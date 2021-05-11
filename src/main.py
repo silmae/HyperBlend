@@ -21,12 +21,13 @@ image_type = '.tif'
 data_max_value = 65535 # 65535 for uint 16
 
 blender_executable_path         =   os.path.normpath("C:/MyTemp/Software/Blender/blender.exe")
+project_root_path = '../'
 
 
 def get_leaf_rend_folder() -> os.path:
     """Returns the path to leaf render folder."""
 
-    rend_path_leaf = './rend'
+    rend_path_leaf = project_root_path + 'rend'
     return os.path.normpath(rend_path_leaf)
 
 
@@ -34,10 +35,10 @@ def get_reference_rend_folder(imaging_type: str) -> os.path:
     """Returns the path to reflectance or transmittance reference folder."""
 
     if imaging_type == imaging_type_refl:
-        rend_path_refl_ref = './rend_refl_ref'
+        rend_path_refl_ref = project_root_path + 'rend_refl_ref'
         return os.path.normpath(rend_path_refl_ref)
     elif imaging_type == imaging_type_tran:
-        rend_path_tran_ref = './rend_tran_ref'
+        rend_path_tran_ref = project_root_path + 'rend_tran_ref'
         return os.path.normpath(rend_path_tran_ref)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {imaging_type_refl} or {imaging_type_tran}.")
@@ -293,9 +294,9 @@ def run_render_single(rps: RenderParametersForSingle):
     blender_args = [
         blender_executable_path,
         "--background",  # Run Blender in the background.
-        os.path.normpath("./leafShader.blend"),  # Blender file to be run.
+        os.path.normpath(project_root_path + "leafShader.blend"),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
-        os.path.normpath("./testScript.py"),  # Python script file to be run.
+        os.path.normpath(project_root_path + "testScript.py"),  # Python script file to be run.
         "--log-level", "0",
 
     ]
@@ -324,7 +325,7 @@ class Plotter:
         self.rp = rp
         self.x_label = x_label
         self.x_values = x_values
-        self.plot_folder = os.path.normpath('./plot')
+        self.plot_folder = os.path.normpath(project_root_path + 'plot')
         x_ndvalues = np.array(x_values)
         self.filename = f"{x_label}_{x_ndvalues.min():.1f}-{x_ndvalues.max():.1f}"
         self.r = None
@@ -462,6 +463,10 @@ def preset_make_varying_ai():
 def optimize_to_measured(r_m, t_m):
     """Optimize stuff"""
 
+    def printable_variable_list(as_array):
+        l = [f'{variable:.3f}' for variable in as_array]
+        return l
+
     wl = 0
 
     def f(x):
@@ -481,7 +486,7 @@ def optimize_to_measured(r_m, t_m):
 
         r = get_relative_refl_or_tran(imaging_type_refl, rps.wl)
         t = get_relative_refl_or_tran(imaging_type_tran, rps.wl)
-        print(f"rendering with x = {x} resulting r = {r}, t = {t}")
+        print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         dist = math.sqrt((r - r_m)*(r - r_m) + (t-t_m) * (t-t_m))
 
         penalty = 0
@@ -518,9 +523,7 @@ def optimize_to_measured(r_m, t_m):
     # Scale x
     x_scale = [0.01,0.01,1,1]
 
-    # Minimize f with initial guess a,b,r. Uses Levenberg-Maquardt (method='lm')
-    # as proposed in the paper.
-    res = optimize.least_squares(f, x_0, bounds=bounds, method='trf', x_scale=x_scale, verbose=2, gtol=None, diff_step=0.01)
+    res = optimize.least_squares(f, x_0, bounds=bounds, method='trf', ftol=0.01, x_scale=x_scale, verbose=2, gtol=None, diff_step=0.01)
     return res
 
 if __name__ == '__main__':
