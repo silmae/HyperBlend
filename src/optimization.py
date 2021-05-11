@@ -1,3 +1,43 @@
+"""
+Desired folder structure for optimization process:
+
+- project_root
+    - optimization
+        - set_name
+            - target (refl tran)
+                - target.toml
+            - working_temp
+                - rend_leaf
+                - rend_refl_ref
+                - rend_tran_ref
+            - result
+                - final_result.toml
+                - plot
+                    - result_plot.jpg
+                    - parameter_a.png
+                    - parameter_b.png
+                    - ...
+                - sub_result
+                    - wl_1XXX.toml
+                    - wl_2XXX.toml
+                    - ...
+
+For parallel processing
+
+1. fetch wavelengths, and target reflectance and transmittance from optimization/target/target.toml before threading
+2. deside a starting guess (constant?)
+3. rend references to working_temp/rend_refl_ref and rend_tran_ref
+4. make a thread pool
+5. run wavelength-wise optimization
+    5.1 rend leaf to rend_leaf folder
+    5.2 retrieve r and t
+    5.3 compare to target
+    5.4 finish when good enough
+    5.5 save result (a,b,c,d,r,t, and metadata) to sub_result/wl_XX.toml
+6. collect subresults to single file (add RMSE and such)
+7. plot resulting (a,b,c,d,r,t) 
+
+"""
 
 import math
 import scipy.optimize as optimize

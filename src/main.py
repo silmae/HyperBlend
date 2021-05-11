@@ -4,6 +4,7 @@ from src import constants as C
 from src import data_utils as DU
 from src import optimization
 
+
 if __name__ == '__main__':
 
     logging.basicConfig(level=logging.INFO)
