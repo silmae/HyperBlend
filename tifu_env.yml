@@ -1,0 +1,22 @@
+# Create environment with conda running:
+# conda env create -n tifu --file tifu_env.yml
+# Change "create" to "update" when updating.
+name: tifu
+channels:
+  - defaults
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - xarray
+  - scipy
+  - netcdf4
+  - matplotlib
+  - appdirs
+  - tqdm
+  - toml
+  - tabulate
+  - ipython
+  - pip
+  - pip:
+      - netcdf4

@@ -1,0 +1,14 @@
+__pycache__/
+
+.vscode/
+.idea/
+
+# Exclude all renders, plots and Blender backups
+rend*/*
+plot*/*
+*.blend1
+
+# Ignore generated examples, but keep the sourse 
+# spectrogram in git
+examples/*
+!examples/fluorescence_spectrogram.nc
