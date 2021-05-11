@@ -12,94 +12,16 @@ import toml
 import scipy as sc
 import scipy.optimize as optimize
 
-imaging_type_refl = 'refl'
-imaging_type_tran = 'tran'
-target_type_leaf = 'leaf'
-target_type_ref = 'reference'
+from src import file_handling as FH
+from src import constants as C
 
-image_type = '.tif'
-data_max_value = 65535 # 65535 for uint 16
-
-blender_executable_path         =   os.path.normpath("C:/MyTemp/Software/Blender/blender.exe")
-project_root_path = '../'
-
-
-def get_leaf_rend_folder() -> os.path:
-    """Returns the path to leaf render folder."""
-
-    rend_path_leaf = project_root_path + 'rend'
-    return os.path.normpath(rend_path_leaf)
-
-
-def get_reference_rend_folder(imaging_type: str) -> os.path:
-    """Returns the path to reflectance or transmittance reference folder."""
-
-    if imaging_type == imaging_type_refl:
-        rend_path_refl_ref = project_root_path + 'rend_refl_ref'
-        return os.path.normpath(rend_path_refl_ref)
-    elif imaging_type == imaging_type_tran:
-        rend_path_tran_ref = project_root_path + 'rend_tran_ref'
-        return os.path.normpath(rend_path_tran_ref)
-    else:
-        raise Exception(f"Imaging type {imaging_type} not recognized. Use {imaging_type_refl} or {imaging_type_tran}.")
-
-
-def get_image_folder(target_type: str, imaging_type: str):
-    """Returns a path to correct folder according to given target and imaging type. """
-
-    if target_type == target_type_leaf:
-        return get_leaf_rend_folder()
-    elif target_type == target_type_ref:
-        return get_reference_rend_folder(imaging_type)
-    else:
-        raise Exception(f"Target type must be either {target_type_leaf} or {target_type_leaf}. Was {target_type}.")
-
-
-def get_image_file_path(target_type: str, imaging_type: str, wl: float):
-    """Returns a full path to an image of given wavelength."""
-
-    image_name = f"{imaging_type}_wl{wl:.2f}.tif"
-    if target_type == target_type_leaf:
-        return os.path.normpath(get_leaf_rend_folder() + '/' + image_name)
-    elif target_type == target_type_ref:
-        return os.path.normpath(get_reference_rend_folder(imaging_type) + '/' + image_name)
-    else:
-        raise Exception(f"Target type must be either {target_type_leaf} or {target_type_leaf}. Was {target_type}.")
-
-
-def search_by_wl(target_type: str, imaging_type: str, wl: float) -> os.path:
-    """Search a folder for an image of given wavelength.
-
-    A path to the image is returned.
-
-    :raises FileNotFoundError if not found
-    """
-
-    def almost_equals(f1: float, f2: float, epsilon=0.01):
-        res = abs(f1 - f2) <= epsilon
-        return res
-
-    folder = get_image_folder(target_type, imaging_type)
-    for filename in os.listdir(folder):
-        image_wl = parse_wl_from_image_name(filename)
-        if almost_equals(wl, image_wl):
-            return get_image_file_path(target_type,imaging_type,wl)
-
-    # Did not find
-    raise FileNotFoundError(f"Could not find {wl} nm image from {folder}.")
-
-
-def parse_wl_from_image_name(image_name):
-    tail = image_name.split("_wl", 1)[1]
-    wl_s = tail.rsplit(".", 1)[0]
-    return float(wl_s)
 
 
 def get_relative_refl_or_tran(imaging_type: str, wl: float):
     """Returns leaf reflectance (transmittance) divided by reference reflectance (transmittance). """
 
-    leaf_mean = get_rend_as_mean(search_by_wl(target_type_leaf, imaging_type, wl))
-    reference_mean = get_rend_as_mean(search_by_wl(target_type_ref, imaging_type, wl))
+    leaf_mean = get_rend_as_mean(FH.search_by_wl(C.target_type_leaf, imaging_type, wl))
+    reference_mean = get_rend_as_mean(FH.search_by_wl(C.target_type_ref, imaging_type, wl))
     relative = leaf_mean / reference_mean
     return relative
 
@@ -292,11 +214,11 @@ def run_render_single(rps: RenderParametersForSingle):
 
     # Basic arguments that will always be passed on:
     blender_args = [
-        blender_executable_path,
+        C.blender_executable_path,
         "--background",  # Run Blender in the background.
-        os.path.normpath(project_root_path + "leafShader.blend"),  # Blender file to be run.
+        os.path.normpath(C.project_root_path + "leafShader.blend"),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(project_root_path + "testScript.py"),  # Python script file to be run.
+        os.path.normpath(C.project_root_path + "testScript.py"),  # Python script file to be run.
         "--log-level", "0",
 
     ]
@@ -325,7 +247,7 @@ class Plotter:
         self.rp = rp
         self.x_label = x_label
         self.x_values = x_values
-        self.plot_folder = os.path.normpath(project_root_path + 'plot')
+        self.plot_folder = os.path.normpath(C.project_root_path + 'plot')
         x_ndvalues = np.array(x_values)
         self.filename = f"{x_label}_{x_ndvalues.min():.1f}-{x_ndvalues.max():.1f}"
         self.r = None
@@ -335,8 +257,8 @@ class Plotter:
         tran_list = []
         # Get data according to wavelengths
         for i, wl in enumerate(self.rp.wl_list):
-            refl_list.append(get_relative_refl_or_tran(imaging_type_refl, wl))
-            tran_list.append(get_relative_refl_or_tran(imaging_type_tran, wl))
+            refl_list.append(get_relative_refl_or_tran(C.imaging_type_refl, wl))
+            tran_list.append(get_relative_refl_or_tran(C.imaging_type_tran, wl))
 
         self.r = np.array(refl_list)
         self.t = np.array(tran_list)
@@ -484,8 +406,8 @@ def optimize_to_measured(r_m, t_m):
         rps.mix_fac = x[3]
         run_render_single(rps)
 
-        r = get_relative_refl_or_tran(imaging_type_refl, rps.wl)
-        t = get_relative_refl_or_tran(imaging_type_tran, rps.wl)
+        r = get_relative_refl_or_tran(C.imaging_type_refl, rps.wl)
+        t = get_relative_refl_or_tran(C.imaging_type_tran, rps.wl)
         print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         dist = math.sqrt((r - r_m)*(r - r_m) + (t-t_m) * (t-t_m))
 
@@ -552,8 +474,8 @@ if __name__ == '__main__':
     t_m = 0.4
     optimize_to_measured(r_m=r_m,t_m=t_m)
 
-    r = get_relative_refl_or_tran(imaging_type_refl, 0)
-    t = get_relative_refl_or_tran(imaging_type_tran, 0)
+    r = get_relative_refl_or_tran(C.imaging_type_refl, 0)
+    t = get_relative_refl_or_tran(C.imaging_type_tran, 0)
     print(f"Final reflectance: {r} ({r_m})")
     print(f"Final transmittance: {t} ({t_m})")
 
