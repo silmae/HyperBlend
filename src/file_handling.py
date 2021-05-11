@@ -11,7 +11,7 @@ def check_folder_structure():
 def get_leaf_rend_folder() -> os.path:
     """Returns the path to leaf render folder."""
 
-    rend_path_leaf = C.project_root_path + 'rend'
+    rend_path_leaf = C.project_root_path + '/' + C.rend_folder_name
     return os.path.normpath(rend_path_leaf)
 
 
@@ -19,10 +19,10 @@ def get_reference_rend_folder(imaging_type: str) -> os.path:
     """Returns the path to reflectance or transmittance reference folder."""
 
     if imaging_type == C.imaging_type_refl:
-        rend_path_refl_ref = C.project_root_path + 'rend_refl_ref'
+        rend_path_refl_ref = C.project_root_path + '/' + C.rend_ref_refl_folder_name
         return os.path.normpath(rend_path_refl_ref)
     elif imaging_type == C.imaging_type_tran:
-        rend_path_tran_ref = C.project_root_path + 'rend_tran_ref'
+        rend_path_tran_ref = C.project_root_path + '/' + C.rend_ref_tran_folder_name
         return os.path.normpath(rend_path_tran_ref)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
