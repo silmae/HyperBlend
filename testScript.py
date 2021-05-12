@@ -11,10 +11,7 @@ D = bpy.data
 O = bpy.ops
 S = D.scenes['Scene']
 cameraList = D.collections['Cameras'].all_objects
-project_path = 'C:/Users/kiauriih/Code/Python/LeafBlend'
-render_path_leaf = project_path + '/rend'
-render_path_refl_ref = project_path + '/rend_refl_ref'
-render_path_tran_ref = project_path + '/rend_tran_ref'
+# project_path = 'C:/Users/kiauriih/Code/Python/LeafBlend'
 
 # Target names in the blender file
 target_leaf = 'Leaf plate'
@@ -56,6 +53,7 @@ else:
 
 print(argv)
 
+key_base_path = 'base_path'
 key_dry_run = 'dry_run'
 # key_single_wavelength = 'single_wavelength'
 key_clear = 'clear'
@@ -68,6 +66,10 @@ key_scat_ai = 'scat_ai'
 key_mix_fac = 'mix_fac'
 
 parser = argparse.ArgumentParser()
+
+parser.add_argument("-p", f"--{key_base_path}", dest=key_base_path, action="store",
+                    required=True, help="Base path to render folders. Under it have to be folders for "
+                                        "/rend, /rend_ref_refl, and rend_ref_tran")
 
 parser.add_argument("-y", f"--{key_dry_run}", dest=key_dry_run, action="store_true",
                     required=False, help="If given, nothing is saved but the prints will come out.")
@@ -114,6 +116,11 @@ abs_dens = vars(args)[key_abs_dens]
 scat_dens = vars(args)[key_scat_dens]
 scat_ai = vars(args)[key_scat_ai]
 mix_fac = vars(args)[key_mix_fac]
+base_path = vars(args)[key_base_path]
+
+render_path_leaf = base_path + '/rend'
+render_path_refl_ref = base_path + '/rend_refl_ref'
+render_path_tran_ref = base_path + '/rend_tran_ref'
 
 # if single_wavelength and not wavelength:
 #     raise Exception(f"Wavelength must be provided if '-s' switch is used.")

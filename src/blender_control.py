@@ -29,7 +29,7 @@ def run_render_series(rp: RenderParametersForSeries):
     print(f"Render loop run for {seconds:.1f} seconds")
 
 
-def run_render_single(rps: RenderParametersForSingle):
+def run_render_single(rps: RenderParametersForSingle, rend_base: str):
 
     # Basic arguments that will always be passed on:
     blender_args = [
@@ -43,6 +43,8 @@ def run_render_single(rps: RenderParametersForSingle):
     ]
 
     scirpt_args = ['--']
+    p = os.path.abspath(rend_base)
+    scirpt_args += ['-p', f'{p}']
     if rps.clear_rend_folder:
         scirpt_args += ['-c']  # clear rend
     if rps.clear_references:
@@ -56,6 +58,7 @@ def run_render_single(rps: RenderParametersForSingle):
     scirpt_args += ['-ds', f'{rps.scat_dens}']  # scattering density
     scirpt_args += ['-ai', f'{rps.scat_ai}']  # scattering anisotropy
     scirpt_args += ['-mf', f'{rps.mix_fac}']  # mixing factor
+    print(scirpt_args)
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args, stdout=stream)

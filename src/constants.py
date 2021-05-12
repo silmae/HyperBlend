@@ -12,6 +12,7 @@ blender_executable_path = 'C:/MyTemp/Software/Blender/blender.exe'
 path_project_root = '../'
 
 # folder names
+# NOTE do not change render folder names as they are used by Blender script
 folder_rend = 'rend'
 folder_rend_ref_refl = 'rend_refl_ref'
 folder_rend_ref_tran = 'rend_tran_ref'

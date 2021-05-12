@@ -46,16 +46,17 @@ from src import constants as C
 from src.render_parameters import RenderParametersForSingle
 from src import blender_control as B
 from src import data_utils as DU
+from src import file_handling as FH
 
 
-def optimize_to_measured(r_m, t_m):
+def optimize_to_measured(set_name: str, r_m, t_m):
     """Optimize stuff"""
 
     def printable_variable_list(as_array):
         l = [f'{variable:.3f}' for variable in as_array]
         return l
 
-    wl = 0
+    wl = 1
 
     def f(x):
         """Function to be minimized F = sum(d_i²)."""
@@ -70,7 +71,7 @@ def optimize_to_measured(r_m, t_m):
         rps.scat_dens = x[1]
         rps.scat_ai = x[2]
         rps.mix_fac = x[3]
-        B.run_render_single(rps)
+        B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
         r = DU.get_relative_refl_or_tran(C.imaging_type_refl, rps.wl)
         t = DU.get_relative_refl_or_tran(C.imaging_type_tran, rps.wl)
@@ -94,7 +95,7 @@ def optimize_to_measured(r_m, t_m):
     rps.scat_dens = 0
     rps.scat_ai = 0
     rps.mix_fac = 0
-    B.run_render_single(rps)
+    B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
     # initial guess
     a = 100
