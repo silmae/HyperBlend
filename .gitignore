@@ -7,6 +7,7 @@ __pycache__/
 rend*/*
 plot*/*
 *.blend1
+optimization/*
 
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
