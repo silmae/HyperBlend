@@ -58,7 +58,7 @@ def run_render_single(rps: RenderParametersForSingle, rend_base: str):
     scirpt_args += ['-ds', f'{rps.scat_dens}']  # scattering density
     scirpt_args += ['-ai', f'{rps.scat_ai}']  # scattering anisotropy
     scirpt_args += ['-mf', f'{rps.mix_fac}']  # mixing factor
-    print(scirpt_args)
+    # print(scirpt_args)
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args, stdout=stream)

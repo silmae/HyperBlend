@@ -73,8 +73,8 @@ def optimize_to_measured(set_name: str, r_m, t_m):
         rps.mix_fac = x[3]
         B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
-        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, rps.wl)
-        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, rps.wl)
+        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, rps.wl, base_path=FH.get_path_opt_working(set_name))
+        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, rps.wl, base_path=FH.get_path_opt_working(set_name))
         print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         dist = math.sqrt((r - r_m)*(r - r_m) + (t-t_m) * (t-t_m))
 

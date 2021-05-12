@@ -72,47 +72,52 @@ def get_path_rend_leaf(set_name: str):
     return p
 
 
-def get_path_rend_reference(imaging_type: str, set_name: str) -> os.path:
+def get_path_opt_target_file(set_name: str):
+    """Reference reflectance and transmittance."""
+    p = os.path.normpath(get_path_opt_target(set_name) + '/' + C.file_opt_target + C.postfix_text_data_format)
+    return p
+
+
+def get_image_folder(target_type: str, imaging_type: str, base_path: str):
+    """Returns a path to correct folder according to given target and imaging type. """
+
+    if target_type == C.target_type_leaf:
+        return os.path.normpath(base_path + '/' + C.folder_rend)
+    elif target_type == C.target_type_ref:
+        return get_path_rend_reference(imaging_type, base_path)
+    else:
+        raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
+
+
+def get_path_rend_reference(imaging_type: str, base_path: str) -> os.path:
     """Returns the path to reflectance or transmittance reference folder."""
 
     if imaging_type == C.imaging_type_refl:
-        p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend_ref_refl)
+        p = os.path.normpath(base_path + '/' + C.folder_rend_ref_refl)
     elif imaging_type == C.imaging_type_tran:
-        p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend_ref_tran)
+        p = os.path.normpath(base_path + '/' + C.folder_rend_ref_tran)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
     return p
 
 
-def get_path_opt_target_file(set_name: str):
-    p = os.path.normpath(get_path_opt_target(set_name) + '/' + C.file_opt_target + C.postfix_text_data_format)
-    return p
+def generate_image_file_name(imaging_type: str, wl: float):
+    image_name = f"{imaging_type}_wl{wl:.2f}{C.postfix_image_format}"
+    return image_name
 
-
-def get_image_folder(target_type: str, imaging_type: str):
-    """Returns a path to correct folder according to given target and imaging type. """
-
-    if target_type == C.target_type_leaf:
-        return get_path_rend_leaf()
-    elif target_type == C.target_type_ref:
-        return get_path_rend_reference(imaging_type)
-    else:
-        raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
-
-
-def get_image_file_path(target_type: str, imaging_type: str, wl: float):
+def get_image_file_path(target_type: str, imaging_type: str, wl: float, base_path: str):
     """Returns a full path to an image of given wavelength."""
 
-    image_name = f"{imaging_type}_wl{wl:.2f}.tif"
+    image_name = generate_image_file_name(imaging_type, wl)
     if target_type == C.target_type_leaf:
-        return os.path.normpath(get_path_rend_leaf() + '/' + image_name)
+        return os.path.normpath(base_path + '/' + C.folder_rend + '/' + image_name)
     elif target_type == C.target_type_ref:
-        return os.path.normpath(get_path_rend_reference(imaging_type) + '/' + image_name)
+        return os.path.normpath(get_path_rend_reference(imaging_type, base_path) + '/' + image_name)
     else:
         raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
 
 
-def search_by_wl(target_type: str, imaging_type: str, wl: float) -> os.path:
+def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str) -> os.path:
     """Search a folder for an image of given wavelength.
 
     A path to the image is returned.
@@ -124,11 +129,11 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float) -> os.path:
         res = abs(f1 - f2) <= epsilon
         return res
 
-    folder = get_image_folder(target_type, imaging_type)
+    folder = get_image_folder(target_type, imaging_type, base_path)
     for filename in os.listdir(folder):
         image_wl = utils.parse_wl_from_image_name(filename)
         if almost_equals(wl, image_wl):
-            return get_image_file_path(target_type,imaging_type,wl)
+            return get_image_file_path(target_type,imaging_type,wl, base_path)
 
     # Did not find
     raise FileNotFoundError(f"Could not find {wl} nm image from {folder}.")
