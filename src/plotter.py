@@ -15,7 +15,7 @@ class Plotter:
         self.rp = rp
         self.x_label = x_label
         self.x_values = x_values
-        self.plot_folder = os.path.normpath(C.project_root_path + 'plot')
+        self.plot_folder = os.path.normpath(C.path_project_root + 'plot')
         x_ndvalues = np.array(x_values)
         self.filename = f"{x_label}_{x_ndvalues.min():.1f}-{x_ndvalues.max():.1f}"
         self.r = None

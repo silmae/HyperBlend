@@ -4,37 +4,98 @@ import os
 from src import constants as C
 from src import utils
 
-def check_folder_structure():
-    pass
+
+def create_opt_folder_structure(set_name: str):
+    """Check that the folder structure for optimization is OK. Create if not."""
+    if not os.path.exists(get_path_opt_root()):
+        os.makedirs(get_path_opt_root())
+    if not os.path.exists(get_path_opt_target(set_name)):
+        os.makedirs(get_path_opt_target(set_name))
+    if not os.path.exists(get_path_opt_working(set_name)):
+        os.makedirs(get_path_opt_working(set_name))
+    if not os.path.exists(get_path_rend_leaf(set_name)):
+        os.makedirs(get_path_rend_leaf(set_name))
+    if not os.path.exists(get_path_rend_reference(C.imaging_type_refl, set_name)):
+        os.makedirs(get_path_rend_reference(C.imaging_type_refl, set_name))
+    if not os.path.exists(get_path_rend_reference(C.imaging_type_tran, set_name)):
+        os.makedirs(get_path_rend_reference(C.imaging_type_tran, set_name))
+    if not os.path.exists(get_path_opt_result(set_name)):
+        os.makedirs(get_path_opt_result(set_name))
+    if not os.path.exists(get_path_opt_result_plot(set_name)):
+        os.makedirs(get_path_opt_result_plot(set_name))
+    if not os.path.exists(get_path_opt_subresult(set_name)):
+        os.makedirs(get_path_opt_subresult(set_name))
 
 
-def get_leaf_rend_folder() -> os.path:
+def get_path_opt_root():
+    p = os.path.normpath(C.path_project_root + '/' + C.folder_opt)
+    return p
+
+
+def get_path_opt_set(set_name: str):
+    p = os.path.normpath(get_path_opt_root() + '/' + set_name)
+    return p
+
+
+def get_path_opt_target(set_name: str):
+    p = os.path.normpath(get_path_opt_set(set_name) + '/' + C.folder_opt_target)
+    return p
+
+
+def get_path_opt_working(set_name: str):
+    p = os.path.normpath(get_path_opt_set(set_name) + '/' + C.folder_opt_work)
+    return p
+
+
+def get_path_opt_result(set_name: str):
+    p = os.path.normpath(get_path_opt_set(set_name) + '/' + C.folder_opt_result)
+    return p
+
+
+def get_path_opt_result_plot(set_name: str):
+    p = os.path.normpath(get_path_opt_result(set_name) + '/' + C.folder_opt_plot)
+    return p
+
+
+def get_path_opt_subresult(set_name: str):
+    p = os.path.normpath(get_path_opt_result(set_name) + '/' + C.folder_opt_subresult)
+    return p
+
+
+def set_exists(set_name: str) -> bool:
+    return os.path.exists(get_path_opt_set(set_name))
+
+
+def get_path_rend_leaf(set_name: str):
     """Returns the path to leaf render folder."""
+    p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend)
+    return p
 
-    rend_path_leaf = C.project_root_path + '/' + C.rend_folder_name
-    return os.path.normpath(rend_path_leaf)
 
-
-def get_reference_rend_folder(imaging_type: str) -> os.path:
+def get_path_rend_reference(imaging_type: str, set_name: str) -> os.path:
     """Returns the path to reflectance or transmittance reference folder."""
 
     if imaging_type == C.imaging_type_refl:
-        rend_path_refl_ref = C.project_root_path + '/' + C.rend_ref_refl_folder_name
-        return os.path.normpath(rend_path_refl_ref)
+        p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend_ref_refl)
     elif imaging_type == C.imaging_type_tran:
-        rend_path_tran_ref = C.project_root_path + '/' + C.rend_ref_tran_folder_name
-        return os.path.normpath(rend_path_tran_ref)
+        p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend_ref_tran)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
+    return p
+
+
+def get_path_opt_target_file(set_name: str):
+    p = os.path.normpath(get_path_opt_target(set_name) + '/' + C.file_opt_target + C.postfix_text_data_format)
+    return p
 
 
 def get_image_folder(target_type: str, imaging_type: str):
     """Returns a path to correct folder according to given target and imaging type. """
 
     if target_type == C.target_type_leaf:
-        return get_leaf_rend_folder()
+        return get_path_rend_leaf()
     elif target_type == C.target_type_ref:
-        return get_reference_rend_folder(imaging_type)
+        return get_path_rend_reference(imaging_type)
     else:
         raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
 
@@ -44,9 +105,9 @@ def get_image_file_path(target_type: str, imaging_type: str, wl: float):
 
     image_name = f"{imaging_type}_wl{wl:.2f}.tif"
     if target_type == C.target_type_leaf:
-        return os.path.normpath(get_leaf_rend_folder() + '/' + image_name)
+        return os.path.normpath(get_path_rend_leaf() + '/' + image_name)
     elif target_type == C.target_type_ref:
-        return os.path.normpath(get_reference_rend_folder(imaging_type) + '/' + image_name)
+        return os.path.normpath(get_path_rend_reference(imaging_type) + '/' + image_name)
     else:
         raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
 

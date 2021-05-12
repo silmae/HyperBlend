@@ -35,9 +35,9 @@ def run_render_single(rps: RenderParametersForSingle):
     blender_args = [
         C.blender_executable_path,
         "--background",  # Run Blender in the background.
-        os.path.normpath(C.project_root_path + "leafShader.blend"),  # Blender file to be run.
+        os.path.normpath(C.path_project_root + "leafShader.blend"),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(C.project_root_path + "testScript.py"),  # Python script file to be run.
+        os.path.normpath(C.path_project_root + "testScript.py"),  # Python script file to be run.
         "--log-level", "0",
 
     ]
