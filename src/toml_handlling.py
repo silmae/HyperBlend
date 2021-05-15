@@ -6,6 +6,19 @@ from src import file_handling as FH
 from src import constants as C
 
 
+def write_subresult(set_name: str, res_dict: dict):
+    wl = res_dict['wl']
+    p = FH.get_path_opt_subresult(set_name) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
+    with open(p, 'w+') as file:
+        toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+def read_subresult(set_name: str, wl: float):
+    p = FH.get_path_opt_subresult(set_name) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
+    with open(p, 'r') as file:
+        subres_dict = toml.load(file)
+
+    return subres_dict
+
 def write_target(set_name:str, wls):
     """Writes given list to file as toml.
 

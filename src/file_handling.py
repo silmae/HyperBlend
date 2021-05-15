@@ -1,4 +1,4 @@
-
+import logging
 import os
 
 from src import constants as C
@@ -62,7 +62,7 @@ def get_path_opt_subresult(set_name: str):
     return p
 
 
-def set_exists(set_name: str) -> bool:
+def target_exists(set_name: str) -> bool:
     return os.path.exists(get_path_opt_set(set_name))
 
 
@@ -70,6 +70,15 @@ def get_path_rend_leaf(set_name: str):
     """Returns the path to leaf render folder."""
     p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend)
     return p
+
+
+def clear_rend_leaf(set_name: str):
+    clear_folder(get_path_rend_leaf(set_name))
+
+
+def clear_rend_refs(set_name: str):
+    get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name))
+    get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name))
 
 
 def get_path_opt_target_file(set_name: str):
@@ -105,6 +114,7 @@ def generate_image_file_name(imaging_type: str, wl: float):
     image_name = f"{imaging_type}_wl{wl:.2f}{C.postfix_image_format}"
     return image_name
 
+
 def get_image_file_path(target_type: str, imaging_type: str, wl: float, base_path: str):
     """Returns a full path to an image of given wavelength."""
 
@@ -137,3 +147,11 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
 
     # Did not find
     raise FileNotFoundError(f"Could not find {wl} nm image from {folder}.")
+
+
+def clear_folder(path):
+    norm_path = os.path.normpath(path)
+    if os.path.exists:
+        list(map(os.unlink, (os.path.join(norm_path, f) for f in os.listdir(norm_path))))
+    else:
+        logging.warning(f"No files to delete in '{norm_path}'.")
