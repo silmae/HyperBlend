@@ -8,6 +8,21 @@ import toml
 from src import constants as C
 from src import data_utils as DU
 from src.render_parameters import RenderParametersForSeries
+from src import toml_handlling as T
+
+def plot_subresult_opt_history(set_name: str, wl: float):
+    subres_dict = T.read_subresult(set_name=set_name, wl=wl)
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    ax[0].plot(np.arange(len(subres_dict['history_absorption_density'])),subres_dict['history_absorption_density'], label='history_absorption_density')
+    ax[0].plot(np.arange(len(subres_dict['history_scattering_density'])),subres_dict['history_scattering_density'], label='history_scattering_density')
+    ax[0].plot(np.arange(len(subres_dict['history_scattering_anisotropy'])),subres_dict['history_scattering_anisotropy'], label='history_scattering_anisotropy')
+    ax[0].plot(np.arange(len(subres_dict['history_mix_factor'])),subres_dict['history_mix_factor'], label='history_mix_factor')
+    ax[0].legend()
+    ax[1].plot(np.arange(len(subres_dict['history_reflectance'])),subres_dict['history_reflectance'], label='history_reflectance')
+    ax[1].plot(np.arange(len(subres_dict['history_transmittance'])),subres_dict['history_transmittance'], label='history_transmittance')
+    ax[1].legend()
+
+    plt.show()
 
 class Plotter:
 
