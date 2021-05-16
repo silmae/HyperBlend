@@ -41,6 +41,7 @@ For parallel processing
 
 import math
 import time
+import logging
 
 import scipy.optimize as optimize
 
@@ -105,6 +106,21 @@ def run_optimization(set_name: str):
         # run the whole optimization just to change the images.
         plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)
 
+    logging.info("Finished optimizing.")
+
+    # Collect results test
+    subreslist = T.collect_subresults(set_name)
+    result_dict = {
+        C.result_key_wls: [subres[C.subres_key_wl] for subres in subreslist],
+        C.result_key_refls_modeled: [subres[C.subres_key_reflectance_modeled] for subres in subreslist],
+        C.result_key_refls_measured: [subres[C.subres_key_reflectance_measured] for subres in subreslist],
+        C.result_key_refls_error: [subres[C.subres_key_reflectance_error] for subres in subreslist],
+        C.result_key_trans_modeled: [subres[C.subres_key_transmittance_modeled] for subres in subreslist],
+        C.result_key_trans_measured: [subres[C.subres_key_transmittance_measured] for subres in subreslist],
+        C.result_key_trans_error: [subres[C.subres_key_transmittance_error] for subres in subreslist],
+    }
+    T.write_final_result(set_name, result_dict)
+    plotter.plot_final_result(set_name, save_thumbnail=True, dont_show=True)
 
 def printable_variable_list(as_array):
     l = [f'{variable:.3f}' for variable in as_array]

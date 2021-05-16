@@ -33,20 +33,10 @@ if __name__ == '__main__':
     # print(f"Final reflectance: {r} ({r_m})")
     # print(f"Final transmittance: {t} ({t_m})")
 
-    # Collect results test
-    # subreslist = T.collect_subresults(test_set_name)
-    # result_dict = {
-    #     C.result_key_wls: [subres[C.subres_key_wl] for subres in subreslist],
-    #     C.result_key_refls_modeled: [subres[C.subres_key_reflectance_modeled] for subres in subreslist],
-    #     C.result_key_refls_measured: [subres[C.subres_key_reflectance_measured] for subres in subreslist],
-    #     C.result_key_refls_error: [subres[C.subres_key_reflectance_error] for subres in subreslist],
-    #     C.result_key_trans_modeled: [subres[C.subres_key_transmittance_modeled] for subres in subreslist],
-    #     C.result_key_trans_measured: [subres[C.subres_key_transmittance_measured] for subres in subreslist],
-    #     C.result_key_trans_error: [subres[C.subres_key_transmittance_error] for subres in subreslist],
-    # }
-    # T.write_final_result(test_set_name, result_dict)
+
     # read = T.read_final_result(test_set_name)
     # for key in read:
     #     print(f"{key}: {read[key]}")
-    plotter.plot_final_result(test_set_name)
+    # plotter.plot_final_result(test_set_name)
+    plotter.plot_final_result(test_set_name, save_thumbnail=True, dont_show=True)
     # print(result_dict)

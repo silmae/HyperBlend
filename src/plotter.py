@@ -89,14 +89,14 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
     if save_thumbnail is not None:
         folder = FH.get_path_opt_result_plot(set_name)
         image_name = f"subresplot_wl{wl:.2f}.png"
-        path = folder + '/' + image_name
+        path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
         plt.show()
 
 
-def plot_final_result(set_name: str):
+def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
     result = T.read_final_result(set_name)
     fig, ax = plt.subplots(figsize=figsize)
     plot_refl_tran_to_axis(ax, result[C.result_key_refls_measured], result[C.result_key_trans_measured],
@@ -104,7 +104,14 @@ def plot_final_result(set_name: str):
                            refl_color='red')
     plot_refl_tran_to_axis(ax, result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
                            result[C.result_key_wls], 'Wavelength [nm]', invert_tran=True)
-    plt.show()
+    if save_thumbnail:
+        folder = FH.get_path_opt_result_plot(set_name)
+        image_name = f"final_result_plot.png"
+        path = os.path.normpath(folder + '/' + image_name)
+        logging.info(f"Saving the result plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
 
 
 class Plotter:
