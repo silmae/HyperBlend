@@ -31,9 +31,8 @@ def plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=F
         axis_object.plot(x_values, np.ones((len(x_values))) * data, label=label, color='red')
 
 
-def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False):
-    refl_color = 'blue'
-    tran_color = 'orange'
+def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False,
+                           refl_color='blue', tran_color='orange'):
     axis_object.set_xlabel(x_label)
     axis_object.set_ylabel('Reflectance', color=refl_color)
     axis_object.tick_params(axis='y', labelcolor=refl_color)
@@ -95,6 +94,17 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
         plt.savefig(path, dpi=300)
     if not dont_show:
         plt.show()
+
+
+def plot_final_result(set_name: str):
+    result = T.read_final_result(set_name)
+    fig, ax = plt.subplots(figsize=figsize)
+    plot_refl_tran_to_axis(ax, result[C.result_key_refls_measured], result[C.result_key_trans_measured],
+                           result[C.result_key_wls], 'Wavelength [nm]', invert_tran=True, tran_color='black',
+                           refl_color='red')
+    plot_refl_tran_to_axis(ax, result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
+                           result[C.result_key_wls], 'Wavelength [nm]', invert_tran=True)
+    plt.show()
 
 
 class Plotter:

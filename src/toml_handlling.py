@@ -1,9 +1,38 @@
 import toml
+import os
 
 import numpy as np
 
 from src import file_handling as FH
 from src import constants as C
+
+
+def read_final_result(set_name: str):
+    p = os.path.normpath(FH.get_path_opt_result(set_name) + '/' + 'final_result' + C.postfix_text_data_format)
+    with open(p, 'r') as file:
+        subres_dict = toml.load(file)
+
+    return subres_dict
+
+
+def write_final_result(set_name: str, res_dict: dict):
+    p = os.path.normpath(FH.get_path_opt_result(set_name) + '/' + 'final_result' + C.postfix_text_data_format)
+    with open(p, 'w+') as file:
+        toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+
+def collect_subresults(set_name: str):
+    """Collect subresult dictionaries in a list and return it."""
+
+    p = FH.get_path_opt_subresult(set_name)
+    subres_list = []
+    for filename in os.listdir(p):
+        if filename.endswith(C.postfix_text_data_format):
+            subres = toml.load(os.path.join(p, filename))
+            subres_list.append(subres)
+            # print(filename)
+            # print(subres)
+    return subres_list
 
 
 def write_subresult(set_name: str, res_dict: dict):
@@ -12,12 +41,14 @@ def write_subresult(set_name: str, res_dict: dict):
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
+
 def read_subresult(set_name: str, wl: float):
     p = FH.get_path_opt_subresult(set_name) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
     return subres_dict
+
 
 def write_target(set_name:str, wls):
     """Writes given list to file as toml.

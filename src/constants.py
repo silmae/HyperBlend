@@ -43,3 +43,13 @@ subres_key_history_absorption_density = 'history_absorption_density'
 subres_key_history_scattering_density = 'history_scattering_density'
 subres_key_history_scattering_anisotropy = 'history_scattering_anisotropy'
 subres_key_history_mix_factor = 'history_mix_factor'
+
+# final result toml keys
+result_key_wls = 'wls'
+result_key_refls_modeled = 'refls_modeled'
+result_key_refls_measured = 'refls_measured'
+result_key_refls_error = 'refls_error'
+result_key_trans_modeled = 'trans_modeled'
+result_key_trans_measured = 'trans_measured'
+result_key_trans_error = 'trans_error'
+
