@@ -96,12 +96,14 @@ def run_optimization(set_name: str):
             'history_scattering_density': [float(h[1]) for h in history],
             'history_scattering_anisotropy': [float(h[2]) for h in history],
             'history_mix_factor': [float(h[3]) for h in history],
-            # 'history': history,
+            # 'history': history, NOTE saving without casting to loat braks TOML
         }
         print(res_dict)
 
         T.write_subresult(set_name, res_dict)
         # Save the plot of optimization history
+        # Plotter can re-create the plots from saved toml data, so there's no need to
+        # run the whole optimization just to change the images.
         plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)
 
 

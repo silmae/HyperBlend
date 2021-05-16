@@ -13,6 +13,7 @@ from src import toml_handlling as T
 from src import file_handling as FH
 
 figsize = (12,8)
+fig_title_font_size = 18
 
 
 def plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
@@ -63,17 +64,20 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
 
     subres_dict = T.read_subresult(set_name=set_name, wl=wl)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
+    ax[0].set_title('Variable space')
+    ax[1].set_title('Target space')
     plot_list_variable_to_axis(ax[0], 'history_absorption_density', subres_dict['history_absorption_density'], skip_first=True)
     plot_list_variable_to_axis(ax[0], 'history_scattering_density', subres_dict['history_scattering_density'], skip_first=True)
     plot_list_variable_to_axis(ax[0], 'history_scattering_anisotropy', subres_dict['history_scattering_anisotropy'], skip_first=True)
     plot_list_variable_to_axis(ax[0], 'history_mix_factor', subres_dict['history_mix_factor'], skip_first=True)
     ax[0].set_xlabel('iteration')
     ax[0].legend()
+    plot_x_line_to_axis(ax[1], 'reflectance_target', subres_dict['reflectance_measured'], np.arange(1,len(subres_dict['history_reflectance'])))
+    plot_x_line_to_axis(ax[1], 'transmittance_target', subres_dict['transmittance_measured'], np.arange(1,len(subres_dict['history_transmittance'])), invert=True)
     plot_refl_tran_to_axis(ax[1], subres_dict['history_reflectance'], subres_dict['history_transmittance'],
                            np.arange(len(subres_dict['history_scattering_anisotropy'])), 'iteration', invert_tran=True,
                            skip_first=True)
-    plot_x_line_to_axis(ax[1], 'reflectance_target', subres_dict['reflectance_measured'], np.arange(1,len(subres_dict['history_reflectance'])))
-    plot_x_line_to_axis(ax[1], 'transmittance_target', subres_dict['transmittance_measured'], np.arange(1,len(subres_dict['history_transmittance'])), invert=True)
     ax[1].set_ylim(0,1)
 
     if save_thumbnail is not None:
