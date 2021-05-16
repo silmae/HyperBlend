@@ -81,22 +81,21 @@ def run_optimization(set_name: str):
         t_m = target[2]
         history, elapsed = optimize_single_wl(wl, r_m, t_m, set_name)
         res_dict = {
-            'wl': wl,
-            'reflectance_measured': r_m,
-            'transmittance_measured': t_m,
-            'reflectance_modeled': history[-1][4],
-            'transmittance_modeled': history[-1][5],
-            'reflectance_error': math.fabs(history[-1][4] - r_m),
-            'transmittance_error': math.fabs(history[-1][5] - t_m),
-            'iterations': len(history)-1,
-            'elapsed_time_s': elapsed,
-            'history_reflectance': [float(h[4]) for h in history],
-            'history_transmittance': [float(h[5]) for h in history],
-            'history_absorption_density': [float(h[0]) for h in history],
-            'history_scattering_density': [float(h[1]) for h in history],
-            'history_scattering_anisotropy': [float(h[2]) for h in history],
-            'history_mix_factor': [float(h[3]) for h in history],
-            # 'history': history, NOTE saving without casting to loat braks TOML
+            C.subres_key_wl: wl,
+            C.subres_key_reflectance_measured: r_m,
+            C.subres_key_transmittance_measured: t_m,
+            C.subres_key_reflectance_modeled: history[-1][4],
+            C.subres_key_transmittance_modeled: history[-1][5],
+            C.subres_key_reflectance_error: math.fabs(history[-1][4] - r_m),
+            C.subres_key_transmittance_error: math.fabs(history[-1][5] - t_m),
+            C.subres_key_iterations: len(history)-1,
+            C.subres_key_elapsed_time_s: elapsed,
+            C.subres_key_history_reflectance: [float(h[4]) for h in history],
+            C.subres_key_history_transmittance: [float(h[5]) for h in history],
+            C.subres_key_history_absorption_density: [float(h[0]) for h in history],
+            C.subres_key_history_scattering_density: [float(h[1]) for h in history],
+            C.subres_key_history_scattering_anisotropy: [float(h[2]) for h in history],
+            C.subres_key_history_mix_factor: [float(h[3]) for h in history],
         }
         print(res_dict)
 
@@ -139,7 +138,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
 
         r = DU.get_relative_refl_or_tran(C.imaging_type_refl, rps.wl, base_path=FH.get_path_opt_working(set_name))
         t = DU.get_relative_refl_or_tran(C.imaging_type_tran, rps.wl, base_path=FH.get_path_opt_working(set_name))
-        print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
+        # Debug print
+        # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         dist = distance(r, t)
         history.append([*x, r, t])
 
@@ -162,7 +162,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
     B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
     # initial guess
-    a = 1
+    a = 1.0
     b = 0.88
     c = 0.2
     d = 0.5

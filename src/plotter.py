@@ -67,27 +67,35 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    plot_list_variable_to_axis(ax[0], 'history_absorption_density', subres_dict['history_absorption_density'], skip_first=True)
-    plot_list_variable_to_axis(ax[0], 'history_scattering_density', subres_dict['history_scattering_density'], skip_first=True)
-    plot_list_variable_to_axis(ax[0], 'history_scattering_anisotropy', subres_dict['history_scattering_anisotropy'], skip_first=True)
-    plot_list_variable_to_axis(ax[0], 'history_mix_factor', subres_dict['history_mix_factor'], skip_first=True)
+    plot_list_variable_to_axis(ax[0], C.subres_key_history_absorption_density,
+                               subres_dict[C.subres_key_history_absorption_density], skip_first=True)
+    plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_density,
+                               subres_dict[C.subres_key_history_scattering_density], skip_first=True)
+    plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_anisotropy,
+                               subres_dict[C.subres_key_history_scattering_anisotropy], skip_first=True)
+    plot_list_variable_to_axis(ax[0], C.subres_key_history_mix_factor,
+                               subres_dict[C.subres_key_history_mix_factor], skip_first=True)
     ax[0].set_xlabel('iteration')
     ax[0].legend()
-    plot_x_line_to_axis(ax[1], 'reflectance_target', subres_dict['reflectance_measured'], np.arange(1,len(subres_dict['history_reflectance'])))
-    plot_x_line_to_axis(ax[1], 'transmittance_target', subres_dict['transmittance_measured'], np.arange(1,len(subres_dict['history_transmittance'])), invert=True)
-    plot_refl_tran_to_axis(ax[1], subres_dict['history_reflectance'], subres_dict['history_transmittance'],
-                           np.arange(len(subres_dict['history_scattering_anisotropy'])), 'iteration', invert_tran=True,
+    plot_x_line_to_axis(ax[1], C.subres_key_reflectance_measured, subres_dict[C.subres_key_reflectance_measured],
+                        np.arange(1,len(subres_dict[C.subres_key_history_reflectance])))
+    plot_x_line_to_axis(ax[1], C.subres_key_transmittance_measured, subres_dict[C.subres_key_transmittance_measured],
+                        np.arange(1,len(subres_dict[C.subres_key_history_transmittance])), invert=True)
+    plot_refl_tran_to_axis(ax[1], subres_dict[C.subres_key_history_reflectance],
+                           subres_dict[C.subres_key_history_transmittance],
+                           np.arange(len(subres_dict[C.subres_key_history_scattering_anisotropy])),
+                           'iteration', invert_tran=True,
                            skip_first=True)
-    ax[1].set_ylim(0,1)
 
     if save_thumbnail is not None:
         folder = FH.get_path_opt_result_plot(set_name)
         image_name = f"subresplot_wl{wl:.2f}.png"
         path = folder + '/' + image_name
-        logging.info(f"Plotter is trying to save the subresult graph to '{path}'.")
+        logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
         plt.show()
+
 
 class Plotter:
 
