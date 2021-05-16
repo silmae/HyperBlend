@@ -1,5 +1,6 @@
 
 import os
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from src import constants as C
 from src import data_utils as DU
 from src.render_parameters import RenderParametersForSeries
 from src import toml_handlling as T
+from src import file_handling as FH
 
 figsize = (12,8)
 
@@ -56,7 +58,8 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
         axt.set_ylim([0, 1])
 
 
-def plot_subresult_opt_history(set_name: str, wl: float):
+def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, dont_show=False):
+    """Saves the image if savepath is given."""
 
     subres_dict = T.read_subresult(set_name=set_name, wl=wl)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
@@ -73,7 +76,14 @@ def plot_subresult_opt_history(set_name: str, wl: float):
     plot_x_line_to_axis(ax[1], 'transmittance_target', subres_dict['transmittance_measured'], np.arange(1,len(subres_dict['history_transmittance'])), invert=True)
     ax[1].set_ylim(0,1)
 
-    plt.show()
+    if save_thumbnail is not None:
+        folder = FH.get_path_opt_result_plot(set_name)
+        image_name = f"subresplot_wl{wl:.2f}.png"
+        path = folder + '/' + image_name
+        logging.info(f"Plotter is trying to save the subresult graph to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
 
 class Plotter:
 

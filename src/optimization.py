@@ -51,6 +51,7 @@ from src import blender_control as B
 from src import data_utils as DU
 from src import file_handling as FH
 from src import toml_handlling as T
+from src import plotter
 
 # Bounds
 lb = [0, 0, -0.5, 0]
@@ -95,11 +96,13 @@ def run_optimization(set_name: str):
             'history_scattering_density': [float(h[1]) for h in history],
             'history_scattering_anisotropy': [float(h[2]) for h in history],
             'history_mix_factor': [float(h[3]) for h in history],
-            'history': history,
+            # 'history': history,
         }
         print(res_dict)
 
         T.write_subresult(set_name, res_dict)
+        # Save the plot of optimization history
+        plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)
 
 
 def printable_variable_list(as_array):
