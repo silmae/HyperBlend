@@ -46,8 +46,8 @@ class RenderParametersForSeries:
 
 class RenderParametersForSingle:
 
-    clear_rend_folder = True
-    clear_references = True
+    clear_rend_folder = False
+    clear_references = False
     render_references = True
     dry_run = False
 

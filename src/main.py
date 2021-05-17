@@ -9,24 +9,26 @@ from src import plotter
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level='INFO')
 
-    test_set_name = 'set_ABC'
+    test_set_name = 'set_threaded'
+    # test_set_name = 'set_ABC'
     # -------------
     # Uncomment to re-create plots and save them. The wl must exist in subresults (toml).
     # plotter.plot_subresult_opt_history(set_name=test_set_name, wl=10., save_thumbnail=True)
     # -------------
-    # FH.create_opt_folder_structure(test_set_name)
-    # wls1 = [
-    #     (10, 0.21, 0.17),
-    #     (15, 0.11, 0.161),
-    # ]
-    # T.write_target(test_set_name, wls1)
+    FH.create_opt_folder_structure(test_set_name)
+    wls1 = [
+        (10, 0.21, 0.17),
+        (20, 0.31, 0.28),
+    ]
+    T.write_target(test_set_name, wls1)
     # print(T.read_target(test_set_name, None))
 
     # logging.basicConfig(level=logging.INFO)
     # r_m = 0.4
     # t_m = 0.4
-    # optimization.run_optimization(test_set_name)
+    optimization.run_optimization(test_set_name)
     #
     # r = DU.get_relative_refl_or_tran(C.imaging_type_refl, 0)
     # t = DU.get_relative_refl_or_tran(C.imaging_type_tran, 0)
@@ -38,5 +40,5 @@ if __name__ == '__main__':
     # for key in read:
     #     print(f"{key}: {read[key]}")
     # plotter.plot_final_result(test_set_name)
-    plotter.plot_final_result(test_set_name, save_thumbnail=True, dont_show=True)
+    # plotter.plot_final_result(test_set_name, save_thumbnail=True, dont_show=True)
     # print(result_dict)

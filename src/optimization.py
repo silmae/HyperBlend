@@ -42,6 +42,7 @@ For parallel processing
 import math
 import time
 import logging
+from multiprocessing import Pool
 
 import scipy.optimize as optimize
 
@@ -75,42 +76,27 @@ def run_optimization(set_name: str):
     """Run the whole thing."""
 
     targets = T.read_target(set_name, None)
+    total_time_start = time.perf_counter()
 
-    for target in targets:
-        wl = target[0]
-        r_m = target[1]
-        t_m = target[2]
-        history, elapsed = optimize_single_wl(wl, r_m, t_m, set_name)
-        res_dict = {
-            C.subres_key_wl: wl,
-            C.subres_key_reflectance_measured: r_m,
-            C.subres_key_transmittance_measured: t_m,
-            C.subres_key_reflectance_modeled: history[-1][4],
-            C.subres_key_transmittance_modeled: history[-1][5],
-            C.subres_key_reflectance_error: math.fabs(history[-1][4] - r_m),
-            C.subres_key_transmittance_error: math.fabs(history[-1][5] - t_m),
-            C.subres_key_iterations: len(history)-1,
-            C.subres_key_elapsed_time_s: elapsed,
-            C.subres_key_history_reflectance: [float(h[4]) for h in history],
-            C.subres_key_history_transmittance: [float(h[5]) for h in history],
-            C.subres_key_history_absorption_density: [float(h[0]) for h in history],
-            C.subres_key_history_scattering_density: [float(h[1]) for h in history],
-            C.subres_key_history_scattering_anisotropy: [float(h[2]) for h in history],
-            C.subres_key_history_mix_factor: [float(h[3]) for h in history],
-        }
-        print(res_dict)
+    use_threads = True
+    if use_threads:
+        param_list = [(a[0], a[1], a[2], set_name) for a in targets]
+        with Pool() as pool:
+            pool.map(optimize_single_wl_threaded, param_list)
 
-        T.write_subresult(set_name, res_dict)
-        # Save the plot of optimization history
-        # Plotter can re-create the plots from saved toml data, so there's no need to
-        # run the whole optimization just to change the images.
-        plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)
+    else:
+        for target in targets:
+            wl = target[0]
+            r_m = target[1]
+            t_m = target[2]
+            optimize_single_wl(wl, r_m, t_m, set_name)
 
-    logging.info("Finished optimizing.")
+    logging.info("Finished optimizing of all wavelengths. Saving final result")
 
     # Collect results test
     subreslist = T.collect_subresults(set_name)
     result_dict = {
+        C.result_key_wall_clock_elapsed_min: (time.perf_counter() - total_time_start) / 60.,
         C.result_key_wls: [subres[C.subres_key_wl] for subres in subreslist],
         C.result_key_refls_modeled: [subres[C.subres_key_reflectance_modeled] for subres in subreslist],
         C.result_key_refls_measured: [subres[C.subres_key_reflectance_measured] for subres in subreslist],
@@ -127,8 +113,13 @@ def printable_variable_list(as_array):
     return l
 
 
+def optimize_single_wl_threaded(args):
+    optimize_single_wl(args[0], args[1], args[2], args[3])
+
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
     """Optimize stuff"""
+
+    logging.info(f'Optimizing wavelength {wl} nm started.')
 
     start = time.perf_counter()
     history = []
@@ -141,7 +132,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         """Function to be minimized F = sum(d_i²)."""
 
         rps = RenderParametersForSingle()
-        rps.clear_rend_folder = True
+        rps.clear_rend_folder = False
         rps.clear_references = False
         rps.render_references = False
         rps.dry_run = False
@@ -166,9 +157,11 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         return dist + penalty
 
 
-    # Do this once to set render references and clear all old stuff
+    # Do this once to render references
     rps = RenderParametersForSingle()
     rps.render_references = True
+    rps.clear_rend_folder = False
+    rps.clear_references = False
     rps.dry_run = False
     rps.wl = wl
     rps.abs_dens = 0
@@ -187,5 +180,29 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
 
     res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', ftol=0.01, verbose=2, gtol=None, diff_step=0.01)
     elapsed = time.perf_counter() - start
-    print(res)
-    return history, elapsed
+
+    res_dict = {
+        C.subres_key_wl: wl,
+        C.subres_key_reflectance_measured: r_m,
+        C.subres_key_transmittance_measured: t_m,
+        C.subres_key_reflectance_modeled: history[-1][4],
+        C.subres_key_transmittance_modeled: history[-1][5],
+        C.subres_key_reflectance_error: math.fabs(history[-1][4] - r_m),
+        C.subres_key_transmittance_error: math.fabs(history[-1][5] - t_m),
+        C.subres_key_iterations: len(history) - 1,
+        C.subres_key_elapsed_time_s: elapsed,
+        C.subres_key_history_reflectance: [float(h[4]) for h in history],
+        C.subres_key_history_transmittance: [float(h[5]) for h in history],
+        C.subres_key_history_absorption_density: [float(h[0]) for h in history],
+        C.subres_key_history_scattering_density: [float(h[1]) for h in history],
+        C.subres_key_history_scattering_anisotropy: [float(h[2]) for h in history],
+        C.subres_key_history_mix_factor: [float(h[3]) for h in history],
+    }
+    # print(res_dict)
+    logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')
+
+    T.write_subresult(set_name, res_dict)
+    # Save the plot of optimization history
+    # Plotter can re-create the plots from saved toml data, so there's no need to
+    # run the whole optimization just to change the images.
+    plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)

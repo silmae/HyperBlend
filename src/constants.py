@@ -45,6 +45,7 @@ subres_key_history_scattering_anisotropy = 'history_scattering_anisotropy'
 subres_key_history_mix_factor = 'history_mix_factor'
 
 # final result toml keys
+result_key_wall_clock_elapsed_min = 'wall_clock_time_elapsed_min'
 result_key_wls = 'wls'
 result_key_refls_modeled = 'refls_modeled'
 result_key_refls_measured = 'refls_measured'
