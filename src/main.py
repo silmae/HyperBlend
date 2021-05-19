@@ -21,11 +21,11 @@ if __name__ == '__main__':
     FH.create_opt_folder_structure(test_set_name)
     wls1 = [
         (10, 0.10, 0.10),
-        (20, 0.20, 0.20),
-        (30, 0.30, 0.30),
-        (40, 0.40, 0.40),
-        (50, 0.30, 0.30),
-        (60, 0.20, 0.20),
+        (11, 0.12, 0.12),
+        (12, 0.15, 0.13),
+        (13, 0.17, 0.15),
+        (14, 0.14, 0.11),
+        (15, 0.16, 0.08),
     ]
     T.write_target(test_set_name, wls1)
     # print(T.read_target(test_set_name, None))
@@ -33,7 +33,9 @@ if __name__ == '__main__':
     # logging.basicConfig(level=logging.INFO)
     # r_m = 0.4
     # t_m = 0.4
-    optimization.run_optimization_in_batches(test_set_name, batch_n=1)
+    optimization.init(test_set_name)
+    optimization.run_optimization_in_batches(test_set_name, batch_n=3)
+    # print(FH.subresult_exists(test_set_name, 11.))
     #
     # r = DU.get_relative_refl_or_tran(C.imaging_type_refl, 0)
     # t = DU.get_relative_refl_or_tran(C.imaging_type_tran, 0)

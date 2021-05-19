@@ -83,16 +83,16 @@ def run_optimization_in_batches(set_name: str, batch_n=1):
             selector.append(i+j*step_size)
         wls = T.read_target(set_name)[selector]
         print(f"Batch {i}: \n{wls}")
-        # run_optimization(set_name)
+        run_optimization(set_name, wls)
     # do the last item for odd list
     if wl_n % batch_n != 0:
         selector = [wl_n-1]
         wls = T.read_target(set_name)[selector]
         print(f"Batch {i+1}: \n{wls}")
-        # run_optimization(set_name)
+        run_optimization(set_name, wls)
 
 
-def run_optimization(set_name: str, targets=None):
+def run_optimization(set_name: str, targets=None, use_threads=True):
     """Run optimization batch.
 
     Give targets as a batch. If none given, all target wls are run.
@@ -103,12 +103,12 @@ def run_optimization(set_name: str, targets=None):
 
     total_time_start = time.perf_counter()
 
-    use_threads = True
     if use_threads:
         param_list = [(a[0], a[1], a[2], set_name) for a in targets]
         with Pool() as pool:
             pool.map(optimize_single_wl_threaded, param_list)
-
+            # pool.close()
+            # pool.join()
     else:
         for target in targets:
             wl = target[0]
@@ -130,6 +130,14 @@ def run_optimization(set_name: str, targets=None):
         C.result_key_trans_measured: [subres[C.subres_key_transmittance_measured] for subres in subreslist],
         C.result_key_trans_error: [subres[C.subres_key_transmittance_error] for subres in subreslist],
     }
+    try:
+        previous_result = T.read_final_result(set_name) # throws OSError upon failure
+        this_batch_time = result_dict[C.result_key_wall_clock_elapsed_min]
+        previous_result = previous_result[C.result_key_wall_clock_elapsed_min]
+        result_dict[C.result_key_wall_clock_elapsed_min] = this_batch_time + previous_result
+    except OSError as e:
+        pass # this is ok for the first round
+
     T.write_final_result(set_name, result_dict)
     plotter.plot_final_result(set_name, save_thumbnail=True, dont_show=True)
 
@@ -141,10 +149,15 @@ def printable_variable_list(as_array):
 def optimize_single_wl_threaded(args):
     optimize_single_wl(args[0], args[1], args[2], args[3])
 
+
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
     """Optimize stuff"""
 
-    logging.info(f'Optimizing wavelength {wl} nm started.')
+    print(f'Optimizing wavelength {wl} nm started.', flush=True)
+
+    if FH.subresult_exists(set_name, wl):
+        print(f"Subresult for wl {wl:.2f} already exists. Skipping optimization.", flush=True)
+        return
 
     start = time.perf_counter()
     history = []
@@ -195,15 +208,26 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
     rps.mix_fac = 0
     B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
-    # initial guess
-    a = 1.0
-    b = 0.88
-    c = 0.2
-    d = 0.5
+    previous_wl = wl-1
+    if FH.subresult_exists(set_name, previous_wl):
+        adjacent_result = T.read_subresult(set_name, previous_wl)
+        a = adjacent_result[C.subres_key_history_absorption_density][-1]
+        b = adjacent_result[C.subres_key_history_scattering_density][-1]
+        c = adjacent_result[C.subres_key_history_scattering_anisotropy][-1]
+        d = adjacent_result[C.subres_key_history_mix_factor][-1]
+        print(f"Using result of previous wl ({previous_wl}) as a starting guess.", flush=True)
+    else:
+        a = 1.0
+        b = 0.88
+        c = 0.2
+        d = 0.5
+
     x_0 = [a,b,c,d]
+    print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
+
     history.append([*x_0, 0.0, 0.0])
 
-    res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', ftol=0.01, verbose=2, gtol=None, diff_step=0.01)
+    res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', ftol=0.01, xtol=0.001, verbose=2, gtol=None, diff_step=0.0001)
     elapsed = time.perf_counter() - start
 
     res_dict = {

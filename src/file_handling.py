@@ -62,8 +62,13 @@ def get_path_opt_subresult(set_name: str):
     return p
 
 
-# def subresult_exists(set_name: str, wl:float):
-    
+def subresult_exists(set_name: str, wl:float):
+    # FIXME this is the same that is used by tom_handler when creating the file. Collect to same place.
+    p = get_path_opt_subresult(set_name) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
+    if os.path.exists(p):
+        return True
+    else:
+        return False
 
 
 def target_exists(set_name: str) -> bool:
