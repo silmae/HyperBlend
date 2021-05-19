@@ -72,10 +72,35 @@ def init(set_name: str):
     FH.clear_rend_refs(set_name)
 
 
-def run_optimization(set_name: str):
-    """Run the whole thing."""
+def run_optimization_in_batches(set_name: str, batch_n=1):
 
-    targets = T.read_target(set_name, None)
+    wl_n = len(T.read_target(set_name))
+    batch_size = int(wl_n / batch_n)
+    step_size = int(wl_n/batch_size)
+    for i in range(batch_n):
+        selector = []
+        for j in range(batch_size):
+            selector.append(i+j*step_size)
+        wls = T.read_target(set_name)[selector]
+        print(f"Batch {i}: \n{wls}")
+        # run_optimization(set_name)
+    # do the last item for odd list
+    if wl_n % batch_n != 0:
+        selector = [wl_n-1]
+        wls = T.read_target(set_name)[selector]
+        print(f"Batch {i+1}: \n{wls}")
+        # run_optimization(set_name)
+
+
+def run_optimization(set_name: str, targets=None):
+    """Run optimization batch.
+
+    Give targets as a batch. If none given, all target wls are run.
+    """
+
+    if targets is None:
+        targets = T.read_target(set_name)
+
     total_time_start = time.perf_counter()
 
     use_threads = True

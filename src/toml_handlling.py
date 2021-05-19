@@ -67,7 +67,7 @@ def write_target(set_name:str, wls):
         toml.dump(res, file)
 
 
-def read_target(set_name: str, select_n=None):
+def read_target(set_name: str):
     """Read target values for optimization.
 
     Parameters
@@ -80,17 +80,11 @@ def read_target(set_name: str, select_n=None):
     Returns
     -------
         list
-            list of reflectances and transmittances per wavelength [[wl, r, t],...]
+            list of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
     """
 
     with open(FH.get_path_opt_target_file(set_name), 'r') as file:
         wls = toml.load(file)
         wls = wls['wlrt']
-
-    if select_n is None:
+        wls = np.array(wls)
         return wls
-    else:
-        max_idx = len(wls)
-        selector = np.linspace(0, max_idx, select_n)
-        selected = wls[selector]
-        return selected

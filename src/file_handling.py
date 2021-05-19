@@ -62,6 +62,10 @@ def get_path_opt_subresult(set_name: str):
     return p
 
 
+# def subresult_exists(set_name: str, wl:float):
+    
+
+
 def target_exists(set_name: str) -> bool:
     return os.path.exists(get_path_opt_set(set_name))
 
