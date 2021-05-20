@@ -8,6 +8,7 @@ rend*/*
 plot*/*
 *.blend1
 optimization/*
+measured_data/*
 
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
