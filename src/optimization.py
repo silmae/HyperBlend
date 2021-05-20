@@ -227,7 +227,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
 
     history.append([*x_0, 0.0, 0.0])
 
-    res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', ftol=0.01, xtol=0.001, verbose=2, gtol=None, diff_step=0.0001)
+    res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None, diff_step=0.01)
     elapsed = time.perf_counter() - start
 
     res_dict = {
