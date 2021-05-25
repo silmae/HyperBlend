@@ -20,21 +20,31 @@ raudus_t = [
 
 if __name__ == '__main__':
     logging.basicConfig(level='INFO')
-    raudus_wl = np.array(raudus_wl)
-    raudus_set = 'raudus_koivu'
-    FH.create_opt_folder_structure(raudus_set)
-    raudus_r = np.array(raudus_r).clip(0.,1.)
-    raudus_t = np.array(raudus_t).clip(0.,1.)
-    wl_data = np.zeros((3,len(raudus_wl)))
-    wl_data[0] = raudus_wl
-    wl_data[1] = raudus_r
-    wl_data[2] = raudus_t
-    wl_data = np.transpose(wl_data)
+    ########################
+    # First full succesful optimization
+    # raudus_wl = np.array(raudus_wl)
+    # raudus_set = 'raudus_koivu'
+    # FH.create_opt_folder_structure(raudus_set)
+    # raudus_r = np.array(raudus_r).clip(0.,1.)
+    # raudus_t = np.array(raudus_t).clip(0.,1.)
+    # wl_data = np.zeros((3,len(raudus_wl)))
+    # wl_data[0] = raudus_wl
+    # wl_data[1] = raudus_r
+    # wl_data[2] = raudus_t
+    # wl_data = np.transpose(wl_data)
     # T.write_target(raudus_set, wl_data)
     # optimization.init(raudus_set)
     # optimization.run_optimization_in_batches(raudus_set, batch_n=1)
     # optimization.make_final_result(raudus_set)
-    plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
+    # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
+    ######################
+    # Testing SHGO
+    set_name = 'koivu_anneal'
+    optimization.init(set_name)
+    optimization.run_optimization_in_batches(set_name, batch_n=400)
+    optimization.make_final_result(set_name)
+    plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
+
 
     # test_set_name = 'set_batched'
     # test_set_name = 'set_threaded'

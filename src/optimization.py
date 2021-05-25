@@ -118,7 +118,7 @@ def run_optimization(set_name: str, targets=None, use_threads=True):
 
     logging.info("Finished optimizing of all wavelengths. Saving final result")
     elapsed_min = (time.perf_counter() - total_time_start) / 60.
-    make_final_result(set_name, time=elapsed_min)
+    make_final_result(set_name, elapsed_min=elapsed_min)
 
 
 def make_final_result(set_name:str, elapsed_min=None):
@@ -240,7 +240,21 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
 
     history.append([*x_0, 0.0, 0.0])
 
-    res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None, diff_step=0.01)
+    opt_method = 'anneal'
+    print(f'optimizing with {opt_method}', flush=True)
+    if opt_method == 'least_squares':
+        res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None, diff_step=0.01)
+    elif opt_method == 'shgo':
+        shgo_bounds = [(b[0], b[1]) for b in zip(lb, ub)]
+        res = optimize.shgo(f, shgo_bounds, iters=10, n=2, sampling_method='sobol')
+        print(f'result: \n{res}', flush=True)
+    elif opt_method == 'anneal':
+        anneal_bounds = list(zip(lb, ub))
+        res = optimize.dual_annealing(f, anneal_bounds, seed=123, maxiter=50, maxfun=500, initial_temp=4000,
+                                      accept=-100, x0=x_0)
+        print(f'result: \n{res}', flush=True)
+    else:
+        raise Exception(f"Optimization method '{opt_method}' not recognized.")
     elapsed = time.perf_counter() - start
 
     res_dict = {
