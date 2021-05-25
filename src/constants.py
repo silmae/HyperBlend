@@ -53,4 +53,8 @@ result_key_refls_error = 'refls_error'
 result_key_trans_modeled = 'trans_modeled'
 result_key_trans_measured = 'trans_measured'
 result_key_trans_error = 'trans_error'
+result_key_absorption_density = 'absorption_density'
+result_key_scattering_density = 'scattering_density'
+result_key_scattering_anisotropy = 'scattering_anisotropy'
+result_key_mix_factor = 'mix_factor'
 

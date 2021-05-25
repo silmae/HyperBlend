@@ -32,8 +32,9 @@ if __name__ == '__main__':
     wl_data = np.transpose(wl_data)
     # T.write_target(raudus_set, wl_data)
     # optimization.init(raudus_set)
-    optimization.run_optimization_in_batches(raudus_set, batch_n=1)
-
+    # optimization.run_optimization_in_batches(raudus_set, batch_n=1)
+    # optimization.make_final_result(raudus_set)
+    plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
 
     # test_set_name = 'set_batched'
     # test_set_name = 'set_threaded'

@@ -38,18 +38,19 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
     axis_object.tick_params(axis='y', labelcolor=refl_color)
     # But use given x_values for plotting
     length = len(x_values)
+    marker = '.'
     if skip_first:
-        axis_object.plot(x_values[1:length], refl[1:length], label="Reflectance", color=refl_color)
+        axis_object.scatter(x_values[1:length], refl[1:length], label="Reflectance", color=refl_color, marker=marker)
     else:
-        axis_object.plot(x_values, refl, label="Reflectance", color=refl_color)
+        axis_object.scatter(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
 
     axt = axis_object.twinx()
     axt.set_ylabel('Transmittance', color=tran_color)
     axt.tick_params(axis='y', labelcolor=tran_color)
     if skip_first:
-        axt.plot(x_values[1:length], tran[1:length], label="Transmittance", color=tran_color)
+        axt.scatter(x_values[1:length], tran[1:length], label="Transmittance", color=tran_color, marker=marker)
     else:
-        axt.plot(x_values, tran, label="Transmittance", color=tran_color)
+        axt.scatter(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
 
     axis_object.set_ylim([0, 1])
     if invert_tran:
@@ -95,15 +96,31 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
     if not dont_show:
         plt.show()
 
+    # close the figure to avoid memory consumption warning when over 20 figs
+    plt.close(fig)
+
 
 def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
     result = T.read_final_result(set_name)
-    fig, ax = plt.subplots(figsize=figsize)
-    plot_refl_tran_to_axis(ax, result[C.result_key_refls_measured], result[C.result_key_trans_measured],
-                           result[C.result_key_wls], 'Wavelength [nm]', invert_tran=True, tran_color='black',
-                           refl_color='red')
-    plot_refl_tran_to_axis(ax, result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
-                           result[C.result_key_wls], 'Wavelength [nm]', invert_tran=True)
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
+    ax[0].set_title('Variable space')
+    ax[1].set_title('Target space')
+    x_data = result[C.result_key_wls]
+    marker = '.'
+    ax[0].scatter(x_data, result[C.result_key_absorption_density], label=C.result_key_absorption_density, marker=marker)
+    ax[0].scatter(x_data, result[C.result_key_scattering_density], label=C.result_key_scattering_density, marker=marker)
+    ax[0].scatter(x_data, result[C.result_key_scattering_anisotropy], label=C.result_key_scattering_anisotropy, marker=marker)
+    ax[0].scatter(x_data, result[C.result_key_mix_factor], label=C.result_key_mix_factor, marker=marker)
+    x_label = 'Wavelength [nm]'
+    ax[0].set_xlabel(x_label)
+    # ax[1].set_xlabel('Wavelength')
+    ax[0].legend()
+    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured],
+                           result[C.result_key_wls], x_label, invert_tran=True, tran_color='black',
+                           refl_color='red', skip_first=False)
+    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
+                           result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
         folder = FH.get_path_opt_result_plot(set_name)
         image_name = f"final_result_plot.png"

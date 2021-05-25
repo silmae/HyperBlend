@@ -117,29 +117,42 @@ def run_optimization(set_name: str, targets=None, use_threads=True):
             optimize_single_wl(wl, r_m, t_m, set_name)
 
     logging.info("Finished optimizing of all wavelengths. Saving final result")
+    elapsed_min = (time.perf_counter() - total_time_start) / 60.
+    make_final_result(set_name, time=elapsed_min)
+
+
+def make_final_result(set_name:str, elapsed_min=None):
 
     # Collect results test
     subreslist = T.collect_subresults(set_name)
-    result_dict = {
-        C.result_key_wall_clock_elapsed_min: (time.perf_counter() - total_time_start) / 60.,
-        C.result_key_wls: [subres[C.subres_key_wl] for subres in subreslist],
-        C.result_key_refls_modeled: [subres[C.subres_key_reflectance_modeled] for subres in subreslist],
-        C.result_key_refls_measured: [subres[C.subres_key_reflectance_measured] for subres in subreslist],
-        C.result_key_refls_error: [subres[C.subres_key_reflectance_error] for subres in subreslist],
-        C.result_key_trans_modeled: [subres[C.subres_key_transmittance_modeled] for subres in subreslist],
-        C.result_key_trans_measured: [subres[C.subres_key_transmittance_measured] for subres in subreslist],
-        C.result_key_trans_error: [subres[C.subres_key_transmittance_error] for subres in subreslist],
-    }
-    try:
-        previous_result = T.read_final_result(set_name) # throws OSError upon failure
-        this_batch_time = result_dict[C.result_key_wall_clock_elapsed_min]
-        previous_result = previous_result[C.result_key_wall_clock_elapsed_min]
-        result_dict[C.result_key_wall_clock_elapsed_min] = this_batch_time + previous_result
-    except OSError as e:
-        pass # this is ok for the first round
+    result_dict = {}
+
+    if elapsed_min is not None:
+        result_dict[C.result_key_wall_clock_elapsed_min] = elapsed_min
+        try:
+            previous_result = T.read_final_result(set_name)  # throws OSError upon failure
+            this_batch_time = result_dict[C.result_key_wall_clock_elapsed_min]
+            previous_result = previous_result[C.result_key_wall_clock_elapsed_min]
+            result_dict[C.result_key_wall_clock_elapsed_min] = this_batch_time + previous_result
+        except OSError as e:
+            pass  # this is ok for the first round
+
+    result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
+    result_dict[C.result_key_refls_modeled] = [subres[C.subres_key_reflectance_modeled] for subres in subreslist]
+    result_dict[C.result_key_refls_measured] = [subres[C.subres_key_reflectance_measured] for subres in subreslist]
+    result_dict[C.result_key_refls_error] = [subres[C.subres_key_reflectance_error] for subres in subreslist]
+    result_dict[C.result_key_trans_modeled] = [subres[C.subres_key_transmittance_modeled] for subres in subreslist]
+    result_dict[C.result_key_trans_measured] = [subres[C.subres_key_transmittance_measured] for subres in subreslist]
+    result_dict[C.result_key_trans_error] = [subres[C.subres_key_transmittance_error] for subres in subreslist]
+
+    result_dict[C.result_key_absorption_density] = [subres[C.subres_key_history_absorption_density][-1] for subres in subreslist]
+    result_dict[C.result_key_scattering_density] = [subres[C.subres_key_history_scattering_density][-1] for subres in subreslist]
+    result_dict[C.result_key_scattering_anisotropy] = [subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist]
+    result_dict[C.result_key_mix_factor] = [subres[C.subres_key_history_mix_factor][-1] for subres in subreslist]
 
     T.write_final_result(set_name, result_dict)
     plotter.plot_final_result(set_name, save_thumbnail=True, dont_show=True)
+
 
 def printable_variable_list(as_array):
     l = [f'{variable:.3f}' for variable in as_array]
