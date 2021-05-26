@@ -40,10 +40,14 @@ if __name__ == '__main__':
     ######################
     # Testing SHGO
     set_name = 'koivu_anneal'
-    optimization.init(set_name)
-    optimization.run_optimization_in_batches(set_name, batch_n=400)
-    optimization.make_final_result(set_name)
-    plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
+    optimization.init(set_name, clear_subresults=True)
+    t = T.read_target(set_name)
+    t = t[int(len(t)/2)]
+    optimization.optimize_single_wl(*t, set_name)
+    plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
+    # optimization.run_optimization_in_batches(set_name, batch_n=400)
+    # optimization.make_final_result(set_name)
+    # plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
 
 
     # test_set_name = 'set_batched'

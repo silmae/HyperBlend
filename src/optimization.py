@@ -64,12 +64,14 @@ bounds = (lb, ub)
 x_scale = [0.01, 0.01, 1, 1]
 
 
-def init(set_name: str):
+def init(set_name: str, clear_subresults: bool):
     """Create empty folders etc."""
 
     FH.create_opt_folder_structure(set_name)
     FH.clear_rend_leaf(set_name)
     FH.clear_rend_refs(set_name)
+    if clear_subresults:
+        FH.clear_folder(FH.get_path_opt_subresult(set_name))
 
 
 def run_optimization_in_batches(set_name: str, batch_n=1):
@@ -250,8 +252,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         print(f'result: \n{res}', flush=True)
     elif opt_method == 'anneal':
         anneal_bounds = list(zip(lb, ub))
-        res = optimize.dual_annealing(f, anneal_bounds, seed=123, maxiter=50, maxfun=500, initial_temp=4000,
-                                      accept=-100, x0=x_0)
+        res = optimize.dual_annealing(f, anneal_bounds, seed=123, maxiter=500, maxfun=1000, initial_temp=5000,
+                                      x0=x_0, restart_temp_ratio=0.9999, visit=2.1, accept=-9000)
         print(f'result: \n{res}', flush=True)
     else:
         raise Exception(f"Optimization method '{opt_method}' not recognized.")
