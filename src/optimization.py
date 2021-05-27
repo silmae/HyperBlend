@@ -45,6 +45,8 @@ import logging
 from multiprocessing import Pool
 
 import scipy.optimize as optimize
+from scipy.optimize import OptimizeResult
+import numpy as np
 
 
 from src import constants as C
@@ -55,13 +57,15 @@ from src import file_handling as FH
 from src import toml_handlling as T
 from src import plotter
 
+
 # Bounds
-lb = [0, 0, -0.5, 0]
+lb = [0.01, 0.01, -0.5, 0]
 ub = [10, 10, 0.5, 1]
 bounds = (lb, ub)
+density_scale = 100
 
 # Scale x
-x_scale = [0.01, 0.01, 1, 1]
+# x_scale = [0.01, 0.01, 1, 1]
 
 
 def init(set_name: str, clear_subresults: bool):
@@ -190,8 +194,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         rps.render_references = False
         rps.dry_run = False
         rps.wl = wl
-        rps.abs_dens = x[0] * 100
-        rps.scat_dens = x[1] * 100
+        rps.abs_dens = x[0] * density_scale
+        rps.scat_dens = x[1] * density_scale
         rps.scat_ai = x[2]
         rps.mix_fac = x[3]
         B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
@@ -200,7 +204,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         t = DU.get_relative_refl_or_tran(C.imaging_type_tran, rps.wl, base_path=FH.get_path_opt_working(set_name))
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
-        dist = distance(r, t)
+        dist = distance(r, t) * 1
         history.append([*x, r, t])
 
         penalty = 0
@@ -237,12 +241,15 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         c = 0.2
         d = 0.5
 
-    x_0 = [a,b,c,d]
+
+    # x_0 = [a,b,c,d]
+    x_0 =  [0.21553118, 2.28501613, 0.45281115, 0.50871691]
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
     history.append([*x_0, 0.0, 0.0])
+    seed = 123
 
-    opt_method = 'anneal'
+    opt_method = 'basin_hopping'
     print(f'optimizing with {opt_method}', flush=True)
     if opt_method == 'least_squares':
         res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None, diff_step=0.01)
@@ -252,9 +259,48 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         print(f'result: \n{res}', flush=True)
     elif opt_method == 'anneal':
         anneal_bounds = list(zip(lb, ub))
-        res = optimize.dual_annealing(f, anneal_bounds, seed=123, maxiter=500, maxfun=1000, initial_temp=5000,
+        res = optimize.dual_annealing(f, anneal_bounds, seed=seed, maxiter=500, maxfun=1000, initial_temp=5000,
                                       x0=x_0, restart_temp_ratio=0.9999, visit=2.1, accept=-9000)
         print(f'result: \n{res}', flush=True)
+    elif opt_method == 'basin_hopping':
+        class Stepper(object):
+
+            def __init__(self, stepsize=0.1):
+                self.stepsize = stepsize
+
+            def __call__(self, x):
+
+                for i in range(len(x)):
+                    bound_length = ub[i] - lb[i]
+                    s = bound_length * self.stepsize # max stepsize as percentage
+                    x[i] += np.random.uniform(-s, s)
+                    if x[i] > ub[i]:
+                        x[i] = ub[i]
+                    if x[i] < lb[i]:
+                        x[i] = lb[i]
+
+                return x
+        f_tol = 0.001
+        def callback(x, f, accepted):
+            print("####Callback message########")
+            print(x)
+            print(f)
+            print(accepted)
+            print("############################")
+            if f <= f_tol:
+                return True
+
+        def custom_local_minimizer(fun, x0, args=(), maxfev=None, stepsize=0.1, maxiter=100, callback=None, **options):
+            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='trf', verbose=2,
+                                         gtol=None, diff_step=0.01, max_nfev=150)
+            return res_lsq
+
+        custom_step = Stepper()
+        minimizer_options = None
+        minimizer_kwargs = {'bounds': bounds, 'options': minimizer_options, 'method': custom_local_minimizer}
+        res = optimize.basinhopping(f, x0=x_0, stepsize=1., niter=50, T=0.1, interval=5, niter_success=10, seed=seed,
+                                    take_step=custom_step, callback=callback, minimizer_kwargs=minimizer_kwargs)
+        print(f'basing hopping result: \n{res}', flush=True)
     else:
         raise Exception(f"Optimization method '{opt_method}' not recognized.")
     elapsed = time.perf_counter() - start

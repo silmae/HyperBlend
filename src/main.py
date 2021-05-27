@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
     ######################
     # Testing SHGO
-    set_name = 'koivu_anneal'
+    set_name = 'koivu_basin_hopping'
     optimization.init(set_name, clear_subresults=True)
     t = T.read_target(set_name)
     t = t[int(len(t)/2)]
