@@ -15,10 +15,10 @@ def create_opt_folder_structure(set_name: str):
         os.makedirs(get_path_opt_working(set_name))
     if not os.path.exists(get_path_rend_leaf(set_name)):
         os.makedirs(get_path_rend_leaf(set_name))
-    if not os.path.exists(get_path_rend_reference(C.imaging_type_refl, set_name)):
-        os.makedirs(get_path_rend_reference(C.imaging_type_refl, set_name))
-    if not os.path.exists(get_path_rend_reference(C.imaging_type_tran, set_name)):
-        os.makedirs(get_path_rend_reference(C.imaging_type_tran, set_name))
+    if not os.path.exists(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name))):
+        os.makedirs(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name)))
+    if not os.path.exists(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name))):
+        os.makedirs(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name)))
     if not os.path.exists(get_path_opt_result(set_name)):
         os.makedirs(get_path_opt_result(set_name))
     if not os.path.exists(get_path_opt_result_plot(set_name)):
@@ -97,7 +97,9 @@ def get_path_opt_target_file(set_name: str):
 
 
 def get_image_folder(target_type: str, imaging_type: str, base_path: str):
-    """Returns a path to correct folder according to given target and imaging type. """
+    """Returns a path to correct folder according to given target and imaging type.
+    Basepath should be the work folder.
+    """
 
     if target_type == C.target_type_leaf:
         return os.path.normpath(base_path + '/' + C.folder_rend)
