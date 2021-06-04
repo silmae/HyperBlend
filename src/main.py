@@ -40,7 +40,7 @@ if __name__ == '__main__':
     ######################
     # Testing SHGO
     set_name = 'koivu_basin_hopping'
-    optimization.init(set_name, clear_subresults=True)
+    optimization.init(set_name, clear_subresults=False)
     t = T.read_target(set_name)
     t = t[int(len(t)/2)]
     optimization.optimize_single_wl(*t, set_name)

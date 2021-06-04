@@ -7,7 +7,9 @@ target_type_ref = 'reference'
 postfix_image_format = '.tif'
 postfix_text_data_format = '.toml'
 
-blender_executable_path = 'C:/MyTemp/Software/Blender/blender.exe'
+# this should be changed
+blender_executable_path_win = 'C:/MyTemp/Software/Blender/blender.exe'
+blender_executable_path_linux = '/usr/bin/blender'
 
 path_project_root = '../'
 

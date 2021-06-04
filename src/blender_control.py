@@ -3,6 +3,8 @@ import os
 
 import subprocess
 import time
+from sys import platform
+import logging
 
 from src import constants as C
 from src.render_parameters import RenderParametersForSeries
@@ -31,9 +33,16 @@ def run_render_series(rp: RenderParametersForSeries):
 
 def run_render_single(rps: RenderParametersForSingle, rend_base: str):
 
+    bpath = C.blender_executable_path_win
+    if not platform.startswith('win'):
+        bpath = C.blender_executable_path_linux
+        logging.info("Running on linux machine.")
+    else:
+        logging.info("Running on windows machine.")
+
     # Basic arguments that will always be passed on:
     blender_args = [
-        C.blender_executable_path,
+        bpath,
         "--background",  # Run Blender in the background.
         os.path.normpath(C.path_project_root + "leafShader.blend"),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
