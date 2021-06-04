@@ -42,7 +42,7 @@ if __name__ == '__main__':
     set_name = 'koivu_basin_hopping'
     optimization.init(set_name, clear_subresults=False)
     t = T.read_target(set_name)
-    t = t[int(len(t)/2)]
+    t = t[int(len(t)/3)]
     optimization.optimize_single_wl(*t, set_name)
     plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
     # optimization.run_optimization_in_batches(set_name, batch_n=400)
