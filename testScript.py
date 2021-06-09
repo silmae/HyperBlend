@@ -1,8 +1,8 @@
 import bpy
 import os
-import numpy as np
 import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
+import logging
 
 # import settings as s
 
@@ -51,7 +51,7 @@ if "--" not in argv:
 else:
     argv = argv[argv.index("--") + 1:]  # get all args after "--"
 
-print(argv)
+# print(argv)
 
 key_base_path = 'base_path'
 key_dry_run = 'dry_run'
@@ -103,7 +103,7 @@ parser.add_argument("-mf", f"--{key_mix_fac}", dest=key_mix_fac, action="store",
                     help="Mixing factor of absorption and scattering (0 for full absorption, 1 for scatter).")
 
 args = parser.parse_args(argv)
-print(vars(args))
+# print(vars(args))
 # print(f"{s.key_wl}={vars(args)[s.key_wl]}")
 
 dry_run = vars(args)[key_dry_run]
@@ -119,6 +119,7 @@ mix_fac = vars(args)[key_mix_fac]
 base_path = vars(args)[key_base_path]
 
 render_path_leaf = base_path + '/rend'
+# logging.warning(f"Rendering to '{render_path_leaf}'.")
 render_path_refl_ref = base_path + '/rend_refl_ref'
 render_path_tran_ref = base_path + '/rend_tran_ref'
 
@@ -150,7 +151,7 @@ def toggle_cam():
     else:
         set_active_camera(cam_name_refl)
 
-    print(f'Active camera is {C.scene.camera.name}')
+    # print(f'Active camera is {C.scene.camera.name}')
 
 
 def render_leaf(imaging_type, wl, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=True):
@@ -191,20 +192,28 @@ def render_target(imaging_type, wl, target_name, render_path, dry_run=True):
     image_name = f'{imaging_type}_wl{wl:.2f}.tif'
     file_path = os.path.normpath(f'{render_path}/{image_name}')
     S.render.filepath = file_path
-    # Hide all targets from render and viewport
-    for obj in D.collections['Targets'].all_objects:
-        # print(f"Rendering target: {obj.name}")
-        obj.hide_render = True
-        obj.hide_viewport = True
+
+    # This loop will break in Blender 2.8
+    # for obj in D.collections['Targets'].all_objects:
+    #     logging.warning(f"Rendering target: {obj.name} ({obj.visible_get()})")
+        # obj.hide_render = True
+        # obj.hide_viewport = True
+    # Hide individually instead
+    D.collections['Targets'].all_objects['Leaf plate'].hide_render = True
+    D.collections['Targets'].all_objects['Reflectance white'].hide_render = True
+    D.collections['Targets'].all_objects['Transmittance white'].hide_render = True
+
+    # logging.warning(f"target_name: {target_name}")
     target_obj = D.objects[target_name]
+    # logging.warning("PIIIIIdsafIPd")
     target_obj.hide_render = False
     target_obj.hide_viewport = False
 
     if not dry_run:
-        print(f'Saving render to "{file_path}"')
+        # logging.warning(f'Saving render to "{file_path}"')
         O.render.render(write_still=True)
     else:
-        print(f'Faking to save render to "{file_path}"')
+        logging.warning(f'Faking to save render to "{file_path}"')
 
 # Calling script must handle the series
 # def render_image_series(wl_list, absorption_list, scatter_list, mix_factor_list, scattering_anisotropy_list,
