@@ -242,8 +242,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         d = 0.5
 
 
-    # x_0 = [a,b,c,d]
-    x_0 =  [0.21553118, 2.28501613, 0.45281115, 0.50871691]
+    x_0 = [a,b,c,d]
+    # x_0 =  [0.21553118, 2.28501613, 0.45281115, 0.50871691]
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
     history.append([*x_0, 0.0, 0.0])

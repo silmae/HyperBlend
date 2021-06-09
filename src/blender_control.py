@@ -36,9 +36,10 @@ def run_render_single(rps: RenderParametersForSingle, rend_base: str):
     bpath = C.blender_executable_path_win
     if not platform.startswith('win'):
         bpath = C.blender_executable_path_linux
-        logging.info("Running on linux machine.")
+        # logging.info("Running on linux machine.")
     else:
-        logging.info("Running on windows machine.")
+        pass
+        # logging.info("Running on windows machine.")
 
     # Basic arguments that will always be passed on:
     blender_args = [
@@ -47,7 +48,7 @@ def run_render_single(rps: RenderParametersForSingle, rend_base: str):
         os.path.normpath(C.path_project_root + "leafShader.blend"),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(C.path_project_root + "testScript.py"),  # Python script file to be run.
-        "--log-level", "0",
+        # "--log-level", "0",
 
     ]
 
@@ -67,7 +68,7 @@ def run_render_single(rps: RenderParametersForSingle, rend_base: str):
     scirpt_args += ['-ds', f'{rps.scat_dens}']  # scattering density
     scirpt_args += ['-ai', f'{rps.scat_ai}']  # scattering anisotropy
     scirpt_args += ['-mf', f'{rps.mix_fac}']  # mixing factor
-    # print(scirpt_args)
+    # logging.info(f"running Blender with '{blender_args + scirpt_args}'")
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args, stdout=stream)

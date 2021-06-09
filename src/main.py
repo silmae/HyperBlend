@@ -44,7 +44,7 @@ if __name__ == '__main__':
     t = T.read_target(set_name)
     t = t[int(len(t)/3)]
     optimization.optimize_single_wl(*t, set_name)
-    plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
+    # plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
     # optimization.run_optimization_in_batches(set_name, batch_n=400)
     # optimization.make_final_result(set_name)
     # plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
