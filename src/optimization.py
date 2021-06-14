@@ -143,6 +143,8 @@ def make_final_result(set_name:str, elapsed_min=None):
         except OSError as e:
             pass  # this is ok for the first round
 
+    result_dict[C.result_key_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])**2))
+    result_dict[C.result_key_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])**2))
     result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
     result_dict[C.result_key_refls_modeled] = [subres[C.subres_key_reflectance_modeled] for subres in subreslist]
     result_dict[C.result_key_refls_measured] = [subres[C.subres_key_reflectance_measured] for subres in subreslist]
