@@ -36,7 +36,7 @@ def collect_subresults(set_name: str):
 
 
 def write_subresult(set_name: str, res_dict: dict):
-    wl = res_dict['wl']
+    wl = res_dict[C.subres_key_wl]
     p = FH.get_path_opt_subresult(set_name) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
