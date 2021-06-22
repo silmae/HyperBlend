@@ -1,4 +1,6 @@
 import logging
+import os.path
+
 import numpy as np
 import sys
 import argparse  # to parse options for us and print a nice help message
@@ -23,6 +25,10 @@ raudus_t = [
 if __name__ == '__main__':
     logging.basicConfig(level='INFO')
     print(f"Running main with arguments {str(sys.argv)}")
+    wd = os.path.dirname(sys.argv[0])
+    print(f"Setting working directory to {wd}")
+    os.chdir(wd)
+    print(f"Working directory is now {os.getcwd()}")
     argv = sys.argv[1:len(sys.argv)] # skip filepath
     parser = argparse.ArgumentParser()
     key_opt_method = 'opt_method'
@@ -58,7 +64,7 @@ if __name__ == '__main__':
     # t = t[int(len(t)/4)]
     # optimization.optimize_single_wl(*t, set_name, opt_method)
     # plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
-    optimization.run_optimization_in_batches(set_name, batch_n=10)
+    # optimization.run_optimization_in_batches(set_name, batch_n=10)
     # optimization.make_final_result(set_name)
     # plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
 

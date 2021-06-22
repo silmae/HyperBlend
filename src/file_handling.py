@@ -7,6 +7,7 @@ from src import utils
 
 def create_opt_folder_structure(set_name: str):
     """Check that the folder structure for optimization is OK. Create if not."""
+    print(f"Creating folder structure to set path {os.path.abspath(get_path_opt_set(set_name))}")
     if not os.path.exists(get_path_opt_root()):
         os.makedirs(get_path_opt_root())
     if not os.path.exists(get_path_opt_target(set_name)):
@@ -28,37 +29,37 @@ def create_opt_folder_structure(set_name: str):
 
 
 def get_path_opt_root():
-    p = os.path.normpath(C.path_project_root + '/' + C.folder_opt)
+    p = os.path.abspath(C.path_project_root + '/' + C.folder_opt)
     return p
 
 
 def get_path_opt_set(set_name: str):
-    p = os.path.normpath(get_path_opt_root() + '/' + set_name)
+    p = os.path.abspath(get_path_opt_root() + '/' + set_name)
     return p
 
 
 def get_path_opt_target(set_name: str):
-    p = os.path.normpath(get_path_opt_set(set_name) + '/' + C.folder_opt_target)
+    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_target)
     return p
 
 
 def get_path_opt_working(set_name: str):
-    p = os.path.normpath(get_path_opt_set(set_name) + '/' + C.folder_opt_work)
+    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_work)
     return p
 
 
 def get_path_opt_result(set_name: str):
-    p = os.path.normpath(get_path_opt_set(set_name) + '/' + C.folder_opt_result)
+    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_result)
     return p
 
 
 def get_path_opt_result_plot(set_name: str):
-    p = os.path.normpath(get_path_opt_result(set_name) + '/' + C.folder_opt_plot)
+    p = os.path.abspath(get_path_opt_result(set_name) + '/' + C.folder_opt_plot)
     return p
 
 
 def get_path_opt_subresult(set_name: str):
-    p = os.path.normpath(get_path_opt_result(set_name) + '/' + C.folder_opt_subresult)
+    p = os.path.abspath(get_path_opt_result(set_name) + '/' + C.folder_opt_subresult)
     return p
 
 
@@ -77,7 +78,7 @@ def target_exists(set_name: str) -> bool:
 
 def get_path_rend_leaf(set_name: str):
     """Returns the path to leaf render folder."""
-    p = os.path.normpath(get_path_opt_working(set_name) + '/' + C.folder_rend)
+    p = os.path.abspath(get_path_opt_working(set_name) + '/' + C.folder_rend)
     return p
 
 
@@ -92,7 +93,7 @@ def clear_rend_refs(set_name: str):
 
 def get_path_opt_target_file(set_name: str):
     """Reference reflectance and transmittance."""
-    p = os.path.normpath(get_path_opt_target(set_name) + '/' + C.file_opt_target + C.postfix_text_data_format)
+    p = os.path.abspath(get_path_opt_target(set_name) + '/' + C.file_opt_target + C.postfix_text_data_format)
     return p
 
 
@@ -102,7 +103,7 @@ def get_image_folder(target_type: str, imaging_type: str, base_path: str):
     """
 
     if target_type == C.target_type_leaf:
-        return os.path.normpath(base_path + '/' + C.folder_rend)
+        return os.path.abspath(base_path + '/' + C.folder_rend)
     elif target_type == C.target_type_ref:
         return get_path_rend_reference(imaging_type, base_path)
     else:
@@ -113,9 +114,9 @@ def get_path_rend_reference(imaging_type: str, base_path: str) -> os.path:
     """Returns the path to reflectance or transmittance reference folder."""
 
     if imaging_type == C.imaging_type_refl:
-        p = os.path.normpath(base_path + '/' + C.folder_rend_ref_refl)
+        p = os.path.abspath(base_path + '/' + C.folder_rend_ref_refl)
     elif imaging_type == C.imaging_type_tran:
-        p = os.path.normpath(base_path + '/' + C.folder_rend_ref_tran)
+        p = os.path.abspath(base_path + '/' + C.folder_rend_ref_tran)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
     return p
@@ -131,9 +132,9 @@ def get_image_file_path(target_type: str, imaging_type: str, wl: float, base_pat
 
     image_name = generate_image_file_name(imaging_type, wl)
     if target_type == C.target_type_leaf:
-        return os.path.normpath(base_path + '/' + C.folder_rend + '/' + image_name)
+        return os.path.abspath(base_path + '/' + C.folder_rend + '/' + image_name)
     elif target_type == C.target_type_ref:
-        return os.path.normpath(get_path_rend_reference(imaging_type, base_path) + '/' + image_name)
+        return os.path.abspath(get_path_rend_reference(imaging_type, base_path) + '/' + image_name)
     else:
         raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
 
@@ -161,7 +162,7 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
 
 
 def clear_folder(path):
-    norm_path = os.path.normpath(path)
+    norm_path = os.path.abspath(path)
     if os.path.exists:
         list(map(os.unlink, (os.path.join(norm_path, f) for f in os.listdir(norm_path))))
     else:
