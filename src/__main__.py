@@ -23,7 +23,7 @@ raudus_t = [
 if __name__ == '__main__':
     logging.basicConfig(level='INFO')
     print(f"Running main with arguments {str(sys.argv)}")
-    argv = sys.argv[1:len(sys.argv)]
+    argv = sys.argv[1:len(sys.argv)] # skip filepath
     parser = argparse.ArgumentParser()
     key_opt_method = 'opt_method'
     parser.add_argument("-m", f"--{key_opt_method}", dest=key_opt_method, action="store",
@@ -52,13 +52,13 @@ if __name__ == '__main__':
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
     ######################
     # Testing SHGO
-    # set_name = 'koivu_basin_hopping'
-    # optimization.init(set_name, clear_subresults=False)
+    set_name = 'full_basin_hopping'
+    optimization.init(set_name, clear_subresults=True)
     # t = T.read_target(set_name)
-    # t = t[int(len(t)/3)]
-    # optimization.optimize_single_wl(*t, set_name)
+    # t = t[int(len(t)/4)]
+    # optimization.optimize_single_wl(*t, set_name, opt_method)
     # plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
-    # optimization.run_optimization_in_batches(set_name, batch_n=400)
+    optimization.run_optimization_in_batches(set_name, batch_n=10)
     # optimization.make_final_result(set_name)
     # plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
 

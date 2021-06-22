@@ -78,7 +78,7 @@ def init(set_name: str, clear_subresults: bool):
         FH.clear_folder(FH.get_path_opt_subresult(set_name))
 
 
-def run_optimization_in_batches(set_name: str, batch_n=1):
+def run_optimization_in_batches(set_name: str, batch_n=1, opt_method='basin_hopping'):
 
     wl_n = len(T.read_target(set_name))
     batch_size = int(wl_n / batch_n)
@@ -89,16 +89,16 @@ def run_optimization_in_batches(set_name: str, batch_n=1):
             selector.append(i+j*step_size)
         wls = T.read_target(set_name)[selector]
         print(f"Batch {i}: \n{wls}")
-        run_optimization(set_name, wls)
+        run_optimization(set_name, wls, opt_method=opt_method)
     # do the last item for odd list
     if wl_n % batch_n != 0:
         selector = [wl_n-1]
         wls = T.read_target(set_name)[selector]
         print(f"Batch {i+1}: \n{wls}")
-        run_optimization(set_name, wls)
+        run_optimization(set_name, wls, opt_method=opt_method)
 
 
-def run_optimization(set_name: str, targets=None, use_threads=True):
+def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='basin_hopping'):
     """Run optimization batch.
 
     Give targets as a batch. If none given, all target wls are run.
@@ -110,7 +110,7 @@ def run_optimization(set_name: str, targets=None, use_threads=True):
     total_time_start = time.perf_counter()
 
     if use_threads:
-        param_list = [(a[0], a[1], a[2], set_name) for a in targets]
+        param_list = [(a[0], a[1], a[2], set_name, opt_method) for a in targets]
         with Pool() as pool:
             pool.map(optimize_single_wl_threaded, param_list)
             # pool.close()
@@ -120,7 +120,7 @@ def run_optimization(set_name: str, targets=None, use_threads=True):
             wl = target[0]
             r_m = target[1]
             t_m = target[2]
-            optimize_single_wl(wl, r_m, t_m, set_name)
+            optimize_single_wl(wl, r_m, t_m, set_name, opt_method)
 
     logging.info("Finished optimizing of all wavelengths. Saving final result")
     elapsed_min = (time.perf_counter() - total_time_start) / 60.
@@ -168,10 +168,10 @@ def printable_variable_list(as_array):
 
 
 def optimize_single_wl_threaded(args):
-    optimize_single_wl(args[0], args[1], args[2], args[3])
+    optimize_single_wl(args[0], args[1], args[2], args[3], args[4])
 
 
-def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
+def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_method: str):
     """Optimize stuff"""
 
     print(f'Optimizing wavelength {wl} nm started.', flush=True)
@@ -251,7 +251,6 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
     history.append([*x_0, 0.0, 0.0])
     seed = 123
 
-    opt_method = 'basin_hopping'
     print(f'optimizing with {opt_method}', flush=True)
     if opt_method == 'least_squares':
         res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None, diff_step=0.01)
@@ -300,12 +299,16 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str):
         custom_step = Stepper()
         minimizer_options = None
         minimizer_kwargs = {'bounds': bounds, 'options': minimizer_options, 'method': custom_local_minimizer}
-        res = optimize.basinhopping(f, x0=x_0, stepsize=1., niter=50, T=0.1, interval=5, niter_success=10, seed=seed,
+        res = optimize.basinhopping(f, x0=x_0, stepsize=1., niter=20, T=0.1, interval=5, niter_success=10, seed=seed,
                                     take_step=custom_step, callback=callback, minimizer_kwargs=minimizer_kwargs)
         print(f'basing hopping result: \n{res}', flush=True)
     else:
         raise Exception(f"Optimization method '{opt_method}' not recognized.")
     elapsed = time.perf_counter() - start
+
+    # TODO temporary solution: add one extra element to the end of the history
+    # to place the best value at the end even if used optimizer does not converge
+    f(res.x)
 
     res_dict = {
         C.subres_key_wl: wl,
