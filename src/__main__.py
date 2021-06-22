@@ -1,5 +1,7 @@
 import logging
 import numpy as np
+import sys
+import argparse  # to parse options for us and print a nice help message
 
 from src import constants as C
 from src import data_utils as DU
@@ -20,6 +22,17 @@ raudus_t = [
 
 if __name__ == '__main__':
     logging.basicConfig(level='INFO')
+    print(f"Running main with arguments {str(sys.argv)}")
+    argv = sys.argv[1:len(sys.argv)]
+    parser = argparse.ArgumentParser()
+    key_opt_method = 'opt_method'
+    parser.add_argument("-m", f"--{key_opt_method}", dest=key_opt_method, action="store",
+                       type=str, required=False, help="Optimization method")
+
+    args = parser.parse_args(argv)
+    opt_method = vars(args)[key_opt_method]
+    # print(f"Running main with arguments {str(args)}")
+    print(f"Optimization method is '{opt_method}'")
     ########################
     # First full succesful optimization
     # raudus_wl = np.array(raudus_wl)
@@ -39,11 +52,11 @@ if __name__ == '__main__':
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
     ######################
     # Testing SHGO
-    set_name = 'koivu_basin_hopping'
-    optimization.init(set_name, clear_subresults=False)
-    t = T.read_target(set_name)
-    t = t[int(len(t)/3)]
-    optimization.optimize_single_wl(*t, set_name)
+    # set_name = 'koivu_basin_hopping'
+    # optimization.init(set_name, clear_subresults=False)
+    # t = T.read_target(set_name)
+    # t = t[int(len(t)/3)]
+    # optimization.optimize_single_wl(*t, set_name)
     # plotter.plot_subresult_opt_history(set_name, t[0],save_thumbnail=True)
     # optimization.run_optimization_in_batches(set_name, batch_n=400)
     # optimization.make_final_result(set_name)
