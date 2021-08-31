@@ -42,6 +42,7 @@ For parallel processing
 import math
 import time
 import logging
+import multiprocessing
 from multiprocessing import Pool
 
 import scipy.optimize as optimize
@@ -49,7 +50,7 @@ from scipy.optimize import OptimizeResult
 import numpy as np
 
 
-from src import constants as C
+from src import constants as C, utils
 from src.render_parameters import RenderParametersForSingle
 from src import blender_control as B
 from src import data_utils as DU
@@ -60,7 +61,7 @@ from src import plotter
 
 # Bounds
 lb = [0.01, 0.01, -0.5, 0]
-ub = [10, 10, 0.5, 1]
+ub = [1, 1, 0.5, 1]
 bounds = (lb, ub)
 density_scale = 100
 
@@ -79,6 +80,9 @@ def init(set_name: str, clear_subresults: bool):
 
 
 def run_optimization_in_batches(set_name: str, batch_n=1, opt_method='basin_hopping'):
+    """
+    Maybe better not to use this as it may cause some discontinuity in variable space.
+    """
 
     wl_n = len(T.read_target(set_name))
     batch_size = int(wl_n / batch_n)
@@ -98,10 +102,24 @@ def run_optimization_in_batches(set_name: str, batch_n=1, opt_method='basin_hopp
         run_optimization(set_name, wls, opt_method=opt_method)
 
 
-def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='basin_hopping'):
+def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='basin_hopping', resolution=1):
     """Run optimization batch.
 
-    Give targets as a batch. If none given, all target wls are run.
+    Give targets as a batch. If none given, all target wls are run, except those excluded by resolution.
+
+    :param set_name:
+        Set name.
+    :param targets:
+        List of target wavelengths. If none given, the whole target list
+        on disk is used. This is for running wavelengths in batches.
+        TODO May behave incorrectly if resolution (other than 1) is given.
+    :param use_threads:
+        If True use parallel computation.
+    :param opt_method:
+        Optimization method to be used. Check implementation for available options.
+    :param resolution:
+        Spectral resolution. Default value 1 will optimize all wavelengths. Value 10
+        would optimize every 10th spectral band.
     """
 
     if targets is None:
@@ -109,40 +127,57 @@ def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='
 
     total_time_start = time.perf_counter()
 
+    # Spectral resolution
+    if resolution is not 1:
+        targets = targets[0:-1:resolution]
+
+
     if use_threads:
-        param_list = [(a[0], a[1], a[2], set_name, opt_method) for a in targets]
-        with Pool() as pool:
-            pool.map(optimize_single_wl_threaded, param_list)
-            # pool.close()
-            # pool.join()
+
+        cpu_count = multiprocessing.cpu_count()
+        consecutive_targets_parallel = utils.chunks(targets, cpu_count)
+        for target in consecutive_targets_parallel:
+            param_list = [(a[0], a[1], a[2], set_name, opt_method, resolution*cpu_count) for a in target]
+            with Pool() as pool:
+                pool.map(optimize_single_wl_threaded, param_list)
+                # pool.close()
+                # pool.join()
     else:
         for target in targets:
             wl = target[0]
             r_m = target[1]
             t_m = target[2]
-            optimize_single_wl(wl, r_m, t_m, set_name, opt_method)
+            optimize_single_wl(wl, r_m, t_m, set_name, opt_method, resolution)
 
     logging.info("Finished optimizing of all wavelengths. Saving final result")
     elapsed_min = (time.perf_counter() - total_time_start) / 60.
-    make_final_result(set_name, elapsed_min=elapsed_min)
+    make_final_result(set_name, wall_clock_time_min=elapsed_min)
 
 
-def make_final_result(set_name:str, elapsed_min=None):
+def make_final_result(set_name:str, wall_clock_time_min=0.0):
+    """
+    :param set_name:
+        Set name.
+    :param wall_clock_time_min:
+        Wall clock time may differ from summed subresult time if computed in parallel.
+    """
 
-    # Collect results test
+    # Collect subresults
     subreslist = T.collect_subresults(set_name)
     result_dict = {}
 
-    if elapsed_min is not None:
-        result_dict[C.result_key_wall_clock_elapsed_min] = elapsed_min
-        try:
-            previous_result = T.read_final_result(set_name)  # throws OSError upon failure
-            this_batch_time = result_dict[C.result_key_wall_clock_elapsed_min]
-            previous_result = previous_result[C.result_key_wall_clock_elapsed_min]
-            result_dict[C.result_key_wall_clock_elapsed_min] = this_batch_time + previous_result
-        except OSError as e:
-            pass  # this is ok for the first round
+    # Set starting value to which earlier result time is added.
+    result_dict[C.result_key_wall_clock_elapsed_min] = wall_clock_time_min
 
+    try:
+        previous_result = T.read_final_result(set_name)  # throws OSError upon failure
+        this_result_time = result_dict[C.result_key_wall_clock_elapsed_min]
+        previous_result_time = previous_result[C.result_key_wall_clock_elapsed_min]
+        result_dict[C.result_key_wall_clock_elapsed_min] = this_result_time + previous_result_time
+    except OSError as e:
+        pass  # this is ok for the first round
+
+    result_dict[C.result_key_process_elapsed_min] = np.sum(subres[C.subres_key_elapsed_time_s] for subres in subreslist) / 60.0
     result_dict[C.result_key_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])**2))
     result_dict[C.result_key_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])**2))
     result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
@@ -168,10 +203,10 @@ def printable_variable_list(as_array):
 
 
 def optimize_single_wl_threaded(args):
-    optimize_single_wl(args[0], args[1], args[2], args[3], args[4])
+    optimize_single_wl(args[0], args[1], args[2], args[3], args[4], args[5])
 
 
-def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_method: str):
+def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_method: str, resolution:int):
     """Optimize stuff"""
 
     print(f'Optimizing wavelength {wl} nm started.', flush=True)
@@ -206,7 +241,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         t = DU.get_relative_refl_or_tran(C.imaging_type_tran, rps.wl, base_path=FH.get_path_opt_working(set_name))
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
-        dist = distance(r, t) * 1
+        dist = distance(r, t) * density_scale
         history.append([*x, r, t])
 
         penalty = 0
@@ -229,7 +264,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
     rps.mix_fac = 0
     B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
-    previous_wl = wl-1
+    previous_wl = wl-resolution
     if FH.subresult_exists(set_name, previous_wl):
         adjacent_result = T.read_subresult(set_name, previous_wl)
         a = adjacent_result[C.subres_key_history_absorption_density][-1]
@@ -238,8 +273,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         d = adjacent_result[C.subres_key_history_mix_factor][-1]
         print(f"Using result of previous wl ({previous_wl}) as a starting guess.", flush=True)
     else:
-        a = 1.0
-        b = 0.88
+        a = 0.5
+        b = 0.5
         c = 0.2
         d = 0.5
 
