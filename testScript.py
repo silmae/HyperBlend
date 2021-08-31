@@ -25,6 +25,27 @@ cam_name_tran = 'tran'
 imaging_type_refl = 'refl'
 imaging_type_tran = 'tran'
 
+## Test setting up rendering with GPU ###
+# from: https://blender.stackexchange.com/questions/104651/selecting-gpu-with-python-script
+# NOTE this is slower on small rends than CPU
+# bpy.data.scenes[0].render.engine = "CYCLES"
+#
+# # Set the device_type
+# bpy.context.preferences.addons[
+#     "cycles"
+# ].preferences.compute_device_type = "CUDA" # or "OPENCL"
+#
+# # Set the device and feature set
+# bpy.context.scene.cycles.device = "GPU"
+#
+# # get_devices() to let Blender detects GPU device
+# bpy.context.preferences.addons["cycles"].preferences.get_devices()
+# print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
+# for d in bpy.context.preferences.addons["cycles"].preferences.devices:
+#     d["use"] = 1 # Using all devices, include GPU and CPU
+#     print(d["name"], d["use"])
+
+#################################################
 
 class Range(object):
     def __init__(self, start, end):
