@@ -7,9 +7,11 @@ target_type_ref = 'reference'
 postfix_image_format = '.tif'
 postfix_text_data_format = '.toml'
 
-# this should be changed
-blender_executable_path_win = 'C:/MyTemp/Software/Blender/blender.exe'
-blender_executable_path_linux = '/usr/bin/blender'
+blender_executable_path_win = 'C:/MyTemp/Software/Blender/blender.exe' # change this to where your Blender is installed
+blender_executable_path_linux = '/snap/bin/blender' # default location on Ubuntu
+
+# location of the ramdisk
+ramdisk = '/media/ramdisk'
 
 path_project_root = '../'
 
@@ -48,6 +50,7 @@ subres_key_history_mix_factor = 'history_mix_factor'
 
 # final result toml keys
 result_key_wall_clock_elapsed_min = 'wall_clock_time_elapsed_min'
+result_key_process_elapsed_min = 'process_elapsed_min'
 result_key_r_RMSE = 'r_RMSE'
 result_key_t_RMSE = 't_RMSE'
 result_key_wls = 'wls'
