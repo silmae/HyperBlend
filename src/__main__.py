@@ -57,7 +57,7 @@ if __name__ == '__main__':
     """
     ########################
     # First full succesful optimization
-    raudus_set = 'raudus_koivu_serial_profile'
+    raudus_set = 'raudus_koivu_optspec'
     make_target(raudus_set)
     # optimization.init(raudus_set, clear_subresults=True)
     # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=10)
