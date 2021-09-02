@@ -9,6 +9,7 @@ plot*/*
 *.blend1
 optimization/*
 measured_data/*
+blender_test_run/*
 
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
