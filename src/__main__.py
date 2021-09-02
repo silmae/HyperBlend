@@ -12,6 +12,7 @@ from src import optimization
 from src import file_handling as FH
 from src import toml_handlling as T
 from src import plotter
+from src import presets
 
 def make_target(set_name):
     raudus_wl = [
@@ -56,12 +57,15 @@ if __name__ == '__main__':
     print(f"Optimization method is '{opt_method}'")
     """
     ########################
+    # Test series run
+    presets.preset_test_series()
+
     # First full succesful optimization
-    raudus_set = 'raudus_koivu_optspec'
-    make_target(raudus_set)
-    # optimization.init(raudus_set, clear_subresults=True)
+    # raudus_set = 'raudus_koivu_optspec'
+    # make_target(raudus_set)
+    # # optimization.init(raudus_set, clear_subresults=True)
     # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=10)
-    optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=10)
+    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=10)
     # optimization.make_final_result(set_name=raudus_set)
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
     ######################

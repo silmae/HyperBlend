@@ -1,9 +1,26 @@
 
+import os
 import numpy as np
 from src.render_parameters import RenderParametersForSeries
 from src import blender_control as B
 from src.plotter import Plotter
+from src import constants as C
 
+def preset_test_series():
+    test_base_path = os.path.abspath(C.path_project_root + '/' + 'blender_test_run')
+    rpfs = RenderParametersForSeries()
+    rpfs.clear_on_start = True
+    rpfs.clear_references = True
+    rpfs.render_references = True
+    rpfs.dry_run = False
+    n = 2000
+    rpfs.wl_list = np.linspace(400, 1500, num=n)
+    rpfs.abs_dens_list = np.linspace(1, 100, num=n)
+    rpfs.scat_dens_list = np.linspace(10, 88.9, num=n)
+    rpfs.scat_ai_list = np.linspace(0.25, 0.25, num=n)
+    rpfs.mix_fac_list = np.linspace(0.5, 0.5, num=n)
+
+    B.run_render_series(rpfs, rend_base=test_base_path)
 
 def preset_make_steady_scat():
     rpfs = RenderParametersForSeries()

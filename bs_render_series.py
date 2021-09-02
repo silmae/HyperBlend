@@ -104,56 +104,51 @@ parser.add_argument("-cr", f"--{key_clear_refs}", dest=key_clear_refs, action="s
 parser.add_argument("-r", f"--{key_render_references}", dest=key_render_references, action="store_true",
                     required=False, help="Render new references if illumination changes.")
 
-parser.add_argument("-wl", f"--{key_wavelength}", dest=key_wavelength, action="store", type=float,
-                    required=True,
-                    help="Number of wavelengths. Wavelength ('-wl') must be provided if '-s' switch is used.")
+parser.add_argument("-wl", f"--{key_wavelength}", dest=key_wavelength, action="store",
+                    required=True, type=str,
+                    help="List of wavelengths.")
 
-parser.add_argument("-da", f"--{key_abs_dens}", dest=key_abs_dens, action="store", type=float,
-                    choices=Range(0.0, 1000.0),
-                    required=True, help="Shader volume absorption node's density input.")
+parser.add_argument("-da", f"--{key_abs_dens}", dest=key_abs_dens, action="store", type=str,
+                    required=True, help="List of Shader volume absorption node's density input.")
 
-parser.add_argument("-ds", f"--{key_scat_dens}", dest=key_scat_dens, action="store", type=float,
-                    choices=Range(0.0, 1000.0),
-                    required=True, help="Shader volume scattering node's density input.")
+parser.add_argument("-ds", f"--{key_scat_dens}", dest=key_scat_dens, action="store",required=True, type=str,
+                    help="List of Shader volume scattering node's density input.")
 
-parser.add_argument("-ai", f"--{key_scat_ai}", dest=key_scat_ai, action="store", type=float, choices=Range(-1.0, 1.0),
-                    required=True, help="Shader volume scattering node's anisotropy input.")
+parser.add_argument("-ai", f"--{key_scat_ai}", dest=key_scat_ai, action="store", required=True,  type=str,
+                    help="List of Shader volume scattering node's anisotropy input.")
 
-parser.add_argument("-mf", f"--{key_mix_fac}", dest=key_mix_fac, action="store", type=float, choices=Range(0.0, 1.0),
-                    required=True,
-                    help="Mixing factor of absorption and scattering (0 for full absorption, 1 for scatter).")
+parser.add_argument("-mf", f"--{key_mix_fac}", dest=key_mix_fac, action="store",  required=True, type=str,
+                    help="List of Mixing factor of absorption and scattering (0 for full absorption, 1 for scatter).")
 
 args = parser.parse_args(argv)
-# print(vars(args))
-# print(f"{s.key_wl}={vars(args)[s.key_wl]}")
+print(vars(args))
 
+base_path = vars(args)[key_base_path]
 dry_run = vars(args)[key_dry_run]
-# single_wavelength = vars(args)[key_single_wavelength]
 clear = vars(args)[key_clear]
 clear_refs = vars(args)[key_clear_refs]
 render_references = vars(args)[key_render_references]
-wavelength = vars(args)[key_wavelength]
-abs_dens = vars(args)[key_abs_dens]
-scat_dens = vars(args)[key_scat_dens]
-scat_ai = vars(args)[key_scat_ai]
-mix_fac = vars(args)[key_mix_fac]
-base_path = vars(args)[key_base_path]
+wavelength_list = vars(args)[key_wavelength]
+abs_dens_list = vars(args)[key_abs_dens]
+scat_dens_list = vars(args)[key_scat_dens]
+scat_ai_list = vars(args)[key_scat_ai]
+mix_fac_list = vars(args)[key_mix_fac]
+wavelength_list = [float(f) for f in (wavelength_list.lstrip('[').rstrip(']')).split(', ')]
+abs_dens_list = [float(f) for f in (abs_dens_list.lstrip('[').rstrip(']')).split(', ')]
+scat_dens_list = [float(f) for f in (scat_dens_list.lstrip('[').rstrip(']')).split(', ')]
+scat_ai_list = [float(f) for f in (scat_ai_list.lstrip('[').rstrip(']')).split(', ')]
+mix_fac_list = [float(f) for f in (mix_fac_list.lstrip('[').rstrip(']')).split(', ')]
+
+if len(wavelength_list) != len(abs_dens_list) or \
+    len(wavelength_list) != len(scat_dens_list) or \
+    len(wavelength_list) != len(scat_ai_list) or \
+    len(wavelength_list) != len(mix_fac_list):
+    raise ValueError(f'One or more of the parameter lists length do not match the number of wavelengths.')
 
 render_path_leaf = base_path + '/rend'
 # logging.warning(f"Rendering to '{render_path_leaf}'.")
 render_path_refl_ref = base_path + '/rend_refl_ref'
 render_path_tran_ref = base_path + '/rend_tran_ref'
-
-# if single_wavelength and not wavelength:
-#     raise Exception(f"Wavelength must be provided if '-s' switch is used.")
-# if single_wavelength and abs_dens is None:
-#     raise Exception(f"Absorption density must be provided if '-s' switch is used.")
-# if single_wavelength and scat_dens is None:
-#     raise Exception(f"Scattering density must be provided if '-s' switch is used.")
-# if single_wavelength and scat_ai is None:
-#     raise Exception(f"Scattering anisotropy must be provided if '-s' switch is used.")
-# if single_wavelength and mix_fac is None:
-#     raise Exception(f"Mixing factor must be provided if '-s' switch is used.")
 
 
 def set_active_camera(cam_name):
@@ -260,11 +255,11 @@ def make_folders():
     """Create default folder if not exist."""
 
     if not os.path.exists(os.path.normpath(render_path_leaf)):
-        os.mkdir(os.path.normpath(render_path_leaf))
+        os.makedirs(os.path.normpath(render_path_leaf))
     if not os.path.exists(os.path.normpath(render_path_refl_ref)):
-        os.mkdir(os.path.normpath(render_path_refl_ref))
+        os.makedirs(os.path.normpath(render_path_refl_ref))
     if not os.path.exists(os.path.normpath(render_path_tran_ref)):
-        os.mkdir(os.path.normpath(render_path_tran_ref))
+        os.makedirs(os.path.normpath(render_path_tran_ref))
 
 
 def clear_folders(clear_reference=False):
@@ -289,21 +284,41 @@ make_folders()
 if clear and not dry_run:
     clear_folders(clear_reference=clear_refs)
 
-render_leaf(imaging_type_refl, wavelength, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=dry_run)
-render_leaf(imaging_type_tran, wavelength, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=dry_run)
+for i, wl in enumerate(wavelength_list):
+    render_leaf(imaging_type_refl, wl, abs_dens_list[i], scat_dens_list[i], scat_ai_list[i], mix_fac_list[i], dry_run=dry_run)
+    render_leaf(imaging_type_tran, wl, abs_dens_list[i], scat_dens_list[i], scat_ai_list[i], mix_fac_list[i], dry_run=dry_run)
 
-if render_references:
-    render_reference(imaging_type_refl, wavelength, dry_run=dry_run)
-    render_reference(imaging_type_tran, wavelength, dry_run=dry_run)
+    if render_references:
+        render_reference(imaging_type_refl, wl, dry_run=dry_run)
+        render_reference(imaging_type_tran, wl, dry_run=dry_run)
 
-    # Do not use this! It should be updated later to make the final renders
-    # after parameter optimization.
-    # n = 5
-    # wl_list = np.linspace(400, 1500, num=n)
-    # absorption_list = np.linspace(100, 100, num=n)
-    # scatter_list = np.linspace(77, 77, num=n)
-    # mix_factor_list = np.linspace(1.0, 0.0, num=n)
-    # scattering_anisotropy_list = np.linspace(0.0, 0.5, num=n)
-    #
-    # render_image_series(wl_list, absorption_list, scatter_list, mix_factor_list, scattering_anisotropy_list,
-    #                     do_reference=render_references, dry_run=dry_run)
+########### "TEST" ##################
+
+# script_path = os.path.dirname(bpy.context.space_data.text.filepath)
+# test_run_base = os.path.abspath(script_path + '/' + 'blender_test_runs')
+# rend_path_test = os.path.abspath(test_run_base + './rend')
+# rend_path_ref_refl_test = os.path.abspath(test_run_base + './rend_ref_refl')
+# rend_path_ref_tran_test = os.path.abspath(test_run_base + './rend_ref_tran')
+# print(rend_path_test)
+# print(rend_path_ref_refl_test)
+# print(rend_path_ref_tran_test)
+#
+# wls = [100, 200]
+# abss = [20, 50]
+# scat = [30, 15]
+# scai = [0.2, 0.25]
+# mfs = [0.4, 0.3]
+# dry_run = False
+# clear_refs = True
+# render_references = True
+#
+# # run with test data
+# clear_folders(clear_reference=clear_refs)
+#
+# for i, wl in enumerate(wls):
+#     render_leaf(imaging_type_refl, wl, abss[i], scat[i], scai[i], mfs[i], dry_run=dry_run)
+#     render_leaf(imaging_type_tran, wl, abss[i], scat[i], scai[i], mfs[i], dry_run=dry_run)
+#
+#     if render_references:
+#         render_reference(imaging_type_refl, wl, dry_run=dry_run)
+#         render_reference(imaging_type_tran, wl, dry_run=dry_run)
