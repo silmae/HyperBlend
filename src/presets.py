@@ -7,7 +7,7 @@ from src.plotter import Plotter
 from src import constants as C
 
 def preset_test_series():
-    test_base_path = os.path.abspath(C.path_project_root + '/' + 'blender_test_run')
+    test_base_path = os.path.abspath(C.ramdisk + '/' + 'blender_test_run')
     rpfs = RenderParametersForSeries()
     rpfs.clear_on_start = True
     rpfs.clear_references = True
