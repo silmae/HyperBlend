@@ -52,6 +52,7 @@ import numpy as np
 
 from src import constants as C, utils
 from src.render_parameters import RenderParametersForSingle
+from src.render_parameters import RenderParametersForSeries
 from src import blender_control as B
 from src import data_utils as DU
 from src import file_handling as FH
@@ -102,7 +103,8 @@ def run_optimization_in_batches(set_name: str, batch_n=1, opt_method='basin_hopp
         run_optimization(set_name, wls, opt_method=opt_method)
 
 
-def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='basin_hopping', resolution=1):
+def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='basin_hopping', resolution=1,
+                     bandwise=False):
     """Run optimization batch.
 
     Give targets as a batch. If none given, all target wls are run, except those excluded by resolution.
@@ -122,84 +124,107 @@ def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='
         would optimize every 10th spectral band.
     """
 
+    total_time_start = time.perf_counter()
+
     if targets is None:
         targets = T.read_target(set_name)
-
-    total_time_start = time.perf_counter()
 
     # Spectral resolution
     if resolution is not 1:
         targets = targets[0:-1:resolution]
 
-
-    if use_threads:
-
-        cpu_count = multiprocessing.cpu_count()
-        consecutive_targets_parallel = utils.chunks(targets, cpu_count)
-        for target in consecutive_targets_parallel:
-            param_list = [(a[0], a[1], a[2], set_name, opt_method, resolution*cpu_count) for a in target]
-            with Pool() as pool:
-                pool.map(optimize_single_wl_threaded, param_list)
-                # pool.close()
-                # pool.join()
+    if not bandwise:
+        optimize_spectrawise(targets=targets, set_name=set_name, opt_method=opt_method)
     else:
-        for target in targets:
-            wl = target[0]
-            r_m = target[1]
-            t_m = target[2]
-            optimize_single_wl(wl, r_m, t_m, set_name, opt_method, resolution)
+        if use_threads:
+            cpu_count = multiprocessing.cpu_count()
+            consecutive_targets_parallel = utils.chunks(targets, cpu_count)
+            for target in consecutive_targets_parallel:
+                param_list = [(a[0], a[1], a[2], set_name, opt_method, resolution*cpu_count) for a in target]
+                with Pool() as pool:
+                    pool.map(optimize_single_wl_threaded, param_list)
+        else:
+            for target in targets:
+                wl = target[0]
+                r_m = target[1]
+                t_m = target[2]
+                optimize_single_wl(wl, r_m, t_m, set_name, opt_method, resolution)
 
     logging.info("Finished optimizing of all wavelengths. Saving final result")
     elapsed_min = (time.perf_counter() - total_time_start) / 60.
     make_final_result(set_name, wall_clock_time_min=elapsed_min)
 
 
-def make_final_result(set_name:str, wall_clock_time_min=0.0):
-    """
-    :param set_name:
-        Set name.
-    :param wall_clock_time_min:
-        Wall clock time may differ from summed subresult time if computed in parallel.
-    """
+def optimize_spectrawise(targets, set_name: str, opt_method: str):
+    print(f"Fake spectrawise optimization")
+    print(f"target shape {targets.shape}")
+    wl_list = targets[:, 0]
+    rm_list = targets[:, 1]
+    tm_list = targets[:, 2]
+    print(f"wl_list shape {wl_list.shape}")
+    print(f"rm_list shape {rm_list.shape}")
+    print(f"tm_list shape {tm_list.shape}")
 
-    # Collect subresults
-    subreslist = T.collect_subresults(set_name)
-    result_dict = {}
+    n = len(wl_list)
 
-    # Set starting value to which earlier result time is added.
-    result_dict[C.result_key_wall_clock_elapsed_min] = wall_clock_time_min
+    def RMSE(a,b):
+        diff = a-b
+        return np.sqrt(np.mean(diff*diff))
 
-    try:
-        previous_result = T.read_final_result(set_name)  # throws OSError upon failure
-        this_result_time = result_dict[C.result_key_wall_clock_elapsed_min]
-        previous_result_time = previous_result[C.result_key_wall_clock_elapsed_min]
-        result_dict[C.result_key_wall_clock_elapsed_min] = this_result_time + previous_result_time
-    except OSError as e:
-        pass  # this is ok for the first round
+    def SAM(a,b):
+        return np.arccos(a.dot(b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
-    result_dict[C.result_key_process_elapsed_min] = np.sum(subres[C.subres_key_elapsed_time_s] for subres in subreslist) / 60.0
-    result_dict[C.result_key_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])**2))
-    result_dict[C.result_key_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])**2))
-    result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
-    result_dict[C.result_key_refls_modeled] = [subres[C.subres_key_reflectance_modeled] for subres in subreslist]
-    result_dict[C.result_key_refls_measured] = [subres[C.subres_key_reflectance_measured] for subres in subreslist]
-    result_dict[C.result_key_refls_error] = [subres[C.subres_key_reflectance_error] for subres in subreslist]
-    result_dict[C.result_key_trans_modeled] = [subres[C.subres_key_transmittance_modeled] for subres in subreslist]
-    result_dict[C.result_key_trans_measured] = [subres[C.subres_key_transmittance_measured] for subres in subreslist]
-    result_dict[C.result_key_trans_error] = [subres[C.subres_key_transmittance_error] for subres in subreslist]
+    def distance_spectral(r_list, t_list):
+        rmse_r = RMSE(r_list, rm_list)
+        rmse_t = RMSE(t_list, tm_list)
+        rmse = rmse_r + rmse_t
+        sam_r = SAM(r_list, rm_list)
+        sam_t = SAM(t_list, tm_list)
+        sam = sam_r + sam_t
+        return rmse + sam
 
-    result_dict[C.result_key_absorption_density] = [subres[C.subres_key_history_absorption_density][-1] for subres in subreslist]
-    result_dict[C.result_key_scattering_density] = [subres[C.subres_key_history_scattering_density][-1] for subres in subreslist]
-    result_dict[C.result_key_scattering_anisotropy] = [subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist]
-    result_dict[C.result_key_mix_factor] = [subres[C.subres_key_history_mix_factor][-1] for subres in subreslist]
+    def render_references():
+        rpfs = RenderParametersForSeries()
+        rpfs.clear_on_start = True
+        rpfs.clear_references = True
+        rpfs.render_references = True
+        rpfs.dry_run = False
+        rpfs.wl_list = wl_list
+        rpfs.abs_dens_list = np.ones_like(wl_list)
+        rpfs.scat_dens_list = np.ones_like(wl_list)
+        rpfs.scat_ai_list = np.zeros_like(wl_list)
+        rpfs.mix_fac_list = np.ones_like(wl_list)
+        B.run_render_series(rpfs, rend_base=FH.get_path_opt_working(set_name))
 
-    T.write_final_result(set_name, result_dict)
-    plotter.plot_final_result(set_name, save_thumbnail=True, dont_show=True)
+    def f(x):
+        rpfs = RenderParametersForSeries()
+        rpfs.clear_on_start = True
+        rpfs.clear_references = False
+        rpfs.render_references = False
+        rpfs.dry_run = False
+        rpfs.wl_list = wl_list
+        rpfs.abs_dens_list = x[0:n] * density_scale
+        rpfs.scat_dens_list = x[n:2*n] * density_scale
+        rpfs.scat_ai_list = x[2*n:3*n]
+        rpfs.mix_fac_list = x[3*n:4*n]
+        B.run_render_series(rpfs, rend_base=FH.get_path_opt_working(set_name))
+        r_list = DU.get_relative_refl_or_tran_series(C.imaging_type_refl, rpfs.wl_list, base_path=FH.get_path_opt_working(set_name))
+        t_list = DU.get_relative_refl_or_tran_series(C.imaging_type_tran, rpfs.wl_list, base_path=FH.get_path_opt_working(set_name))
+        return distance_spectral(r_list, t_list)
+
+    render_references()
+    x1 = np.ones_like(wl_list) * 0.5
+    x2 = np.ones_like(wl_list) * 0.5
+    x3 = np.ones_like(wl_list) * 0.2
+    x4 = np.ones_like(wl_list) * 0.5
+    X_0 = np.array([item for sublist in [x1,x2,x3,x4] for item in sublist])
+    # dist = f(X)
+    # print(dist)
+
+    res = optimize.least_squares(f, X_0, method='trf', verbose=2, gtol=None, diff_step=0.01)
+    print(res)
 
 
-def printable_variable_list(as_array):
-    l = [f'{variable:.3f}' for variable in as_array]
-    return l
 
 
 def optimize_single_wl_threaded(args):
@@ -219,7 +244,9 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
     history = []
 
     def distance(r, t):
-        dist = math.sqrt((r - r_m) * (r - r_m) + (t - t_m) * (t - t_m))
+        r_diff = (r - r_m)
+        t_diff = (t - t_m)
+        dist = math.sqrt(r_diff * r_diff + t_diff * t_diff)
         return dist
 
     def f(x):
@@ -370,3 +397,51 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
     plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)
+
+
+def make_final_result(set_name:str, wall_clock_time_min=0.0):
+    """
+    :param set_name:
+        Set name.
+    :param wall_clock_time_min:
+        Wall clock time may differ from summed subresult time if computed in parallel.
+    """
+
+    # Collect subresults
+    subreslist = T.collect_subresults(set_name)
+    result_dict = {}
+
+    # Set starting value to which earlier result time is added.
+    result_dict[C.result_key_wall_clock_elapsed_min] = wall_clock_time_min
+
+    try:
+        previous_result = T.read_final_result(set_name)  # throws OSError upon failure
+        this_result_time = result_dict[C.result_key_wall_clock_elapsed_min]
+        previous_result_time = previous_result[C.result_key_wall_clock_elapsed_min]
+        result_dict[C.result_key_wall_clock_elapsed_min] = this_result_time + previous_result_time
+    except OSError as e:
+        pass  # this is ok for the first round
+
+    result_dict[C.result_key_process_elapsed_min] = np.sum(subres[C.subres_key_elapsed_time_s] for subres in subreslist) / 60.0
+    result_dict[C.result_key_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])**2))
+    result_dict[C.result_key_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])**2))
+    result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
+    result_dict[C.result_key_refls_modeled] = [subres[C.subres_key_reflectance_modeled] for subres in subreslist]
+    result_dict[C.result_key_refls_measured] = [subres[C.subres_key_reflectance_measured] for subres in subreslist]
+    result_dict[C.result_key_refls_error] = [subres[C.subres_key_reflectance_error] for subres in subreslist]
+    result_dict[C.result_key_trans_modeled] = [subres[C.subres_key_transmittance_modeled] for subres in subreslist]
+    result_dict[C.result_key_trans_measured] = [subres[C.subres_key_transmittance_measured] for subres in subreslist]
+    result_dict[C.result_key_trans_error] = [subres[C.subres_key_transmittance_error] for subres in subreslist]
+
+    result_dict[C.result_key_absorption_density] = [subres[C.subres_key_history_absorption_density][-1] for subres in subreslist]
+    result_dict[C.result_key_scattering_density] = [subres[C.subres_key_history_scattering_density][-1] for subres in subreslist]
+    result_dict[C.result_key_scattering_anisotropy] = [subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist]
+    result_dict[C.result_key_mix_factor] = [subres[C.subres_key_history_mix_factor][-1] for subres in subreslist]
+
+    T.write_final_result(set_name, result_dict)
+    plotter.plot_final_result(set_name, save_thumbnail=True, dont_show=True)
+
+
+def printable_variable_list(as_array):
+    l = [f'{variable:.3f}' for variable in as_array]
+    return l
