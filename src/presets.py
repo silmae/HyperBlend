@@ -14,7 +14,7 @@ rpfs_time_test.clear_on_start = True
 rpfs_time_test.clear_references = True
 rpfs_time_test.render_references = True
 rpfs_time_test.dry_run = False
-n_time_test = 50
+n_time_test = 500
 rpfs_time_test.wl_list = np.linspace(400, 1500, num=n_time_test)
 rpfs_time_test.abs_dens_list = np.linspace(1, 100, num=n_time_test)
 rpfs_time_test.scat_dens_list = np.linspace(10, 88.9, num=n_time_test)
