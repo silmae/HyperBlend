@@ -58,7 +58,8 @@ if __name__ == '__main__':
     """
     ########################
     # Test series run
-    presets.preset_test_series()
+    presets.preset_test_time_spectrawise()
+    # presets.preset_test_time_bandwise()
 
     # First full succesful optimization
     # raudus_set = 'raudus_koivu_optspec'

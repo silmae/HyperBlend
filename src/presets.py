@@ -1,26 +1,56 @@
 
 import os
+import time
 import numpy as np
 from src.render_parameters import RenderParametersForSeries
+from src.render_parameters import RenderParametersForSingle
 from src import blender_control as B
 from src.plotter import Plotter
 from src import constants as C
 
-def preset_test_series():
-    test_base_path = os.path.abspath(C.ramdisk + '/' + 'blender_test_run')
-    rpfs = RenderParametersForSeries()
-    rpfs.clear_on_start = True
-    rpfs.clear_references = True
-    rpfs.render_references = True
-    rpfs.dry_run = False
-    n = 2000
-    rpfs.wl_list = np.linspace(400, 1500, num=n)
-    rpfs.abs_dens_list = np.linspace(1, 100, num=n)
-    rpfs.scat_dens_list = np.linspace(10, 88.9, num=n)
-    rpfs.scat_ai_list = np.linspace(0.25, 0.25, num=n)
-    rpfs.mix_fac_list = np.linspace(0.5, 0.5, num=n)
 
-    B.run_render_series(rpfs, rend_base=test_base_path)
+rpfs_time_test = RenderParametersForSeries()
+rpfs_time_test.clear_on_start = True
+rpfs_time_test.clear_references = True
+rpfs_time_test.render_references = True
+rpfs_time_test.dry_run = False
+n_time_test = 50
+rpfs_time_test.wl_list = np.linspace(400, 1500, num=n_time_test)
+rpfs_time_test.abs_dens_list = np.linspace(1, 100, num=n_time_test)
+rpfs_time_test.scat_dens_list = np.linspace(10, 88.9, num=n_time_test)
+rpfs_time_test.scat_ai_list = np.linspace(0.25, 0.25, num=n_time_test)
+rpfs_time_test.mix_fac_list = np.linspace(0.5, 0.5, num=n_time_test)
+
+def preset_test_time_bandwise():
+    print(f"Running bandwise test for n={n_time_test}...")
+    test_base_path = os.path.abspath(C.path_project_root + '/' + 'blender_test_run')
+    start = time.perf_counter()
+    for i,wl in enumerate(rpfs_time_test.wl_list):
+        rps = RenderParametersForSingle()
+        if i == 0:
+            rps.clear_rend_folder = True
+            rps.clear_references = True
+        else:
+            rps.clear_rend_folder = False
+            rps.clear_references = False
+        rps.render_references = rpfs_time_test.render_references
+        rps.dry_run = rpfs_time_test.dry_run
+        rps.wl = wl
+        rps.abs_dens = rpfs_time_test.abs_dens_list[i]
+        rps.scat_dens = rpfs_time_test.scat_dens_list[i]
+        rps.scat_ai = rpfs_time_test.scat_ai_list[i]
+        rps.mix_fac = rpfs_time_test.mix_fac_list[i]
+        B.run_render_single(rps, rend_base=test_base_path)
+    seconds = time.perf_counter() - start
+    print(f"Test loop time  {seconds:.1f} seconds")
+
+def preset_test_time_spectrawise():
+    print(f"Running spectrawise test for n={n_time_test}...")
+    start = time.perf_counter()
+    test_base_path = os.path.abspath(C.path_project_root + '/' + 'blender_test_run')
+    B.run_render_series(rpfs_time_test, rend_base=test_base_path)
+    seconds = time.perf_counter() - start
+    print(f"Test loop time  {seconds:.1f} seconds")
 
 def preset_make_steady_scat():
     rpfs = RenderParametersForSeries()
