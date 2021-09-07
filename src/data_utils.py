@@ -7,6 +7,15 @@ from src import file_handling as FH
 from src import constants as C
 
 
+def get_relative_refl_or_tran_series(imaging_type: str, wl_list, base_path: str):
+    res = []
+    for _,wl in enumerate(wl_list):
+        val = np.mean(plt.imread(FH.search_by_wl(C.target_type_leaf, imaging_type, wl, base_path)))
+        ref = np.mean(plt.imread(FH.search_by_wl(C.target_type_ref, imaging_type, wl, base_path)))
+        res.append(val / ref)
+    return np.array(res)
+
+
 def get_relative_refl_or_tran(imaging_type: str, wl: float, base_path: str):
     """Returns leaf reflectance (transmittance) divided by reference reflectance (transmittance). """
 
