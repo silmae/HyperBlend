@@ -54,7 +54,7 @@ def run_render_series(rp: RenderParametersForSeries, rend_base: str):
         subprocess.run(blender_args + scirpt_args, stdout=stream)
 
     seconds = time.perf_counter() - start
-    print(f"Render loop run for {seconds:.1f} seconds")
+    #print(f"Render loop run for {seconds:.1f} seconds")
 
 
 def run_render_single(rps: RenderParametersForSingle, rend_base: str):
