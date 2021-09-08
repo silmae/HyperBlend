@@ -130,6 +130,38 @@ def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
     if not dont_show:
         plt.show()
 
+def _plot_optimization_and_refl_tran(wls,x1,x2,x3,x4,r,t,rm,tm,save_path,image_name,save_thumbnail=False,dont_show=False):
+    """More general version of plot_final_result(), which modified to use this instead."""
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
+    ax[0].set_title('Variable space')
+    ax[1].set_title('Target space')
+    marker = '.'
+    ax[0].scatter(wls, x1, label=C.result_key_absorption_density, marker=marker)
+    ax[0].scatter(wls, x2, label=C.result_key_scattering_density, marker=marker)
+    ax[0].scatter(wls, x3, label=C.result_key_scattering_anisotropy,
+                  marker=marker)
+    ax[0].scatter(wls, x4, label=C.result_key_mix_factor, marker=marker)
+    x_label = 'Wavelength [nm]'
+    ax[0].set_xlabel(x_label)
+    # ax[1].set_xlabel('Wavelength')
+    ax[0].legend()
+    plot_refl_tran_to_axis(ax[1], rm, tm, wls, x_label, invert_tran=True, tran_color='black',
+                           refl_color='red', skip_first=False)
+    plot_refl_tran_to_axis(ax[1], r, t, wls, x_label, invert_tran=True, skip_first=False)
+    if save_thumbnail:
+        path = os.path.normpath(save_path + '/' + image_name)
+        # logging.info(f"Saving refl tran plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
+
+def plot_refl_tran_as_subresult(set_name:str, image_name, wls, x1, x2, x3, x4, r, t, rm, tm):
+    save_path = FH.get_path_opt_subresult(set_name)
+    _plot_optimization_and_refl_tran(wls, x1, x2, x3, x4, r, t, rm, tm, save_path, image_name=image_name,
+                                     save_thumbnail=True, dont_show=True)
+
 
 class Plotter:
 
