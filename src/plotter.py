@@ -3,6 +3,7 @@ import os
 import logging
 
 import numpy as np
+from numpy.polynomial import Polynomial
 import matplotlib.pyplot as plt
 import toml
 
@@ -162,6 +163,34 @@ def plot_refl_tran_as_subresult(set_name:str, image_name, wls, x1, x2, x3, x4, r
     _plot_optimization_and_refl_tran(wls, x1, x2, x3, x4, r, t, rm, tm, save_path, image_name=image_name,
                                      save_thumbnail=True, dont_show=True)
 
+def plot_vars_per_absorption(result_dict):
+    # print(result_dict)
+    def fit_poly(x,y,degree):
+        fit = Polynomial.fit(x, y, deg=degree, domain=[0, 1])
+        coeffs = fit.convert().coef
+        print(f"fitting coeffs {coeffs}")
+        y = np.array([np.sum(np.array([coeffs[i] * (j ** i) for i in range(len(coeffs))])) for j in x])
+        plt.plot(x, y, color='black')
+    wls = result_dict[C.result_key_wls]
+    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.result_key_refls_modeled]))])
+    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.result_key_trans_modeled]))])
+    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.result_key_absorption_density]))])
+    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.result_key_scattering_density]))])
+    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.result_key_scattering_anisotropy]))])
+    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.result_key_mix_factor]))])
+    a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
+    fit_poly(a_list,ad_list,degree=1)
+    fit_poly(a_list,sd_list,degree=1)
+    fit_poly(a_list,ai_list,degree=1)
+    fit_poly(a_list,mf_list,degree=1)
+    plt.scatter(a_list, ad_list, label=C.result_key_absorption_density)
+    plt.scatter(a_list, sd_list, label=C.result_key_scattering_density)
+    plt.scatter(a_list, ai_list, label=C.result_key_scattering_anisotropy)
+    plt.scatter(a_list, mf_list, label=C.result_key_mix_factor)
+    plt.xlabel('Absorption')
+    plt.legend()
+    plt.show()
+    # print(a_list)
 
 class Plotter:
 

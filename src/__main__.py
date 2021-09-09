@@ -81,12 +81,21 @@ if __name__ == '__main__':
 
     # First full succesful optimization
     raudus_set = 'linearity_parallel'
-    make_target_fake(raudus_set)
+    raudus_set = 'linearity2'
+    # make_target_fake(raudus_set)
     # # optimization.init(raudus_set, clear_subresults=True)
     # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=50, bandwise=False)
-    optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True, opt_method='least_squares', resolution=10,bandwise=True)
+    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True, opt_method='least_squares', resolution=10,bandwise=True)
     # optimization.make_final_result(set_name=raudus_set)
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
+
+    ##############33
+    result_dict = T.read_final_result('linearity2')
+    plotter.plot_vars_per_absorption(result_dict)
+    result_dict = T.read_final_result('linearity_parallel')
+    plotter.plot_vars_per_absorption(result_dict)
+    ##########3
+
     ######################
     # Testing SHGO
     # set_name = 'full_basin_hopping'
