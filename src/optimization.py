@@ -61,10 +61,19 @@ from src import plotter
 
 
 # Bounds
+# Do not let densities (x1,x2) drop to 0 as it will result in nonphysical behavior.
 lb = [0.01, 0.01, -0.5, 0]
 ub = [1, 1, 0.5, 1]
 bounds = (lb, ub)
-density_scale = 100
+# Control how much density variables (x1,x2) are scaled for rendering. Value of 100 cannot
+# produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
+density_scale = 200
+# Function value change tolerance for lsq minimization
+ftol = 1e-6
+# Variable value change tolerance for lsq minimization
+xtol = 1e-8
+# Initial stepsize
+diffstep = 0.01
 
 # Scale x
 # x_scale = [0.01, 0.01, 1, 1]
@@ -266,11 +275,8 @@ def optimize_spectrawise(targets, set_name: str, opt_method: str):
     up_bound = np.array([item for sublist in [ub1, ub2, ub3, ub4] for item in sublist])
     spectral_bounds = (low_bound, up_bound)
 
-    ftol = 1e-6
-    xtol = 1e-6
-    diff_step = 0.01
     res = optimize.least_squares(f, X_0, bounds=spectral_bounds, method='trf', verbose=2, gtol=None,
-                                 diff_step=diff_step, ftol=ftol, xtol=xtol)
+                                 diff_step=diffstep, ftol=ftol, xtol=xtol)
     print(res)
 
 
@@ -364,7 +370,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
 
     print(f'optimizing with {opt_method}', flush=True)
     if opt_method == 'least_squares':
-        res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None, diff_step=0.01)
+        res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None,
+                                     diff_step=diffstep, ftol=ftol, xtol=xtol)
     elif opt_method == 'shgo':
         shgo_bounds = [(b[0], b[1]) for b in zip(lb, ub)]
         res = optimize.shgo(f, shgo_bounds, iters=10, n=2, sampling_method='sobol')
