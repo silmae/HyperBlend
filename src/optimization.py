@@ -69,14 +69,13 @@ bounds = (lb, ub)
 # produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
 density_scale = 200
 # Function value change tolerance for lsq minimization
-ftol = 1e-6
+ftol = 1e-2
 # Variable value change tolerance for lsq minimization
-xtol = 1e-8
-# Initial stepsize
-diffstep = 0.01
-
-# Scale x
-# x_scale = [0.01, 0.01, 1, 1]
+xtol = 1e-5
+# Stepsize for finite difference jacobian estimation. Smaller step gives
+# better results, but the variables look cloudy. Big step is faster and variables
+# smoother but there will be outliers in the results. Good stepsize is between 0.001 and 0.01.
+diffstep = 0.005
 
 
 def init(set_name: str, clear_subresults: bool):
@@ -147,7 +146,8 @@ def run_optimization(set_name: str, targets=None, use_threads=True, opt_method='
     else:
         if use_threads:
             cpu_count = multiprocessing.cpu_count()
-            consecutive_targets_parallel = utils.chunks(targets, cpu_count)
+            # consecutive_targets_parallel = utils.chunks(targets, cpu_count)
+            consecutive_targets_parallel = utils.chunks(targets, len(targets))
             for target in consecutive_targets_parallel:
                 param_list = [(a[0], a[1], a[2], set_name, opt_method, resolution*cpu_count) for a in target]
                 with Pool() as pool:
@@ -324,13 +324,15 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         dist = distance(r, t) * density_scale
+        # tikhonov = 10
+        # x_norm = np.linalg.norm(x*tikhonov)
         history.append([*x, r, t])
 
         penalty = 0
         some_big_number = 1e6
         if r+t > 1:
             penalty = some_big_number
-        return dist + penalty
+        return dist + penalty #+x_norm
 
 
     # Do this once to render references
@@ -346,23 +348,24 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
     rps.mix_fac = 0
     B.run_render_single(rps, rend_base=FH.get_path_opt_working(set_name))
 
-    previous_wl = wl-resolution
-    if FH.subresult_exists(set_name, previous_wl):
-        adjacent_result = T.read_subresult(set_name, previous_wl)
-        a = adjacent_result[C.subres_key_history_absorption_density][-1]
-        b = adjacent_result[C.subres_key_history_scattering_density][-1]
-        c = adjacent_result[C.subres_key_history_scattering_anisotropy][-1]
-        d = adjacent_result[C.subres_key_history_mix_factor][-1]
-        print(f"Using result of previous wl ({previous_wl}) as a starting guess.", flush=True)
-    else:
-        a = 0.5
-        b = 0.5
-        c = 0.2
-        d = 0.5
+    # previous_wl = wl-resolution
+    # if FH.subresult_exists(set_name, previous_wl):
+    #     adjacent_result = T.read_subresult(set_name, previous_wl)
+    #     a = adjacent_result[C.subres_key_history_absorption_density][-1]
+    #     b = adjacent_result[C.subres_key_history_scattering_density][-1]
+    #     c = adjacent_result[C.subres_key_history_scattering_anisotropy][-1]
+    #     d = adjacent_result[C.subres_key_history_mix_factor][-1]
+    #     print(f"Using result of previous wl ({previous_wl}) as a starting guess.", flush=True)
+    # else:
+    #     a = 0.5
+    #     b = 0.5
+    #     c = 0.2
+    #     d = 0.5
 
 
-    x_0 = [a,b,c,d]
+    # x_0 = [a,b,c,d]
     # x_0 =  [0.21553118, 2.28501613, 0.45281115, 0.50871691]
+    x_0 = get_starting_guess(1-(r_m + t_m))
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
     history.append([*x_0, 0.0, 0.0])
@@ -370,7 +373,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
 
     print(f'optimizing with {opt_method}', flush=True)
     if opt_method == 'least_squares':
-        res = optimize.least_squares(f, x_0,  bounds=bounds, method='trf', verbose=2, gtol=None,
+        res = optimize.least_squares(f, x_0,  bounds=bounds, method='dogbox', verbose=2, gtol=None,
                                      diff_step=diffstep, ftol=ftol, xtol=xtol)
     elif opt_method == 'shgo':
         shgo_bounds = [(b[0], b[1]) for b in zip(lb, ub)]
@@ -410,14 +413,14 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
                 return True
 
         def custom_local_minimizer(fun, x0, args=(), maxfev=None, stepsize=0.1, maxiter=100, callback=None, **options):
-            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='trf', verbose=2,
-                                         gtol=None, diff_step=0.01, max_nfev=150)
+            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='dogbox', verbose=2,
+                                         gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
             return res_lsq
 
         custom_step = Stepper()
         minimizer_options = None
         minimizer_kwargs = {'bounds': bounds, 'options': minimizer_options, 'method': custom_local_minimizer}
-        res = optimize.basinhopping(f, x0=x_0, stepsize=1., niter=20, T=0.1, interval=5, niter_success=10, seed=seed,
+        res = optimize.basinhopping(f, x0=x_0, stepsize=0.02, niter=2, T=0, interval=1, seed=seed,
                                     take_step=custom_step, callback=callback, minimizer_kwargs=minimizer_kwargs)
         print(f'basing hopping result: \n{res}', flush=True)
     else:
@@ -444,6 +447,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         C.subres_key_history_scattering_density: [float(h[1]) for h in history],
         C.subres_key_history_scattering_anisotropy: [float(h[2]) for h in history],
         C.subres_key_history_mix_factor: [float(h[3]) for h in history],
+        'optimizer_result' : res,
     }
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')
@@ -501,3 +505,16 @@ def make_final_result(set_name:str, wall_clock_time_min=0.0):
 def printable_variable_list(as_array):
     l = [f'{variable:.3f}' for variable in as_array]
     return l
+
+def get_starting_guess(absorption:float):
+    """
+    Gives starting guess for given absorption.
+    """
+    def f(coeffs):
+        return coeffs[2]*absorption*absorption + coeffs[1]*absorption + coeffs[0]
+
+    absorption_density = [0.15319704, 0.13493788, 0.43538607]
+    scattering_density = [ 0.59922746, -0.0009426, -0.31473394]
+    scattering_anisotropy = [ 0.29456347, -0.24329242, 0.14122699]
+    mix_factor = [0.793028, 0.2839754, -0.88555556]
+    return [f(absorption_density), f(scattering_density), f(scattering_anisotropy), f(mix_factor)]

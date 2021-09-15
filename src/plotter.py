@@ -16,6 +16,8 @@ from src import file_handling as FH
 figsize = (12,8)
 fig_title_font_size = 18
 
+variable_space_ylim = [-0.5, 1]
+
 
 def plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
     length = len(data)
@@ -78,6 +80,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
                                subres_dict[C.subres_key_history_mix_factor], skip_first=True)
     ax[0].set_xlabel('iteration')
     ax[0].legend()
+    ax[0].set_ylim(variable_space_ylim)
     plot_x_line_to_axis(ax[1], C.subres_key_reflectance_measured, subres_dict[C.subres_key_reflectance_measured],
                         np.arange(1,len(subres_dict[C.subres_key_history_reflectance])))
     plot_x_line_to_axis(ax[1], C.subres_key_transmittance_measured, subres_dict[C.subres_key_transmittance_measured],
@@ -117,6 +120,7 @@ def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
     ax[0].set_xlabel(x_label)
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
+    ax[0].set_ylim(variable_space_ylim)
     plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured],
                            result[C.result_key_wls], x_label, invert_tran=True, tran_color='black',
                            refl_color='red', skip_first=False)
@@ -163,14 +167,18 @@ def plot_refl_tran_as_subresult(set_name:str, image_name, wls, x1, x2, x3, x4, r
     _plot_optimization_and_refl_tran(wls, x1, x2, x3, x4, r, t, rm, tm, save_path, image_name=image_name,
                                      save_thumbnail=True, dont_show=True)
 
-def plot_vars_per_absorption(result_dict):
+def plot_vars_per_absorption(result_dict, degree=2):
+    """Prints polynomial fitting coefficients."""
+
     # print(result_dict)
-    def fit_poly(x,y,degree):
+    def fit_poly(x,y,degree,name):
         fit = Polynomial.fit(x, y, deg=degree, domain=[0, 1])
         coeffs = fit.convert().coef
-        print(f"fitting coeffs {coeffs}")
+        print(f"fitting coeffs for {name}: {coeffs}")
         y = np.array([np.sum(np.array([coeffs[i] * (j ** i) for i in range(len(coeffs))])) for j in x])
         plt.plot(x, y, color='black')
+        return coeffs
+
     wls = result_dict[C.result_key_wls]
     r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.result_key_refls_modeled]))])
     t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.result_key_trans_modeled]))])
@@ -179,10 +187,10 @@ def plot_vars_per_absorption(result_dict):
     ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.result_key_scattering_anisotropy]))])
     mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.result_key_mix_factor]))])
     a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
-    fit_poly(a_list,ad_list,degree=1)
-    fit_poly(a_list,sd_list,degree=1)
-    fit_poly(a_list,ai_list,degree=1)
-    fit_poly(a_list,mf_list,degree=1)
+    fit_poly(a_list,ad_list,degree=degree, name=C.result_key_absorption_density)
+    fit_poly(a_list,sd_list,degree=degree, name=C.result_key_scattering_density)
+    fit_poly(a_list,ai_list,degree=degree, name=C.result_key_scattering_anisotropy)
+    fit_poly(a_list,mf_list,degree=degree, name=C.result_key_mix_factor)
     plt.scatter(a_list, ad_list, label=C.result_key_absorption_density)
     plt.scatter(a_list, sd_list, label=C.result_key_scattering_density)
     plt.scatter(a_list, ai_list, label=C.result_key_scattering_anisotropy)
