@@ -123,7 +123,7 @@ def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
     ax[0].set_ylim(variable_space_ylim)
     plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured],
                            result[C.result_key_wls], x_label, invert_tran=True, tran_color='black',
-                           refl_color='red', skip_first=False)
+                           refl_color='black', skip_first=False)
     plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
                            result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
@@ -153,7 +153,7 @@ def _plot_optimization_and_refl_tran(wls,x1,x2,x3,x4,r,t,rm,tm,save_path,image_n
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     plot_refl_tran_to_axis(ax[1], rm, tm, wls, x_label, invert_tran=True, tran_color='black',
-                           refl_color='red', skip_first=False)
+                           refl_color='black', skip_first=False)
     plot_refl_tran_to_axis(ax[1], r, t, wls, x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
         path = os.path.normpath(save_path + '/' + image_name)
