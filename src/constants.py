@@ -47,6 +47,13 @@ subres_key_history_absorption_density = 'history_absorption_density'
 subres_key_history_scattering_density = 'history_scattering_density'
 subres_key_history_scattering_anisotropy = 'history_scattering_anisotropy'
 subres_key_history_mix_factor = 'history_mix_factor'
+subres_key_optimizer = 'optmizer'
+"""The content of the optimizer result depends on the 
+optimizer used. """
+subres_key_optimizer_result = 'optimiser_result'
+subres_key_optimizer_ftol = 'ftol'
+subres_key_optimizer_xtol = 'xtol'
+subres_key_optimizer_diffstep = 'diffstep'
 
 # final result toml keys
 result_key_wall_clock_elapsed_min = 'wall_clock_time_elapsed_min'

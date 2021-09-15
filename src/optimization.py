@@ -70,6 +70,8 @@ bounds = (lb, ub)
 density_scale = 200
 # Function value change tolerance for lsq minimization
 ftol = 1e-2
+# Absolute termination condition for basin hopping
+ftol_abs = 1.0
 # Variable value change tolerance for lsq minimization
 xtol = 1e-5
 # Stepsize for finite difference jacobian estimation. Smaller step gives
@@ -402,14 +404,14 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
                         x[i] = lb[i]
 
                 return x
-        f_tol = 0.001
+
         def callback(x, f, accepted):
-            print("####Callback message########")
-            print(x)
-            print(f)
-            print(accepted)
-            print("############################")
-            if f <= f_tol:
+            # print("####Callback message########")
+            # print(x)
+            # print(f)
+            # print(accepted)
+            # print("############################")
+            if f <= ftol_abs:
                 return True
 
         def custom_local_minimizer(fun, x0, args=(), maxfev=None, stepsize=0.1, maxiter=100, callback=None, **options):
@@ -420,7 +422,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         custom_step = Stepper()
         minimizer_options = None
         minimizer_kwargs = {'bounds': bounds, 'options': minimizer_options, 'method': custom_local_minimizer}
-        res = optimize.basinhopping(f, x0=x_0, stepsize=0.02, niter=2, T=0, interval=1, seed=seed,
+        res = optimize.basinhopping(f, x0=x_0, stepsize=0.1, niter=2, T=0, interval=1,
                                     take_step=custom_step, callback=callback, minimizer_kwargs=minimizer_kwargs)
         print(f'basing hopping result: \n{res}', flush=True)
     else:
@@ -440,6 +442,11 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         C.subres_key_reflectance_error: math.fabs(history[-1][4] - r_m),
         C.subres_key_transmittance_error: math.fabs(history[-1][5] - t_m),
         C.subres_key_iterations: len(history) - 1,
+        C.subres_key_optimizer: opt_method,
+        C.subres_key_optimizer_ftol: ftol,
+        C.subres_key_optimizer_xtol: xtol,
+        C.subres_key_optimizer_diffstep: diffstep,
+        C.subres_key_optimizer_result: res,
         C.subres_key_elapsed_time_s: elapsed,
         C.subres_key_history_reflectance: [float(h[4]) for h in history],
         C.subres_key_history_transmittance: [float(h[5]) for h in history],
@@ -447,7 +454,6 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, opt_met
         C.subres_key_history_scattering_density: [float(h[1]) for h in history],
         C.subres_key_history_scattering_anisotropy: [float(h[2]) for h in history],
         C.subres_key_history_mix_factor: [float(h[3]) for h in history],
-        'optimizer_result' : res,
     }
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')
@@ -485,6 +491,12 @@ def make_final_result(set_name:str, wall_clock_time_min=0.0):
     result_dict[C.result_key_process_elapsed_min] = np.sum(subres[C.subres_key_elapsed_time_s] for subres in subreslist) / 60.0
     result_dict[C.result_key_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])**2))
     result_dict[C.result_key_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])**2))
+    result_dict[C.subres_key_optimizer] = subreslist[0][C.subres_key_optimizer],
+    result_dict[C.subres_key_optimizer_ftol] = ftol,
+    result_dict[C.subres_key_optimizer_xtol] = xtol,
+    result_dict[C.subres_key_optimizer_diffstep] = diffstep,
+    if result_dict[C.subres_key_optimizer][0] == 'basin_hopping':
+        result_dict['basin_iterations_required'] = sum([(subres[C.subres_key_optimizer_result]['nit'] > 1) for subres in subreslist])
     result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
     result_dict[C.result_key_refls_modeled] = [subres[C.subres_key_reflectance_modeled] for subres in subreslist]
     result_dict[C.result_key_refls_measured] = [subres[C.subres_key_reflectance_measured] for subres in subreslist]

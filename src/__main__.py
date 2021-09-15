@@ -79,29 +79,32 @@ if __name__ == '__main__':
     # time_band = presets.preset_test_time_bandwise()
     ##########
 
+
+
     # First full succesful optimization
     raudus_set = 'linearity_parallel'
     raudus_set = 'linearity2'
     raudus_set = 'linearity_starting_guess'
     raudus_set = 'raudus_starting_guess'
-    # raudus_set = 'raudus_starting_guess_basin'
-    raudus_set = 'raudus_metavar_4_fullreso'
+    raudus_set = 'basin_compare5'
+    raudus_set = 'raudus_basin'
+    optimization.make_final_result(raudus_set)
     # make_target_fake(raudus_set)
-    make_target(raudus_set)
+    # make_target(raudus_set)
     # # optimization.init(raudus_set, clear_subresults=True)
     # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=50, bandwise=False)
-    optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
-                                  opt_method='least_squares',
-                                  resolution=1,bandwise=True)
+    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
+    #                               opt_method='least_squares',
+    #                               resolution=20, bandwise=True)
     # optimization.make_final_result(set_name=raudus_set)
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
 
-    ##############33
+    ##############
     # result_dict = T.read_final_result('linearity2')
     # plotter.plot_vars_per_absorption(result_dict)
     # result_dict = T.read_final_result('linearity_parallel')
     # plotter.plot_vars_per_absorption(result_dict)
-    ##########3
+    ##########
 
     # print(optimization.get_starting_guess(0.8))
 
