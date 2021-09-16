@@ -9,6 +9,7 @@ from src import constants as C
 from src import data_utils as DU
 from src import utils
 from src import optimization
+from src.optimization import Optimization
 from src import file_handling as FH
 from src import toml_handlling as T
 from src import plotter
@@ -79,24 +80,23 @@ if __name__ == '__main__':
     # time_band = presets.preset_test_time_bandwise()
     ##########
 
-    presets.preset_test_time_bandwise()
+    # presets.preset_test_time_bandwise()
 
     # First full succesful optimization
-    raudus_set = 'linearity_parallel'
-    raudus_set = 'linearity2'
-    raudus_set = 'linearity_starting_guess'
-    raudus_set = 'raudus_starting_guess'
-    raudus_set = 'basin_compare5'
-    raudus_set = 'refactor_test'
-    # optimization.make_final_result(raudus_set)
-    # make_target_fake(raudus_set)
-    # make_target(raudus_set)
+    set_name = 'linearity_parallel'
+    set_name = 'linearity2'
+    set_name = 'linearity_starting_guess'
+    set_name = 'raudus_starting_guess'
+    set_name = 'basin_compare5'
+    set_name = 'refactor_test'
+    o = Optimization(set_name=set_name, clear_subresults=True)
+    # o.make_final_result(set_name)
+    # make_target_fake(set_name)
+    # make_target(set_name)
     # # optimization.init(raudus_set, clear_subresults=True)
-    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=50)
-    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
-    #                               opt_method='least_squares', resolution=50)
-    # optimization.make_final_result(set_name=raudus_set)
-    # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
+    o.run_optimization(set_name=set_name, use_threads=True, resolution=50)
+    # o.make_final_result(set_name=set_name)
+    # plotter.plot_final_result(set_name, save_thumbnail = True, dont_show = False)
 
     ##############
     # result_dict = T.read_final_result('linearity2')
