@@ -79,7 +79,7 @@ if __name__ == '__main__':
     # time_band = presets.preset_test_time_bandwise()
     ##########
 
-
+    presets.preset_test_time_bandwise()
 
     # First full succesful optimization
     raudus_set = 'linearity_parallel'
@@ -90,11 +90,11 @@ if __name__ == '__main__':
     raudus_set = 'refactor_test'
     # optimization.make_final_result(raudus_set)
     # make_target_fake(raudus_set)
-    make_target(raudus_set)
+    # make_target(raudus_set)
     # # optimization.init(raudus_set, clear_subresults=True)
     # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=50)
-    optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
-                                  opt_method='least_squares', resolution=50)
+    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
+    #                               opt_method='least_squares', resolution=50)
     # optimization.make_final_result(set_name=raudus_set)
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
 
