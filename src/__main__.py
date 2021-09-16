@@ -87,15 +87,14 @@ if __name__ == '__main__':
     raudus_set = 'linearity_starting_guess'
     raudus_set = 'raudus_starting_guess'
     raudus_set = 'basin_compare5'
-    raudus_set = 'raudus_basin'
-    optimization.make_final_result(raudus_set)
+    raudus_set = 'refactor_test'
+    # optimization.make_final_result(raudus_set)
     # make_target_fake(raudus_set)
-    # make_target(raudus_set)
+    make_target(raudus_set)
     # # optimization.init(raudus_set, clear_subresults=True)
-    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=50, bandwise=False)
-    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
-    #                               opt_method='least_squares',
-    #                               resolution=20, bandwise=True)
+    # optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=False, opt_method='least_squares', resolution=50)
+    optimization.run_optimization(set_name=raudus_set, targets=None, use_threads=True,
+                                  opt_method='least_squares', resolution=50)
     # optimization.make_final_result(set_name=raudus_set)
     # plotter.plot_final_result(raudus_set, save_thumbnail = True, dont_show = False)
 
