@@ -1,3 +1,6 @@
+"""
+This file contains plotting-related code.
+"""
 
 import os
 import logging
@@ -5,10 +8,8 @@ import logging
 import numpy as np
 from numpy.polynomial import Polynomial
 import matplotlib.pyplot as plt
-import toml
 
 from src import constants as C
-from src import data_utils as DU
 from src import toml_handlling as T
 from src import file_handling as FH
 
@@ -18,7 +19,22 @@ fig_title_font_size = 18
 variable_space_ylim = [-0.5, 1]
 
 
-def plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
+def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
+    """Plots given Blender parameter to given matplolib.axis object.
+
+    :param axis_object:
+        matplotlib.axis object to plot to.
+    :param label:
+        Label for the plot.
+    :param data:
+        List of parameter values per wavelength.
+    :param skip_first:
+        If true, the first value is not plotted. This exists because the history given by
+        the optimization class contains the starting guess as the first datapoint.
+    :return:
+        None
+    """
+
     length = len(data)
     if skip_first:
         axis_object.plot(np.arange(length - 1), data[1:length], label=label)
@@ -26,7 +42,23 @@ def plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
         axis_object.plot(np.arange(length), data, label=label)
 
 
-def plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=False):
+def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=False):
+    """Plots a horizontal line to given axis object on height data. Used for subresult plots.
+
+    :param axis_object:
+        matplotlib.axis object to plot to.
+    :param label:
+        Label for the plot.
+    :param data:
+        Into what height the horizontal line should be drawn to.
+    :param x_values:
+        Essentially the length of the line.
+    :param invert:
+        Use reciprocal of data as height. Used for transmittance values.
+    :return:
+        None
+    """
+
     if invert:
         axis_object.plot(x_values, 1 - np.ones((len(x_values))) * data, label=label, color='red')
     else:
@@ -35,6 +67,30 @@ def plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=F
 
 def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False,
                            refl_color='blue', tran_color='orange'):
+    """Plots reflectance and transmittance to given axis object.
+
+    :param axis_object:
+        matplotlib.axis object to plot to.
+    :param refl:
+        List of reflectance values to be plotted.
+    :param tran:
+        List of transmittance values to be plotted.
+    :param x_values:
+        Essentially a list of wavelengths.
+    :param x_label:
+        Label of x-axis.
+    :param invert_tran:
+        If True, transmittance is plotted on separate y-axis 'upside down' as is common.
+    :param skip_first:
+        If true, the first value is not plotted. This exists because the history given by
+        the optimization class contains the starting guess as the first datapoint.
+    :param refl_color:
+        Color of reflectance points.
+    :param tran_color:
+        Color of transmittance points.
+    :return:
+        None
+    """
     axis_object.set_xlabel(x_label)
     axis_object.set_ylabel('Reflectance', color=refl_color)
     axis_object.tick_params(axis='y', labelcolor=refl_color)
@@ -61,33 +117,45 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
         axt.set_ylim([0, 1])
 
 
-def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, dont_show=False):
-    """Saves the image if savepath is given."""
+def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=True, dont_show=True):
+    """Plots otimization history of a single wavelength using existing subresult toml file.
+
+    :param set_name:
+        Set name.
+    :param wl:
+        Wavelength of the optimization.
+    :param save_thumbnail:
+        If True, a JPG image is saved to result/plot folder. Default is True.
+    :param dont_show:
+        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+    :return:
+        None
+    """
 
     subres_dict = T.read_subresult(set_name=set_name, wl=wl)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    plot_list_variable_to_axis(ax[0], C.subres_key_history_absorption_density,
-                               subres_dict[C.subres_key_history_absorption_density], skip_first=True)
-    plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_density,
-                               subres_dict[C.subres_key_history_scattering_density], skip_first=True)
-    plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_anisotropy,
-                               subres_dict[C.subres_key_history_scattering_anisotropy], skip_first=True)
-    plot_list_variable_to_axis(ax[0], C.subres_key_history_mix_factor,
-                               subres_dict[C.subres_key_history_mix_factor], skip_first=True)
-    ax[0].set_xlabel('iteration')
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_absorption_density,
+                                subres_dict[C.subres_key_history_absorption_density], skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_density,
+                                subres_dict[C.subres_key_history_scattering_density], skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_anisotropy,
+                                subres_dict[C.subres_key_history_scattering_anisotropy], skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_mix_factor,
+                                subres_dict[C.subres_key_history_mix_factor], skip_first=True)
+    ax[0].set_xlabel('Render call')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    plot_x_line_to_axis(ax[1], C.subres_key_reflectance_measured, subres_dict[C.subres_key_reflectance_measured],
-                        np.arange(1,len(subres_dict[C.subres_key_history_reflectance])))
-    plot_x_line_to_axis(ax[1], C.subres_key_transmittance_measured, subres_dict[C.subres_key_transmittance_measured],
-                        np.arange(1,len(subres_dict[C.subres_key_history_transmittance])), invert=True)
+    _plot_x_line_to_axis(ax[1], C.subres_key_reflectance_measured, subres_dict[C.subres_key_reflectance_measured],
+                         np.arange(1,len(subres_dict[C.subres_key_history_reflectance])))
+    _plot_x_line_to_axis(ax[1], C.subres_key_transmittance_measured, subres_dict[C.subres_key_transmittance_measured],
+                         np.arange(1,len(subres_dict[C.subres_key_history_transmittance])), invert=True)
     plot_refl_tran_to_axis(ax[1], subres_dict[C.subres_key_history_reflectance],
                            subres_dict[C.subres_key_history_transmittance],
                            np.arange(len(subres_dict[C.subres_key_history_scattering_anisotropy])),
-                           'iteration', invert_tran=True,
+                           'Render call', invert_tran=True,
                            skip_first=True)
 
     if save_thumbnail is not None:
@@ -103,7 +171,19 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=False, d
     plt.close(fig)
 
 
-def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
+def plot_final_result(set_name: str, save_thumbnail=True, dont_show=True):
+    """Plots final result of all optimized wavelengths to result/plot folder using existing final result TOML file.
+
+    :param set_name:
+        Set name.
+    :param save_thumbnail:
+        If True, a JPG image is saved to result/plot folder. Default is True.
+    :param dont_show:
+        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+    :return:
+        None
+    """
+
     result = T.read_final_result(set_name)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
@@ -134,40 +214,22 @@ def plot_final_result(set_name: str, save_thumbnail=False, dont_show=False):
     if not dont_show:
         plt.show()
 
-def _plot_optimization_and_refl_tran(wls,x1,x2,x3,x4,r,t,rm,tm,save_path,image_name,save_thumbnail=False,dont_show=False):
-    """More general version of plot_final_result(), which modified to use this instead."""
-
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-    fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
-    ax[0].set_title('Variable space')
-    ax[1].set_title('Target space')
-    marker = '.'
-    ax[0].scatter(wls, x1, label=C.result_key_absorption_density, marker=marker)
-    ax[0].scatter(wls, x2, label=C.result_key_scattering_density, marker=marker)
-    ax[0].scatter(wls, x3, label=C.result_key_scattering_anisotropy,
-                  marker=marker)
-    ax[0].scatter(wls, x4, label=C.result_key_mix_factor, marker=marker)
-    x_label = 'Wavelength [nm]'
-    ax[0].set_xlabel(x_label)
-    # ax[1].set_xlabel('Wavelength')
-    ax[0].legend()
-    plot_refl_tran_to_axis(ax[1], rm, tm, wls, x_label, invert_tran=True, tran_color='black',
-                           refl_color='black', skip_first=False)
-    plot_refl_tran_to_axis(ax[1], r, t, wls, x_label, invert_tran=True, skip_first=False)
-    if save_thumbnail:
-        path = os.path.normpath(save_path + '/' + image_name)
-        # logging.info(f"Saving refl tran plot to '{path}'.")
-        plt.savefig(path, dpi=300)
-    if not dont_show:
-        plt.show()
-
-def plot_refl_tran_as_subresult(set_name:str, image_name, wls, x1, x2, x3, x4, r, t, rm, tm):
-    save_path = FH.get_path_opt_subresult(set_name)
-    _plot_optimization_and_refl_tran(wls, x1, x2, x3, x4, r, t, rm, tm, save_path, image_name=image_name,
-                                     save_thumbnail=True, dont_show=True)
 
 def plot_vars_per_absorption(result_dict, degree=2):
-    """Prints polynomial fitting coefficients."""
+    """Prints polynomial fitting coefficients.
+
+    Used to get the coefficients for starting guess. This should be run for the result of optimizing
+    spectra_utils.make_linear_test_target().
+
+    TODO automize the whole thing and save coefficients to a file.
+
+    :param result_dict:
+        Result dict to fit the polynomials to. As returned by toml_handling.read_final_result(set_name).
+    :param degree:
+        Degree of the polynomial to be fit. Default is 2.
+    :return:
+        Coefficients in a list starting from the highest order, e.g., [A, B, C] in Ax^2 + Bx + C.
+    """
 
     # print(result_dict)
     def fit_poly(x,y,degree,name):
@@ -198,72 +260,3 @@ def plot_vars_per_absorption(result_dict, degree=2):
     plt.legend()
     plt.show()
     # print(a_list)
-
-# class Plotter:
-#
-#     def __init__(self, x_label: str, x_values):
-#         self.x_label = x_label
-#         self.x_values = x_values
-#         self.plot_folder = os.path.normpath(C.path_project_root + 'plot')
-#         x_ndvalues = np.array(x_values)
-#         self.filename = f"{x_label}_{x_ndvalues.min():.1f}-{x_ndvalues.max():.1f}"
-#         self.r = None
-#         self.t = None
-#
-#         refl_list = []
-#         tran_list = []
-#         # Get data according to wavelengths
-#         for i, wl in enumerate(self.rp.wl_list):
-#             refl_list.append(DU.get_relative_refl_or_tran(C.imaging_type_refl, wl))
-#             tran_list.append(DU.get_relative_refl_or_tran(C.imaging_type_tran, wl))
-#
-#         self.r = np.array(refl_list)
-#         self.t = np.array(tran_list)
-#
-#     def dump(self):
-#         if not os.path.exists(self.plot_folder):
-#             os.makedirs(self.plot_folder)
-#         d = self.rp.get_as_dict()
-#         d['x_label'] = self.x_label
-#         d['x_values'] = self.x_values
-#         d['reflectance'] = self.r
-#         d['transmittance'] = self.t
-#         path = os.path.normpath(f"{self.plot_folder}/{self.filename}.toml")
-#         with open(path, 'w') as f:
-#             toml.dump(d, f, encoder=toml.TomlNumpyEncoder())
-#         return d
-#
-#     def plot_wl_series(self, invert_tran_y=True, save_thumbnail=True, silent=False):
-#
-#
-#         fig, axr = plt.subplots(figsize=figsize)
-#         plot_refl_tran_to_axis(axr, self.r, self.t, self.x_values, self.x_label, invert_tran=True)
-#
-#         # axr.set_xlabel(self.x_label)
-#         # axr.set_ylabel('Reflectance', color=refl_color)
-#         # axr.tick_params(axis='y', labelcolor=refl_color)
-#         # # But use given x_values for plotting
-#         # axr.plot(self.x_values, self.r, label="Reflectance", color=refl_color)
-#         #
-#         # axt = axr.twinx()
-#         # axt.set_ylabel('Transmittance', color=tran_color)
-#         # axt.tick_params(axis='y', labelcolor=tran_color)
-#         # axt.plot(self.x_values, self.t, label="Transmittance", color=tran_color)
-#
-#         # axr.set_ylim([0, 1])
-#         # if invert_tran_y:
-#         #     axt.set_ylim([1, 0])
-#         # else:
-#         #     axt.set_ylim([0, 1])
-#         # plt.legend()
-#
-#         if save_thumbnail:
-#             if not os.path.exists(self.plot_folder):
-#                 os.makedirs(self.plot_folder)
-#             path = os.path.normpath(f"{self.plot_folder}/{self.filename}.png")
-#             plt.savefig(path)
-#
-#         if not silent:
-#             plt.show()
-
-
