@@ -7,7 +7,7 @@ target_type_ref = 'reference'
 postfix_image_format = '.tif'
 postfix_text_data_format = '.toml'
 
-blender_executable_path_win = 'C:/MyTemp/Software/Blender/blender.exe' # change this to where your Blender is installed
+blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 2.92/blender.exe' # change this to where your Blender is installed
 blender_executable_path_linux = '/snap/bin/blender' # default location on Ubuntu
 
 # location of the ramdisk
@@ -71,4 +71,3 @@ result_key_absorption_density = 'absorption_density'
 result_key_scattering_density = 'scattering_density'
 result_key_scattering_anisotropy = 'scattering_anisotropy'
 result_key_mix_factor = 'mix_factor'
-

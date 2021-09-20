@@ -125,7 +125,7 @@ class Optimization:
         targets = T.read_target(set_name)
 
         # Spectral resolution
-        if resolution is not 1:
+        if resolution != 1:
             targets = targets[0:-1:resolution]
 
         if use_threads:
