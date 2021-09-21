@@ -15,13 +15,15 @@ from src import toml_handlling as T
 from src import plotter
 from src import presets
 from src import spectra_utils as SU
-
+from src import specchio_data_parser as SDP
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    set_name = 'linearity'
-    SU.make_linear_test_target(set_name)
+    set_name = 'specchio_test'
+    # SU.make_linear_test_target(set_name)
     opt = Optimization(set_name, clear_subresults=True)
     opt.run_optimization(set_name, resolution=100)
+
+    # SDP.combine_pairs()
