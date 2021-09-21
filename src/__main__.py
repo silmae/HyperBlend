@@ -22,8 +22,8 @@ if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
     set_name = 'specchio_test'
-    # SU.make_linear_test_target(set_name)
+    # # SU.make_linear_test_target(set_name)
     opt = Optimization(set_name, clear_subresults=True)
-    opt.run_optimization(set_name, resolution=100)
+    opt.run_optimization(set_name, resolution=50)
 
     # SDP.combine_pairs()
