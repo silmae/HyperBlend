@@ -76,7 +76,7 @@ def _make_target(set_name: str, wls, r_m, t_m):
     if len(wls) != len(r_m) or len(wls) != len(t_m):
         raise ValueError(f'Length of the lists of wavelenghts ({len(wls)}), reflectances ({len(r_m)}) or transmittances ({len(t_m)}) did not match.')
 
-    FH.create_opt_folder_structure(set_name)
+    FH.create_opt_folder_structure_for_samples(set_name, int)
     target_data = np.zeros((3, len(wls)))
     target_data[0] = wls
     target_data[1] = r_m

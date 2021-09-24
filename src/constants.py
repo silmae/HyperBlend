@@ -21,15 +21,19 @@ folder_rend = 'rend'
 folder_rend_ref_refl = 'rend_refl_ref'
 folder_rend_ref_tran = 'rend_tran_ref'
 folder_opt = 'optimization'
-folder_opt_target = 'target'
+folder_opt_sample_targets = 'sample_targets'
+folder_opt_sample_results = 'sample_results'
+folder_sample_prefix = 'sample'
 folder_opt_work = 'working_temp'
 folder_opt_result = 'result'
 folder_opt_subresult = 'sub_results'
 folder_opt_plot = 'plot'
+folder_set_result = 'set_result'
 
 # file names
 file_opt_target = 'target'
 file_opt_res = 'final_result'
+file_sample_result = 'sample_result'
 
 # subresult toml keys
 subres_key_wl = 'wl'

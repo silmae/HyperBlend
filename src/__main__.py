@@ -21,9 +21,9 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    set_name = 'specchio_test'
+    set_name = 'specchio_20nm'
     # # SU.make_linear_test_target(set_name)
-    opt = Optimization(set_name, clear_subresults=True)
-    opt.run_optimization(set_name, resolution=50)
+    opt = Optimization(set_name, clear_subresults=False)
+    opt.run_optimization(set_name, resolution=20, use_threads=True)
 
     # SDP.combine_pairs()

@@ -11,27 +11,72 @@ from src import constants as C
 from src import utils
 
 
-def create_opt_folder_structure(set_name: str):
-    """Check that the folder structure for optimization is OK. Create if not."""
-    print(f"Creating folder structure to set path {os.path.abspath(get_path_opt_set(set_name))}")
+def create_first_level_folders(set_name: str):
+    """Create base folder and samples folder.
+
+    Should be called when a new optimization object is created.
+    """
+
     if not os.path.exists(get_path_opt_root()):
         os.makedirs(get_path_opt_root())
     if not os.path.exists(get_path_opt_target(set_name)):
         os.makedirs(get_path_opt_target(set_name))
-    if not os.path.exists(get_path_opt_working(set_name)):
-        os.makedirs(get_path_opt_working(set_name))
-    if not os.path.exists(get_path_rend_leaf(set_name)):
-        os.makedirs(get_path_rend_leaf(set_name))
-    if not os.path.exists(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name))):
-        os.makedirs(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name)))
-    if not os.path.exists(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name))):
-        os.makedirs(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name)))
-    if not os.path.exists(get_path_opt_result(set_name)):
-        os.makedirs(get_path_opt_result(set_name))
-    if not os.path.exists(get_path_opt_result_plot(set_name)):
-        os.makedirs(get_path_opt_result_plot(set_name))
-    if not os.path.exists(get_path_opt_subresult(set_name)):
-        os.makedirs(get_path_opt_subresult(set_name))
+    if not os.path.exists(get_sample_results_path(set_name)):
+        os.makedirs(get_sample_results_path(set_name))
+    if not os.path.exists(get_set_result_folder_path(set_name)):
+        os.makedirs(get_set_result_folder_path(set_name))
+
+
+def create_opt_folder_structure_for_samples(set_name: str, sample_id):
+    """Check that the folder structure for optimization is OK. Create if not.
+    :param sample_id:
+    """
+    print(f"Creating folder structure to set path {os.path.abspath(get_path_opt_set(set_name))}")
+
+    sample_folder_name = f'{C.folder_sample_prefix}_{sample_id}'
+    sample_path = os.path.join(get_sample_results_path(set_name), sample_folder_name)
+    print(sample_path)
+    if not os.path.exists(sample_path):
+        os.makedirs(sample_path)
+
+    if not os.path.exists(get_path_opt_working(set_name, sample_id)):
+        os.makedirs(get_path_opt_working(set_name, sample_id))
+    if not os.path.exists(get_path_rend_leaf(set_name, sample_id)):
+        os.makedirs(get_path_rend_leaf(set_name, sample_id))
+    if not os.path.exists(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name, sample_id))):
+        os.makedirs(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name, sample_id)))
+    if not os.path.exists(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name, sample_id))):
+        os.makedirs(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name, sample_id)))
+    if not os.path.exists(get_path_opt_subresult(set_name, sample_id)):
+        os.makedirs(get_path_opt_subresult(set_name, sample_id))
+    # if not os.path.exists(get_path_opt_result(set_name)):
+    #     os.makedirs(get_path_opt_result(set_name))
+    # if not os.path.exists(get_path_opt_result_plot(set_name)):
+    #     os.makedirs(get_path_opt_result_plot(set_name))
+
+
+def list_target_ids(set_name: str):
+    ids = []
+    for filename in os.listdir(get_path_opt_target(set_name)):
+        sample_id = filename.rstrip(C.postfix_text_data_format).split('_')[1]
+        ids.append(int(sample_id))
+    return ids
+
+
+def get_set_result_folder_path(set_name: str):
+    """Path to collected sample result folder."""
+    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_set_result)
+    return p
+
+
+def get_set_sample_path(set_name: str, sample_id: int):
+    p = os.path.abspath(get_sample_results_path(set_name) + '/' + f'{C.folder_sample_prefix}_{sample_id}')
+    return p
+
+
+def get_sample_results_path(set_name: str):
+    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_sample_results)
+    return p
 
 
 def get_path_opt_root():
@@ -48,43 +93,47 @@ def get_path_opt_set(set_name: str):
 
 def get_path_opt_target(set_name: str):
     """Path to optimization target folder (measurements) of given set 'project_root/optimization/<set_name>/target'. """
-    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_target)
+    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_sample_targets)
     return p
 
 
-def get_path_opt_working(set_name: str):
-    """Path to optimization working folder (for renders) of given set 'project_root/optimization/<set_name>/working_temp'. """
-    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_work)
-    return p
-
-
-def get_path_opt_result(set_name: str):
-    """Path to optimization result folder of given set 'project_root/optimization/<set_name>/result'. """
-    p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_result)
-    return p
-
-
-def get_path_opt_result_plot(set_name: str):
-    """Path to result plot folder of given set 'project_root/optimization/<set_name>/result/plot'.
-
-    This folder contains the final result plot and all subresult plots.
+def get_path_opt_working(set_name: str, sample_id):
+    """Path to optimization working folder (for renders) of given set 'project_root/optimization/<set_name>/working_temp'.
+    :param sample_id:
     """
-    p = os.path.abspath(get_path_opt_result(set_name) + '/' + C.folder_opt_plot)
+    p = os.path.abspath(get_set_sample_path(set_name, sample_id) + '/' + C.folder_opt_work)
     return p
 
 
-def get_path_opt_subresult(set_name: str):
+# def get_path_opt_result(set_name: str):
+#     """Path to optimization result folder of given set 'project_root/optimization/<set_name>/result'. """
+#     p = os.path.abspath(get_path_opt_set(set_name) + '/' + C.folder_opt_result)
+#     return p
+
+
+# def get_path_opt_result_plot(set_name: str):
+#     """Path to result plot folder of given set 'project_root/optimization/<set_name>/result/plot'.
+#
+#     This folder contains the final result plot and all subresult plots.
+#     """
+#     p = os.path.abspath(get_path_opt_result(set_name) + '/' + C.folder_opt_plot)
+#     return p
+
+
+def get_path_opt_subresult(set_name: str, sample_id):
     """Path to subresult folder of given set 'project_root/optimization/<set_name>/result/subresults'.
 
     The folder contains all subresults per wavelength as toml formatted txt files.
+    :param sample_id:
     """
-    p = os.path.abspath(get_path_opt_result(set_name) + '/' + C.folder_opt_subresult)
+    p = os.path.abspath(get_set_sample_path(set_name, sample_id) + '/' + C.folder_opt_subresult)
     return p
 
 
-def subresult_exists(set_name: str, wl:float):
+def subresult_exists(set_name: str, wl: float, sample_id):
     """Tells whether a certain subresult exists within given set.
 
+    :param sample_id:
     :param set_name:
         Set name.
     :param wl:
@@ -93,44 +142,41 @@ def subresult_exists(set_name: str, wl:float):
         True, if the subresult file was found, False otherwise.
     """
     # FIXME this is the same that is used by tom_handler when creating the file. Collect to same place.
-    p = get_path_opt_subresult(set_name) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
+    p = get_path_opt_subresult(set_name, sample_id) + f"/subres_wl_{wl:.2f}" + C.postfix_text_data_format
     if os.path.exists(p):
         return True
     else:
         return False
 
 
-def target_exists(set_name: str) -> bool:
-    """Tells wether target for given set exits.
-
-    :param set_name:
-        Set name.
-    :return:
-        True, if target file was found, False otherwise.
+def get_path_rend_leaf(set_name: str, sample_id):
+    """Path to leaf render folder of given set 'project_root/optimization/<set_name>/working_temp/rend'.
+    :param sample_id:
     """
-    return os.path.exists(get_path_opt_set(set_name))
-
-
-def get_path_rend_leaf(set_name: str):
-    """Path to leaf render folder of given set 'project_root/optimization/<set_name>/working_temp/rend'. """
-    p = os.path.abspath(get_path_opt_working(set_name) + '/' + C.folder_rend)
+    p = os.path.abspath(get_path_opt_working(set_name, sample_id) + '/' + C.folder_rend)
     return p
 
 
-def clear_rend_leaf(set_name: str):
-    """Clears leaf render folder of given set 'project_root/optimization/<set_name>/working_temp/rend'. """
-    clear_folder(get_path_rend_leaf(set_name))
+def clear_rend_leaf(set_name: str, sample_id):
+    """Clears leaf render folder of given set 'project_root/optimization/<set_name>/working_temp/rend'.
+    :param sample_id:
+    """
+    clear_folder(get_path_rend_leaf(set_name, sample_id))
 
 
-def clear_rend_refs(set_name: str):
-    """Clears reference render folders of given set 'project_root/optimization/<set_name>/working_temp/rend_refl_ref and rend_tran_ref'. """
-    clear_folder(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name)))
-    clear_folder(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name)))
+def clear_rend_refs(set_name: str, sample_id):
+    """Clears reference render folders of given set 'project_root/optimization/<set_name>/working_temp/rend_refl_ref and rend_tran_ref'.
+    :param sample_id:
+    """
+    clear_folder(get_path_rend_reference(C.imaging_type_refl, get_path_opt_working(set_name, sample_id)))
+    clear_folder(get_path_rend_reference(C.imaging_type_tran, get_path_opt_working(set_name, sample_id)))
 
 
-def get_path_opt_target_file(set_name: str):
-    """Path to optimization target file (measurements) of given set 'project_root/optimization/<set_name>/target/target.toml'. """
-    p = os.path.abspath(get_path_opt_target(set_name) + '/' + C.file_opt_target + C.postfix_text_data_format)
+def get_path_opt_target_file(set_name: str, sample_id):
+    """Path to optimization target file (measurements) of given set 'project_root/optimization/<set_name>/target/target.toml'.
+    :param sample_id:
+    """
+    p = os.path.abspath(get_path_opt_target(set_name) + '/' + f'{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}')
     return p
 
 
@@ -254,7 +300,7 @@ def clear_folder(path):
         None
     """
     norm_path = os.path.abspath(path)
-    if os.path.exists:
+    if os.path.exists(norm_path):
         list(map(os.unlink, (os.path.join(norm_path, f) for f in os.listdir(norm_path))))
     else:
         logging.warning(f"No files to delete in '{norm_path}'.")

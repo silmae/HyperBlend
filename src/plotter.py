@@ -117,9 +117,10 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
         axt.set_ylim([0, 1])
 
 
-def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=True, dont_show=True):
+def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True):
     """Plots otimization history of a single wavelength using existing subresult toml file.
 
+    :param sample_id:
     :param set_name:
         Set name.
     :param wl:
@@ -132,7 +133,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=True, do
         None
     """
 
-    subres_dict = T.read_subresult(set_name=set_name, wl=wl)
+    subres_dict = T.read_subresult(set_name=set_name, wl=wl, sample_id=sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
@@ -159,7 +160,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=True, do
                            skip_first=True)
 
     if save_thumbnail is not None:
-        folder = FH.get_path_opt_result_plot(set_name)
+        folder = FH.get_path_opt_subresult(set_name, sample_id)
         image_name = f"subresplot_wl{wl:.2f}.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
@@ -171,9 +172,10 @@ def plot_subresult_opt_history(set_name: str, wl: float, save_thumbnail=True, do
     plt.close(fig)
 
 
-def plot_final_result(set_name: str, save_thumbnail=True, dont_show=True):
+def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=True):
     """Plots final result of all optimized wavelengths to result/plot folder using existing final result TOML file.
 
+    :param sample_id:
     :param set_name:
         Set name.
     :param save_thumbnail:
@@ -184,7 +186,7 @@ def plot_final_result(set_name: str, save_thumbnail=True, dont_show=True):
         None
     """
 
-    result = T.read_final_result(set_name)
+    result = T.read_sample_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
@@ -206,8 +208,8 @@ def plot_final_result(set_name: str, save_thumbnail=True, dont_show=True):
     plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
                            result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
-        folder = FH.get_path_opt_result_plot(set_name)
-        image_name = f"final_result_plot.png"
+        folder = FH.get_set_result_folder_path(set_name)
+        image_name = f"sample_{sample_id}_result_plot.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the result plot to '{path}'.")
         plt.savefig(path, dpi=300)

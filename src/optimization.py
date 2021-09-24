@@ -98,11 +98,14 @@ class Optimization:
         self.xtol = xtol
         self.diffstep = diffstep
 
-        FH.create_opt_folder_structure(set_name)
-        FH.clear_rend_leaf(set_name)
-        FH.clear_rend_refs(set_name)
-        if clear_subresults:
-            FH.clear_folder(FH.get_path_opt_subresult(set_name))
+        FH.create_first_level_folders(set_name)
+        # TODO check these later
+        ids = FH.list_target_ids(set_name)
+        for _, sample_id in enumerate(ids):
+            FH.clear_rend_leaf(set_name, sample_id)
+            FH.clear_rend_refs(set_name, sample_id)
+            if clear_subresults:
+                FH.clear_folder(FH.get_path_opt_subresult(set_name, sample_id))
 
     def run_optimization(self, set_name: str, use_threads=True, use_basin_hopping=False, resolution=1):
         """Run optimization.
@@ -121,34 +124,41 @@ class Optimization:
             would optimize every 10th spectral band.
         """
 
-        total_time_start = time.perf_counter()
-        targets = T.read_target(set_name)
 
-        # Spectral resolution
-        if resolution != 1:
-            targets = targets[0:-1:resolution]
+        ids = FH.list_target_ids(set_name)
+        ids.sort()
 
-        if use_threads:
-            param_list = [(a[0], a[1], a[2], set_name, self.diffstep,
-                       self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-                       use_basin_hopping) for a in targets]
-            with Pool() as pool:
-                pool.map(optimize_single_wl_threaded, param_list)
-        else:
-            for target in targets:
-                wl = target[0]
-                r_m = target[1]
-                t_m = target[2]
-                optimize_single_wl(wl, r_m, t_m, set_name, self.diffstep,
-                       self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-                       use_basin_hopping)
+        for _,sample_id in enumerate(ids):
+            FH.create_opt_folder_structure_for_samples(set_name, sample_id)
+            logging.info(f'Starting optimization of sample {sample_id}')
+            total_time_start = time.perf_counter()
+            targets = T.read_target(set_name, sample_id)
 
-        logging.info("Finished optimizing of all wavelengths. Saving final result")
-        elapsed_min = (time.perf_counter() - total_time_start) / 60.
-        self.make_final_result(set_name, wall_clock_time_min=elapsed_min)
+            # Spectral resolution
+            if resolution != 1:
+                targets = targets[0:-1:resolution]
+
+            if use_threads:
+                param_list = [(a[0], a[1], a[2], set_name, self.diffstep,
+                           self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
+                           use_basin_hopping, sample_id) for a in targets]
+                with Pool() as pool:
+                    pool.map(optimize_single_wl_threaded, param_list)
+            else:
+                for target in targets:
+                    wl = target[0]
+                    r_m = target[1]
+                    t_m = target[2]
+                    optimize_single_wl(wl, r_m, t_m, set_name, self.diffstep,
+                           self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
+                           use_basin_hopping, sample_id)
+
+            logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
+            elapsed_min = (time.perf_counter() - total_time_start) / 60.
+            self.make_sample_result(set_name, sample_id, wall_clock_time_min=elapsed_min)
 
 
-    def make_final_result(self, set_name: str, wall_clock_time_min=0.0):
+    def make_sample_result(self, set_name: str, sample_id: int, wall_clock_time_min=0.0):
         """Collects the final result from existing subresults.
 
         Saves final result as toml and plotted image.
@@ -160,14 +170,14 @@ class Optimization:
         """
 
         # Collect subresults
-        subreslist = T.collect_subresults(set_name)
+        subreslist = T.collect_subresults(set_name, sample_id)
         result_dict = {}
 
         # Set starting value to which earlier result time is added.
         result_dict[C.result_key_wall_clock_elapsed_min] = wall_clock_time_min
 
         try:
-            previous_result = T.read_final_result(set_name)  # throws OSError upon failure
+            previous_result = T.read_sample_result(set_name, sample_id)  # throws OSError upon failure
             this_result_time = result_dict[C.result_key_wall_clock_elapsed_min]
             previous_result_time = previous_result[C.result_key_wall_clock_elapsed_min]
             result_dict[C.result_key_wall_clock_elapsed_min] = this_result_time + previous_result_time
@@ -199,8 +209,8 @@ class Optimization:
         result_dict[C.result_key_scattering_anisotropy] = [subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist]
         result_dict[C.result_key_mix_factor] = [subres[C.subres_key_history_mix_factor][-1] for subres in subreslist]
 
-        T.write_final_result(set_name, result_dict)
-        plotter.plot_final_result(set_name, save_thumbnail=True, dont_show=True)
+        T.write_sample_result(set_name, result_dict, sample_id)
+        plotter.plot_sample_result(set_name, sample_id, dont_show=True, save_thumbnail=True)
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""
@@ -209,7 +219,7 @@ def optimize_single_wl_threaded(args):
 
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
-                       use_basin_hopping):
+                       use_basin_hopping: bool, sample_id: int):
     """Optimize single wavelength to given reflectance and transmittance.
 
     Result is saved in a .toml file and plotted as an image.
@@ -228,9 +238,9 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     """
 
     print(f'Optimizing wavelength {wl} nm started.', flush=True)
-
-    if FH.subresult_exists(set_name, wl):
-        print(f"Subresult for wl {wl:.2f} already exists. Skipping optimization.", flush=True)
+    exists = FH.subresult_exists(set_name, wl, sample_id)
+    if exists:
+        print(f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.", flush=True)
         return
 
     start = time.perf_counter()
@@ -247,7 +257,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     def f(x):
         """Function to be minimized F = sum(d_i²)."""
 
-        B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name),
+        B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name, sample_id),
                             wl=wl,
                             abs_dens=x[0] * density_scale,
                             scat_dens=x[1] * density_scale,
@@ -258,8 +268,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
                             render_references=False,
                             dry_run=False)
 
-        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.get_path_opt_working(set_name))
-        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.get_path_opt_working(set_name))
+        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.get_path_opt_working(set_name, sample_id))
+        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.get_path_opt_working(set_name, sample_id))
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         # Scale distance with the desnity scale.
@@ -273,7 +283,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
             penalty = some_big_number
         return dist + penalty
 
-    B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
+    B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
                         mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True,
                         dry_run=False)
     x_0 = get_starting_guess(1 - (r_m + t_m))
@@ -362,11 +372,11 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')
 
-    T.write_subresult(set_name, res_dict)
+    T.write_subresult(set_name, res_dict, sample_id)
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
-    plotter.plot_subresult_opt_history(set_name, wl, save_thumbnail=True, dont_show=True)
+    plotter.plot_subresult_opt_history(set_name, wl, sample_id, dont_show=True, save_thumbnail=True)
 
 def printable_variable_list(as_array):
     l = [f'{variable:.3f}' for variable in as_array]
