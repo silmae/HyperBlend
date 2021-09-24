@@ -23,7 +23,9 @@ if __name__ == '__main__':
 
     set_name = 'specchio_20nm'
     # # SU.make_linear_test_target(set_name)
-    opt = Optimization(set_name, clear_subresults=False)
-    opt.run_optimization(set_name, resolution=20, use_threads=True)
+    # opt = Optimization(set_name, clear_subresults=False)
+    # opt.run_optimization(set_name, resolution=20, use_threads=True)
 
+    plotter.plot_averaged_sample_errors(set_name, dont_show=False, save_thumbnail=True)
+    plotter.plot_averaged_sample_result(set_name, dont_show=True, save_thumbnail=True)
     # SDP.combine_pairs()

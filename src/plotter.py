@@ -18,6 +18,8 @@ fig_title_font_size = 18
 
 variable_space_ylim = [-0.5, 1]
 
+refl_point_color = 'blue'
+tran_point_color = 'orange'
 
 def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
     """Plots given Blender parameter to given matplolib.axis object.
@@ -66,7 +68,7 @@ def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=
 
 
 def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False,
-                           refl_color='blue', tran_color='orange'):
+                           refl_color='blue', tran_color='orange', refl_errors=None, tran_errors=None):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -91,24 +93,29 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
     :return:
         None
     """
+    use_errors = False
+    if refl_errors is not None and tran_errors is not None:
+        use_errors = True
     axis_object.set_xlabel(x_label)
     axis_object.set_ylabel('Reflectance', color=refl_color)
     axis_object.tick_params(axis='y', labelcolor=refl_color)
+    # Make twin axis for transmittance
+    axt = axis_object.twinx()
+    axt.set_ylabel('Transmittance', color=tran_color)
+    axt.tick_params(axis='y', labelcolor=tran_color)
     # But use given x_values for plotting
     length = len(x_values)
     marker = '.'
     if skip_first:
         axis_object.scatter(x_values[1:length], refl[1:length], label="Reflectance", color=refl_color, marker=marker)
-    else:
-        axis_object.scatter(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
-
-    axt = axis_object.twinx()
-    axt.set_ylabel('Transmittance', color=tran_color)
-    axt.tick_params(axis='y', labelcolor=tran_color)
-    if skip_first:
         axt.scatter(x_values[1:length], tran[1:length], label="Transmittance", color=tran_color, marker=marker)
     else:
-        axt.scatter(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
+        if use_errors:
+            axis_object.errorbar(x_values, refl, yerr=refl_errors, ls='', label="Reflectance", color=refl_color, marker=marker)
+            axt.errorbar(x_values, tran, yerr=tran_errors, ls='', label="Transmittance", color=tran_color, marker=marker)
+        else:
+            axis_object.scatter(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
+            axt.scatter(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
 
     axis_object.set_ylim([0, 1])
     if invert_tran:
@@ -171,6 +178,115 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     # close the figure to avoid memory consumption warning when over 20 figs
     plt.close(fig)
 
+def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=True):
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
+    ax[0].set_title('Variable space')
+    ax[1].set_title('Target space')
+    marker = '.'
+
+    ids = FH.list_finished_sample_ids(set_name)
+    wls = []
+    adens = []
+    sdens = []
+    ai = []
+    mf = []
+    r_m = []
+    t_m = []
+    r = []
+    t = []
+    for _, sample_id in enumerate(ids):
+        result = T.read_sample_result(set_name, sample_id)
+        wls = result[C.result_key_wls]
+        adens.append(result[C.result_key_absorption_density])
+        sdens.append(result[C.result_key_scattering_density])
+        ai.append(result[C.result_key_scattering_anisotropy])
+        mf.append(result[C.result_key_mix_factor])
+        r_m.append(result[C.result_key_refls_measured])
+        t_m.append(result[C.result_key_trans_measured])
+        r.append(result[C.result_key_refls_modeled])
+        t.append(result[C.result_key_trans_modeled])
+
+    adens_mean = np.array(adens).mean(axis=0)
+    sdens_mean = np.array(sdens).mean(axis=0)
+    ai_mean = np.array(ai).mean(axis=0)
+    mf_mean = np.array(mf).mean(axis=0)
+    r_m_mean = np.array(r_m).mean(axis=0)
+    t_m_mean = np.array(t_m).mean(axis=0)
+    r_mean = np.array(r).mean(axis=0)
+    t_mean = np.array(t).mean(axis=0)
+    # half of the std as plt.errorbar plots the same to top and bottom
+    adens_std = np.array(adens).std(axis=0) / 2
+    sdens_std = np.array(sdens).std(axis=0) / 2
+    ai_std = np.array(ai).std(axis=0) / 2
+    mf_std = np.array(mf).std(axis=0) / 2
+    r_m_std= np.array(r_m).std(axis=0) / 2
+    t_m_std= np.array(t_m).std(axis=0) / 2
+    r_std = np.array(r).std(axis=0) / 2
+    t_std = np.array(t).std(axis=0) / 2
+
+    ax[0].errorbar(wls, adens_mean, ls='', yerr=adens_std, label=C.result_key_absorption_density, marker=marker)
+    ax[0].errorbar(wls, sdens_mean, ls='', yerr=sdens_std, label=C.result_key_scattering_density, marker=marker)
+    ax[0].errorbar(wls, ai_mean,    ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
+    ax[0].errorbar(wls, mf_mean,    ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
+    x_label = 'Wavelength [nm]'
+    ax[0].set_xlabel(x_label)
+    # ax[1].set_xlabel('Wavelength')
+    ax[0].legend()
+    ax[0].set_ylim(variable_space_ylim)
+    plot_refl_tran_to_axis(ax[1], r_m_mean, t_m_mean, result[C.result_key_wls], x_label, invert_tran=True,
+                           tran_color='black', refl_color='black', skip_first=False, refl_errors=r_m_std,
+                           tran_errors=t_m_std)
+    plot_refl_tran_to_axis(ax[1], r_mean, t_mean, result[C.result_key_wls], x_label, invert_tran=True, skip_first=False,
+                           refl_errors=r_std, tran_errors=t_std)
+    if save_thumbnail:
+        folder = FH.get_set_result_folder_path(set_name)
+        image_name = f"set_average_result_plot.png"
+        path = os.path.normpath(folder + '/' + image_name)
+        logging.info(f"Saving the result plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
+
+def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=True):
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+    fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
+    # ax.set_title('Optimization errors')
+    marker = '.'
+
+    ids = FH.list_finished_sample_ids(set_name)
+    wls = []
+    refl_errs = []
+    tran_errs = []
+    for _,sample_id in enumerate(ids):
+        result = T.read_sample_result(set_name, sample_id)
+        wls = result[C.result_key_wls]
+        refl_errs.append(result[C.result_key_refls_error])
+        tran_errs.append(result[C.result_key_trans_error])
+
+    refl_errs_mean = np.array(refl_errs).mean(axis=0)
+    tran_errs_mean = np.array(tran_errs).mean(axis=0)
+    refl_errs_std = np.array(refl_errs).std(axis=0) / 2
+    tran_errs_std = np.array(tran_errs).std(axis=0) / 2
+
+    # x_data = result[C.result_key_wls]
+    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, alpha=1.0, ls='', label=C.result_key_refls_error + ' mean', marker=marker, color=refl_point_color)
+    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, alpha=1.0, ls='', label=C.result_key_trans_error + ' mean', marker=marker, color=tran_point_color)
+    x_label = 'Wavelength [nm]'
+    ax.set_xlabel(x_label)
+    ax.legend()
+    # ax.set_ylim(variable_space_ylim)
+
+    if save_thumbnail:
+        folder = FH.get_set_result_folder_path(set_name)
+        image_name = f"set_error_plot.png"
+        path = os.path.normpath(folder + '/' + image_name)
+        logging.info(f"Saving the result plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
 
 def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=True):
     """Plots final result of all optimized wavelengths to result/plot folder using existing final result TOML file.

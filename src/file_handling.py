@@ -35,7 +35,7 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id):
 
     sample_folder_name = f'{C.folder_sample_prefix}_{sample_id}'
     sample_path = os.path.join(get_sample_results_path(set_name), sample_folder_name)
-    print(sample_path)
+    # print(sample_path)
     if not os.path.exists(sample_path):
         os.makedirs(sample_path)
 
@@ -62,6 +62,19 @@ def list_target_ids(set_name: str):
         ids.append(int(sample_id))
     return ids
 
+
+def list_finished_sample_ids(set_name: str):
+    ids = []
+    for sample_folder_name in os.listdir(get_sample_results_path(set_name)):
+        p = os.path.join(get_sample_results_path(set_name), sample_folder_name)
+        # print(p)
+        sample_result_exists = False
+        for filename in os.listdir(p):
+            if filename.startswith(C.file_sample_result) and filename.endswith(C.postfix_text_data_format):
+                sample_id = filename.rstrip(C.postfix_text_data_format).split('_')[-1]
+                ids.append(int(sample_id))
+                # print(sample_id)
+    return ids
 
 def get_set_result_folder_path(set_name: str):
     """Path to collected sample result folder."""
