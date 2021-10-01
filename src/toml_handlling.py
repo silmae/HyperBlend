@@ -11,6 +11,38 @@ from src import file_handling as FH
 from src import constants as C
 
 
+def write_final_result(set_name: str):
+    """Collect sample results and write final result to a toml file. """
+
+    result_dict = {}
+    r = collect_sample_results(set_name)
+    result_dict['total_time_hours'] = np.sum([sr[C.result_key_wall_clock_elapsed_min] for sr in r]) / 60
+    result_dict['total_processor_time_hours'] = np.sum([sr[C.result_key_process_elapsed_min] for sr in r]) / 60
+    result_dict['refl_error_mean'] = np.mean([sr[C.result_key_refls_error] for sr in r])
+    result_dict['tran_error_mean'] = np.mean([sr[C.result_key_trans_error] for sr in r])
+    result_dict['refl_error_std']= np.std([sr[C.result_key_refls_error] for sr in r])
+    result_dict['tran_error_std']= np.std([sr[C.result_key_trans_error] for sr in r])
+    p = os.path.abspath(FH.get_set_result_folder_path(set_name) + '/final_result' + C.postfix_text_data_format)
+    with open(p, 'w+') as file:
+        toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+
+def collect_sample_results(set_name: str):
+    """Collect results of finished samples in a list of dictionaries.
+
+    :param set_name:
+        Set name
+    :return:
+        List of sample result dictionaries.
+    """
+
+    ids = FH.list_finished_sample_ids(set_name)
+    collected_results = []
+    for _,sample_id in enumerate(ids):
+        sample_result_dict = read_sample_result(set_name, sample_id)
+        collected_results.append(sample_result_dict)
+    return collected_results
+
 def read_sample_result(set_name: str, sample_id):
     """Reads final result file into a dict and returns it.
 
