@@ -29,6 +29,7 @@ if __name__ == '__main__':
     # plotter.plot_averaged_sample_errors(set_name, dont_show=False, save_thumbnail=True)
     # plotter.plot_averaged_sample_result(set_name, dont_show=True, save_thumbnail=True)
     T.write_final_result(set_name)
+    # FH.clear_all_temp_files(set_name)
 
     # SDP.combine_pairs()
 

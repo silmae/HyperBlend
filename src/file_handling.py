@@ -170,6 +170,12 @@ def get_path_rend_leaf(set_name: str, sample_id):
     return p
 
 
+def clear_all_temp_files(set_name: str):
+    ids = list_finished_sample_ids(set_name)
+    for _,sample_id in enumerate(ids):
+        clear_rend_leaf(set_name, sample_id)
+        clear_rend_refs(set_name, sample_id)
+
 def clear_rend_leaf(set_name: str, sample_id):
     """Clears leaf render folder of given set 'project_root/optimization/<set_name>/working_temp/rend'.
     :param sample_id:
