@@ -16,8 +16,12 @@ def write_final_result(set_name: str):
 
     result_dict = {}
     r = collect_sample_results(set_name)
+    sample_count = len(r)
+    result_dict['sample_count'] = sample_count
     result_dict['total_time_hours'] = np.sum([sr[C.result_key_wall_clock_elapsed_min] for sr in r]) / 60
+    result_dict['time_per_sample_hours'] = np.sum([sr[C.result_key_wall_clock_elapsed_min] for sr in r]) / 60 / sample_count
     result_dict['total_processor_time_hours'] = np.sum([sr[C.result_key_process_elapsed_min] for sr in r]) / 60
+    result_dict['processor_time_per_sample_hours'] = np.sum([sr[C.result_key_process_elapsed_min] for sr in r]) / 60 / sample_count
     result_dict['refl_error_mean'] = np.mean([sr[C.result_key_refls_error] for sr in r])
     result_dict['tran_error_mean'] = np.mean([sr[C.result_key_trans_error] for sr in r])
     result_dict['refl_error_std']= np.std([sr[C.result_key_refls_error] for sr in r])
