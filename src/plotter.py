@@ -333,7 +333,7 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
         plt.show()
 
 
-def plot_vars_per_absorption(result_dict, degree=2):
+def plot_vars_per_absorption(result_dict, degree=2, save_folder=None):
     """Prints polynomial fitting coefficients.
 
     Used to get the coefficients for starting guess. This should be run for the result of optimizing
@@ -376,5 +376,12 @@ def plot_vars_per_absorption(result_dict, degree=2):
     plt.scatter(a_list, mf_list, label=C.result_key_mix_factor)
     plt.xlabel('Absorption')
     plt.legend()
+
+    if save_folder is not None:
+        image_name = f"variable_fitting.png"
+        path = os.path.normpath(save_folder + '/' + image_name)
+        logging.info(f"Saving variable fitting plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+
     plt.show()
     # print(a_list)
