@@ -16,7 +16,7 @@ from src import file_handling as FH
 figsize = (12,8)
 fig_title_font_size = 18
 
-variable_space_ylim = [-0.5, 1]
+variable_space_ylim = [0.0, 1]
 
 refl_point_color = 'blue'
 tran_point_color = 'orange'
@@ -349,6 +349,8 @@ def plot_vars_per_absorption(result_dict, degree=2, save_folder=None):
         Coefficients in a list starting from the highest order, e.g., [A, B, C] in Ax^2 + Bx + C.
     """
 
+    # TODO: use utils.fit_poly
+    
     # print(result_dict)
     def fit_poly(x,y,degree,name):
         fit = Polynomial.fit(x, y, deg=degree, domain=[0, 1])

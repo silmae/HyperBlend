@@ -33,7 +33,7 @@ For parallel processing
     5.2 retrieve r and t
     5.3 compare to target
     5.4 finish when good enough
-    5.5 save result (a,b,c,d,r,t, and metadata) to sub_result/wl_XX.toml
+    5.5 save result (a,b,c,d,r,t, and metadata) to sub_reesult/wl_XX.toml
 6. collect subresults to single file (add RMSE and such)
 7. plot resulting (a,b,c,d,r,t) 
 
@@ -56,10 +56,12 @@ from src import file_handling as FH
 from src import toml_handlling as T
 from src import plotter
 
+hard_coded_starting_guess = [0.28, 0.43, 0.27, 0.28]
 
 class Optimization:
 
-    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=5e-3, clear_subresults=False):
+    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=5e-3,
+                 clear_subresults=False, use_hard_coded_starting_guess=False):
         """Initialize new optimization object.
 
         Creates necessary folder structure if needed.
@@ -83,38 +85,38 @@ class Optimization:
 
         # Bounds
         # Do not let densities (x1,x2) drop to 0 as it will result in nonphysical behavior.
-        self.lb = [0.01, 0.01, -0.5, 0]
-        self.ub = [1, 1, 0.5, 1]
+        self.lb = [0.01, 0.01, 0.0, 0.0]
+        self.ub = [1.0, 1.0, 1.0, 1.0]
         self.bounds = (self.lb, self.ub)
         # Control how much density variables (x1,x2) are scaled for rendering. Value of 100 cannot
         # produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
-        self.density_scale = 200
+        self.density_scale = 300
 
         # Verbosity levels 0, 1 or 2
         self.optimizer_verbosity = 2
 
+        self.set_name = set_name
         self.ftol = ftol
         self.ftol_abs = ftol_abs
         self.xtol = xtol
         self.diffstep = diffstep
+        self.use_hard_coded_starting_guess = use_hard_coded_starting_guess
 
-        FH.create_first_level_folders(set_name)
+        FH.create_first_level_folders(self.set_name)
         # TODO check these later
-        ids = FH.list_target_ids(set_name)
+        ids = FH.list_target_ids(self.set_name)
         for _, sample_id in enumerate(ids):
-            FH.clear_rend_leaf(set_name, sample_id)
-            FH.clear_rend_refs(set_name, sample_id)
+            FH.clear_rend_leaf(self.set_name, sample_id)
+            FH.clear_rend_refs(self.set_name, sample_id)
             if clear_subresults:
-                FH.clear_folder(FH.get_path_opt_subresult(set_name, sample_id))
+                FH.clear_folder(FH.get_path_opt_subresult(self.set_name, sample_id))
 
-    def run_optimization(self, set_name: str, use_threads=True, use_basin_hopping=False, resolution=1):
+    def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1):
         """Run optimization.
 
         Reads target reflectance and transmittance from a file.
 
         :param use_basin_hopping:
-        :param set_name:
-            Set name.
         :param use_threads:
             If True use parallel computation.
         :param opt_method:
@@ -125,23 +127,23 @@ class Optimization:
         """
 
 
-        ids = FH.list_target_ids(set_name)
+        ids = FH.list_target_ids(self.set_name)
         ids.sort()
 
         for _,sample_id in enumerate(ids):
-            FH.create_opt_folder_structure_for_samples(set_name, sample_id)
+            FH.create_opt_folder_structure_for_samples(self.set_name, sample_id)
             logging.info(f'Starting optimization of sample {sample_id}')
             total_time_start = time.perf_counter()
-            targets = T.read_target(set_name, sample_id)
+            targets = T.read_target(self.set_name, sample_id)
 
             # Spectral resolution
             if resolution != 1:
                 targets = targets[0:-1:resolution]
 
             if use_threads:
-                param_list = [(a[0], a[1], a[2], set_name, self.diffstep,
+                param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
                            self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-                           use_basin_hopping, sample_id) for a in targets]
+                           use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess) for a in targets]
                 with Pool() as pool:
                     pool.map(optimize_single_wl_threaded, param_list)
             else:
@@ -149,35 +151,33 @@ class Optimization:
                     wl = target[0]
                     r_m = target[1]
                     t_m = target[2]
-                    optimize_single_wl(wl, r_m, t_m, set_name, self.diffstep,
+                    optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
                            self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-                           use_basin_hopping, sample_id)
+                           use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess)
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
-            self.make_sample_result(set_name, sample_id, wall_clock_time_min=elapsed_min)
+            self.make_sample_result(sample_id, wall_clock_time_min=elapsed_min)
 
 
-    def make_sample_result(self, set_name: str, sample_id: int, wall_clock_time_min=0.0):
+    def make_sample_result(self, sample_id: int, wall_clock_time_min=0.0):
         """Collects the final result from existing subresults.
 
         Saves final result as toml and plotted image.
 
-        :param set_name:
-            Set name.
         :param wall_clock_time_min:
             Wall clock time may differ from summed subresult time if computed in parallel.
         """
 
         # Collect subresults
-        subreslist = T.collect_subresults(set_name, sample_id)
+        subreslist = T.collect_subresults(self.set_name, sample_id)
         result_dict = {}
 
         # Set starting value to which earlier result time is added.
         result_dict[C.result_key_wall_clock_elapsed_min] = wall_clock_time_min
 
         try:
-            previous_result = T.read_sample_result(set_name, sample_id)  # throws OSError upon failure
+            previous_result = T.read_sample_result(self.set_name, sample_id)  # throws OSError upon failure
             this_result_time = result_dict[C.result_key_wall_clock_elapsed_min]
             previous_result_time = previous_result[C.result_key_wall_clock_elapsed_min]
             result_dict[C.result_key_wall_clock_elapsed_min] = this_result_time + previous_result_time
@@ -209,8 +209,8 @@ class Optimization:
         result_dict[C.result_key_scattering_anisotropy] = [subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist]
         result_dict[C.result_key_mix_factor] = [subres[C.subres_key_history_mix_factor][-1] for subres in subreslist]
 
-        T.write_sample_result(set_name, result_dict, sample_id)
-        plotter.plot_sample_result(set_name, sample_id, dont_show=True, save_thumbnail=True)
+        T.write_sample_result(self.set_name, result_dict, sample_id)
+        plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""
@@ -219,7 +219,7 @@ def optimize_single_wl_threaded(args):
 
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
-                       use_basin_hopping: bool, sample_id: int):
+                       use_basin_hopping: bool, sample_id: int, ftol_abs, use_hard_coded_starting_guess):
     """Optimize single wavelength to given reflectance and transmittance.
 
     Result is saved in a .toml file and plotted as an image.
@@ -286,7 +286,10 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
                         mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True,
                         dry_run=False)
-    x_0 = get_starting_guess(1 - (r_m + t_m))
+    if use_hard_coded_starting_guess:
+        x_0 = hard_coded_starting_guess
+    else:
+        x_0 = get_starting_guess(1 - (r_m + t_m))
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
     # Save the starting guess into history. This will not be included in any plots.
@@ -316,25 +319,30 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
                 """
 
                 for i in range(len(x)):
-                    bound_length = math.fabs(self.ub[i] - self.lb[i])
-                    s = bound_length * self.stepsize  # max stepsize as percentage
+                    bound_length = math.fabs(bounds[1][i] - bounds[0][i])
+                    s = bound_length * self.stepsize  # max stepsizeas percentage
                     x[i] += np.random.uniform(-s, s)
-                    if x[i] > self.ub[i]:
-                        x[i] = self.ub[i]
-                    if x[i] < self.lb[i]:
-                        x[i] = self.lb[i]
+                    if x[i] > bounds[1][i]:
+                        x[i] = bounds[1][i]
+                    if x[i] < bounds[0][i]:
+                        x[i] = bounds[0][i]
 
                 return x
 
-        def callback(x, f, accepted):
-            """Callback to terminate at current iteration if the function value is low enough."""
-            if f <= self.ftol_abs:
+        def callback(x, f_val, accepted):
+            """Callback to terminate at current iteration if the function value is low enough.
+
+            NOTE: f is the value of function f so do not call f(x) in here!
+            """
+            print(f'Callback value: {f_val[0]:.6f}')
+            if f_val <= ftol_abs:
+                print(f'Callback value: {f_val[0]:.6f} is smaller than treshold {ftol_abs:.6f}')
                 return True
 
-        def custom_local_minimizer(fun, x0):
+        def custom_local_minimizer(fun, x0, *args, **kwargs):
             """Run the default least_squares optimizer as a local minimizer for basin hopping."""
 
-            res_lsq = optimize.least_squares(fun, x0, bounds=fun.bounds, method='dogbox',
+            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='dogbox',
                                              verbose=optimizer_verbosity,
                                              gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
             return res_lsq
@@ -391,8 +399,9 @@ def get_starting_guess(absorption: float):
     def f(coeffs):
         return coeffs[2] * absorption * absorption + coeffs[1] * absorption + coeffs[0]
 
-    absorption_density = [0.15319704, 0.13493788, 0.43538607]
-    scattering_density = [0.59922746, -0.0009426, -0.31473394]
-    scattering_anisotropy = [0.29456347, -0.24329242, 0.14122699]
-    mix_factor = [0.793028, 0.2839754, -0.88555556]
+    coeff_dict = T.read_starting_guess_coeffs()
+    absorption_density = coeff_dict[C.ad_coeffs]
+    scattering_density = coeff_dict[C.sd_coeffs]
+    scattering_anisotropy = coeff_dict[C.ai_coeffs]
+    mix_factor = coeff_dict[C.mf_coeffs]
     return [f(absorption_density), f(scattering_density), f(scattering_anisotropy), f(mix_factor)]

@@ -75,3 +75,9 @@ result_key_absorption_density = 'absorption_density'
 result_key_scattering_density = 'scattering_density'
 result_key_scattering_anisotropy = 'scattering_anisotropy'
 result_key_mix_factor = 'mix_factor'
+
+# starting guess coefficients names
+ad_coeffs = 'ad_coeffs' # absorption density
+sd_coeffs = 'sd_coeffs' # scattering density
+ai_coeffs = 'ai_coeffs' # scattering anisotropy
+mf_coeffs = 'mf_coeffs' # mixing factor

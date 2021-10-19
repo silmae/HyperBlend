@@ -238,6 +238,10 @@ def get_path_rend_reference(imaging_type: str, base_path: str) -> os.path:
     return p
 
 
+def get_filepath_default_starting_guess():
+    p = os.path.abspath(C.path_project_root + '/default_starting_guess' + C.postfix_text_data_format)
+    return p
+
 def generate_image_file_name(imaging_type: str, wl: float):
     """Generates a name for a rendered image based on given wavelength.
 

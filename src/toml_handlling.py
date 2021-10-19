@@ -169,3 +169,32 @@ def read_target(set_name: str, sample_id: int):
         data = data['wlrt']
         data = np.array(data)
         return data
+
+
+def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs):
+    """Writes given starting guess coefficients to disk.
+
+    :param ad_coeffs:
+    :param sd_coeffs:
+    :param ai_coeffs:
+    :param mf_coeffs:
+    :return:
+    """
+
+    path = FH.get_filepath_default_starting_guess()
+    coeff_dict = {C.ad_coeffs:ad_coeffs, C.sd_coeffs:sd_coeffs, C.ai_coeffs:ai_coeffs, C.mf_coeffs:mf_coeffs}
+    with open(path, 'w+') as file:
+        toml.dump(coeff_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+
+def read_starting_guess_coeffs():
+    """Reads starting guess coefficients from disk and return as dictionary.
+
+    :return:
+        Starting guess coefficients in a dictionary.
+    """
+
+    path = FH.get_filepath_default_starting_guess()
+    with open(path, 'r') as file:
+        data = toml.load(file)
+        return data
