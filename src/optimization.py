@@ -138,7 +138,7 @@ class Optimization:
 
             # Spectral resolution
             if resolution != 1:
-                targets = targets[0:-1:resolution]
+                targets = targets[::resolution]
 
             if use_threads:
                 param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
