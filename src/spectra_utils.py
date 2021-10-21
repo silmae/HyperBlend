@@ -9,7 +9,7 @@ Hopefully, in the future, fetching measurements from SPECCHIO database is includ
 
 import numpy as np
 
-from src import file_handling as FH
+from src import file_handling as FH, plotter
 from src import toml_handlling as T
 from src import utils as U
 from src import constants as C
@@ -98,14 +98,17 @@ def generate_starting_guess():
     is corrupt or missing.
     """
 
-    set_name = 'linear_starting_guess'
-    degree = 2
+    set_name = C.starting_guess_set_name
 
     FH.create_first_level_folders(set_name)
-    make_linear_test_target(set_name)
     o = Optimization(set_name=set_name, clear_subresults=True, use_hard_coded_starting_guess=True)
+    make_linear_test_target(set_name)
     o.run_optimization(resolution=10, use_basin_hopping=False, use_threads=True)
+    fit_starting_guess_coefficients()
+    plotter.plot_vars_per_absorption()
 
+def fit_starting_guess_coefficients(degree=4):
+    set_name = C.starting_guess_set_name
     result_dict = T.read_sample_result(set_name, 0)
     wls = result_dict[C.result_key_wls]
     r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.result_key_refls_modeled]))])
@@ -120,4 +123,3 @@ def generate_starting_guess():
     ai_coeffs = U.fit_poly(a_list, ai_list, degree=degree, name=C.result_key_scattering_anisotropy)
     mf_coeffs = U.fit_poly(a_list, mf_list, degree=degree, name=C.result_key_mix_factor)
     T.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs)
-

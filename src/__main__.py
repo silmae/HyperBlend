@@ -31,8 +31,11 @@ if __name__ == '__main__':
     # T.write_final_result(set_name)
     # FH.clear_all_temp_files(set_name)
 
-    # SU.define_starting_guess()
-    presets.optimize_default_target()
+    # SU.generate_starting_guess()
+    # presets.optimize_default_target()
+    # SU.fit_starting_guess_coefficients(degree=4)
+    # plotter.plot_vars_per_absorption(dont_show=False)
+    plotter.plot_sample_result(C.starting_guess_set_name, sample_id=0)
 
     # SDP.combine_pairs()
 

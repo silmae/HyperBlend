@@ -19,7 +19,7 @@ fig_title_font_size = 18
 variable_space_ylim = [0.0, 1]
 
 refl_point_color = 'blue'
-tran_point_color = 'orange'
+tran_point_color = 'red'
 
 def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
     """Plots given Blender parameter to given matplolib.axis object.
@@ -68,7 +68,7 @@ def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=
 
 
 def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False,
-                           refl_color='blue', tran_color='orange', refl_errors=None, tran_errors=None):
+                           refl_color=refl_point_color, tran_color=tran_point_color, refl_errors=None, tran_errors=None):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -333,33 +333,11 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
         plt.show()
 
 
-def plot_vars_per_absorption(result_dict, degree=2, save_folder=None):
-    """Prints polynomial fitting coefficients.
+def plot_vars_per_absorption(dont_show=True, save_thumbnail=True):
 
-    Used to get the coefficients for starting guess. This should be run for the result of optimizing
-    spectra_utils.make_linear_test_target().
-
-    TODO automize the whole thing and save coefficients to a file.
-
-    :param result_dict:
-        Result dict to fit the polynomials to. As returned by toml_handling.read_final_result(set_name).
-    :param degree:
-        Degree of the polynomial to be fit. Default is 2.
-    :return:
-        Coefficients in a list starting from the highest order, e.g., [A, B, C] in Ax^2 + Bx + C.
-    """
-
-    # TODO: use utils.fit_poly
-    
-    # print(result_dict)
-    def fit_poly(x,y,degree,name):
-        fit = Polynomial.fit(x, y, deg=degree, domain=[0, 1])
-        coeffs = fit.convert().coef
-        print(f"fitting coeffs for {name}: {coeffs}")
-        y = np.array([np.sum(np.array([coeffs[i] * (j ** i) for i in range(len(coeffs))])) for j in x])
-        plt.plot(x, y, color='black')
-        return coeffs
-
+    set_name = C.starting_guess_set_name
+    result_dict = T.read_sample_result(set_name, 0)
+    coeffs = T.read_starting_guess_coeffs()
     wls = result_dict[C.result_key_wls]
     r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.result_key_refls_modeled]))])
     t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.result_key_trans_modeled]))])
@@ -368,22 +346,24 @@ def plot_vars_per_absorption(result_dict, degree=2, save_folder=None):
     ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.result_key_scattering_anisotropy]))])
     mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.result_key_mix_factor]))])
     a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
-    fit_poly(a_list,ad_list,degree=degree, name=C.result_key_absorption_density)
-    fit_poly(a_list,sd_list,degree=degree, name=C.result_key_scattering_density)
-    fit_poly(a_list,ai_list,degree=degree, name=C.result_key_scattering_anisotropy)
-    fit_poly(a_list,mf_list,degree=degree, name=C.result_key_mix_factor)
     plt.scatter(a_list, ad_list, label=C.result_key_absorption_density)
     plt.scatter(a_list, sd_list, label=C.result_key_scattering_density)
     plt.scatter(a_list, ai_list, label=C.result_key_scattering_anisotropy)
     plt.scatter(a_list, mf_list, label=C.result_key_mix_factor)
+    for _,key in enumerate(coeffs):
+        coeff  = coeffs[key]
+        y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])
+        plt.plot(a_list, y, color='black')
+
     plt.xlabel('Absorption')
     plt.legend()
 
-    if save_folder is not None:
+    if save_thumbnail:
+        p = FH.get_set_result_folder_path(set_name)
         image_name = f"variable_fitting.png"
-        path = os.path.normpath(save_folder + '/' + image_name)
+        path = os.path.normpath(p + '/' + image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
         plt.savefig(path, dpi=300)
 
-    plt.show()
-    # print(a_list)
+    if not dont_show:
+        plt.show()

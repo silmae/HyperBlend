@@ -81,3 +81,6 @@ ad_coeffs = 'ad_coeffs' # absorption density
 sd_coeffs = 'sd_coeffs' # scattering density
 ai_coeffs = 'ai_coeffs' # scattering anisotropy
 mf_coeffs = 'mf_coeffs' # mixing factor
+
+# Default starting guess
+starting_guess_set_name = 'linear_starting_guess'
