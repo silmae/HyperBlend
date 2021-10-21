@@ -32,10 +32,10 @@ if __name__ == '__main__':
     # FH.clear_all_temp_files(set_name)
 
     # SU.generate_starting_guess()
-    # presets.optimize_default_target()
+    presets.optimize_default_target()
     # SU.fit_starting_guess_coefficients(degree=4)
     # plotter.plot_vars_per_absorption(dont_show=False)
-    plotter.plot_sample_result(C.starting_guess_set_name, sample_id=0)
+    # plotter.plot_sample_result(C.starting_guess_set_name, sample_id=0)
 
     # SDP.combine_pairs()
 

@@ -35,7 +35,7 @@ For parallel processing
     5.4 finish when good enough
     5.5 save result (a,b,c,d,r,t, and metadata) to sub_reesult/wl_XX.toml
 6. collect subresults to single file (add RMSE and such)
-7. plot resulting (a,b,c,d,r,t) 
+7. plot resulting (a,b,c,d,r,t)
 
 """
 
@@ -57,6 +57,8 @@ from src import toml_handlling as T
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
+LOWER_BOUND = [0.01, 0.01, 0.0, 0.0]
+UPPER_BOUND = [1.0, 1.0, 1.0, 1.0]
 
 class Optimization:
 
@@ -85,9 +87,7 @@ class Optimization:
 
         # Bounds
         # Do not let densities (x1,x2) drop to 0 as it will result in nonphysical behavior.
-        self.lb = [0.01, 0.01, 0.0, 0.0]
-        self.ub = [1.0, 1.0, 1.0, 1.0]
-        self.bounds = (self.lb, self.ub)
+        self.bounds = (LOWER_BOUND, UPPER_BOUND)
         # Control how much density variables (x1,x2) are scaled for rendering. Value of 100 cannot
         # produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
         self.density_scale = 300
@@ -396,12 +396,22 @@ def get_starting_guess(absorption: float):
     Gives starting guess for given absorption.
     """
 
-    def f(coeffs):
-        return coeffs[2] * absorption * absorption + coeffs[1] * absorption + coeffs[0]
+    def f(coeffs, lb, ub):
+        n = len(coeffs)
+        res = 0
+        for i in range(n):
+            a = (n-i-1)
+            res += coeffs[a] * absorption**a
+        # res = coeffs[2] * absorption * absorption + coeffs[1] * absorption + coeffs[0]
+        if res < lb:
+            res = lb
+        if res > ub:
+            res = ub
+        return res
 
     coeff_dict = T.read_starting_guess_coeffs()
-    absorption_density = coeff_dict[C.ad_coeffs]
-    scattering_density = coeff_dict[C.sd_coeffs]
-    scattering_anisotropy = coeff_dict[C.ai_coeffs]
-    mix_factor = coeff_dict[C.mf_coeffs]
-    return [f(absorption_density), f(scattering_density), f(scattering_anisotropy), f(mix_factor)]
+    absorption_density      = f(coeff_dict[C.ad_coeffs], LOWER_BOUND[0], UPPER_BOUND[0])
+    scattering_density      = f(coeff_dict[C.sd_coeffs], LOWER_BOUND[1], UPPER_BOUND[1])
+    scattering_anisotropy   = f(coeff_dict[C.ai_coeffs], LOWER_BOUND[2], UPPER_BOUND[2])
+    mix_factor              = f(coeff_dict[C.mf_coeffs], LOWER_BOUND[3], UPPER_BOUND[3])
+    return absorption_density, scattering_density, scattering_anisotropy, mix_factor
