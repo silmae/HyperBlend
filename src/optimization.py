@@ -56,7 +56,7 @@ from src import file_handling as FH
 from src import toml_handlling as T
 from src import plotter
 
-hard_coded_starting_guess = [0.28, 0.43, 0.27, 0.28]
+hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
 
 class Optimization:
 
@@ -261,7 +261,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
                             wl=wl,
                             abs_dens=x[0] * density_scale,
                             scat_dens=x[1] * density_scale,
-                            scat_ai=x[2],
+                            scat_ai=x[2] - 0.5, # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
                             mix_fac=x[3],
                             clear_rend_folder=False,
                             clear_references=False,
