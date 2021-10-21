@@ -57,7 +57,7 @@ from src import toml_handlling as T
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
-LOWER_BOUND = [0.01, 0.01, 0.0, 0.0]
+LOWER_BOUND = [0.000001, 0.000001, 0.0, 0.0]
 UPPER_BOUND = [1.0, 1.0, 1.0, 1.0]
 
 class Optimization:
