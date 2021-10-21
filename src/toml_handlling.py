@@ -47,7 +47,7 @@ def collect_sample_results(set_name: str):
         collected_results.append(sample_result_dict)
     return collected_results
 
-def read_sample_result(set_name: str, sample_id):
+def read_sample_result(set_name: str, sample_id: int):
     """Reads final result file into a dict and returns it.
 
     :param sample_id:
