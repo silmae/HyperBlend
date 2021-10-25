@@ -196,18 +196,47 @@ class Optimization:
         result_dict[C.subres_key_optimizer_diffstep] = self.diffstep,
         if result_dict[C.subres_key_optimizer][0] == 'basin_hopping':
             result_dict['basin_iterations_required'] = sum([(subres[C.subres_key_optimizer_result]['nit'] > 1) for subres in subreslist])
-        result_dict[C.result_key_wls] = [subres[C.subres_key_wl] for subres in subreslist]
-        result_dict[C.result_key_refls_modeled] = [subres[C.subres_key_reflectance_modeled] for subres in subreslist]
-        result_dict[C.result_key_refls_measured] = [subres[C.subres_key_reflectance_measured] for subres in subreslist]
-        result_dict[C.result_key_refls_error] = [subres[C.subres_key_reflectance_error] for subres in subreslist]
-        result_dict[C.result_key_trans_modeled] = [subres[C.subres_key_transmittance_modeled] for subres in subreslist]
-        result_dict[C.result_key_trans_measured] = [subres[C.subres_key_transmittance_measured] for subres in subreslist]
-        result_dict[C.result_key_trans_error] = [subres[C.subres_key_transmittance_error] for subres in subreslist]
 
-        result_dict[C.result_key_absorption_density] = [subres[C.subres_key_history_absorption_density][-1] for subres in subreslist]
-        result_dict[C.result_key_scattering_density] = [subres[C.subres_key_history_scattering_density][-1] for subres in subreslist]
-        result_dict[C.result_key_scattering_anisotropy] = [subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist]
-        result_dict[C.result_key_mix_factor] = [subres[C.subres_key_history_mix_factor][-1] for subres in subreslist]
+        # Collect lists from subresults
+        wls = np.array([subres[C.subres_key_wl] for subres in subreslist])
+        r   = np.array([subres[C.subres_key_reflectance_modeled] for subres in subreslist])
+        rm  = np.array([subres[C.subres_key_reflectance_measured] for subres in subreslist])
+        re  = np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])
+        t   = np.array([subres[C.subres_key_transmittance_modeled] for subres in subreslist])
+        tm  = np.array([subres[C.subres_key_transmittance_measured] for subres in subreslist])
+        te  = np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])
+        ad  = np.array([subres[C.subres_key_history_absorption_density][-1] for subres in subreslist])
+        sd  = np.array([subres[C.subres_key_history_scattering_density][-1] for subres in subreslist])
+        sa  = np.array([subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist])
+        mf  = np.array([subres[C.subres_key_history_mix_factor][-1] for subres in subreslist])
+
+        # Sort lists by wavelength
+        sorting_idx = wls.argsort()
+        sorting_idx = np.flip(sorting_idx)
+        wls = wls[sorting_idx[::-1]]
+        r  = r[sorting_idx[::-1]]
+        rm = rm[sorting_idx[::-1]]
+        re = re[sorting_idx[::-1]]
+        t  = t[sorting_idx[::-1]]
+        tm = tm[sorting_idx[::-1]]
+        te = te[sorting_idx[::-1]]
+        ad = ad[sorting_idx[::-1]]
+        sd = sd[sorting_idx[::-1]]
+        sa = sa[sorting_idx[::-1]]
+        mf = mf[sorting_idx[::-1]]
+
+        # Save into final result
+        result_dict[C.result_key_wls] = wls
+        result_dict[C.result_key_refls_modeled] = r
+        result_dict[C.result_key_refls_measured] = rm
+        result_dict[C.result_key_refls_error] = re
+        result_dict[C.result_key_trans_modeled] = t
+        result_dict[C.result_key_trans_measured] = tm
+        result_dict[C.result_key_trans_error] = te
+        result_dict[C.result_key_absorption_density] = ad
+        result_dict[C.result_key_scattering_density] = sd
+        result_dict[C.result_key_scattering_anisotropy] = sa
+        result_dict[C.result_key_mix_factor] = mf
 
         T.write_sample_result(self.set_name, result_dict, sample_id)
         plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
