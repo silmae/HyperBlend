@@ -1,5 +1,9 @@
 """
 This file contains plotting-related code.
+
+Tips for plotting:
+https://towardsdatascience.com/5-powerful-tricks-to-visualize-your-data-with-matplotlib-16bc33747e05
+
 """
 
 import os
@@ -18,8 +22,16 @@ fig_title_font_size = 18
 
 variable_space_ylim = [0.0, 1]
 
-refl_point_color = 'blue'
-tran_point_color = 'red'
+color_reflectance = 'blue'
+color_transmittance = 'red'
+color_reflectance_measured = 'black'
+color_transmittance_measured = 'black'
+color_ad = 'maroon'
+color_sd = 'peru'
+color_ai = 'olivedrab'
+color_mf = 'darkorchid'
+alpha_error = 0.5
+
 
 def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
     """Plots given Blender parameter to given matplolib.axis object.
@@ -68,7 +80,7 @@ def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=
 
 
 def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False,
-                           refl_color=refl_point_color, tran_color=tran_point_color, refl_errors=None, tran_errors=None):
+                           refl_color=color_reflectance, tran_color=color_transmittance, refl_errors=None, tran_errors=None):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -178,6 +190,14 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     # close the figure to avoid memory consumption warning when over 20 figs
     plt.close(fig)
 
+def plot_neat_errors(ax_obj, x, value, value_std, color, label, ls='-'):
+    sorting_idx = x.argsort()
+    x_sorted = x[sorting_idx[::-1]]
+    value_sorted = value[sorting_idx[::-1]]
+    std_sorted = value_std[sorting_idx[::-1]]
+    ax_obj.fill_between(x_sorted, value_sorted-std_sorted, value_sorted+std_sorted, label=label, alpha=alpha_error, color=color)
+    ax_obj.plot(x_sorted, value_sorted, color=color, ls=ls)
+
 def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=True):
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
@@ -208,6 +228,7 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
         r.append(result[C.result_key_refls_modeled])
         t.append(result[C.result_key_trans_modeled])
 
+    wls = np.array(wls)
     adens_mean = np.array(adens).mean(axis=0)
     sdens_mean = np.array(sdens).mean(axis=0)
     ai_mean = np.array(ai).mean(axis=0)
@@ -226,26 +247,56 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     r_std = np.array(r).std(axis=0) / 2
     t_std = np.array(t).std(axis=0) / 2
 
-    ax[0].errorbar(wls, adens_mean, ls='', yerr=adens_std, label=C.result_key_absorption_density, marker=marker)
-    ax[0].errorbar(wls, sdens_mean, ls='', yerr=sdens_std, label=C.result_key_scattering_density, marker=marker)
-    ax[0].errorbar(wls, ai_mean,    ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
-    ax[0].errorbar(wls, mf_mean,    ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
+    plot_neat_errors(ax[0], wls, adens_mean, adens_std, color_ad, 'Absorption density')
+    plot_neat_errors(ax[0], wls, sdens_mean, sdens_std, color_sd, 'Scattering density')
+    plot_neat_errors(ax[0], wls, ai_mean, ai_std, color_ai, 'Scattering anistropy')
+    plot_neat_errors(ax[0], wls, mf_mean, mf_std, color_mf, 'Mix factor')
+
+    # ax[
+    #     0].errorbar(wls, sdens_mean, errorevery=error_every, ls='', yerr=sdens_std, label=C.result_key_scattering_density, marker=marker)
+    # ax[
+    #     0].errorbar(wls, ai_mean, errorevery=error_every, ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
+    # ax[
+    #     0].errorbar(wls, mf_mean, errorevery=error_every, ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
+
+    # error_every = 5
+    # ax[0].errorbar(wls, adens_mean, errorevery=error_every,ls='', yerr=adens_std, label=C.result_key_absorption_density, marker=marker)
+    # ax[0].errorbar(wls, sdens_mean, errorevery=error_every,ls='', yerr=sdens_std, label=C.result_key_scattering_density, marker=marker)
+    # ax[0].errorbar(wls, ai_mean,    errorevery=error_every,ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
+    # ax[0].errorbar(wls, mf_mean,    errorevery=error_every,ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
     x_label = 'Wavelength [nm]'
     ax[0].set_xlabel(x_label)
+    ax[1].set_xlabel(x_label)
+    tick_max = 12
+    ax[0].xaxis.set_major_locator(plt.MaxNLocator(tick_max))
+    ax[1].xaxis.set_major_locator(plt.MaxNLocator(tick_max))
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    plot_refl_tran_to_axis(ax[1], r_m_mean, t_m_mean, result[C.result_key_wls], x_label, invert_tran=True,
-                           tran_color='black', refl_color='black', skip_first=False, refl_errors=r_m_std,
-                           tran_errors=t_m_std)
-    plot_refl_tran_to_axis(ax[1], r_mean, t_mean, result[C.result_key_wls], x_label, invert_tran=True, skip_first=False,
-                           refl_errors=r_std, tran_errors=t_std)
+
+    ax[1].set_ylim([0,1])
+    ax[1].set_ylabel('Reflectance', color=color_reflectance)
+    ax[1].tick_params(axis='y', labelcolor=color_reflectance)
+    plot_neat_errors(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
+    plot_neat_errors(ax[1], wls, r_m_mean, r_m_std, color_reflectance_measured, 'Reflectance measured', ls='--')
+
+    ax_inverted = ax[1].twinx()
+    ax_inverted.set_ylim([1, 0])
+    ax_inverted.set_ylabel('Transmittance', color=color_transmittance)
+    ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
+    plot_neat_errors(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
+    plot_neat_errors(ax_inverted, wls, t_m_mean, t_m_std, color_transmittance_measured, 'Transmittance measured', ls='--')
+    # plot_refl_tran_to_axis(ax[1], r_m_mean, t_m_mean, result[C.result_key_wls], x_label, invert_tran=True,
+    #                        tran_color='black', refl_color='black', skip_first=False, refl_errors=r_m_std,
+    #                        tran_errors=t_m_std)
+    # plot_refl_tran_to_axis(ax[1], r_mean, t_mean, result[C.result_key_wls], x_label, invert_tran=True, skip_first=False,
+    #                        refl_errors=r_std, tran_errors=t_std)
     if save_thumbnail:
         folder = FH.get_set_result_folder_path(set_name)
         image_name = f"set_average_result_plot.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the result plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
 
@@ -272,8 +323,8 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     tran_errs_std = np.array(tran_errs).std(axis=0) / 2
 
     # x_data = result[C.result_key_wls]
-    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, alpha=1.0, ls='', label=C.result_key_refls_error + ' mean', marker=marker, color=refl_point_color)
-    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, alpha=1.0, ls='', label=C.result_key_trans_error + ' mean', marker=marker, color=tran_point_color)
+    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, alpha=1.0, ls='', label=C.result_key_refls_error + ' mean', marker=marker, color=color_reflectance)
+    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, alpha=1.0, ls='', label=C.result_key_trans_error + ' mean', marker=marker, color=color_transmittance)
     x_label = 'Wavelength [nm]'
     ax.set_xlabel(x_label)
     ax.legend()
