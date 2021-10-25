@@ -1,4 +1,5 @@
-#Authors
+Authors
+===========
 
 ----------------
 Development lead
