@@ -17,20 +17,23 @@ from src import constants as C
 from src import toml_handlling as T
 from src import file_handling as FH
 
-figsize = (12,8)
+figsize = (12,6)
+figsize_single = (6,6)
 fig_title_font_size = 18
+axis_label_font_size = 16
 
 variable_space_ylim = [0.0, 1]
 
-color_reflectance = 'blue'
-color_transmittance = 'red'
+color_reflectance = 'royalblue'
+color_transmittance = 'deeppink'
 color_reflectance_measured = 'black'
 color_transmittance_measured = 'black'
-color_ad = 'maroon'
-color_sd = 'peru'
+color_ad = 'teal'
+color_sd = 'darkorange'
 color_ai = 'olivedrab'
 color_mf = 'darkorchid'
-alpha_error = 0.5
+alpha_error = 0.2
+max_ticks = 8
 
 
 def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
@@ -195,15 +198,15 @@ def plot_neat_errors(ax_obj, x, value, value_std, color, label, ls='-'):
     x_sorted = x[sorting_idx[::-1]]
     value_sorted = value[sorting_idx[::-1]]
     std_sorted = value_std[sorting_idx[::-1]]
-    ax_obj.fill_between(x_sorted, value_sorted-std_sorted, value_sorted+std_sorted, label=label, alpha=alpha_error, color=color)
-    ax_obj.plot(x_sorted, value_sorted, color=color, ls=ls)
+    ax_obj.fill_between(x_sorted, value_sorted-std_sorted, value_sorted+std_sorted, alpha=alpha_error, color=color)
+    ax_obj.plot(x_sorted, value_sorted, color=color, ls=ls, label=label)
 
 def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=True):
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-    fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
-    ax[0].set_title('Variable space')
-    ax[1].set_title('Target space')
+    # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
+    # ax[0].set_title('Variable space')
+    # ax[1].set_title('Target space')
     marker = '.'
 
     ids = FH.list_finished_sample_ids(set_name)
@@ -265,27 +268,30 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     # ax[0].errorbar(wls, ai_mean,    errorevery=error_every,ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
     # ax[0].errorbar(wls, mf_mean,    errorevery=error_every,ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
     x_label = 'Wavelength [nm]'
-    ax[0].set_xlabel(x_label)
-    ax[1].set_xlabel(x_label)
-    tick_max = 12
-    ax[0].xaxis.set_major_locator(plt.MaxNLocator(tick_max))
-    ax[1].xaxis.set_major_locator(plt.MaxNLocator(tick_max))
+    ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
+    ax[1].set_xlabel(x_label, fontsize=axis_label_font_size)
+    ax[0].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
+    ax[1].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
+    ax[0].set_ylabel('Material parameter', fontsize=axis_label_font_size)
 
     ax[1].set_ylim([0,1])
-    ax[1].set_ylabel('Reflectance', color=color_reflectance)
+    ax[1].set_ylabel('Reflectance', color=color_reflectance, fontsize=axis_label_font_size)
     ax[1].tick_params(axis='y', labelcolor=color_reflectance)
     plot_neat_errors(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
-    plot_neat_errors(ax[1], wls, r_m_mean, r_m_std, color_reflectance_measured, 'Reflectance measured', ls='--')
+    # plot_neat_errors(ax[1], wls, r_m_mean, r_m_std, color_reflectance_measured, 'Reflectance measured', ls='dotted')
+    ax[1].plot(wls, r_m_mean, color=color_reflectance_measured, ls='dotted')
 
     ax_inverted = ax[1].twinx()
     ax_inverted.set_ylim([1, 0])
-    ax_inverted.set_ylabel('Transmittance', color=color_transmittance)
+    ax_inverted.set_ylabel('Transmittance', color=color_transmittance, fontsize=axis_label_font_size)
     ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
     plot_neat_errors(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
-    plot_neat_errors(ax_inverted, wls, t_m_mean, t_m_std, color_transmittance_measured, 'Transmittance measured', ls='--')
+    # plot_neat_errors(ax_inverted, wls, t_m_mean, t_m_std, color_transmittance_measured, 'Transmittance measured', ls='dotted')
+    ax_inverted.plot(wls, t_m_mean, color=color_transmittance_measured, ls='dotted')
+
     # plot_refl_tran_to_axis(ax[1], r_m_mean, t_m_mean, result[C.result_key_wls], x_label, invert_tran=True,
     #                        tran_color='black', refl_color='black', skip_first=False, refl_errors=r_m_std,
     #                        tran_errors=t_m_std)
@@ -302,10 +308,12 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
 
 def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
     # ax.set_title('Optimization errors')
     marker = '.'
+
+    ax.set_ylabel('RMSE', fontsize=axis_label_font_size)
 
     ids = FH.list_finished_sample_ids(set_name)
     wls = []
@@ -317,16 +325,20 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
         refl_errs.append(result[C.result_key_refls_error])
         tran_errs.append(result[C.result_key_trans_error])
 
+    wls = np.array(wls)
     refl_errs_mean = np.array(refl_errs).mean(axis=0)
     tran_errs_mean = np.array(tran_errs).mean(axis=0)
     refl_errs_std = np.array(refl_errs).std(axis=0) / 2
     tran_errs_std = np.array(tran_errs).std(axis=0) / 2
 
     # x_data = result[C.result_key_wls]
-    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, alpha=1.0, ls='', label=C.result_key_refls_error + ' mean', marker=marker, color=color_reflectance)
-    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, alpha=1.0, ls='', label=C.result_key_trans_error + ' mean', marker=marker, color=color_transmittance)
+    # plot_neat_errors(ax, wls, refl_errs_mean, refl_errs_std, color_reflectance, 'Reflectance error')
+    # plot_neat_errors(ax, wls, tran_errs_mean, tran_errs_std, color_transmittance, 'Transmittance error')
+    error_every = 5
+    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, errorevery=error_every, alpha=1.0, ls='', label='Reflectance error', marker=marker, color=color_reflectance)
+    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, errorevery=error_every, alpha=1.0, ls='', label='Transmittance error', marker=marker, color=color_transmittance)
     x_label = 'Wavelength [nm]'
-    ax.set_xlabel(x_label)
+    ax.set_xlabel(x_label, fontsize=axis_label_font_size)
     ax.legend()
     # ax.set_ylim(variable_space_ylim)
 
@@ -406,7 +418,7 @@ def plot_vars_per_absorption(dont_show=True, save_thumbnail=True):
         y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])
         plt.plot(a_list, y, color='black')
 
-    plt.xlabel('Absorption')
+    plt.xlabel('Absorption', fonsize=axis_label_font_size)
     plt.legend()
 
     if save_thumbnail:
