@@ -25,6 +25,12 @@ if __name__ == '__main__':
     # # SU.make_linear_test_target(set_name)
     opt = Optimization(set_name, clear_subresults=False)
     # opt.run_optimization(set_name, resolution=5)
+
+    # Rewrite sample results
+    # ids = FH.list_finished_sample_ids(set_name)
+    # for _,id in enumerate(ids):
+    #     opt.make_sample_result(sample_id=id)
+
     plotter.plot_averaged_sample_result(set_name)
     plotter.plot_averaged_sample_errors(set_name)
 
