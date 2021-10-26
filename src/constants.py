@@ -9,6 +9,8 @@ postfix_text_data_format = '.toml'
 
 blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 2.92/blender.exe' # change this to where your Blender is installed
 blender_executable_path_linux = '/snap/bin/blender' # default location on Ubuntu
+blender_scene_name = 'scene_leaf_material.blend'
+blender_script_name = 'bs_render_single.py'
 
 # location of the ramdisk
 ramdisk = '/media/ramdisk'

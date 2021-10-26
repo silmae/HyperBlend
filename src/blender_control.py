@@ -50,9 +50,9 @@ def run_render_single(rend_base_path: str, wl:float, abs_dens:float, scat_dens:f
     blender_args = [
         bpath,
         "--background",  # Run Blender in the background.
-        os.path.normpath(C.path_project_root + "leafShader.blend"),  # Blender file to be run.
+        os.path.normpath(C.path_project_root + C.blender_scene_name),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(C.path_project_root + "bs_render_single.py"),  # Python script file to be run.
+        os.path.normpath(C.path_project_root + C.blender_script_name),  # Python script file to be run.
         # "--log-level", "0",
 
     ]

@@ -21,29 +21,5 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    set_name = 'specchio_5nm'
-    # # SU.make_linear_test_target(set_name)
-    opt = Optimization(set_name, clear_subresults=False)
-    # opt.run_optimization(set_name, resolution=5)
-
-    # Rewrite sample results
-    # ids = FH.list_finished_sample_ids(set_name)
-    # for _,id in enumerate(ids):
-    #     opt.make_sample_result(sample_id=id)
-
-    plotter.plot_averaged_sample_result(set_name)
-    plotter.plot_averaged_sample_errors(set_name)
-
-    # plotter.plot_averaged_sample_errors(set_name, dont_show=False, save_thumbnail=True)
-    # plotter.plot_averaged_sample_result(set_name, dont_show=True, save_thumbnail=True)
-    # T.write_final_result(set_name)
-    # FH.clear_all_temp_files(set_name)
-
-    # SU.generate_starting_guess()
-    # presets.optimize_default_target(spectral_resolution=20)
-    # SU.fit_starting_guess_coefficients(degree=4)
-    # plotter.plot_vars_per_absorption(dont_show=False)
-    # plotter.plot_sample_result(C.starting_guess_set_name, sample_id=0)
-
-    # SDP.combine_pairs()
-
+    # Test the software with hard coded data.
+    presets.optimize_default_target(spectral_resolution=50)
