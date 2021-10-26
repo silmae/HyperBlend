@@ -1,3 +1,7 @@
+"""
+This file passes the rendering parameters to the Blender rendering script.
+"""
+
 import os
 
 import subprocess
@@ -74,8 +78,10 @@ def run_render_single(rend_base_path: str, wl:float, abs_dens:float, scat_dens:f
     scirpt_args += ['-ds', f'{scat_dens}']  # scattering density
     scirpt_args += ['-ai', f'{scat_ai}']  # scattering anisotropy
     scirpt_args += ['-mf', f'{mix_fac}']  # mixing factor
+
     # Uncomment for debugging
     # logging.info(f"running Blender with '{blender_args + scirpt_args}'")
 
+    # Direct Blender logging info to null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args, stdout=stream)
