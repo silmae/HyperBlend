@@ -36,9 +36,10 @@ alpha_error = 0.2
 max_ticks = 8
 
 
-def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False):
+def _plot_list_variable_to_axis(axis_object, label: str, data, color, skip_first=False):
     """Plots given Blender parameter to given matplolib.axis object.
 
+    :param color:
     :param axis_object:
         matplotlib.axis object to plot to.
     :param label:
@@ -54,9 +55,9 @@ def _plot_list_variable_to_axis(axis_object, label: str, data, skip_first=False)
 
     length = len(data)
     if skip_first:
-        axis_object.plot(np.arange(length - 1), data[1:length], label=label)
+        axis_object.plot(np.arange(length - 1), data[1:length], label=label, color=color)
     else:
-        axis_object.plot(np.arange(length), data, label=label)
+        axis_object.plot(np.arange(length), data, label=label, color=color)
 
 
 def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=False):
@@ -82,8 +83,7 @@ def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=
         axis_object.plot(x_values, np.ones((len(x_values))) * data, label=label, color='red')
 
 
-def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False,
-                           refl_color=color_reflectance, tran_color=color_transmittance, refl_errors=None, tran_errors=None):
+def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False, refl_color=color_reflectance, tran_color=color_transmittance):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -108,9 +108,7 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
     :return:
         None
     """
-    use_errors = False
-    if refl_errors is not None and tran_errors is not None:
-        use_errors = True
+
     axis_object.set_xlabel(x_label)
     axis_object.set_ylabel('Reflectance', color=refl_color)
     axis_object.tick_params(axis='y', labelcolor=refl_color)
@@ -122,15 +120,11 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
     length = len(x_values)
     marker = '.'
     if skip_first:
-        axis_object.scatter(x_values[1:length], refl[1:length], label="Reflectance", color=refl_color, marker=marker)
-        axt.scatter(x_values[1:length], tran[1:length], label="Transmittance", color=tran_color, marker=marker)
+        axis_object.plot(x_values[1:length], refl[1:length], label="Reflectance", color=refl_color, marker=marker)
+        axt.plot(x_values[1:length], tran[1:length], label="Transmittance", color=tran_color, marker=marker)
     else:
-        if use_errors:
-            axis_object.errorbar(x_values, refl, yerr=refl_errors, ls='', label="Reflectance", color=refl_color, marker=marker)
-            axt.errorbar(x_values, tran, yerr=tran_errors, ls='', label="Transmittance", color=tran_color, marker=marker)
-        else:
-            axis_object.scatter(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
-            axt.scatter(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
+        axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
+        axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
 
     axis_object.set_ylim([0, 1])
     if invert_tran:
@@ -160,14 +154,10 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_absorption_density,
-                                subres_dict[C.subres_key_history_absorption_density], skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_density,
-                                subres_dict[C.subres_key_history_scattering_density], skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_anisotropy,
-                                subres_dict[C.subres_key_history_scattering_anisotropy], skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_mix_factor,
-                                subres_dict[C.subres_key_history_mix_factor], skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_absorption_density, subres_dict[C.subres_key_history_absorption_density], color=color_ad, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_density, subres_dict[C.subres_key_history_scattering_density], color=color_sd, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_anisotropy, subres_dict[C.subres_key_history_scattering_anisotropy], color=color_ai, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.subres_key_history_mix_factor, subres_dict[C.subres_key_history_mix_factor], color=color_mf, skip_first=True)
     ax[0].set_xlabel('Render call')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
@@ -175,11 +165,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
                          np.arange(1,len(subres_dict[C.subres_key_history_reflectance])))
     _plot_x_line_to_axis(ax[1], C.subres_key_transmittance_measured, subres_dict[C.subres_key_transmittance_measured],
                          np.arange(1,len(subres_dict[C.subres_key_history_transmittance])), invert=True)
-    plot_refl_tran_to_axis(ax[1], subres_dict[C.subres_key_history_reflectance],
-                           subres_dict[C.subres_key_history_transmittance],
-                           np.arange(len(subres_dict[C.subres_key_history_scattering_anisotropy])),
-                           'Render call', invert_tran=True,
-                           skip_first=True)
+    plot_refl_tran_to_axis(ax[1], subres_dict[C.subres_key_history_reflectance], subres_dict[C.subres_key_history_transmittance], np.arange(len(subres_dict[C.subres_key_history_scattering_anisotropy])), 'Render call', invert_tran=True, skip_first=True)
 
     if save_thumbnail is not None:
         folder = FH.get_path_opt_subresult(set_name, sample_id)
@@ -383,11 +369,8 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured],
-                           result[C.result_key_wls], x_label, invert_tran=True, tran_color='black',
-                           refl_color='black', skip_first=False)
-    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled],
-                           result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
+    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured], result[C.result_key_wls], x_label, invert_tran=True, skip_first=False, refl_color='black', tran_color='black')
+    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled], result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
         folder = FH.get_set_result_folder_path(set_name)
         image_name = f"sample_{sample_id}_result_plot.png"
