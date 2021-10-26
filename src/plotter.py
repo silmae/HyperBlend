@@ -28,9 +28,9 @@ color_reflectance = 'royalblue'
 color_transmittance = 'deeppink'
 color_reflectance_measured = 'black'
 color_transmittance_measured = 'black'
-color_ad = 'teal'
+color_ad = 'olivedrab'
 color_sd = 'darkorange'
-color_ai = 'olivedrab'
+color_ai = 'brown'
 color_mf = 'darkorchid'
 alpha_error = 0.2
 max_ticks = 8
@@ -334,9 +334,11 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     # x_data = result[C.result_key_wls]
     # plot_neat_errors(ax, wls, refl_errs_mean, refl_errs_std, color_reflectance, 'Reflectance error')
     # plot_neat_errors(ax, wls, tran_errs_mean, tran_errs_std, color_transmittance, 'Transmittance error')
+    # ax.scatter(wls, refl_errs_mean, color=color_reflectance,   marker_size=2)
+    # ax.scatter(wls, tran_errs_mean, color=color_transmittance, marker_size=2)
     error_every = 5
-    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, errorevery=error_every, alpha=1.0, ls='', label='Reflectance error', marker=marker, color=color_reflectance)
-    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, errorevery=error_every, alpha=1.0, ls='', label='Transmittance error', marker=marker, color=color_transmittance)
+    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, errorevery=error_every, alpha=1.0, ls='', lw=0., label='Reflectance error',   marker='x', markersize=4, color=color_reflectance)
+    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, errorevery=error_every, alpha=1.0, ls='', lw=0., label='Transmittance error', marker=marker, markersize=4, color=color_transmittance)
     x_label = 'Wavelength [nm]'
     ax.set_xlabel(x_label, fontsize=axis_label_font_size)
     ax.legend()
