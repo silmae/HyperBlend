@@ -1,3 +1,10 @@
+"""
+Entry point of the program.
+
+There is no user interface to the program (yet) so code your calls here
+and run in IDE (or command line, but prepare to fix bugs).
+"""
+
 import logging
 import os.path
 
@@ -5,6 +12,7 @@ import numpy as np
 import sys
 import argparse  # to parse options for us and print a nice help message
 
+# A bunch of improrts to self-made files you may need.
 from src import constants as C
 from src import data_utils as DU
 from src import utils
