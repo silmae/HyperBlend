@@ -1,3 +1,18 @@
+"""
+This is the rendering script that Blender runs when evoked by blender_control.py.
+
+Object names in this file and the Blender scene file must match. We cannot use the
+constants.py file here as this script is run in Blender's own Python environment,
+so all object names and such are hard coded.
+
+Debug prints do not show if Blender output is directed to dev.null in blender_control.py.
+
+TODO: explicitly set up render engine and such so that Blender's default setting that
+are likely to change in future do not break the script.
+"""
+
+# bpy stands for Blender Python, which is included Blender's own Python environment.
+# It exists inside Blender, so don't worry if your IDE flags it as not found.
 import bpy
 import os
 import sys  # to get command line args
@@ -25,29 +40,11 @@ cam_name_tran = 'tran'
 imaging_type_refl = 'refl'
 imaging_type_tran = 'tran'
 
-## Test setting up rendering with GPU ###
-# from: https://blender.stackexchange.com/questions/104651/selecting-gpu-with-python-script
-# NOTE this is slower on small rends than CPU
-# bpy.data.scenes[0].render.engine = "CYCLES"
-#
-# # Set the device_type
-# bpy.context.preferences.addons[
-#     "cycles"
-# ].preferences.compute_device_type = "CUDA" # or "OPENCL"
-#
-# # Set the device and feature set
-# bpy.context.scene.cycles.device = "GPU"
-#
-# # get_devices() to let Blender detects GPU device
-# bpy.context.preferences.addons["cycles"].preferences.get_devices()
-# print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
-# for d in bpy.context.preferences.addons["cycles"].preferences.devices:
-#     d["use"] = 1 # Using all devices, include GPU and CPU
-#     print(d["name"], d["use"])
-
-#################################################
-
 class Range(object):
+    """
+    Range class for automatically checking input values by argparser.
+    """
+
     def __init__(self, start, end):
         self.start = start
         self.end = end
@@ -65,108 +62,23 @@ class Range(object):
         return '[{0},{1}]'.format(self.start, self.end)
 
 
-argv = sys.argv
-
-if "--" not in argv:
-    argv = []  # no arguments for the script
-else:
-    argv = argv[argv.index("--") + 1:]  # get all args after "--"
-
-# print(argv)
-
-key_base_path = 'base_path'
-key_dry_run = 'dry_run'
-# key_single_wavelength = 'single_wavelength'
-key_clear = 'clear'
-key_clear_refs = 'clear_references'
-key_render_references = 'render_references'
-key_wavelength = 'wavelength'
-key_abs_dens = 'abs_dens'
-key_scat_dens = 'scat_dens'
-key_scat_ai = 'scat_ai'
-key_mix_fac = 'mix_fac'
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument("-p", f"--{key_base_path}", dest=key_base_path, action="store",
-                    required=True, help="Base path to render folders. Under it have to be folders for "
-                                        "/rend, /rend_ref_refl, and rend_ref_tran")
-
-parser.add_argument("-y", f"--{key_dry_run}", dest=key_dry_run, action="store_true",
-                    required=False, help="If given, nothing is saved but the prints will come out.")
-
-parser.add_argument("-c", f"--{key_clear}", dest=key_clear, action="store_true",
-                    required=False, help="Clear leaf render folder before starting new renders.")
-
-parser.add_argument("-cr", f"--{key_clear_refs}", dest=key_clear_refs, action="store_true",
-                    required=False, help="Clear all reference folders before starting new renders.")
-
-parser.add_argument("-r", f"--{key_render_references}", dest=key_render_references, action="store_true",
-                    required=False, help="Render new references if illumination changes.")
-
-parser.add_argument("-wl", f"--{key_wavelength}", dest=key_wavelength, action="store", type=float,
-                    required=True,
-                    help="Number of wavelengths. Wavelength ('-wl') must be provided if '-s' switch is used.")
-
-parser.add_argument("-da", f"--{key_abs_dens}", dest=key_abs_dens, action="store", type=float,
-                    choices=Range(0.0, 1000.0),
-                    required=True, help="Shader volume absorption node's density input.")
-
-parser.add_argument("-ds", f"--{key_scat_dens}", dest=key_scat_dens, action="store", type=float,
-                    choices=Range(0.0, 1000.0),
-                    required=True, help="Shader volume scattering node's density input.")
-
-parser.add_argument("-ai", f"--{key_scat_ai}", dest=key_scat_ai, action="store", type=float, choices=Range(-1.0, 1.0),
-                    required=True, help="Shader volume scattering node's anisotropy input.")
-
-parser.add_argument("-mf", f"--{key_mix_fac}", dest=key_mix_fac, action="store", type=float, choices=Range(0.0, 1.0),
-                    required=True,
-                    help="Mixing factor of absorption and scattering (0 for full absorption, 1 for scatter).")
-
-args = parser.parse_args(argv)
-# print(vars(args))
-# print(f"{s.key_wl}={vars(args)[s.key_wl]}")
-
-dry_run = vars(args)[key_dry_run]
-# single_wavelength = vars(args)[key_single_wavelength]
-clear = vars(args)[key_clear]
-clear_refs = vars(args)[key_clear_refs]
-render_references = vars(args)[key_render_references]
-wavelength = vars(args)[key_wavelength]
-abs_dens = vars(args)[key_abs_dens]
-scat_dens = vars(args)[key_scat_dens]
-scat_ai = vars(args)[key_scat_ai]
-mix_fac = vars(args)[key_mix_fac]
-base_path = vars(args)[key_base_path]
-
-render_path_leaf = base_path + '/rend'
-# logging.warning(f"Rendering to '{render_path_leaf}'.")
-render_path_refl_ref = base_path + '/rend_refl_ref'
-render_path_tran_ref = base_path + '/rend_tran_ref'
-
-# if single_wavelength and not wavelength:
-#     raise Exception(f"Wavelength must be provided if '-s' switch is used.")
-# if single_wavelength and abs_dens is None:
-#     raise Exception(f"Absorption density must be provided if '-s' switch is used.")
-# if single_wavelength and scat_dens is None:
-#     raise Exception(f"Scattering density must be provided if '-s' switch is used.")
-# if single_wavelength and scat_ai is None:
-#     raise Exception(f"Scattering anisotropy must be provided if '-s' switch is used.")
-# if single_wavelength and mix_fac is None:
-#     raise Exception(f"Mixing factor must be provided if '-s' switch is used.")
-
-
 def set_active_camera(cam_name):
+    """Set rendering camera to be used. Must be either 'refl' or 'tran'"""
+
     for cam in cameraList:
         if cam.name == cam_name:
             C.scene.camera = cam
 
 
 def get_active_camera():
+    """Returns the camera that is currently in use."""
+
     return C.scene.camera
 
 
 def toggle_cam():
+    """Toggle from reflectance to transmittance camera and vice versa."""
+
     if get_active_camera().name == cam_name_refl:
         set_active_camera(cam_name_tran)
     else:
@@ -176,6 +88,9 @@ def toggle_cam():
 
 
 def render_leaf(imaging_type, wl, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=True):
+    """Renders the leaf target with given arguments."""
+
+    # Debug prints
     # print("Received parameters for render_leaf()")
     # print(f"wl: {wl}")
     # print(f"abs_dens: {abs_dens}")
@@ -197,7 +112,9 @@ def render_leaf(imaging_type, wl, abs_dens, scat_dens, scat_ai, mix_fac, dry_run
     render_target(imaging_type, wl, target_leaf, render_path_leaf, dry_run=dry_run)
 
 
-def render_reference(imaging_type, wl, dry_run=dry_run):
+def render_reference(imaging_type, wl, dry_run=True):
+    """Renders white reference in either reflectance or transmittance mode."""
+
     if imaging_type == imaging_type_refl:
         render_target(imaging_type, wl, target_refl_ref, render_path_refl_ref, dry_run=dry_run)
     elif imaging_type == imaging_type_tran:
@@ -205,6 +122,8 @@ def render_reference(imaging_type, wl, dry_run=dry_run):
 
 
 def render_target(imaging_type, wl, target_name, render_path, dry_run=True):
+    """General rendering function."""
+
     if imaging_type == imaging_type_refl:
         set_active_camera(cam_name_refl)
     elif imaging_type == imaging_type_tran:
@@ -224,9 +143,7 @@ def render_target(imaging_type, wl, target_name, render_path, dry_run=True):
     D.collections['Targets'].all_objects['Reflectance white'].hide_render = True
     D.collections['Targets'].all_objects['Transmittance white'].hide_render = True
 
-    # logging.warning(f"target_name: {target_name}")
     target_obj = D.objects[target_name]
-    # logging.warning("PIIIIIdsafIPd")
     target_obj.hide_render = False
     target_obj.hide_viewport = False
 
@@ -235,25 +152,6 @@ def render_target(imaging_type, wl, target_name, render_path, dry_run=True):
         O.render.render(write_still=True)
     else:
         logging.warning(f'Faking to save render to "{file_path}"')
-
-# Calling script must handle the series
-# def render_image_series(wl_list, absorption_list, scatter_list, mix_factor_list, scattering_anisotropy_list,
-#                         do_reference=False, dry_run=True):
-#     print('\n#################################\nRendering images\n############################')
-#
-#     if not dry_run:
-#         clear_folders()
-#
-#     for j, wl in enumerate(wl_list):
-#
-#         render_leaf(imaging_type_refl, wl, absorption_list[j], scatter_list[j], scattering_anisotropy_list[j],
-#                     mix_factor_list[j], dry_run=dry_run)
-#         render_leaf(imaging_type_tran, wl, absorption_list[j], scatter_list[j], scattering_anisotropy_list[j],
-#                     mix_factor_list[j], dry_run=dry_run)
-#
-#         if do_reference:
-#             render_reference(imaging_type_refl, wl, dry_run=dry_run)
-#             render_reference(imaging_type_tran, wl, dry_run=dry_run)
 
 
 def make_folders():
@@ -270,7 +168,8 @@ def make_folders():
 def clear_folders(clear_reference=False):
     """Clear render folders. Reference folder are also cleared if clear_reference=True.
 
-    Creates missing folder, so it should be safe to call.
+    Creates the folders if not exist, so it should be safe to call. This is mainly for
+    debugging if run straight from Blender. Primarily, use clearing code in file_handling.py.
     """
 
     make_folders()
@@ -282,28 +181,115 @@ def clear_folders(clear_reference=False):
         list(map(os.unlink, (os.path.join(render_path_tran_ref, f) for f in os.listdir(render_path_tran_ref))))
 
 
-########### "MAIN" ##################
+if __name__ == '__main__':
 
-make_folders()
+    # Store arguments passed from blender_control.py
+    argv = sys.argv
 
-if clear and not dry_run:
-    clear_folders(clear_reference=clear_refs)
+    if "--" not in argv:
+        argv = []  # no arguments for the script
+    else:
+        argv = argv[argv.index("--") + 1:]  # get all args after "--"
 
-render_leaf(imaging_type_refl, wavelength, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=dry_run)
-render_leaf(imaging_type_tran, wavelength, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=dry_run)
+    # Argument names
+    key_base_path = ['-p', '--base_path']
+    key_dry_run = ['-y', '--dry_run']
+    key_clear = ['-c', '--clear']
+    key_clear_refs = ['-cr', '--clear_references']
+    key_render_references = ['-r', '--render_references']
+    key_wavelength = ['-wl', '--wavelength']
+    key_abs_dens = ['-da', '--abs_dens']
+    key_scat_dens = ['-ds', '--scat_dens']
+    key_scat_ai = ['-ai', '--scat_ai']
+    key_mix_fac = ['-mf', '--mix_fac']
 
-if render_references:
-    render_reference(imaging_type_refl, wavelength, dry_run=dry_run)
-    render_reference(imaging_type_tran, wavelength, dry_run=dry_run)
+    parser = argparse.ArgumentParser()
 
-    # Do not use this! It should be updated later to make the final renders
-    # after parameter optimization.
-    # n = 5
-    # wl_list = np.linspace(400, 1500, num=n)
-    # absorption_list = np.linspace(100, 100, num=n)
-    # scatter_list = np.linspace(77, 77, num=n)
-    # mix_factor_list = np.linspace(1.0, 0.0, num=n)
-    # scattering_anisotropy_list = np.linspace(0.0, 0.5, num=n)
+    parser.add_argument(key_base_path[0], key_base_path[1], dest=key_base_path[1], action="store",
+                        required=True, help="Base path to render folders. Under it have to be folders for "
+                                            "/rend, /rend_ref_refl, and rend_ref_tran")
+
+    parser.add_argument(key_dry_run[0], key_dry_run[1], dest=key_dry_run[1], action="store_true",
+                        required=False, help="If given, nothing is saved but the prints will come out.")
+
+    parser.add_argument(key_clear[0], key_clear[1], dest=key_clear[1], action="store_true",
+                        required=False, help="Clear leaf render folder before starting new renders.")
+
+    parser.add_argument(key_clear_refs[0], key_clear_refs[1], dest=key_clear_refs[1], action="store_true",
+                        required=False, help="Clear all reference folders before starting new renders.")
+
+    parser.add_argument(key_render_references[0], key_render_references[1], dest=key_render_references[1], action="store_true",
+                        required=False, help="Render new references if illumination changes.")
+
+    parser.add_argument(key_wavelength[0], key_wavelength[1], dest=key_wavelength[1], action="store", type=float,
+                        required=True,
+                        help="Wavelength to be rendered. Affects only the naming of resulting image file.")
+
+    parser.add_argument(key_abs_dens[0], key_abs_dens[1], dest=key_abs_dens[1], action="store", type=float,
+                        choices=Range(0.0, 1000.0),
+                        required=True, help="Shader volume absorption node's density input.")
+
+    parser.add_argument(key_scat_dens[0], key_scat_dens[1], dest=key_scat_dens[1], action="store", type=float,
+                        choices=Range(0.0, 1000.0),
+                        required=True, help="Shader volume scattering node's density input.")
+
+    parser.add_argument(key_scat_ai[0], key_scat_ai[1], dest=key_scat_ai[1], action="store", type=float, choices=Range(-1.0, 1.0),
+                        required=True, help="Shader volume scattering node's anisotropy input.")
+
+    parser.add_argument(key_mix_fac[0], key_mix_fac[1], dest=key_mix_fac[1], action="store", type=float, choices=Range(0.0, 1.0),
+                        required=True,
+                        help="Mixing factor of absorption and scattering (0 for full absorption, 1 for scatter).")
+
+    args = parser.parse_args(argv)
+
+    dry_run = vars(args)[key_dry_run[1]]
+    clear = vars(args)[key_clear[1]]
+    clear_refs = vars(args)[key_clear_refs[1]]
+    render_references = vars(args)[key_render_references[1]]
+    wavelength = vars(args)[key_wavelength[1]]
+    abs_dens = vars(args)[key_abs_dens[1]]
+    scat_dens = vars(args)[key_scat_dens[1]]
+    scat_ai = vars(args)[key_scat_ai[1]]
+    mix_fac = vars(args)[key_mix_fac[1]]
+    base_path = vars(args)[key_base_path[1]]
+
+    render_path_leaf = base_path + '/rend'
+    # logging.warning(f"Rendering to '{render_path_leaf}'.")
+    render_path_refl_ref = base_path + '/rend_refl_ref'
+    render_path_tran_ref = base_path + '/rend_tran_ref'
+
+    ## Tested setting up rendering with GPU ###
+    # from: https://blender.stackexchange.com/questions/104651/selecting-gpu-with-python-script
     #
-    # render_image_series(wl_list, absorption_list, scatter_list, mix_factor_list, scattering_anisotropy_list,
-    #                     do_reference=render_references, dry_run=dry_run)
+    # NOTE this is slower on small rends than CPU
+    #
+    # bpy.data.scenes[0].render.engine = "CYCLES"
+    #
+    # # Set the device_type
+    # bpy.context.preferences.addons[
+    #     "cycles"
+    # ].preferences.compute_device_type = "CUDA" # or "OPENCL"
+    #
+    # # Set the device and feature set
+    # bpy.context.scene.cycles.device = "GPU"
+    #
+    # # get_devices() to let Blender detects GPU device
+    # bpy.context.preferences.addons["cycles"].preferences.get_devices()
+    # print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
+    # for d in bpy.context.preferences.addons["cycles"].preferences.devices:
+    #     d["use"] = 1 # Using all devices, include GPU and CPU
+    #     print(d["name"], d["use"])
+
+    #################################################
+
+    make_folders()
+
+    if clear and not dry_run:
+        clear_folders(clear_reference=clear_refs)
+
+    render_leaf(imaging_type_refl, wavelength, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=dry_run)
+    render_leaf(imaging_type_tran, wavelength, abs_dens, scat_dens, scat_ai, mix_fac, dry_run=dry_run)
+
+    if render_references:
+        render_reference(imaging_type_refl, wavelength, dry_run=dry_run)
+        render_reference(imaging_type_tran, wavelength, dry_run=dry_run)
