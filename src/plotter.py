@@ -166,7 +166,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     plot_refl_tran_to_axis(ax[1], subres_dict[C.subres_key_history_reflectance], subres_dict[C.subres_key_history_transmittance], np.arange(len(subres_dict[C.subres_key_history_scattering_anisotropy])), 'Render call', invert_tran=True, skip_first=True)
 
     if save_thumbnail is not None:
-        folder = FH.get_path_opt_subresult(set_name, sample_id)
+        folder = FH.path_directory_subresult(set_name, sample_id)
         image_name = f"subresplot_wl{wl:.2f}.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
@@ -282,7 +282,7 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     # plot_refl_tran_to_axis(ax[1], r_mean, t_mean, result[C.result_key_wls], x_label, invert_tran=True, skip_first=False,
     #                        refl_errors=r_std, tran_errors=t_std)
     if save_thumbnail:
-        folder = FH.get_set_result_folder_path(set_name)
+        folder = FH.path_directory_set_result(set_name)
         image_name = f"set_average_result_plot.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the result plot to '{path}'.")
@@ -329,7 +329,7 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        folder = FH.get_set_result_folder_path(set_name)
+        folder = FH.path_directory_set_result(set_name)
         image_name = f"set_error_plot.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the result plot to '{path}'.")
@@ -370,7 +370,7 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
     plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured], result[C.result_key_wls], x_label, invert_tran=True, skip_first=False, refl_color='black', tran_color='black')
     plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled], result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
-        folder = FH.get_set_result_folder_path(set_name)
+        folder = FH.path_directory_set_result(set_name)
         image_name = f"sample_{sample_id}_result_plot.png"
         path = os.path.normpath(folder + '/' + image_name)
         logging.info(f"Saving the result plot to '{path}'.")
@@ -405,7 +405,7 @@ def plot_vars_per_absorption(dont_show=True, save_thumbnail=True):
     plt.legend()
 
     if save_thumbnail:
-        p = FH.get_set_result_folder_path(set_name)
+        p = FH.path_directory_set_result(set_name)
         image_name = f"variable_fitting.png"
         path = os.path.normpath(p + '/' + image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")

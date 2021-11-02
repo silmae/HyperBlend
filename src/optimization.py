@@ -106,7 +106,7 @@ class Optimization:
             FH.clear_rend_leaf(self.set_name, sample_id)
             FH.clear_rend_refs(self.set_name, sample_id)
             if clear_subresults:
-                FH.clear_folder(FH.get_path_opt_subresult(self.set_name, sample_id))
+                FH.clear_folder(FH.path_directory_subresult(self.set_name, sample_id))
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1):
         """Run optimization.
@@ -243,6 +243,7 @@ def optimize_single_wl_threaded(args):
 
     optimize_single_wl(*args)
 
+
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
                        use_basin_hopping: bool, sample_id: int, ftol_abs, use_hard_coded_starting_guess):
@@ -283,19 +284,19 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     def f(x):
         """Function to be minimized F = sum(d_i²)."""
 
-        B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name, sample_id),
+        B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id),
                             wl=wl,
                             abs_dens=x[0] * density_scale,
                             scat_dens=x[1] * density_scale,
-                            scat_ai=x[2] - 0.5, # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
+                            scat_ai=x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
                             mix_fac=x[3],
                             clear_rend_folder=False,
                             clear_references=False,
                             render_references=False,
                             dry_run=False)
 
-        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.get_path_opt_working(set_name, sample_id))
-        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.get_path_opt_working(set_name, sample_id))
+        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.path_directory_working(set_name, sample_id))
+        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.path_directory_working(set_name, sample_id))
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         # Scale distance with the desnity scale.
@@ -309,7 +310,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
             penalty = some_big_number
         return dist + penalty
 
-    B.run_render_single(rend_base_path=FH.get_path_opt_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
+    B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
                         mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True,
                         dry_run=False)
     if use_hard_coded_starting_guess:

@@ -8,6 +8,7 @@ import os
 import numpy as np
 
 from src.data import file_handling as FH
+from src.data import file_names as FN
 from src import constants as C
 
 
@@ -26,7 +27,7 @@ def write_final_result(set_name: str):
     result_dict['tran_error_mean'] = np.mean([sr[C.result_key_trans_error] for sr in r])
     result_dict['refl_error_std']= np.std([sr[C.result_key_refls_error] for sr in r])
     result_dict['tran_error_std']= np.std([sr[C.result_key_trans_error] for sr in r])
-    p = os.path.abspath(FH.get_set_result_folder_path(set_name) + '/final_result' + C.postfix_text_data_format)
+    p = FH.join(FH.path_directory_set_result(set_name), FN.filename_final_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -47,17 +48,19 @@ def collect_sample_results(set_name: str):
         collected_results.append(sample_result_dict)
     return collected_results
 
-def read_sample_result(set_name: str, sample_id: int):
-    """Reads final result file into a dict and returns it.
 
-    :param sample_id:
+def read_sample_result(set_name: str, sample_id: int):
+    """Reads sample result file into a dict and returns it.
+
     :param set_name:
         Set name.
+    :param sample_id:
+        Sample id.
     :return:
-        Result file content as dict.
+        Result file content as a dict.
     """
 
-    p = os.path.normpath(FH.get_set_sample_path(set_name, sample_id) + f'/{C.file_sample_result}_{sample_id}{C.postfix_text_data_format}')
+    p = FH.join(FH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -65,17 +68,9 @@ def read_sample_result(set_name: str, sample_id: int):
 
 
 def write_sample_result(set_name: str, res_dict: dict, sample_id: int):
-    """Writes final result dictionary into a file.
+    """Writes sample result dictionary into a file."""
 
-    :param sample_id:
-    :param set_name:
-        Set name.
-    :param res_dict:
-        Dictionary to be written.
-    :return:
-        None
-    """
-    p = os.path.normpath(FH.get_set_sample_path(set_name, sample_id) + f'/{C.file_sample_result}_{sample_id}{C.postfix_text_data_format}')
+    p = FH.join(FH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -90,14 +85,12 @@ def collect_subresults(set_name: str, sample_id):
         A list of subresult dictionaries.
     """
 
-    p = FH.get_path_opt_subresult(set_name, sample_id)
+    p = FH.path_directory_subresult(set_name, sample_id)
     subres_list = []
     for filename in os.listdir(p):
         if filename.endswith(C.postfix_text_data_format):
-            subres = toml.load(os.path.join(p, filename))
+            subres = toml.load(FH.join(p, filename))
             subres_list.append(subres)
-            # print(filename)
-            # print(subres)
     return subres_list
 
 
@@ -114,7 +107,7 @@ def write_subresult(set_name: str, res_dict: dict, sample_id):
     """
 
     wl = res_dict[C.subres_key_wl]
-    p = FH.get_path_opt_subresult(set_name, sample_id) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
+    p = FH.path_file_subresult(set_name, wl, sample_id)
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -130,7 +123,8 @@ def read_subresult(set_name: str, wl: float, sample_id):
     :return:
         Subresult as a dictionary.
     """
-    p = FH.get_path_opt_subresult(set_name, sample_id) + '/' + f"subres_wl_{wl:.2f}" + C.postfix_text_data_format
+
+    p = FH.path_file_subresult(set_name, wl, sample_id)
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -150,7 +144,7 @@ def write_target(set_name:str, data, sample_id=0):
     """
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {'wlrt': floated_list}
-    with open(FH.get_path_opt_target_file(set_name, sample_id), 'w+') as file:
+    with open(FH.path_file_target(set_name, sample_id), 'w+') as file:
         toml.dump(res, file)
 
 
@@ -164,7 +158,7 @@ def read_target(set_name: str, sample_id: int):
         List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
     """
 
-    with open(FH.get_path_opt_target_file(set_name, sample_id), 'r') as file:
+    with open(FH.path_file_target(set_name, sample_id), 'r') as file:
         data = toml.load(file)
         data = data['wlrt']
         data = np.array(data)
@@ -181,7 +175,7 @@ def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs):
     :return:
     """
 
-    path = FH.get_filepath_default_starting_guess()
+    path = FH.path_file_default_starting_guess()
     coeff_dict = {C.ad_coeffs:ad_coeffs, C.sd_coeffs:sd_coeffs, C.ai_coeffs:ai_coeffs, C.mf_coeffs:mf_coeffs}
     with open(path, 'w+') as file:
         toml.dump(coeff_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
@@ -194,7 +188,7 @@ def read_starting_guess_coeffs():
         Starting guess coefficients in a dictionary.
     """
 
-    path = FH.get_filepath_default_starting_guess()
+    path = FH.path_file_default_starting_guess()
     with open(path, 'r') as file:
         data = toml.load(file)
         return data
