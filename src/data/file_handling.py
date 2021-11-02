@@ -8,7 +8,7 @@ import logging
 import os
 
 from src import constants as C
-from src import utils
+from src.utils import general_utils as GU
 
 
 def create_first_level_folders(set_name: str):
@@ -306,7 +306,7 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
 
     folder = get_image_folder(target_type, imaging_type, base_path)
     for filename in os.listdir(folder):
-        image_wl = utils.parse_wl_from_image_name(filename)
+        image_wl = GU.parse_wl_from_image_name(filename)
         if almost_equals(wl, image_wl):
             return get_image_file_path(target_type,imaging_type,wl, base_path)
 

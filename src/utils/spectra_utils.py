@@ -11,7 +11,7 @@ import numpy as np
 
 from src import plotter
 from src.data import file_handling as FH, toml_handlling as T
-from src import utils as U
+from src.utils import general_utils as GU
 from src import constants as C
 from src.optimization import Optimization
 
@@ -118,8 +118,8 @@ def fit_starting_guess_coefficients(degree=4):
     ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.result_key_scattering_anisotropy]))])
     mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.result_key_mix_factor]))])
     a_list = np.ones_like(r_list) - (r_list + t_list)  # modeled absorptions
-    ad_coeffs = U.fit_poly(a_list, ad_list, degree=degree, name=C.result_key_absorption_density)
-    sd_coeffs = U.fit_poly(a_list, sd_list, degree=degree, name=C.result_key_scattering_density)
-    ai_coeffs = U.fit_poly(a_list, ai_list, degree=degree, name=C.result_key_scattering_anisotropy)
-    mf_coeffs = U.fit_poly(a_list, mf_list, degree=degree, name=C.result_key_mix_factor)
+    ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree, name=C.result_key_absorption_density)
+    sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree, name=C.result_key_scattering_density)
+    ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree, name=C.result_key_scattering_anisotropy)
+    mf_coeffs = GU.fit_poly(a_list, mf_list, degree=degree, name=C.result_key_mix_factor)
     T.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs)
