@@ -1,22 +1,23 @@
 # Create environment with conda running:
-# conda env create -n tifu --file tifu_env.yml
+# conda env create -n hb --file hb_env.yml
 # Change "create" to "update" when updating.
-name: tifu
+name: hb
 channels:
   - defaults
 dependencies:
   - python=3.7
   - numpy
-  - pandas
-  - xarray
+ # - pandas
+ # - xarray
   - scipy
-  - netcdf4
+ # - netcdf4
   - matplotlib
-  - appdirs
-  - tqdm
+ # - appdirs
+ # - tqdm
   - toml
-  - tabulate
+ # - tabulate
   - ipython
+  - sphinx #API documentation
   - pip
-  - pip:
-      - netcdf4
+ # - pip:
+ #     - netcdf4
