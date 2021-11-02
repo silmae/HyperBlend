@@ -7,10 +7,10 @@ TODO Out of date!!
 import os
 import time
 import numpy as np
-from src import blender_control as B
+from src.rendering import blender_control as B
 # from src.plotter import Plotter
 from src import constants as C
-from src import spectra_utils as SU
+from src.utils import spectra_utils as SU
 from src.optimization import Optimization
 
 def optimize_default_target(spectral_resolution=50):

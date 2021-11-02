@@ -7,7 +7,7 @@ import os
 
 import numpy as np
 
-from src import file_handling as FH
+from src.data import file_handling as FH
 from src import constants as C
 
 

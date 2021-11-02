@@ -42,18 +42,15 @@ For parallel processing
 import math
 import time
 import logging
-import multiprocessing
 from multiprocessing import Pool
 
 import scipy.optimize as optimize
-from scipy.optimize import OptimizeResult
 import numpy as np
 
-from src import constants as C, utils
-from src import blender_control as B
-from src import data_utils as DU
-from src import file_handling as FH
-from src import toml_handlling as T
+from src import constants as C
+from src.rendering import blender_control as B
+from src.utils import data_utils as DU
+from src.data import file_handling as FH, toml_handlling as T
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]

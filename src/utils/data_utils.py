@@ -3,7 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src import file_handling as FH
+from src.data import file_handling as FH
 from src import constants as C
 
 

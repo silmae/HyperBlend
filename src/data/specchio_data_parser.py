@@ -13,7 +13,7 @@ import numpy as np
 import toml
 
 
-main_folder = os.path.normpath('../../SpeccioData')
+main_folder = os.path.normpath('../../../SpeccioData')
 
 def make_target( wls, r_m, t_m, path, sample_idx):
 

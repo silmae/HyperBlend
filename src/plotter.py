@@ -10,12 +10,10 @@ import os
 import logging
 
 import numpy as np
-from numpy.polynomial import Polynomial
 import matplotlib.pyplot as plt
 
 from src import constants as C
-from src import toml_handlling as T
-from src import file_handling as FH
+from src.data import file_handling as FH, toml_handlling as T
 
 figsize = (12,6)
 figsize_single = (6,6)
