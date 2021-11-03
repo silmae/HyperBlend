@@ -78,6 +78,6 @@ def filename_final_result() -> str:
 
 def filename_sample_result(sample_id: int) -> str:
     """Filename of the subresult file."""
-    
+
     filename = f'{C.file_sample_result}_{sample_id}{C.postfix_text_data_format}'
     return filename
