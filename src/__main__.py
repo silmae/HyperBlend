@@ -12,7 +12,7 @@ import sys
 # A bunch of improrts to self-made files you may need.
 from src import presets
 from src.optimization import Optimization
-from data import toml_handlling as TH
+from data import toml_handling as TH
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring

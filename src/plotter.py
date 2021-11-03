@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src import constants as C
-from src.data import file_handling as FH, toml_handlling as T
+from src.data import file_handling as FH, toml_handling as T
 
 figsize = (12,6)
 figsize_single = (6,6)

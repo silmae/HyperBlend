@@ -50,7 +50,7 @@ import numpy as np
 from src import constants as C
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
-from src.data import file_handling as FH, toml_handlling as T
+from src.data import file_handling as FH, toml_handling as T
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
