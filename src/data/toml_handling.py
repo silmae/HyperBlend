@@ -1,11 +1,14 @@
 """
-Methods in this file handle writing and reading of various toml formatted txt files.
+Methods in this module handle writing and reading of various toml formatted txt files.
+
+Hierarchy of the results: final result is mean of sample results,
+which is collected from wavelength results.
 """
 
-import toml
 import os
 
 import numpy as np
+import toml
 
 from src.data import file_handling as FH
 from src.data import file_names as FN
@@ -14,6 +17,9 @@ from src import constants as C
 
 def write_final_result(set_name: str):
     """Collect sample results and write final result to a toml file. """
+
+
+    # TODO move names to constants
 
     result_dict = {}
     r = collect_sample_results(set_name)
@@ -67,22 +73,31 @@ def read_sample_result(set_name: str, sample_id: int):
     return subres_dict
 
 
-def write_sample_result(set_name: str, res_dict: dict, sample_id: int):
-    """Writes sample result dictionary into a file."""
+def write_sample_result(set_name: str, res_dict: dict, sample_id: int) -> None:
+    """Writes sample result dictionary into a file.
+
+    :param set_name:
+        Set name.
+    :param res_dict:
+        Sample results as a dictionary to be written to disk.
+    :param sample_id:
+        Sample id.
+    """
 
     p = FH.join(FH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def collect_subresults(set_name: str, sample_id):
-    """Collects subresult dictionaries in to a list and returns it.
+def collect_wavelength_result(set_name: str, sample_id: int):
+    """Collects wavelength result dictionaries in to a list and returns it.
 
-    :param sample_id:
     :param set_name:
         Set name.
+    :param sample_id:
+        Sample id.
     :return:
-        A list of subresult dictionaries.
+        A list of wavelength result dictionaries.
     """
 
     p = FH.path_directory_subresult(set_name, sample_id)
@@ -94,16 +109,15 @@ def collect_subresults(set_name: str, sample_id):
     return subres_list
 
 
-def write_subresult(set_name: str, res_dict: dict, sample_id):
-    """Writes subresult of optimization of a single wavelength into a file.
+def write_wavelength_result(set_name: str, res_dict: dict, sample_id: int) -> None:
+    """Writes wavelength result of optimization into a file.
 
-    :param sample_id:
     :param set_name:
         Set name.
     :param res_dict:
         Subresult dictionary.
-    :return:
-        None
+    :param sample_id:
+        Sample id.
     """
 
     wl = res_dict[C.subres_key_wl]
@@ -112,14 +126,15 @@ def write_subresult(set_name: str, res_dict: dict, sample_id):
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_subresult(set_name: str, wl: float, sample_id):
-    """Reads a subresult file into a dictionary and returns it.
+def read_wavelength_result(set_name: str, wl: float, sample_id: int):
+    """Reads a wavelength result file into a dictionary and returns it.
 
-    :param sample_id:
     :param set_name:
         Set name.
     :param wl:
         Wavelength of the subresult.
+    :param sample_id:
+        Sample id.
     :return:
         Subresult as a dictionary.
     """
@@ -131,17 +146,18 @@ def read_subresult(set_name: str, wl: float, sample_id):
     return subres_dict
 
 
-def write_target(set_name:str, data, sample_id=0):
+def write_target(set_name:str, data, sample_id=0) -> None:
     """Writes given list of reflectance and transmittance data to toml formatted file.
 
     :param set_name:
-        Name of the set.
+        Set name.
     :param data:
         List of lists or list of tuples [[wl, r, t], ...]
         Do not use numpy arrays as they may break the toml writer.
-    :return:
-        None
+    :param sample_id:
+        Sample id. Default is 0, which is used for sets with only one sample.
     """
+
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {'wlrt': floated_list}
     with open(FH.path_file_target(set_name, sample_id), 'w+') as file:
@@ -151,9 +167,10 @@ def write_target(set_name:str, data, sample_id=0):
 def read_target(set_name: str, sample_id: int):
     """Read target values for optimization.
 
-    :param sample_id:
     :param set_name:
         Name of the set.
+    :param sample_id:
+        Sample id.
     :return:
         List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
     """
@@ -165,14 +182,17 @@ def read_target(set_name: str, sample_id: int):
         return data
 
 
-def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs):
+def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs) -> None:
     """Writes given starting guess coefficients to disk.
 
     :param ad_coeffs:
+        Coefficients for absorption particle density as a list of floats.
     :param sd_coeffs:
+        Coefficients for scattering particle density as a list of floats.
     :param ai_coeffs:
+        Coefficients for scattering anisotropy as a list of floats.
     :param mf_coeffs:
-    :return:
+        Coefficients for mix factor as a list of floats.
     """
 
     path = FH.path_file_default_starting_guess()

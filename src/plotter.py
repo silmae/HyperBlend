@@ -147,7 +147,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
         None
     """
 
-    subres_dict = T.read_subresult(set_name=set_name, wl=wl, sample_id=sample_id)
+    subres_dict = T.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')

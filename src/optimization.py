@@ -167,7 +167,7 @@ class Optimization:
         """
 
         # Collect subresults
-        subreslist = T.collect_subresults(self.set_name, sample_id)
+        subreslist = T.collect_wavelength_result(self.set_name, sample_id)
         result_dict = {}
 
         # Set starting value to which earlier result time is added.
@@ -407,7 +407,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')
 
-    T.write_subresult(set_name, res_dict, sample_id)
+    T.write_wavelength_result(set_name, res_dict, sample_id)
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
