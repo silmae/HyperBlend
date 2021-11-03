@@ -25,7 +25,7 @@ def optimize_default_target(spectral_resolution=50):
         None
     """
 
-    set_name = 'default_taregt_test'
+    set_name = 'default_target_test'
     o = Optimization(set_name)
     SU.make_default_target(set_name)
     o.run_optimization(use_threads=True, resolution=spectral_resolution)
