@@ -152,18 +152,18 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_absorption_density, subres_dict[C.subres_key_history_absorption_density], color=color_ad, skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_density, subres_dict[C.subres_key_history_scattering_density], color=color_sd, skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_scattering_anisotropy, subres_dict[C.subres_key_history_scattering_anisotropy], color=color_ai, skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.subres_key_history_mix_factor, subres_dict[C.subres_key_history_mix_factor], color=color_mf, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ad, subres_dict[C.key_wl_result_history_ad], color=color_ad, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_sd, subres_dict[C.key_wl_result_history_sd], color=color_sd, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ai, subres_dict[C.key_wl_result_history_ai], color=color_ai, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_mf, subres_dict[C.key_wl_result_history_mf], color=color_mf, skip_first=True)
     ax[0].set_xlabel('Render call')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    _plot_x_line_to_axis(ax[1], C.subres_key_reflectance_measured, subres_dict[C.subres_key_reflectance_measured],
-                         np.arange(1,len(subres_dict[C.subres_key_history_reflectance])))
-    _plot_x_line_to_axis(ax[1], C.subres_key_transmittance_measured, subres_dict[C.subres_key_transmittance_measured],
-                         np.arange(1,len(subres_dict[C.subres_key_history_transmittance])), invert=True)
-    plot_refl_tran_to_axis(ax[1], subres_dict[C.subres_key_history_reflectance], subres_dict[C.subres_key_history_transmittance], np.arange(len(subres_dict[C.subres_key_history_scattering_anisotropy])), 'Render call', invert_tran=True, skip_first=True)
+    _plot_x_line_to_axis(ax[1], C.key_wl_result_refl_measured, subres_dict[C.key_wl_result_refl_measured],
+                         np.arange(1, len(subres_dict[C.key_wl_result_history_r])))
+    _plot_x_line_to_axis(ax[1], C.key_wl_result_tran_measured, subres_dict[C.key_wl_result_tran_measured],
+                         np.arange(1, len(subres_dict[C.key_wl_result_history_t])), invert=True)
+    plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True, skip_first=True)
 
     if save_thumbnail is not None:
         folder = FH.path_directory_subresult(set_name, sample_id)
@@ -205,15 +205,15 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     t = []
     for _, sample_id in enumerate(ids):
         result = T.read_sample_result(set_name, sample_id)
-        wls = result[C.result_key_wls]
-        adens.append(result[C.result_key_absorption_density])
-        sdens.append(result[C.result_key_scattering_density])
-        ai.append(result[C.result_key_scattering_anisotropy])
-        mf.append(result[C.result_key_mix_factor])
-        r_m.append(result[C.result_key_refls_measured])
-        t_m.append(result[C.result_key_trans_measured])
-        r.append(result[C.result_key_refls_modeled])
-        t.append(result[C.result_key_trans_modeled])
+        wls = result[C.key_sample_result_wls]
+        adens.append(result[C.key_sample_result_ad])
+        sdens.append(result[C.key_sample_result_sd])
+        ai.append(result[C.key_sample_result_ai])
+        mf.append(result[C.key_sample_result_mf])
+        r_m.append(result[C.key_sample_result_rm])
+        t_m.append(result[C.key_sample_result_tm])
+        r.append(result[C.key_sample_result_r])
+        t.append(result[C.key_sample_result_t])
 
     wls = np.array(wls)
     adens_mean = np.array(adens).mean(axis=0)
@@ -305,9 +305,9 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     tran_errs = []
     for _,sample_id in enumerate(ids):
         result = T.read_sample_result(set_name, sample_id)
-        wls = result[C.result_key_wls]
-        refl_errs.append(result[C.result_key_refls_error])
-        tran_errs.append(result[C.result_key_trans_error])
+        wls = result[C.key_sample_result_wls]
+        refl_errs.append(result[C.key_sample_result_re])
+        tran_errs.append(result[C.key_sample_result_te])
 
     wls = np.array(wls)
     refl_errs_mean = np.array(refl_errs).mean(axis=0)
@@ -356,19 +356,19 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    x_data = result[C.result_key_wls]
+    x_data = result[C.key_sample_result_wls]
     marker = '.'
-    ax[0].scatter(x_data, result[C.result_key_absorption_density], label=C.result_key_absorption_density, marker=marker)
-    ax[0].scatter(x_data, result[C.result_key_scattering_density], label=C.result_key_scattering_density, marker=marker)
-    ax[0].scatter(x_data, result[C.result_key_scattering_anisotropy], label=C.result_key_scattering_anisotropy, marker=marker)
-    ax[0].scatter(x_data, result[C.result_key_mix_factor], label=C.result_key_mix_factor, marker=marker)
+    ax[0].scatter(x_data, result[C.key_sample_result_ad], label=C.key_sample_result_ad, marker=marker)
+    ax[0].scatter(x_data, result[C.key_sample_result_sd], label=C.key_sample_result_sd, marker=marker)
+    ax[0].scatter(x_data, result[C.key_sample_result_ai], label=C.key_sample_result_ai, marker=marker)
+    ax[0].scatter(x_data, result[C.key_sample_result_mf], label=C.key_sample_result_mf, marker=marker)
     x_label = 'Wavelength [nm]'
     ax[0].set_xlabel(x_label)
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_measured], result[C.result_key_trans_measured], result[C.result_key_wls], x_label, invert_tran=True, skip_first=False, refl_color='black', tran_color='black')
-    plot_refl_tran_to_axis(ax[1], result[C.result_key_refls_modeled], result[C.result_key_trans_modeled], result[C.result_key_wls], x_label, invert_tran=True, skip_first=False)
+    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, skip_first=False, refl_color='black', tran_color='black')
+    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True, skip_first=False)
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
         image_name = f"sample_{sample_id}_result_plot.png"
@@ -384,18 +384,18 @@ def plot_vars_per_absorption(dont_show=True, save_thumbnail=True):
     set_name = C.starting_guess_set_name
     result_dict = T.read_sample_result(set_name, 0)
     coeffs = T.read_starting_guess_coeffs()
-    wls = result_dict[C.result_key_wls]
-    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.result_key_refls_modeled]))])
-    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.result_key_trans_modeled]))])
-    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.result_key_absorption_density]))])
-    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.result_key_scattering_density]))])
-    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.result_key_scattering_anisotropy]))])
-    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.result_key_mix_factor]))])
+    wls = result_dict[C.key_sample_result_wls]
+    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
+    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
+    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
+    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
+    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
+    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
     a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
-    plt.scatter(a_list, ad_list, label=C.result_key_absorption_density)
-    plt.scatter(a_list, sd_list, label=C.result_key_scattering_density)
-    plt.scatter(a_list, ai_list, label=C.result_key_scattering_anisotropy)
-    plt.scatter(a_list, mf_list, label=C.result_key_mix_factor)
+    plt.scatter(a_list, ad_list, label=C.key_sample_result_ad)
+    plt.scatter(a_list, sd_list, label=C.key_sample_result_sd)
+    plt.scatter(a_list, ai_list, label=C.key_sample_result_ai)
+    plt.scatter(a_list, mf_list, label=C.key_sample_result_mf)
     for _,key in enumerate(coeffs):
         coeff  = coeffs[key]
         y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])

@@ -18,21 +18,18 @@ from src import constants as C
 def write_final_result(set_name: str):
     """Collect sample results and write final result to a toml file. """
 
-
-    # TODO move names to constants
-
     result_dict = {}
     r = collect_sample_results(set_name)
     sample_count = len(r)
-    result_dict['sample_count'] = sample_count
-    result_dict['total_time_hours'] = np.sum([sr[C.result_key_wall_clock_elapsed_min] for sr in r]) / 60
-    result_dict['time_per_sample_hours'] = np.sum([sr[C.result_key_wall_clock_elapsed_min] for sr in r]) / 60 / sample_count
-    result_dict['total_processor_time_hours'] = np.sum([sr[C.result_key_process_elapsed_min] for sr in r]) / 60
-    result_dict['processor_time_per_sample_hours'] = np.sum([sr[C.result_key_process_elapsed_min] for sr in r]) / 60 / sample_count
-    result_dict['refl_error_mean'] = np.mean([sr[C.result_key_refls_error] for sr in r])
-    result_dict['tran_error_mean'] = np.mean([sr[C.result_key_trans_error] for sr in r])
-    result_dict['refl_error_std']= np.std([sr[C.result_key_refls_error] for sr in r])
-    result_dict['tran_error_std']= np.std([sr[C.result_key_trans_error] for sr in r])
+    result_dict[C.key_set_result_sample_count] = sample_count
+    result_dict[C.key_set_result_total_time_hours] = np.sum([sr[C.key_sample_result_wall_clock_elapsed_min] for sr in r]) / 60
+    result_dict[C.key_set_result_time_per_sample_hours] = np.sum([sr[C.key_sample_result_wall_clock_elapsed_min] for sr in r]) / 60 / sample_count
+    result_dict[C.key_set_result_total_processor_time_hours] = np.sum([sr[C.key_sample_result_process_elapsed_min] for sr in r]) / 60
+    result_dict[C.key_set_result_processor_time_per_sample_hours] = np.sum([sr[C.key_sample_result_process_elapsed_min] for sr in r]) / 60 / sample_count
+    result_dict[C.key_set_result_refl_error_mean] = np.mean([sr[C.key_sample_result_re] for sr in r])
+    result_dict[C.key_set_result_tran_error_mean] = np.mean([sr[C.key_sample_result_te] for sr in r])
+    result_dict[C.key_set_result_refl_error_std]= np.std([sr[C.key_sample_result_re] for sr in r])
+    result_dict[C.key_set_result_tran_error_std]= np.std([sr[C.key_sample_result_te] for sr in r])
     p = FH.join(FH.path_directory_set_result(set_name), FN.filename_final_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
@@ -120,7 +117,7 @@ def write_wavelength_result(set_name: str, res_dict: dict, sample_id: int) -> No
         Sample id.
     """
 
-    wl = res_dict[C.subres_key_wl]
+    wl = res_dict[C.key_wl_result_wl]
     p = FH.path_file_subresult(set_name, wl, sample_id)
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())

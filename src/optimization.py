@@ -171,41 +171,41 @@ class Optimization:
         result_dict = {}
 
         # Set starting value to which earlier result time is added.
-        result_dict[C.result_key_wall_clock_elapsed_min] = wall_clock_time_min
+        result_dict[C.key_sample_result_wall_clock_elapsed_min] = wall_clock_time_min
 
         try:
             previous_result = T.read_sample_result(self.set_name, sample_id)  # throws OSError upon failure
-            this_result_time = result_dict[C.result_key_wall_clock_elapsed_min]
-            previous_result_time = previous_result[C.result_key_wall_clock_elapsed_min]
-            result_dict[C.result_key_wall_clock_elapsed_min] = this_result_time + previous_result_time
+            this_result_time = result_dict[C.key_sample_result_wall_clock_elapsed_min]
+            previous_result_time = previous_result[C.key_sample_result_wall_clock_elapsed_min]
+            result_dict[C.key_sample_result_wall_clock_elapsed_min] = this_result_time + previous_result_time
         except OSError as e:
             pass  # this is ok for the first round
 
-        result_dict[C.result_key_process_elapsed_min] = np.sum(
-            subres[C.subres_key_elapsed_time_s] for subres in subreslist) / 60.0
-        result_dict[C.result_key_r_RMSE] = np.sqrt(
-            np.mean(np.array([subres[C.subres_key_reflectance_error] for subres in subreslist]) ** 2))
-        result_dict[C.result_key_t_RMSE] = np.sqrt(
-            np.mean(np.array([subres[C.subres_key_transmittance_error] for subres in subreslist]) ** 2))
-        result_dict[C.subres_key_optimizer] = subreslist[0][C.subres_key_optimizer],
-        result_dict[C.subres_key_optimizer_ftol] = self.ftol,
-        result_dict[C.subres_key_optimizer_xtol] = self.xtol,
-        result_dict[C.subres_key_optimizer_diffstep] = self.diffstep,
-        if result_dict[C.subres_key_optimizer][0] == 'basin_hopping':
-            result_dict['basin_iterations_required'] = sum([(subres[C.subres_key_optimizer_result]['nit'] > 1) for subres in subreslist])
+        result_dict[C.key_sample_result_process_elapsed_min] = np.sum(
+            subres[C.key_wl_result_elapsed_time_s] for subres in subreslist) / 60.0
+        result_dict[C.key_sample_result_r_RMSE] = np.sqrt(
+            np.mean(np.array([subres[C.key_wl_result_refl_error] for subres in subreslist]) ** 2))
+        result_dict[C.key_sample_result_t_RMSE] = np.sqrt(
+            np.mean(np.array([subres[C.key_wl_result_tran_error] for subres in subreslist]) ** 2))
+        result_dict[C.key_wl_result_optimizer] = subreslist[0][C.key_wl_result_optimizer],
+        result_dict[C.key_wl_result_optimizer_ftol] = self.ftol,
+        result_dict[C.key_wl_result_optimizer_xtol] = self.xtol,
+        result_dict[C.key_wl_result_optimizer_diffstep] = self.diffstep,
+        if result_dict[C.key_wl_result_optimizer][0] == 'basin_hopping':
+            result_dict['basin_iterations_required'] = sum([(subres[C.key_wl_result_optimizer_result]['nit'] > 1) for subres in subreslist])
 
         # Collect lists from subresults
-        wls = np.array([subres[C.subres_key_wl] for subres in subreslist])
-        r   = np.array([subres[C.subres_key_reflectance_modeled] for subres in subreslist])
-        rm  = np.array([subres[C.subres_key_reflectance_measured] for subres in subreslist])
-        re  = np.array([subres[C.subres_key_reflectance_error] for subres in subreslist])
-        t   = np.array([subres[C.subres_key_transmittance_modeled] for subres in subreslist])
-        tm  = np.array([subres[C.subres_key_transmittance_measured] for subres in subreslist])
-        te  = np.array([subres[C.subres_key_transmittance_error] for subres in subreslist])
-        ad  = np.array([subres[C.subres_key_history_absorption_density][-1] for subres in subreslist])
-        sd  = np.array([subres[C.subres_key_history_scattering_density][-1] for subres in subreslist])
-        sa  = np.array([subres[C.subres_key_history_scattering_anisotropy][-1] for subres in subreslist])
-        mf  = np.array([subres[C.subres_key_history_mix_factor][-1] for subres in subreslist])
+        wls = np.array([subres[C.key_wl_result_wl] for subres in subreslist])
+        r   = np.array([subres[C.key_wl_result_refl_modeled] for subres in subreslist])
+        rm  = np.array([subres[C.key_wl_result_refl_measured] for subres in subreslist])
+        re  = np.array([subres[C.key_wl_result_refl_error] for subres in subreslist])
+        t   = np.array([subres[C.key_wl_result_tran_modeled] for subres in subreslist])
+        tm  = np.array([subres[C.key_wl_result_tran_measured] for subres in subreslist])
+        te  = np.array([subres[C.key_wl_result_tran_error] for subres in subreslist])
+        ad  = np.array([subres[C.key_wl_result_history_ad][-1] for subres in subreslist])
+        sd  = np.array([subres[C.key_wl_result_history_sd][-1] for subres in subreslist])
+        sa  = np.array([subres[C.key_wl_result_history_ai][-1] for subres in subreslist])
+        mf  = np.array([subres[C.key_wl_result_history_mf][-1] for subres in subreslist])
 
         # Sort lists by wavelength
         sorting_idx = wls.argsort()
@@ -223,17 +223,17 @@ class Optimization:
         mf = mf[sorting_idx[::-1]]
 
         # Save into final result
-        result_dict[C.result_key_wls] = wls
-        result_dict[C.result_key_refls_modeled] = r
-        result_dict[C.result_key_refls_measured] = rm
-        result_dict[C.result_key_refls_error] = re
-        result_dict[C.result_key_trans_modeled] = t
-        result_dict[C.result_key_trans_measured] = tm
-        result_dict[C.result_key_trans_error] = te
-        result_dict[C.result_key_absorption_density] = ad
-        result_dict[C.result_key_scattering_density] = sd
-        result_dict[C.result_key_scattering_anisotropy] = sa
-        result_dict[C.result_key_mix_factor] = mf
+        result_dict[C.key_sample_result_wls] = wls
+        result_dict[C.key_sample_result_r] = r
+        result_dict[C.key_sample_result_rm] = rm
+        result_dict[C.key_sample_result_re] = re
+        result_dict[C.key_sample_result_t] = t
+        result_dict[C.key_sample_result_tm] = tm
+        result_dict[C.key_sample_result_te] = te
+        result_dict[C.key_sample_result_ad] = ad
+        result_dict[C.key_sample_result_sd] = sd
+        result_dict[C.key_sample_result_ai] = sa
+        result_dict[C.key_sample_result_mf] = mf
 
         T.write_sample_result(self.set_name, result_dict, sample_id)
         plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
@@ -383,26 +383,26 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     # Create subresult dictionary to be saved in file.
     res_dict = {
-        C.subres_key_wl: wl,
-        C.subres_key_reflectance_measured: r_m,
-        C.subres_key_transmittance_measured: t_m,
-        C.subres_key_reflectance_modeled: history[-1][4],
-        C.subres_key_transmittance_modeled: history[-1][5],
-        C.subres_key_reflectance_error: math.fabs(history[-1][4] - r_m),
-        C.subres_key_transmittance_error: math.fabs(history[-1][5] - t_m),
-        C.subres_key_iterations: len(history) - 1,
-        C.subres_key_optimizer: opt_method,
-        C.subres_key_optimizer_ftol: ftol,
-        C.subres_key_optimizer_xtol: xtol,
-        C.subres_key_optimizer_diffstep: diffstep,
-        C.subres_key_optimizer_result: res,
-        C.subres_key_elapsed_time_s: elapsed,
-        C.subres_key_history_reflectance: [float(h[4]) for h in history],
-        C.subres_key_history_transmittance: [float(h[5]) for h in history],
-        C.subres_key_history_absorption_density: [float(h[0]) for h in history],
-        C.subres_key_history_scattering_density: [float(h[1]) for h in history],
-        C.subres_key_history_scattering_anisotropy: [float(h[2]) for h in history],
-        C.subres_key_history_mix_factor: [float(h[3]) for h in history],
+        C.key_wl_result_wl: wl,
+        C.key_wl_result_refl_measured: r_m,
+        C.key_wl_result_tran_measured: t_m,
+        C.key_wl_result_refl_modeled: history[-1][4],
+        C.key_wl_result_tran_modeled: history[-1][5],
+        C.key_wl_result_refl_error: math.fabs(history[-1][4] - r_m),
+        C.key_wl_result_tran_error: math.fabs(history[-1][5] - t_m),
+        C.key_wl_result_iterations: len(history) - 1,
+        C.key_wl_result_optimizer: opt_method,
+        C.key_wl_result_optimizer_ftol: ftol,
+        C.key_wl_result_optimizer_xtol: xtol,
+        C.key_wl_result_optimizer_diffstep: diffstep,
+        C.key_wl_result_optimizer_result: res,
+        C.key_wl_result_elapsed_time_s: elapsed,
+        C.key_wl_result_history_r: [float(h[4]) for h in history],
+        C.key_wl_result_history_t: [float(h[5]) for h in history],
+        C.key_wl_result_history_ad: [float(h[0]) for h in history],
+        C.key_wl_result_history_sd: [float(h[1]) for h in history],
+        C.key_wl_result_history_ai: [float(h[2]) for h in history],
+        C.key_wl_result_history_mf: [float(h[3]) for h in history],
     }
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')

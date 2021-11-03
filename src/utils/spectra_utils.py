@@ -110,16 +110,16 @@ def generate_starting_guess():
 def fit_starting_guess_coefficients(degree=4):
     set_name = C.starting_guess_set_name
     result_dict = T.read_sample_result(set_name, 0)
-    wls = result_dict[C.result_key_wls]
-    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.result_key_refls_modeled]))])
-    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.result_key_trans_modeled]))])
-    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.result_key_absorption_density]))])
-    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.result_key_scattering_density]))])
-    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.result_key_scattering_anisotropy]))])
-    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.result_key_mix_factor]))])
+    wls = result_dict[C.key_sample_result_wls]
+    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
+    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
+    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
+    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
+    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
+    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
     a_list = np.ones_like(r_list) - (r_list + t_list)  # modeled absorptions
-    ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree, name=C.result_key_absorption_density)
-    sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree, name=C.result_key_scattering_density)
-    ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree, name=C.result_key_scattering_anisotropy)
-    mf_coeffs = GU.fit_poly(a_list, mf_list, degree=degree, name=C.result_key_mix_factor)
+    ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree, name=C.key_sample_result_ad)
+    sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree, name=C.key_sample_result_sd)
+    ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree, name=C.key_sample_result_ai)
+    mf_coeffs = GU.fit_poly(a_list, mf_list, degree=degree, name=C.key_sample_result_mf)
     T.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs)
