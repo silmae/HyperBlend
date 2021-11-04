@@ -15,14 +15,25 @@ def chunks(lst, n):
         chunked_list = list(chunks(original_list, 3))
         -> [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
+
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
 
-def fit_poly(x,y,degree,name):
+def fit_poly(x, y, degree):
+    """Fit a plynomial function to data.
+
+    :param x:
+        Data x values.
+    :param y:
+        Data y values.
+    :param degree:
+        Degree of the fuction to fit.
+    :return:
+        A list of coefficients.
+    """
+
     fit = Polynomial.fit(x, y, deg=degree, domain=[0, 1])
     coeffs = fit.convert().coef
     print(f"fitting coeffs for {name}: {coeffs}")
-    # y = np.array([np.sum(np.array([coeffs[i] * (j ** i) for i in range(len(coeffs))])) for j in x])
-    # plt.plot(x, y, color='black')
     return coeffs
