@@ -16,12 +16,18 @@ from src import constants as C
 from src.data import file_handling as FH, toml_handling as T
 
 figsize = (12,6)
+"""Figure size for two plot figures."""
 figsize_single = (6,6)
+"""Figure size for single plot figures."""
 fig_title_font_size = 18
+"""Title font size."""
 axis_label_font_size = 16
+"""Axis label font size"""
 
-variable_space_ylim = [0.0, 1]
+variable_space_ylim = [0.0, 1.0]
+"""Y-axis limit for leaf material parameter plot."""
 
+# Colors
 color_reflectance = 'royalblue'
 color_transmittance = 'deeppink'
 color_reflectance_measured = 'black'
@@ -30,91 +36,13 @@ color_ad = 'olivedrab'
 color_sd = 'darkorange'
 color_ai = 'brown'
 color_mf = 'darkorchid'
+color_history_target = 'black'
+
 alpha_error = 0.2
+"""Alpha for std shadow."""
+
 max_ticks = 8
-
-
-def _plot_list_variable_to_axis(axis_object, label: str, data, color):
-    """Plots given Blender parameter to given matplolib.axis object.
-
-    :param color:
-    :param axis_object:
-        matplotlib.axis object to plot to.
-    :param label:
-        Label for the plot.
-    :param data:
-        List of parameter values per wavelength.
-    :return:
-        None
-    """
-
-    length = len(data)
-    axis_object.plot(np.arange(length), data, label=label, color=color)
-
-
-def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=False):
-    """Plots a horizontal line to given axis object on height data. Used for subresult plots.
-
-    :param axis_object:
-        matplotlib.axis object to plot to.
-    :param label:
-        Label for the plot.
-    :param data:
-        Into what height the horizontal line should be drawn to.
-    :param x_values:
-        Essentially the length of the line.
-    :param invert:
-        Use reciprocal of data as height. Used for transmittance values.
-    :return:
-        None
-    """
-
-    if invert:
-        axis_object.plot(x_values, 1 - np.ones((len(x_values))) * data, label=label, color='red')
-    else:
-        axis_object.plot(x_values, np.ones((len(x_values))) * data, label=label, color='red')
-
-
-def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
-    """Plots reflectance and transmittance to given axis object.
-
-    :param axis_object:
-        matplotlib.axis object to plot to.
-    :param refl:
-        List of reflectance values to be plotted.
-    :param tran:
-        List of transmittance values to be plotted.
-    :param x_values:
-        Essentially a list of wavelengths.
-    :param x_label:
-        Label of x-axis.
-    :param invert_tran:
-        If True, transmittance is plotted on separate y-axis 'upside down' as is common.
-    :param refl_color:
-        Color of reflectance points.
-    :param tran_color:
-        Color of transmittance points.
-    :return:
-        None
-    """
-
-    axis_object.set_xlabel(x_label)
-    axis_object.set_ylabel('Reflectance', color=refl_color)
-    axis_object.tick_params(axis='y', labelcolor=refl_color)
-    # Make twin axis for transmittance
-    axt = axis_object.twinx()
-    axt.set_ylabel('Transmittance', color=tran_color)
-    axt.tick_params(axis='y', labelcolor=tran_color)
-    # But use given x_values for plotting
-    marker = '.'
-    axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
-    axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
-
-    axis_object.set_ylim([0, 1])
-    if invert_tran:
-        axt.set_ylim([1, 0])
-    else:
-        axt.set_ylim([0, 1])
+"""Max tick count for wavelength."""
 
 
 def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True):
@@ -138,17 +66,19 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ad, subres_dict[C.key_wl_result_history_ad], color=color_ad)
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_sd, subres_dict[C.key_wl_result_history_sd], color=color_sd)
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ai, subres_dict[C.key_wl_result_history_ai], color=color_ai)
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_mf, subres_dict[C.key_wl_result_history_mf], color=color_mf)
+    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ad])), subres_dict[C.key_wl_result_history_ad], label=C.key_wl_result_history_ad, color=color_ad)
+    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_sd])), subres_dict[C.key_wl_result_history_sd], label=C.key_wl_result_history_sd, color=color_sd)
+    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ai])), subres_dict[C.key_wl_result_history_ai], label=C.key_wl_result_history_ai, color=color_ai)
+    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_mf])), subres_dict[C.key_wl_result_history_mf], label=C.key_wl_result_history_mf, color=color_mf)
     ax[0].set_xlabel('Render call')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    _plot_x_line_to_axis(ax[1], C.key_wl_result_refl_measured, subres_dict[C.key_wl_result_refl_measured],
-                         np.arange(1, len(subres_dict[C.key_wl_result_history_r])))
-    _plot_x_line_to_axis(ax[1], C.key_wl_result_tran_measured, subres_dict[C.key_wl_result_tran_measured],
-                         np.arange(1, len(subres_dict[C.key_wl_result_history_t])), invert=True)
+
+    # Plot horizontal line to location of measured value
+    x_data = np.arange(1, len(subres_dict[C.key_wl_result_history_r]))
+    ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target)
+    ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target)
+
     plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
@@ -217,8 +147,8 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     sdens_std = np.array(sdens).std(axis=0) / 2
     ai_std = np.array(ai).std(axis=0) / 2
     mf_std = np.array(mf).std(axis=0) / 2
-    r_m_std= np.array(r_m).std(axis=0) / 2
-    t_m_std= np.array(t_m).std(axis=0) / 2
+    # r_m_std= np.array(r_m).std(axis=0) / 2
+    # t_m_std= np.array(t_m).std(axis=0) / 2
     r_std = np.array(r).std(axis=0) / 2
     t_std = np.array(t).std(axis=0) / 2
 
@@ -227,18 +157,6 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     plot_neat_errors(ax[0], wls, ai_mean, ai_std, color_ai, 'Scattering anistropy')
     plot_neat_errors(ax[0], wls, mf_mean, mf_std, color_mf, 'Mix factor')
 
-    # ax[
-    #     0].errorbar(wls, sdens_mean, errorevery=error_every, ls='', yerr=sdens_std, label=C.result_key_scattering_density, marker=marker)
-    # ax[
-    #     0].errorbar(wls, ai_mean, errorevery=error_every, ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
-    # ax[
-    #     0].errorbar(wls, mf_mean, errorevery=error_every, ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
-
-    # error_every = 5
-    # ax[0].errorbar(wls, adens_mean, errorevery=error_every,ls='', yerr=adens_std, label=C.result_key_absorption_density, marker=marker)
-    # ax[0].errorbar(wls, sdens_mean, errorevery=error_every,ls='', yerr=sdens_std, label=C.result_key_scattering_density, marker=marker)
-    # ax[0].errorbar(wls, ai_mean,    errorevery=error_every,ls='', yerr=ai_std, label=C.result_key_scattering_anisotropy, marker=marker)
-    # ax[0].errorbar(wls, mf_mean,    errorevery=error_every,ls='', yerr=mf_std, label=C.result_key_mix_factor, marker=marker)
     x_label = 'Wavelength [nm]'
     ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[1].set_xlabel(x_label, fontsize=axis_label_font_size)
@@ -253,7 +171,6 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     ax[1].set_ylabel('Reflectance', color=color_reflectance, fontsize=axis_label_font_size)
     ax[1].tick_params(axis='y', labelcolor=color_reflectance)
     plot_neat_errors(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
-    # plot_neat_errors(ax[1], wls, r_m_mean, r_m_std, color_reflectance_measured, 'Reflectance measured', ls='dotted')
     ax[1].plot(wls, r_m_mean, color=color_reflectance_measured, ls='dotted')
 
     ax_inverted = ax[1].twinx()
@@ -261,14 +178,8 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     ax_inverted.set_ylabel('Transmittance', color=color_transmittance, fontsize=axis_label_font_size)
     ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
     plot_neat_errors(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
-    # plot_neat_errors(ax_inverted, wls, t_m_mean, t_m_std, color_transmittance_measured, 'Transmittance measured', ls='dotted')
     ax_inverted.plot(wls, t_m_mean, color=color_transmittance_measured, ls='dotted')
 
-    # plot_refl_tran_to_axis(ax[1], r_m_mean, t_m_mean, result[C.result_key_wls], x_label, invert_tran=True,
-    #                        tran_color='black', refl_color='black', skip_first=False, refl_errors=r_m_std,
-    #                        tran_errors=t_m_std)
-    # plot_refl_tran_to_axis(ax[1], r_mean, t_mean, result[C.result_key_wls], x_label, invert_tran=True, skip_first=False,
-    #                        refl_errors=r_std, tran_errors=t_std)
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
         image_name = f"set_average_result_plot.png"
@@ -278,7 +189,9 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     if not dont_show:
         plt.show()
 
+
 def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=True):
+    """Plots averaged optimization errors of a sample. """
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
@@ -325,14 +238,16 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     if not dont_show:
         plt.show()
 
-def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=True):
-    """Plots final result of all optimized wavelengths to result/plot folder using existing final result TOML file.
 
-    :param sample_id:
+def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumbnail=True) -> None:
+    """Plots sample result.
+
     :param set_name:
         Set name.
+    :param sample_id:
+        Sample id.
     :param save_thumbnail:
-        If True, a JPG image is saved to result/plot folder. Default is True.
+        If True, a PNG image is saved. Default is True.
     :param dont_show:
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     :return:
@@ -367,7 +282,11 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
         plt.show()
 
 
-def plot_vars_per_absorption(dont_show=True, save_thumbnail=True):
+def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> None:
+    """Plot starting guess poynomial fit with data.
+
+    Used only when generating the starting guess.
+    """
 
     set_name = C.starting_guess_set_name
     result_dict = T.read_sample_result(set_name, 0)
@@ -401,3 +320,59 @@ def plot_vars_per_absorption(dont_show=True, save_thumbnail=True):
 
     if not dont_show:
         plt.show()
+
+
+def replot_wl_results(set_name: str):
+    """Replot wavelength results.
+
+    Overwrites existing plots.
+    """
+
+    sample_ids = FH.list_finished_sample_ids(set_name)
+    for sample_id in sample_ids:
+        d = T.read_sample_result(set_name, sample_id=sample_id)
+        wls = d[C.key_sample_result_wls]
+        for wl in wls:
+            plot_subresult_opt_history(set_name, wl=wl, sample_id=sample_id)
+
+
+def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
+    """Plots reflectance and transmittance to given axis object.
+
+    :param axis_object:
+        matplotlib.axis object to plot to.
+    :param refl:
+        List of reflectance values to be plotted.
+    :param tran:
+        List of transmittance values to be plotted.
+    :param x_values:
+        Essentially a list of wavelengths.
+    :param x_label:
+        Label of x-axis.
+    :param invert_tran:
+        If True, transmittance is plotted on separate y-axis 'upside down' as is common.
+    :param refl_color:
+        Color of reflectance points.
+    :param tran_color:
+        Color of transmittance points.
+    :return:
+        None
+    """
+
+    axis_object.set_xlabel(x_label)
+    axis_object.set_ylabel('Reflectance', color=refl_color)
+    axis_object.tick_params(axis='y', labelcolor=refl_color)
+    # Make twin axis for transmittance
+    axt = axis_object.twinx()
+    axt.set_ylabel('Transmittance', color=tran_color)
+    axt.tick_params(axis='y', labelcolor=tran_color)
+    # But use given x_values for plotting
+    marker = '.'
+    axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
+    axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
+
+    axis_object.set_ylim([0, 1])
+    if invert_tran:
+        axt.set_ylim([1, 0])
+    else:
+        axt.set_ylim([0, 1])

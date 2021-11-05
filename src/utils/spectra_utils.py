@@ -106,7 +106,7 @@ def generate_starting_guess():
     make_linear_test_target(set_name)
     o.run_optimization(resolution=10, use_basin_hopping=False, use_threads=True)
     fit_starting_guess_coefficients()
-    plotter.plot_vars_per_absorption()
+    plotter._plot_starting_guess_coeffs_fitting()
 
 
 def fit_starting_guess_coefficients(degree=4):
