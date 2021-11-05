@@ -93,6 +93,12 @@ file_sample_result = 'sample_result'
 key_wl_result_wl = 'wl'
 """Wavelength."""
 
+key_wl_result_x0 = 'x0'
+"""Starting guess used for the wavelength optimization."""
+
+key_wl_result_x_best = 'x_best'
+"""Optimized leaf material variables for the wavelength."""
+
 key_wl_result_refl_measured = 'reflectance_measured'
 """Measured (target) reflectance."""
 

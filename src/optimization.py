@@ -413,8 +413,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     # Create wavelength result dictionary to be saved on disk.
     res_dict = {
         C.key_wl_result_wl: wl,
-        'x0': x_0,
-        'x_best': res.x,
+        C.key_wl_result_x0: x_0,
+        C.key_wl_result_x_best: res.x,
         C.key_wl_result_refl_measured: r_m,
         C.key_wl_result_tran_measured: t_m,
         C.key_wl_result_refl_modeled: r_best,
