@@ -142,7 +142,10 @@ class Optimization:
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
             self.make_sample_result(sample_id, wall_clock_time_min=elapsed_min)
 
-        # TODO make set result if more than one sample
+        # Plot averages if there was more than one sample
+        if len(FH.list_finished_sample_ids(self.set_name)) > 1:
+            plotter.plot_averaged_sample_result(self.set_name)
+            plotter.plot_averaged_sample_errors(self.set_name)
 
     def make_sample_result(self, sample_id: int, wall_clock_time_min=0.0):
         """Creates the sample result by collecting the data from wavelength results.

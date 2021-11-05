@@ -14,7 +14,7 @@ def parse_sample_id(filename: str) -> int:
         Parsed sample id.
     """
 
-    sample_id = int(filename.rstrip(C.postfix_text_data_format).split('_')[1])
+    sample_id = int(filename.rstrip(C.postfix_text_data_format).split('_')[-1])
     return sample_id
 
 
