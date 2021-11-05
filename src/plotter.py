@@ -34,7 +34,7 @@ alpha_error = 0.2
 max_ticks = 8
 
 
-def _plot_list_variable_to_axis(axis_object, label: str, data, color, skip_first=False):
+def _plot_list_variable_to_axis(axis_object, label: str, data, color):
     """Plots given Blender parameter to given matplolib.axis object.
 
     :param color:
@@ -44,18 +44,12 @@ def _plot_list_variable_to_axis(axis_object, label: str, data, color, skip_first
         Label for the plot.
     :param data:
         List of parameter values per wavelength.
-    :param skip_first:
-        If true, the first value is not plotted. This exists because the history given by
-        the optimization class contains the starting guess as the first datapoint.
     :return:
         None
     """
 
     length = len(data)
-    if skip_first:
-        axis_object.plot(np.arange(length - 1), data[1:length], label=label, color=color)
-    else:
-        axis_object.plot(np.arange(length), data, label=label, color=color)
+    axis_object.plot(np.arange(length), data, label=label, color=color)
 
 
 def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=False):
@@ -81,7 +75,7 @@ def _plot_x_line_to_axis(axis_object, label: str, data: float, x_values, invert=
         axis_object.plot(x_values, np.ones((len(x_values))) * data, label=label, color='red')
 
 
-def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, skip_first=False, refl_color=color_reflectance, tran_color=color_transmittance):
+def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -96,9 +90,6 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
         Label of x-axis.
     :param invert_tran:
         If True, transmittance is plotted on separate y-axis 'upside down' as is common.
-    :param skip_first:
-        If true, the first value is not plotted. This exists because the history given by
-        the optimization class contains the starting guess as the first datapoint.
     :param refl_color:
         Color of reflectance points.
     :param tran_color:
@@ -115,14 +106,9 @@ def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tr
     axt.set_ylabel('Transmittance', color=tran_color)
     axt.tick_params(axis='y', labelcolor=tran_color)
     # But use given x_values for plotting
-    length = len(x_values)
     marker = '.'
-    if skip_first:
-        axis_object.plot(x_values[1:length], refl[1:length], label="Reflectance", color=refl_color, marker=marker)
-        axt.plot(x_values[1:length], tran[1:length], label="Transmittance", color=tran_color, marker=marker)
-    else:
-        axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
-        axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
+    axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
+    axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
 
     axis_object.set_ylim([0, 1])
     if invert_tran:
@@ -152,10 +138,10 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ad, subres_dict[C.key_wl_result_history_ad], color=color_ad, skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_sd, subres_dict[C.key_wl_result_history_sd], color=color_sd, skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ai, subres_dict[C.key_wl_result_history_ai], color=color_ai, skip_first=True)
-    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_mf, subres_dict[C.key_wl_result_history_mf], color=color_mf, skip_first=True)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ad, subres_dict[C.key_wl_result_history_ad], color=color_ad)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_sd, subres_dict[C.key_wl_result_history_sd], color=color_sd)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_ai, subres_dict[C.key_wl_result_history_ai], color=color_ai)
+    _plot_list_variable_to_axis(ax[0], C.key_wl_result_history_mf, subres_dict[C.key_wl_result_history_mf], color=color_mf)
     ax[0].set_xlabel('Render call')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
@@ -163,7 +149,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
                          np.arange(1, len(subres_dict[C.key_wl_result_history_r])))
     _plot_x_line_to_axis(ax[1], C.key_wl_result_tran_measured, subres_dict[C.key_wl_result_tran_measured],
                          np.arange(1, len(subres_dict[C.key_wl_result_history_t])), invert=True)
-    plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True, skip_first=True)
+    plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
         folder = FH.path_directory_subresult(set_name, sample_id)
@@ -177,6 +163,7 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     # close the figure to avoid memory consumption warning when over 20 figs
     plt.close(fig)
 
+
 def plot_neat_errors(ax_obj, x, value, value_std, color, label, ls='-'):
     sorting_idx = x.argsort()
     x_sorted = x[sorting_idx[::-1]]
@@ -184,6 +171,7 @@ def plot_neat_errors(ax_obj, x, value, value_std, color, label, ls='-'):
     std_sorted = value_std[sorting_idx[::-1]]
     ax_obj.fill_between(x_sorted, value_sorted-std_sorted, value_sorted+std_sorted, alpha=alpha_error, color=color)
     ax_obj.plot(x_sorted, value_sorted, color=color, ls=ls, label=label)
+
 
 def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=True):
 
@@ -367,8 +355,8 @@ def plot_sample_result(set_name: str, sample_id, dont_show=True, save_thumbnail=
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, skip_first=False, refl_color='black', tran_color='black')
-    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True, skip_first=False)
+    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
+    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
         image_name = f"sample_{sample_id}_result_plot.png"

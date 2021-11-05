@@ -340,10 +340,6 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
-    # Save the starting guess into history. This will not be included in any plots.
-    # TODO remove this and fix plotting methods accordingly. Save x0 separately to result toml
-    history.append([*x_0, 0.0, 0.0])
-
     opt_method = 'least_squares'
     if not use_basin_hopping:
         res = optimize.least_squares(f, x_0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
@@ -425,7 +421,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         C.key_wl_result_tran_modeled: t_best,
         C.key_wl_result_refl_error: math.fabs(r_best - r_m),
         C.key_wl_result_tran_error: math.fabs(t_best - t_m),
-        C.key_wl_result_iterations: len(history) - 1, # FIXME when fixing the history
+        C.key_wl_result_iterations: len(history),
         C.key_wl_result_optimizer: opt_method,
         C.key_wl_result_optimizer_ftol: ftol,
         C.key_wl_result_optimizer_xtol: xtol,
