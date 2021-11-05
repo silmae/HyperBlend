@@ -400,16 +400,32 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     elapsed = time.perf_counter() - start
 
+    # Render one more time with best values (in case it was not the last run)
+    B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id),
+                        wl=wl,
+                        abs_dens= res.x[0] * density_scale,
+                        scat_dens=res.x[1] * density_scale,
+                        scat_ai=res.x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
+                        mix_fac=res.x[3],
+                        clear_rend_folder=False,
+                        clear_references=False,
+                        render_references=False,
+                        dry_run=False)
+    r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.path_directory_working(set_name, sample_id))
+    t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.path_directory_working(set_name, sample_id))
+
     # Create wavelength result dictionary to be saved on disk.
     res_dict = {
         C.key_wl_result_wl: wl,
+        'x0': x_0,
+        'x_best': res.x,
         C.key_wl_result_refl_measured: r_m,
         C.key_wl_result_tran_measured: t_m,
-        C.key_wl_result_refl_modeled: history[-1][4],
-        C.key_wl_result_tran_modeled: history[-1][5],
-        C.key_wl_result_refl_error: math.fabs(history[-1][4] - r_m),
-        C.key_wl_result_tran_error: math.fabs(history[-1][5] - t_m),
-        C.key_wl_result_iterations: len(history) - 1,
+        C.key_wl_result_refl_modeled: r_best,
+        C.key_wl_result_tran_modeled: t_best,
+        C.key_wl_result_refl_error: math.fabs(r_best - r_m),
+        C.key_wl_result_tran_error: math.fabs(t_best - t_m),
+        C.key_wl_result_iterations: len(history) - 1, # FIXME when fixing the history
         C.key_wl_result_optimizer: opt_method,
         C.key_wl_result_optimizer_ftol: ftol,
         C.key_wl_result_optimizer_xtol: xtol,
