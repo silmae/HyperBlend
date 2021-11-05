@@ -1,42 +1,5 @@
 """
-Desired folder structure for optimization process:
-
-- project_root
-    - optimization
-        - set_name
-            - target (refl tran)
-                - target.toml
-            - working_temp
-                - rend_leaf
-                - rend_refl_ref
-                - rend_tran_ref
-            - result
-                - final_result.toml
-                - plot
-                    - result_plot.jpg
-                    - parameter_a.png
-                    - parameter_b.png
-                    - ...
-                - sub_result
-                    - wl_1XXX.toml
-                    - wl_2XXX.toml
-                    - ...
-
-For parallel processing
-
-1. fetch wavelengths, and target reflectance and transmittance from optimization/target/target.toml before threading
-2. deside a starting guess (constant?)
-3. rend references to working_temp/rend_refl_ref and rend_tran_ref
-4. make a thread pool
-5. run wavelength-wise optimization
-    5.1 rend leaf to rend_leaf folder
-    5.2 retrieve r and t
-    5.3 compare to target
-    5.4 finish when good enough
-    5.5 save result (a,b,c,d,r,t, and metadata) to sub_reesult/wl_XX.toml
-6. collect subresults to single file (add RMSE and such)
-7. plot resulting (a,b,c,d,r,t)
-
+Optimization class and related methods.
 """
 
 import math
@@ -54,38 +17,59 @@ from src.data import file_handling as FH, toml_handling as T
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
+"""This should be used only if the starting guess based on polynomial fitting is not available. 
+ Will produce worse results and is slower. """
+
 LOWER_BOUND = [0.000001, 0.000001, 0.0, 0.0]
+"""Lower constraints of the minimization problem. Absorption and scattering particle density cannot be exactly 
+zero as it may cause problems in rendering. """
+
 UPPER_BOUND = [1.0, 1.0, 1.0, 1.0]
+"""Upper limit of the minimization problem."""
+
 
 class Optimization:
+    """
+        Optimization class runs a least squares optimization of the HyperBlend leaf spectral model
+        against a set of measured leaf spectra.
+    """
 
     def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=5e-3,
-                 clear_subresults=False, use_hard_coded_starting_guess=False):
+                 clear_wl_results=False, use_hard_coded_starting_guess=False):
         """Initialize new optimization object.
 
         Creates necessary folder structure if needed.
 
         :param set_name:
-            Set name.
+            Set name. This is used to identify the measurement set.
         :param ftol:
-            Function value change tolerance for lsq minimization
+            Function value (difference between measured and modeled) change between iterations considered
+            as 'still converging'.
+            This is a stop criterion for the optimizer. Smaller value leads to more accurate result, but increases
+            the optimization time. Works in tandem with xtol, so whichever value is reached first will stop
+            the optimization for that wavelength.
         :param ftol_abs:
-            Absolute termination condition for basin hopping. Only used if run with basin hopping algorithm.
+            Absolute termination condition for basin hopping. There will be no more basin hopping iterations
+             if reached function value is smaller than this value. Only used if run with basin hopping algorithm,
+             which can help if optimization gets caught in local minima. Basin hopping can be turned on when
+             Optimization.run() is called.
         :param xtol:
-            Variable value change tolerance for lsq minimization
+            Controls how much the leaf material parameters need to change between iterations to be considered
+            'progressing'. Greater value stops the optimization earlier.
         :param diffstep:
-            Stepsize for finite difference jacobian estimation. Smaller step gives
+            Stepsize for finite difference Jacobian estimation. Smaller step gives
             better results, but the variables look cloudy. Big step is faster and variables
             smoother but there will be outliers in the results. Good stepsize is between 0.001 and 0.01.
-        :param clear_subresults:
-            If True, clear the subresults folder. Default is False. This is useful when running multiple
-            tests with the same set name and you want to overwrite the last result.
+        :param clear_wl_results:
+            If True, clears the all wavelength results. Default is False. This is useful when running multiple
+            tests with the same set name and you want to overwrite the last result. Old render are always cleared.
+        :param use_hard_coded_starting_guess:
+            Use hard-coded starting guess instead of the one based on polynomial fitting (the default).
+            Use this only if the default starting guess is unavailable for some reason.
         """
 
-        # Bounds
-        # Do not let densities (x1,x2) drop to 0 as it will result in nonphysical behavior.
         self.bounds = (LOWER_BOUND, UPPER_BOUND)
-        # Control how much density variables (x1,x2) are scaled for rendering. Value of 100 cannot
+        # Control how much density variables (absorption and scattering density) are scaled for rendering. Value of 100 cannot
         # produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
         self.density_scale = 300
 
@@ -100,29 +84,31 @@ class Optimization:
         self.use_hard_coded_starting_guess = use_hard_coded_starting_guess
 
         FH.create_first_level_folders(self.set_name)
-        # TODO check these later
+
         ids = FH.list_target_ids(self.set_name)
         for _, sample_id in enumerate(ids):
             FH.clear_rend_leaf(self.set_name, sample_id)
             FH.clear_rend_refs(self.set_name, sample_id)
-            if clear_subresults:
+            if clear_wl_results:
                 FH.clear_folder(FH.path_directory_subresult(self.set_name, sample_id))
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1):
-        """Run optimization.
+        """Runs the optimization for each sample in the set.
 
-        Reads target reflectance and transmittance from a file.
+        It is safe to interrupt this method at any point as intermediate results are
+        saved to disk and existing results are not optimized again.
 
-        :param use_basin_hopping:
+        Loops through target toml files in set's target folder.
+
         :param use_threads:
-            If True use parallel computation.
-        :param opt_method:
-            Optimization method to be used. Check implementation for available options.
+            If True, use parallel computation on CPU.
+        :param use_basin_hopping:
+            If True, use basin hopping algorithm on top of the default least squares method.
+            It helps in not getting stuck to local optima, but is significantly slower.
         :param resolution:
             Spectral resolution. Default value 1 will optimize all wavelengths. Value 10
             would optimize every 10th spectral band.
         """
-
 
         ids = FH.list_target_ids(self.set_name)
         ids.sort()
@@ -156,60 +142,63 @@ class Optimization:
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
             self.make_sample_result(sample_id, wall_clock_time_min=elapsed_min)
 
+        # TODO make set result if more than one sample
 
     def make_sample_result(self, sample_id: int, wall_clock_time_min=0.0):
-        """Collects the final result from existing subresults.
+        """Creates the sample result by collecting the data from wavelength results.
 
-        Saves final result as toml and plotted image.
+        Saves the result as numerical data and plots.
 
+        :param sample_id:
+            Sample id.
         :param wall_clock_time_min:
-            Wall clock time may differ from summed subresult time if computed in parallel.
+            Wall clock time used to optimize this sample.
         """
 
         # Collect subresults
-        subreslist = T.collect_wavelength_result(self.set_name, sample_id)
-        result_dict = {}
+        wl_res_list = T.collect_wavelength_result(self.set_name, sample_id)
+        sample_result_dict = {}
 
         # Set starting value to which earlier result time is added.
-        result_dict[C.key_sample_result_wall_clock_elapsed_min] = wall_clock_time_min
+        sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = wall_clock_time_min
 
+        # If we already have existing sample result, with sparser resolution, we'll want to take that
+        # into account when saving the new result.
         try:
             previous_result = T.read_sample_result(self.set_name, sample_id)  # throws OSError upon failure
-            this_result_time = result_dict[C.key_sample_result_wall_clock_elapsed_min]
+            this_result_time = sample_result_dict[C.key_sample_result_wall_clock_elapsed_min]
             previous_result_time = previous_result[C.key_sample_result_wall_clock_elapsed_min]
-            result_dict[C.key_sample_result_wall_clock_elapsed_min] = this_result_time + previous_result_time
+            sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = this_result_time + previous_result_time
         except OSError as e:
-            pass  # this is ok for the first round
+            pass  # there was no previous result so this is OK
 
-        result_dict[C.key_sample_result_process_elapsed_min] = np.sum(
-            subres[C.key_wl_result_elapsed_time_s] for subres in subreslist) / 60.0
-        result_dict[C.key_sample_result_r_RMSE] = np.sqrt(
-            np.mean(np.array([subres[C.key_wl_result_refl_error] for subres in subreslist]) ** 2))
-        result_dict[C.key_sample_result_t_RMSE] = np.sqrt(
-            np.mean(np.array([subres[C.key_wl_result_tran_error] for subres in subreslist]) ** 2))
-        result_dict[C.key_wl_result_optimizer] = subreslist[0][C.key_wl_result_optimizer],
-        result_dict[C.key_wl_result_optimizer_ftol] = self.ftol,
-        result_dict[C.key_wl_result_optimizer_xtol] = self.xtol,
-        result_dict[C.key_wl_result_optimizer_diffstep] = self.diffstep,
-        if result_dict[C.key_wl_result_optimizer][0] == 'basin_hopping':
-            result_dict['basin_iterations_required'] = sum([(subres[C.key_wl_result_optimizer_result]['nit'] > 1) for subres in subreslist])
+        sample_result_dict[C.key_sample_result_process_elapsed_min] = np.sum(subres[C.key_wl_result_elapsed_time_s] for subres in wl_res_list) / 60.0
+        sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.key_wl_result_refl_error] for subres in wl_res_list]) ** 2))
+        sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.key_wl_result_tran_error] for subres in wl_res_list]) ** 2))
+        sample_result_dict[C.key_wl_result_optimizer] = wl_res_list[0][C.key_wl_result_optimizer],
+        sample_result_dict[C.key_wl_result_optimizer_ftol] = self.ftol,
+        sample_result_dict[C.key_wl_result_optimizer_xtol] = self.xtol,
+        sample_result_dict[C.key_wl_result_optimizer_diffstep] = self.diffstep,
+        if sample_result_dict[C.key_wl_result_optimizer][0] == 'basin_hopping':
+            sample_result_dict['basin_iterations_required'] = sum([(subres[C.key_wl_result_optimizer_result]['nit'] > 1) for subres in wl_res_list])
 
         # Collect lists from subresults
-        wls = np.array([subres[C.key_wl_result_wl] for subres in subreslist])
-        r   = np.array([subres[C.key_wl_result_refl_modeled] for subres in subreslist])
-        rm  = np.array([subres[C.key_wl_result_refl_measured] for subres in subreslist])
-        re  = np.array([subres[C.key_wl_result_refl_error] for subres in subreslist])
-        t   = np.array([subres[C.key_wl_result_tran_modeled] for subres in subreslist])
-        tm  = np.array([subres[C.key_wl_result_tran_measured] for subres in subreslist])
-        te  = np.array([subres[C.key_wl_result_tran_error] for subres in subreslist])
-        ad  = np.array([subres[C.key_wl_result_history_ad][-1] for subres in subreslist])
-        sd  = np.array([subres[C.key_wl_result_history_sd][-1] for subres in subreslist])
-        sa  = np.array([subres[C.key_wl_result_history_ai][-1] for subres in subreslist])
-        mf  = np.array([subres[C.key_wl_result_history_mf][-1] for subres in subreslist])
+        wls = np.array([subres[C.key_wl_result_wl] for subres in wl_res_list])
+        r   = np.array([subres[C.key_wl_result_refl_modeled] for subres in wl_res_list])
+        rm  = np.array([subres[C.key_wl_result_refl_measured] for subres in wl_res_list])
+        re  = np.array([subres[C.key_wl_result_refl_error] for subres in wl_res_list])
+        t   = np.array([subres[C.key_wl_result_tran_modeled] for subres in wl_res_list])
+        tm  = np.array([subres[C.key_wl_result_tran_measured] for subres in wl_res_list])
+        te  = np.array([subres[C.key_wl_result_tran_error] for subres in wl_res_list])
+        ad  = np.array([subres[C.key_wl_result_history_ad][-1] for subres in wl_res_list])
+        sd  = np.array([subres[C.key_wl_result_history_sd][-1] for subres in wl_res_list])
+        sa  = np.array([subres[C.key_wl_result_history_ai][-1] for subres in wl_res_list])
+        mf  = np.array([subres[C.key_wl_result_history_mf][-1] for subres in wl_res_list])
 
-        # Sort lists by wavelength
+        # Sort lists by wavelength. This has to be done as the wavelength
+        # results are read from files in no particular order.
         sorting_idx = wls.argsort()
-        sorting_idx = np.flip(sorting_idx)
+        sorting_idx = np.flip(sorting_idx) # flip to get ascending order
         wls = wls[sorting_idx[::-1]]
         r  = r[sorting_idx[::-1]]
         rm = rm[sorting_idx[::-1]]
@@ -222,21 +211,22 @@ class Optimization:
         sa = sa[sorting_idx[::-1]]
         mf = mf[sorting_idx[::-1]]
 
-        # Save into final result
-        result_dict[C.key_sample_result_wls] = wls
-        result_dict[C.key_sample_result_r] = r
-        result_dict[C.key_sample_result_rm] = rm
-        result_dict[C.key_sample_result_re] = re
-        result_dict[C.key_sample_result_t] = t
-        result_dict[C.key_sample_result_tm] = tm
-        result_dict[C.key_sample_result_te] = te
-        result_dict[C.key_sample_result_ad] = ad
-        result_dict[C.key_sample_result_sd] = sd
-        result_dict[C.key_sample_result_ai] = sa
-        result_dict[C.key_sample_result_mf] = mf
+        # Put sorted lists in the dict
+        sample_result_dict[C.key_sample_result_wls] = wls
+        sample_result_dict[C.key_sample_result_r] = r
+        sample_result_dict[C.key_sample_result_rm] = rm
+        sample_result_dict[C.key_sample_result_re] = re
+        sample_result_dict[C.key_sample_result_t] = t
+        sample_result_dict[C.key_sample_result_tm] = tm
+        sample_result_dict[C.key_sample_result_te] = te
+        sample_result_dict[C.key_sample_result_ad] = ad
+        sample_result_dict[C.key_sample_result_sd] = sd
+        sample_result_dict[C.key_sample_result_ai] = sa
+        sample_result_dict[C.key_sample_result_mf] = mf
 
-        T.write_sample_result(self.set_name, result_dict, sample_id)
+        T.write_sample_result(self.set_name, sample_result_dict, sample_id)
         plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
+
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""
@@ -259,14 +249,43 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         Measured transmittance.
     :param set_name:
         Set name (name of the working folder).
+    :param diffstep:
+        Stepsize for finite difference Jacobian estimation. Smaller step gives
+        better results, but the variables look cloudy. Big step is faster and variables
+        smoother but there will be outliers in the results. Good stepsize is between 0.001 and 0.01.
+   :param ftol:
+            Function value (difference between measured and modeled) change between iterations considered
+            as 'still converging'.
+            This is a stop criterion for the optimizer. Smaller value leads to more accurate result, but increases
+            the optimization time. Works in tandem with xtol, so whichever value is reached first will stop
+            the optimization for that wavelength.
+    :param xtol:
+        Controls how much the leaf material parameters need to change between iterations to be considered
+        'progressing'. Greater value stops the optimization earlier.
+    :param bounds:
+        Bounds of the optimization problem. A tuple ([l1,l2,..], [h1,h2,...]).
+    :param density_scale:
+        Scaling parameter for absorption and scattering density. The values for rendering are much
+        higher than the ones used in optimization.
+    :param optimizer_verbosity:
+        Optimizer verbosity: 0 least verbose, 2 very verbose.
     :param use_basin_hopping:
         If True, use basin hopping algorithm to escape lacal minima (reduce outliers).
         Using this considerably slows down the optimization (nearly two-fold).
+    :param sample_id:
+        Sample id.
+    :param ftol_abs:
+        Absolute termination condition for basin hopping. There will be no more basin hopping iterations
+         if reached function value is smaller than this value. Only used if run with basin hopping algorithm,
+         which can help if optimization gets caught in local minima. Basin hopping can be turned on when
+         Optimization.run() is called.
+    :param use_hard_coded_starting_guess:
+            Use hard-coded starting guess instead of the one based on polynomial fitting (the default).
+            Use this only if the default starting guess is unavailable for some reason.
     """
 
     print(f'Optimizing wavelength {wl} nm started.', flush=True)
-    exists = FH.subresult_exists(set_name, wl, sample_id)
-    if exists:
+    if FH.subresult_exists(set_name, wl, sample_id):
         print(f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.", flush=True)
         return
 
@@ -310,25 +329,26 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
             penalty = some_big_number
         return dist + penalty
 
+    # Render references here as it only needs to be done once per wavelength
     B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
-                        mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True,
-                        dry_run=False)
+                        mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
+
     if use_hard_coded_starting_guess:
         x_0 = hard_coded_starting_guess
     else:
         x_0 = get_starting_guess(1 - (r_m + t_m))
+
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
     # Save the starting guess into history. This will not be included in any plots.
+    # TODO remove this and fix plotting methods accordingly. Save x0 separately to result toml
     history.append([*x_0, 0.0, 0.0])
+
     opt_method = 'least_squares'
     if not use_basin_hopping:
         res = optimize.least_squares(f, x_0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
-                                     gtol=None,
-                                     diff_step=diffstep, ftol=ftol, xtol=xtol)
-
+                                     gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
     else:
-
         opt_method = 'basin_hopping'
 
         class Stepper(object):
@@ -369,8 +389,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         def custom_local_minimizer(fun, x0, *args, **kwargs):
             """Run the default least_squares optimizer as a local minimizer for basin hopping."""
 
-            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='dogbox',
-                                             verbose=optimizer_verbosity,
+            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
                                              gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
             return res_lsq
 
@@ -381,7 +400,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     elapsed = time.perf_counter() - start
 
-    # Create subresult dictionary to be saved in file.
+    # Create wavelength result dictionary to be saved on disk.
     res_dict = {
         C.key_wl_result_wl: wl,
         C.key_wl_result_refl_measured: r_m,
@@ -405,17 +424,13 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         C.key_wl_result_history_mf: [float(h[3]) for h in history],
     }
     # print(res_dict)
-    logging.info(f'Optimizing wavelength {wl} nm finished. Writing subesult and plot to disk.')
+    logging.info(f'Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk.')
 
     T.write_wavelength_result(set_name, res_dict, sample_id)
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
     plotter.plot_subresult_opt_history(set_name, wl, sample_id, dont_show=True, save_thumbnail=True)
-
-def printable_variable_list(as_array):
-    l = [f'{variable:.3f}' for variable in as_array]
-    return l
 
 
 def get_starting_guess(absorption: float):
@@ -429,7 +444,6 @@ def get_starting_guess(absorption: float):
         for i in range(n):
             a = (n-i-1)
             res += coeffs[a] * absorption**a
-        # res = coeffs[2] * absorption * absorption + coeffs[1] * absorption + coeffs[0]
         if res < lb:
             res = lb
         if res > ub:
