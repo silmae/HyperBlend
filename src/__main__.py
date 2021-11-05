@@ -2,14 +2,13 @@
 Entry point of the program.
 
 There is no user interface to the program (yet) so code your calls here
-and run in IDE (or command line, but prepare to fix bugs).
+and run in IDE.
 """
 
 import logging
 
 import sys
 
-# A bunch of improrts to self-made files you may need.
 from src import presets
 from src.optimization import Optimization
 from data import toml_handling as TH
