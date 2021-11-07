@@ -12,11 +12,11 @@ import toml
 
 from src.data import file_handling as FH
 from src.data import file_names as FN
-from src import constants as C
+from src import constants as C, plotter
 from src.data import path_handling as P
 
 
-def write_final_result(set_name: str):
+def write_set_result(set_name: str):
     """Collect sample results and write final result to a toml file. """
 
     result_dict = {}
@@ -27,11 +27,11 @@ def write_final_result(set_name: str):
     result_dict[C.key_set_result_time_per_sample_hours] = np.sum([sr[C.key_sample_result_wall_clock_elapsed_min] for sr in r]) / 60 / sample_count
     result_dict[C.key_set_result_total_processor_time_hours] = np.sum([sr[C.key_sample_result_process_elapsed_min] for sr in r]) / 60
     result_dict[C.key_set_result_processor_time_per_sample_hours] = np.sum([sr[C.key_sample_result_process_elapsed_min] for sr in r]) / 60 / sample_count
-    result_dict[C.key_set_result_refl_error_mean] = np.mean([sr[C.key_sample_result_re] for sr in r])
-    result_dict[C.key_set_result_tran_error_mean] = np.mean([sr[C.key_sample_result_te] for sr in r])
-    result_dict[C.key_set_result_refl_error_std]= np.std([sr[C.key_sample_result_re] for sr in r])
-    result_dict[C.key_set_result_tran_error_std]= np.std([sr[C.key_sample_result_te] for sr in r])
-    p = P.join(P.path_directory_set_result(set_name), FN.filename_final_result())
+    result_dict[C.key_set_result_re_mean] = np.mean([sr[C.key_sample_result_re] for sr in r])
+    result_dict[C.key_set_result_te_mean] = np.mean([sr[C.key_sample_result_te] for sr in r])
+    result_dict[C.key_set_result_re_std] = np.std([sr[C.key_sample_result_re] for sr in r])
+    result_dict[C.key_set_result_te_std] = np.std([sr[C.key_sample_result_te] for sr in r])
+    p = P.join(P.path_directory_set_result(set_name), FN.filename_set_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -210,3 +210,89 @@ def read_starting_guess_coeffs():
     with open(path, 'r') as file:
         data = toml.load(file)
         return data
+
+
+def make_sample_result(set_name:str, sample_id: int, wall_clock_time_min=0.0):
+    """Creates the sample result by collecting the data from wavelength results.
+
+    Saves the result as numerical data and plots.
+
+    :param set_name:
+        Set name.
+    :param sample_id:
+        Sample id.
+    :param wall_clock_time_min:
+        Wall clock time used to optimize this sample.
+    """
+
+    # Collect subresults
+    wl_res_list = collect_wavelength_result(set_name, sample_id)
+    sample_result_dict = {}
+
+    # Set starting value to which earlier result time is added.
+    sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = wall_clock_time_min
+
+    # If we already have existing sample result, with sparser resolution, we'll want to take that
+    # into account when saving the new result.
+    try:
+        previous_result = read_sample_result(set_name, sample_id)  # throws OSError upon failure
+        this_result_time = sample_result_dict[C.key_sample_result_wall_clock_elapsed_min]
+        previous_result_time = previous_result[C.key_sample_result_wall_clock_elapsed_min]
+        sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = this_result_time + previous_result_time
+    except OSError as e:
+        pass  # there was no previous result so this is OK
+
+    sample_result_dict[C.key_sample_result_process_elapsed_min] = np.sum(subres[C.key_wl_result_elapsed_time_s] for subres in wl_res_list) / 60.0
+    sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.key_wl_result_refl_error] for subres in wl_res_list]) ** 2))
+    sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.key_wl_result_tran_error] for subres in wl_res_list]) ** 2))
+    sample_result_dict[C.key_wl_result_optimizer] = wl_res_list[0][C.key_wl_result_optimizer],
+    sample_result_dict[C.key_wl_result_optimizer_ftol] = wl_res_list[0][C.key_wl_result_optimizer_ftol],
+    sample_result_dict[C.key_wl_result_optimizer_xtol] = wl_res_list[0][C.key_wl_result_optimizer_xtol],
+    sample_result_dict[C.key_wl_result_optimizer_diffstep] = wl_res_list[0][C.key_wl_result_optimizer_diffstep],
+    if sample_result_dict[C.key_wl_result_optimizer][0] == 'basin_hopping':
+        sample_result_dict['basin_iterations_required'] = sum([(subres[C.key_wl_result_optimizer_result]['nit'] > 1) for subres in wl_res_list])
+
+    # Collect lists from subresults
+    wls = np.array([subres[C.key_wl_result_wl] for subres in wl_res_list])
+    r   = np.array([subres[C.key_wl_result_refl_modeled] for subres in wl_res_list])
+    rm  = np.array([subres[C.key_wl_result_refl_measured] for subres in wl_res_list])
+    re  = np.array([subres[C.key_wl_result_refl_error] for subres in wl_res_list])
+    t   = np.array([subres[C.key_wl_result_tran_modeled] for subres in wl_res_list])
+    tm  = np.array([subres[C.key_wl_result_tran_measured] for subres in wl_res_list])
+    te  = np.array([subres[C.key_wl_result_tran_error] for subres in wl_res_list])
+    ad  = np.array([subres[C.key_wl_result_history_ad][-1] for subres in wl_res_list])
+    sd  = np.array([subres[C.key_wl_result_history_sd][-1] for subres in wl_res_list])
+    sa  = np.array([subres[C.key_wl_result_history_ai][-1] for subres in wl_res_list])
+    mf  = np.array([subres[C.key_wl_result_history_mf][-1] for subres in wl_res_list])
+
+    # Sort lists by wavelength. This has to be done as the wavelength
+    # results are read from files in no particular order.
+    sorting_idx = wls.argsort()
+    sorting_idx = np.flip(sorting_idx) # flip to get ascending order
+    wls = wls[sorting_idx[::-1]]
+    r  = r[sorting_idx[::-1]]
+    rm = rm[sorting_idx[::-1]]
+    re = re[sorting_idx[::-1]]
+    t  = t[sorting_idx[::-1]]
+    tm = tm[sorting_idx[::-1]]
+    te = te[sorting_idx[::-1]]
+    ad = ad[sorting_idx[::-1]]
+    sd = sd[sorting_idx[::-1]]
+    sa = sa[sorting_idx[::-1]]
+    mf = mf[sorting_idx[::-1]]
+
+    # Put sorted lists in the dict
+    sample_result_dict[C.key_sample_result_wls] = wls
+    sample_result_dict[C.key_sample_result_r] = r
+    sample_result_dict[C.key_sample_result_rm] = rm
+    sample_result_dict[C.key_sample_result_re] = re
+    sample_result_dict[C.key_sample_result_t] = t
+    sample_result_dict[C.key_sample_result_tm] = tm
+    sample_result_dict[C.key_sample_result_te] = te
+    sample_result_dict[C.key_sample_result_ad] = ad
+    sample_result_dict[C.key_sample_result_sd] = sd
+    sample_result_dict[C.key_sample_result_ai] = sa
+    sample_result_dict[C.key_sample_result_mf] = mf
+
+    write_sample_result(set_name, sample_result_dict, sample_id)
+    plotter.plot_sample_result(set_name, sample_id, dont_show=True, save_thumbnail=True)

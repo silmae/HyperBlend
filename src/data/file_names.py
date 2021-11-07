@@ -40,18 +40,16 @@ def filename_wl_result(wl: float) -> str:
     return filename
 
 
-def filename_wl_result_plot(wl:float, file_extension='png') -> str:
+def filename_wl_result_plot(wl: float) -> str:
     """File name of wavelength result plot.
 
     :param wl:
         Wavelength.
-    :param file_extension:
-        File extension for automatic image type detection. Default is 'png'.
     :return:
         Filename as string.
     """
 
-    filename = f"result_wl_{wl:.2f}.{file_extension}"
+    filename = f"result_wl_{wl:.2f}{C.postfix_plot_image_format}"
     return filename
 
 
@@ -80,15 +78,8 @@ def filename_rendered_image(imaging_type: str, wl: float) -> str:
         Image name in the format that other parts of the code can understand.
     """
 
-    image_name = f"{imaging_type}_wl_{wl:.2f}{C.postfix_image_format}"
+    image_name = f"{imaging_type}_wl_{wl:.2f}{C.postfix_render_image_format}"
     return image_name
-
-
-def filename_final_result() -> str:
-    """Filename of the final result file."""
-
-    filename = 'final_result' + C.postfix_text_data_format
-    return filename
 
 
 def filename_sample_result(sample_id: int) -> str:
@@ -98,22 +89,29 @@ def filename_sample_result(sample_id: int) -> str:
     return filename
 
 
-def filename_sample_result_plot(sample_id: int, file_extension: str) -> str:
+def filename_sample_result_plot(sample_id: int) -> str:
     """Filename of the sample result plot file."""
 
-    filename = f"sample_{sample_id}_result_plot.{file_extension}"
+    filename = f"sample_{sample_id}_result_plot{C.postfix_plot_image_format}"
     return filename
 
 
-def filename_set_result_plot(file_extension: str) -> str:
+def filename_set_result() -> str:
+    """Filename of the set result file."""
+
+    filename = 'set_result' + C.postfix_text_data_format
+    return filename
+
+
+def filename_set_result_plot() -> str:
     """Returns filename of set result plot. """
 
-    filename = f"set_average_result_plot.{file_extension}"
+    filename = f"set_result_plot{C.postfix_plot_image_format}"
     return filename
 
 
-def filename_set_error_plot(file_extension: str) -> str:
+def filename_set_error_plot() -> str:
     """Returns filename of set error plot. """
 
-    filename = f"set_error_plot.{file_extension}"
+    filename = f"set_error_plot{C.postfix_plot_image_format}"
     return filename

@@ -10,9 +10,10 @@ Path getters are named like path_directory_xxx or path_file_xxx.
 import logging
 import os
 
-from src import constants as C
-from src.data import file_names as FN
-from src.data import path_handling as P
+from src import constants as C, optimization, plotter
+from src.data import file_names as FN, toml_handling as TH, path_handling as P
+
+
 
 def create_first_level_folders(set_name: str):
     """Create first level folders for a set.
@@ -117,11 +118,6 @@ def subresult_exists(set_name: str, wl: float, sample_id: int) -> bool:
     return res
 
 
-##########################################################################
-# Clearing directories
-##########################################################################
-
-
 def clear_all_rendered_images(set_name: str) -> None:
     """Clear all rendered images of finished samples. """
 
@@ -152,11 +148,6 @@ def clear_folder(path: str) -> None:
         list(map(os.unlink, (P.join(norm_path, f) for f in os.listdir(norm_path))))
     else:
         logging.warning(f"No files to delete in '{norm_path}'.")
-
-
-##########################################################################
-# Misc
-##########################################################################
 
 
 def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str) -> str:
@@ -193,7 +184,47 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
     raise FileNotFoundError(f"Could not find {wl} nm image from {folder}.")
 
 
-# def expand(set_name: str) -> None:
-#     sample_ids = list_finished_sample_ids(set_name)
-#     for sample_id in sample_ids:
-#         TH.col
+def expand(set_name: str) -> None:
+    """Generate back files removed by reduce().
+
+    NOTE: Can not generate rendered images.
+    """
+
+    sample_ids = list_target_ids(set_name)
+
+    for sample_id in sample_ids:
+        TH.make_sample_result(set_name, sample_id)
+        plotter.plot_sample_result(set_name, sample_id, dont_show=True, save_thumbnail=True)
+
+    TH.write_set_result(set_name)
+    plotter.replot_wl_results(set_name)
+    plotter.plot_set_result(set_name, dont_show=True, save_thumbnail=True)
+    plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
+
+
+def reduce(set_name: str) -> None:
+    """Removes all not essential files that can be generated back.
+
+    Useful for reducing file size when sharing over internet, for example.
+    Use expand() method to generate files as they were.
+
+    NOTE: rendered images can not be generated back after they are deleted.
+    """
+
+    clear_all_rendered_images(set_name)
+
+    sample_ids = list_finished_sample_ids(set_name)
+    for sample_id in sample_ids:
+        d = TH.read_sample_result(set_name, sample_id=sample_id)
+        wls = d[C.key_sample_result_wls]
+        for wl in wls:
+            wl_result_plot_path = P.join(P.path_directory_subresult(set_name, sample_id), FN.filename_wl_result_plot(wl))
+            os.unlink(wl_result_plot_path)
+
+        sample_result_path = P.join(P.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+        os.unlink(sample_result_path)
+
+        # Sample result plots are intuitively saved to same place where the set result
+        sample_result_plot_path = P.join(P.path_directory_set_result(set_name), FN.filename_sample_result_plot(sample_id))
+        os.unlink(sample_result_plot_path)
+

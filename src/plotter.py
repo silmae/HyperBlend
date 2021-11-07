@@ -84,7 +84,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
 
     if save_thumbnail is not None:
         folder = P.path_directory_subresult(set_name, sample_id)
-        image_name = FN.filename_wl_result_plot(wl, file_extension=image_type)
+        image_name = FN.filename_wl_result_plot(wl)
         path = P.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(path, dpi=300)
@@ -179,7 +179,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
 
     if save_thumbnail:
         folder = P.path_directory_set_result(set_name)
-        image_name = FN.filename_set_result_plot(file_extension=image_type)
+        image_name = FN.filename_set_result_plot()
         path = P.join(folder, image_name)
         logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
@@ -229,7 +229,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
     if save_thumbnail:
         folder = P.path_directory_set_result(set_name)
-        image_name = FN.filename_set_error_plot(file_extension=image_type)
+        image_name = FN.filename_set_error_plot()
         path = P.join(folder, image_name)
         logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=300)
@@ -270,7 +270,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
         folder = P.path_directory_set_result(set_name)
-        image_name = FN.filename_sample_result_plot(sample_id=sample_id, file_extension=image_type)
+        image_name = FN.filename_sample_result_plot(sample_id=sample_id)
         path = P.join(folder, image_name)
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=300)

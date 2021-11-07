@@ -12,9 +12,10 @@ import numpy as np
 
 
 from src import constants as C
+from src.data.toml_handling import make_sample_result
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
-from src.data import file_handling as FH, toml_handling as T, path_handling as P
+from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
@@ -118,7 +119,7 @@ class Optimization:
             FH.create_opt_folder_structure_for_samples(self.set_name, sample_id)
             logging.info(f'Starting optimization of sample {sample_id}')
             total_time_start = time.perf_counter()
-            targets = T.read_target(self.set_name, sample_id)
+            targets = TH.read_target(self.set_name, sample_id)
 
             # Spectral resolution
             if resolution != 1:
@@ -141,95 +142,12 @@ class Optimization:
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
-            self.make_sample_result(sample_id, wall_clock_time_min=elapsed_min)
+            TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
 
         # Plot averages if there was more than one sample
-        if len(FH.list_finished_sample_ids(self.set_name)) > 1:
-            plotter.plot_set_result(self.set_name)
-            plotter.plot_set_errors(self.set_name)
-
-    def make_sample_result(self, sample_id: int, wall_clock_time_min=0.0):
-        """Creates the sample result by collecting the data from wavelength results.
-
-        Saves the result as numerical data and plots.
-
-        :param sample_id:
-            Sample id.
-        :param wall_clock_time_min:
-            Wall clock time used to optimize this sample.
-        """
-
-        # Collect subresults
-        wl_res_list = T.collect_wavelength_result(self.set_name, sample_id)
-        sample_result_dict = {}
-
-        # Set starting value to which earlier result time is added.
-        sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = wall_clock_time_min
-
-        # If we already have existing sample result, with sparser resolution, we'll want to take that
-        # into account when saving the new result.
-        try:
-            previous_result = T.read_sample_result(self.set_name, sample_id)  # throws OSError upon failure
-            this_result_time = sample_result_dict[C.key_sample_result_wall_clock_elapsed_min]
-            previous_result_time = previous_result[C.key_sample_result_wall_clock_elapsed_min]
-            sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = this_result_time + previous_result_time
-        except OSError as e:
-            pass  # there was no previous result so this is OK
-
-        sample_result_dict[C.key_sample_result_process_elapsed_min] = np.sum(subres[C.key_wl_result_elapsed_time_s] for subres in wl_res_list) / 60.0
-        sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(np.array([subres[C.key_wl_result_refl_error] for subres in wl_res_list]) ** 2))
-        sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(np.array([subres[C.key_wl_result_tran_error] for subres in wl_res_list]) ** 2))
-        sample_result_dict[C.key_wl_result_optimizer] = wl_res_list[0][C.key_wl_result_optimizer],
-        sample_result_dict[C.key_wl_result_optimizer_ftol] = self.ftol,
-        sample_result_dict[C.key_wl_result_optimizer_xtol] = self.xtol,
-        sample_result_dict[C.key_wl_result_optimizer_diffstep] = self.diffstep,
-        if sample_result_dict[C.key_wl_result_optimizer][0] == 'basin_hopping':
-            sample_result_dict['basin_iterations_required'] = sum([(subres[C.key_wl_result_optimizer_result]['nit'] > 1) for subres in wl_res_list])
-
-        # Collect lists from subresults
-        wls = np.array([subres[C.key_wl_result_wl] for subres in wl_res_list])
-        r   = np.array([subres[C.key_wl_result_refl_modeled] for subres in wl_res_list])
-        rm  = np.array([subres[C.key_wl_result_refl_measured] for subres in wl_res_list])
-        re  = np.array([subres[C.key_wl_result_refl_error] for subres in wl_res_list])
-        t   = np.array([subres[C.key_wl_result_tran_modeled] for subres in wl_res_list])
-        tm  = np.array([subres[C.key_wl_result_tran_measured] for subres in wl_res_list])
-        te  = np.array([subres[C.key_wl_result_tran_error] for subres in wl_res_list])
-        ad  = np.array([subres[C.key_wl_result_history_ad][-1] for subres in wl_res_list])
-        sd  = np.array([subres[C.key_wl_result_history_sd][-1] for subres in wl_res_list])
-        sa  = np.array([subres[C.key_wl_result_history_ai][-1] for subres in wl_res_list])
-        mf  = np.array([subres[C.key_wl_result_history_mf][-1] for subres in wl_res_list])
-
-        # Sort lists by wavelength. This has to be done as the wavelength
-        # results are read from files in no particular order.
-        sorting_idx = wls.argsort()
-        sorting_idx = np.flip(sorting_idx) # flip to get ascending order
-        wls = wls[sorting_idx[::-1]]
-        r  = r[sorting_idx[::-1]]
-        rm = rm[sorting_idx[::-1]]
-        re = re[sorting_idx[::-1]]
-        t  = t[sorting_idx[::-1]]
-        tm = tm[sorting_idx[::-1]]
-        te = te[sorting_idx[::-1]]
-        ad = ad[sorting_idx[::-1]]
-        sd = sd[sorting_idx[::-1]]
-        sa = sa[sorting_idx[::-1]]
-        mf = mf[sorting_idx[::-1]]
-
-        # Put sorted lists in the dict
-        sample_result_dict[C.key_sample_result_wls] = wls
-        sample_result_dict[C.key_sample_result_r] = r
-        sample_result_dict[C.key_sample_result_rm] = rm
-        sample_result_dict[C.key_sample_result_re] = re
-        sample_result_dict[C.key_sample_result_t] = t
-        sample_result_dict[C.key_sample_result_tm] = tm
-        sample_result_dict[C.key_sample_result_te] = te
-        sample_result_dict[C.key_sample_result_ad] = ad
-        sample_result_dict[C.key_sample_result_sd] = sd
-        sample_result_dict[C.key_sample_result_ai] = sa
-        sample_result_dict[C.key_sample_result_mf] = mf
-
-        T.write_sample_result(self.set_name, sample_result_dict, sample_id)
-        plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
+        # if len(FH.list_finished_sample_ids(self.set_name)) > 1:
+        plotter.plot_set_result(self.set_name)
+        plotter.plot_set_errors(self.set_name)
 
 
 def optimize_single_wl_threaded(args):
@@ -442,7 +360,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk.')
 
-    T.write_wavelength_result(set_name, res_dict, sample_id)
+    TH.write_wavelength_result(set_name, res_dict, sample_id)
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
@@ -466,7 +384,7 @@ def get_starting_guess(absorption: float):
             res = ub
         return res
 
-    coeff_dict = T.read_starting_guess_coeffs()
+    coeff_dict = TH.read_starting_guess_coeffs()
     absorption_density      = f(coeff_dict[C.ad_coeffs], LOWER_BOUND[0], UPPER_BOUND[0])
     scattering_density      = f(coeff_dict[C.sd_coeffs], LOWER_BOUND[1], UPPER_BOUND[1])
     scattering_anisotropy   = f(coeff_dict[C.ai_coeffs], LOWER_BOUND[2], UPPER_BOUND[2])

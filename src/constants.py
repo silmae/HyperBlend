@@ -18,8 +18,11 @@ target_type_leaf = 'leaf'
 target_type_ref = 'reference'
 """Rendering target (white) reference."""
 
-postfix_image_format = '.tif'
+postfix_render_image_format = '.tif'
 """Image format of images rendered with Blender."""
+
+postfix_plot_image_format = '.png'
+"""Image format of plots."""
 
 postfix_text_data_format = '.toml'
 """Text file format with witch the results are saved."""

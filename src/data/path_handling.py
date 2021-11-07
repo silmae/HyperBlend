@@ -20,15 +20,17 @@ def path_directory_set_result(set_name: str) -> str:
     return p
 
 
-def path_directory_sample(set_name: str, sample_id: int) -> str:
-    p = os.path.abspath(path_directory_sample_result(set_name) + '/' + f'{C.folder_sample_prefix}_{sample_id}')
-    return p
-
-
 def path_directory_sample_result(set_name: str) -> str:
     """Path to where sample results are saved."""
 
     p = os.path.abspath(path_directory_set(set_name) + '/' + C.folder_opt_sample_results)
+    return p
+
+
+def path_directory_sample(set_name: str, sample_id: int) -> str:
+    """Path to sample subfolder."""
+
+    p = os.path.abspath(path_directory_sample_result(set_name) + '/' + f'{C.folder_sample_prefix}_{sample_id}')
     return p
 
 
