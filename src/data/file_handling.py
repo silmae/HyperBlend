@@ -208,6 +208,8 @@ def reduce(set_name: str) -> None:
     Useful for reducing file size when sharing over internet, for example.
     Use expand() method to generate files as they were.
 
+    Reduced size is about 1/10 of original size.
+
     NOTE: rendered images can not be generated back after they are deleted.
     """
 
