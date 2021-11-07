@@ -144,8 +144,8 @@ class Optimization:
 
         # Plot averages if there was more than one sample
         if len(FH.list_finished_sample_ids(self.set_name)) > 1:
-            plotter.plot_averaged_sample_result(self.set_name)
-            plotter.plot_averaged_sample_errors(self.set_name)
+            plotter.plot_set_result(self.set_name)
+            plotter.plot_set_errors(self.set_name)
 
     def make_sample_result(self, sample_id: int, wall_clock_time_min=0.0):
         """Creates the sample result by collecting the data from wavelength results.
@@ -445,7 +445,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
-    plotter.plot_subresult_opt_history(set_name, wl, sample_id, dont_show=True, save_thumbnail=True)
+    plotter.plot_wl_optimization_history(set_name, wl, sample_id, dont_show=True, save_thumbnail=True)
 
 
 def get_starting_guess(absorption: float):

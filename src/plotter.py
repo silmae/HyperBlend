@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src import constants as C
-from src.data import file_handling as FH, toml_handling as T
+from src.data import file_handling as FH, toml_handling as T, file_names as FN
 
 figsize = (12,6)
 """Figure size for two plot figures."""
@@ -44,21 +44,22 @@ alpha_error = 0.2
 max_ticks = 8
 """Max tick count for wavelength."""
 
+image_type = 'png'
 
-def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True):
-    """Plots otimization history of a single wavelength using existing subresult toml file.
 
-    :param sample_id:
+def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True) -> None:
+    """Plots optimization history of a single wavelength using existing wavelength result toml file.
+
     :param set_name:
         Set name.
     :param wl:
         Wavelength of the optimization.
+    :param sample_id:
+        Sample id.
     :param save_thumbnail:
-        If True, a JPG image is saved to result/plot folder. Default is True.
+        If True, a PNG image is saved to result/plot folder. Default is True.
     :param dont_show:
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
-    :return:
-        None
     """
 
     subres_dict = T.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
@@ -79,12 +80,12 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target)
     ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target)
 
-    plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
+    _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
         folder = FH.path_directory_subresult(set_name, sample_id)
-        image_name = f"subresplot_wl{wl:.2f}.png"
-        path = os.path.normpath(folder + '/' + image_name)
+        image_name = FN.filename_wl_result_plot(wl, file_extension=image_type)
+        path = FH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -94,27 +95,25 @@ def plot_subresult_opt_history(set_name: str, wl: float, sample_id, dont_show=Tr
     plt.close(fig)
 
 
-def plot_neat_errors(ax_obj, x, value, value_std, color, label, ls='-'):
-    sorting_idx = x.argsort()
-    x_sorted = x[sorting_idx[::-1]]
-    value_sorted = value[sorting_idx[::-1]]
-    std_sorted = value_std[sorting_idx[::-1]]
-    ax_obj.fill_between(x_sorted, value_sorted-std_sorted, value_sorted+std_sorted, alpha=alpha_error, color=color)
-    ax_obj.plot(x_sorted, value_sorted, color=color, ls=ls, label=label)
+def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
+    """Plot average of sample results as the set result.
 
-
-def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=True):
-
+    :param set_name:
+        Set name.
+    :param dont_show:
+        If False, pyplot.show() is called, otherwise nothing is shown. Default is True.
+    :param save_thumbnail:
+        If True, save plot to disk. Default is True.
+    """
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
     # ax[0].set_title('Variable space')
     # ax[1].set_title('Target space')
-    marker = '.'
 
     ids = FH.list_finished_sample_ids(set_name)
     wls = []
-    adens = []
-    sdens = []
+    ad = []
+    sd = []
     ai = []
     mf = []
     r_m = []
@@ -124,8 +123,8 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     for _, sample_id in enumerate(ids):
         result = T.read_sample_result(set_name, sample_id)
         wls = result[C.key_sample_result_wls]
-        adens.append(result[C.key_sample_result_ad])
-        sdens.append(result[C.key_sample_result_sd])
+        ad.append(result[C.key_sample_result_ad])
+        sd.append(result[C.key_sample_result_sd])
         ai.append(result[C.key_sample_result_ai])
         mf.append(result[C.key_sample_result_mf])
         r_m.append(result[C.key_sample_result_rm])
@@ -134,35 +133,33 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
         t.append(result[C.key_sample_result_t])
 
     wls = np.array(wls)
-    adens_mean = np.array(adens).mean(axis=0)
-    sdens_mean = np.array(sdens).mean(axis=0)
+    adens_mean = np.array(ad).mean(axis=0)
+    sdens_mean = np.array(sd).mean(axis=0)
     ai_mean = np.array(ai).mean(axis=0)
     mf_mean = np.array(mf).mean(axis=0)
     r_m_mean = np.array(r_m).mean(axis=0)
     t_m_mean = np.array(t_m).mean(axis=0)
     r_mean = np.array(r).mean(axis=0)
     t_mean = np.array(t).mean(axis=0)
-    # half of the std as plt.errorbar plots the same to top and bottom
-    adens_std = np.array(adens).std(axis=0) / 2
-    sdens_std = np.array(sdens).std(axis=0) / 2
-    ai_std = np.array(ai).std(axis=0) / 2
-    mf_std = np.array(mf).std(axis=0) / 2
-    # r_m_std= np.array(r_m).std(axis=0) / 2
-    # t_m_std= np.array(t_m).std(axis=0) / 2
-    r_std = np.array(r).std(axis=0) / 2
-    t_std = np.array(t).std(axis=0) / 2
+    adens_std = np.array(ad).std(axis=0)
+    sdens_std = np.array(sd).std(axis=0)
+    ai_std = np.array(ai).std(axis=0)
+    mf_std = np.array(mf).std(axis=0)
+    # r_m_std= np.array(r_m).std(axis=0)
+    # t_m_std= np.array(t_m).std(axis=0)
+    r_std = np.array(r).std(axis=0)
+    t_std = np.array(t).std(axis=0)
 
-    plot_neat_errors(ax[0], wls, adens_mean, adens_std, color_ad, 'Absorption density')
-    plot_neat_errors(ax[0], wls, sdens_mean, sdens_std, color_sd, 'Scattering density')
-    plot_neat_errors(ax[0], wls, ai_mean, ai_std, color_ai, 'Scattering anistropy')
-    plot_neat_errors(ax[0], wls, mf_mean, mf_std, color_mf, 'Mix factor')
+    _plot_with_shadow(ax[0], wls, adens_mean, adens_std, color_ad, 'Absorption density')
+    _plot_with_shadow(ax[0], wls, sdens_mean, sdens_std, color_sd, 'Scattering density')
+    _plot_with_shadow(ax[0], wls, ai_mean, ai_std, color_ai, 'Scattering anistropy')
+    _plot_with_shadow(ax[0], wls, mf_mean, mf_std, color_mf, 'Mix factor')
 
     x_label = 'Wavelength [nm]'
     ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[1].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[0].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
     ax[1].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
-    # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
     ax[0].set_ylabel('Material parameter', fontsize=axis_label_font_size)
@@ -170,27 +167,27 @@ def plot_averaged_sample_result(set_name: str, dont_show=True, save_thumbnail=Tr
     ax[1].set_ylim([0,1])
     ax[1].set_ylabel('Reflectance', color=color_reflectance, fontsize=axis_label_font_size)
     ax[1].tick_params(axis='y', labelcolor=color_reflectance)
-    plot_neat_errors(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
+    _plot_with_shadow(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
     ax[1].plot(wls, r_m_mean, color=color_reflectance_measured, ls='dotted')
 
     ax_inverted = ax[1].twinx()
     ax_inverted.set_ylim([1, 0])
     ax_inverted.set_ylabel('Transmittance', color=color_transmittance, fontsize=axis_label_font_size)
     ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
-    plot_neat_errors(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
+    _plot_with_shadow(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
     ax_inverted.plot(wls, t_m_mean, color=color_transmittance_measured, ls='dotted')
 
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
-        image_name = f"set_average_result_plot.png"
-        path = os.path.normpath(folder + '/' + image_name)
+        image_name = f"set_average_result_plot.{image_type}"
+        path = FH.join(folder, image_name)
         logging.info(f"Saving the result plot to '{path}'.")
         plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
 
 
-def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=True):
+def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     """Plots averaged optimization errors of a sample. """
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
@@ -213,8 +210,8 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     wls = np.array(wls)
     refl_errs_mean = np.array(refl_errs).mean(axis=0)
     tran_errs_mean = np.array(tran_errs).mean(axis=0)
-    refl_errs_std = np.array(refl_errs).std(axis=0) / 2
-    tran_errs_std = np.array(tran_errs).std(axis=0) / 2
+    refl_errs_std = np.array(refl_errs).std(axis=0)
+    tran_errs_std = np.array(tran_errs).std(axis=0)
 
     # x_data = result[C.result_key_wls]
     # plot_neat_errors(ax, wls, refl_errs_mean, refl_errs_std, color_reflectance, 'Reflectance error')
@@ -222,8 +219,9 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
     # ax.scatter(wls, refl_errs_mean, color=color_reflectance,   marker_size=2)
     # ax.scatter(wls, tran_errs_mean, color=color_transmittance, marker_size=2)
     error_every = 5
-    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std, errorevery=error_every, alpha=1.0, ls='', lw=0., label='Reflectance error',   marker='x', markersize=4, color=color_reflectance)
-    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std, errorevery=error_every, alpha=1.0, ls='', lw=0., label='Transmittance error', marker=marker, markersize=4, color=color_transmittance)
+    line_width = 0.0 # does not draw line STD if linewidth is 0.0
+    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Reflectance error',   marker='x', markersize=4, color=color_reflectance)
+    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Transmittance error', marker=marker, markersize=4, color=color_transmittance)
     x_label = 'Wavelength [nm]'
     ax.set_xlabel(x_label, fontsize=axis_label_font_size)
     ax.legend()
@@ -231,8 +229,8 @@ def plot_averaged_sample_errors(set_name: str, dont_show=True, save_thumbnail=Tr
 
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
-        image_name = f"set_error_plot.png"
-        path = os.path.normpath(folder + '/' + image_name)
+        image_name = f"set_error_plot.{image_type}"
+        path = FH.join(folder, image_name)
         logging.info(f"Saving the result plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -250,8 +248,6 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
         If True, a PNG image is saved. Default is True.
     :param dont_show:
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
-    :return:
-        None
     """
 
     result = T.read_sample_result(set_name, sample_id)
@@ -270,12 +266,12 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     # ax[1].set_xlabel('Wavelength')
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
-    plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
+    _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
+    _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
-        image_name = f"sample_{sample_id}_result_plot.png"
-        path = os.path.normpath(folder + '/' + image_name)
+        image_name = f"sample_{sample_id}_result_plot.{image_type}"
+        path = FH.join(folder, image_name)
         logging.info(f"Saving the result plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -314,7 +310,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     if save_thumbnail:
         p = FH.path_directory_set_result(set_name)
         image_name = f"variable_fitting.png"
-        path = os.path.normpath(p + '/' + image_name)
+        path = FH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
         plt.savefig(path, dpi=300)
 
@@ -333,10 +329,35 @@ def replot_wl_results(set_name: str):
         d = T.read_sample_result(set_name, sample_id=sample_id)
         wls = d[C.key_sample_result_wls]
         for wl in wls:
-            plot_subresult_opt_history(set_name, wl=wl, sample_id=sample_id)
+            plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
-def plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
+def _plot_with_shadow(ax_obj, x_data, y_data, y_data_std, color, label, ls='-') -> None:
+    """Plot data with standard deviation as shadow.
+
+    Data must be sorted to show correctly.
+
+    :param ax_obj:
+        Pyplot axes object to plot to.
+    :param x_data:
+        Data x values (wavelengths).
+    :param y_data:
+        Data y values as numpy.array.
+    :param y_data_std:
+        Standard deviation as numpy array. The shadow is drawn as +- std/2.
+    :param color:
+        Color of the plot and shadow.
+    :param label:
+        Label of the value.
+    :param ls:
+        Line style. See pyplot linestyle documentation.
+    """
+
+    ax_obj.fill_between(x_data, y_data-(y_data_std/2), y_data+(y_data_std/2), alpha=alpha_error, color=color)
+    ax_obj.plot(x_data, y_data, color=color, ls=ls, label=label)
+
+
+def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:

@@ -28,7 +28,7 @@ def parse_wl_from_image_name(filename: str):
     wl_s = tail.rsplit(".", 1)[0]
     return float(wl_s)
 
-
+# FIXME wl result
 def filename_subresult(wl: float) -> str:
     """Generate name of a subresult file of given wavelength.
 
@@ -80,4 +80,19 @@ def filename_sample_result(sample_id: int) -> str:
     """Filename of the subresult file."""
 
     filename = f'{C.file_sample_result}_{sample_id}{C.postfix_text_data_format}'
+    return filename
+
+
+def filename_wl_result_plot(wl:float, file_extension='png') -> str:
+    """File name of wavelength result plot.
+
+    :param wl:
+        Wavelength.
+    :param file_extension:
+        File extension for automatic image type detection. Default is 'png'.
+    :return:
+        Filename as string.
+    """
+
+    filename = f"subresplot_wl{wl:.2f}.{file_extension}"
     return filename
