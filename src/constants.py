@@ -117,8 +117,8 @@ key_wl_result_refl_error = 'reflectance_error'
 key_wl_result_tran_error = 'transmittance_error'
 """Error of modeled transmittance."""
 
-key_wl_result_iterations = 'iterations'
-"""Render runs. Not really optimization iterations."""
+key_wl_result_render_calls = 'render_calls'
+"""Render calls. Used in optimization history. """
 
 key_wl_result_elapsed_time_s = 'elapsed_time_s'
 """Time in seconds to optimize a single wavelength."""
@@ -141,10 +141,10 @@ key_wl_result_history_ai = 'history_scattering_anisotropy'
 key_wl_result_history_mf = 'history_mix_factor'
 """History of mix factor listed for each render run."""
 
-key_wl_result_optimizer = 'optmizer'
+key_wl_result_optimizer = 'optimizer'
 """Optimizer name used in optimization."""
 
-key_wl_result_optimizer_result = 'optimiser_result'
+key_wl_result_optimizer_result = 'optimizer_result'
 """The content of the optimizer result depends on the optimizer used. """
 
 key_wl_result_optimizer_ftol = 'ftol'
