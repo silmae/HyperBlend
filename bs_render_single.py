@@ -129,7 +129,7 @@ def render_target(imaging_type, wl, target_name, render_path, dry_run=True):
     elif imaging_type == imaging_type_tran:
         set_active_camera(cam_name_tran)
 
-    image_name = f'{imaging_type}_wl{wl:.2f}.tif'
+    image_name = f'{imaging_type}_wl_{wl:.2f}.tif'
     file_path = os.path.normpath(f'{render_path}/{image_name}')
     S.render.filepath = file_path
 

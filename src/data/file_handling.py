@@ -249,7 +249,7 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
 def path_file_subresult(set_name: str, wl: float, sample_id: int) -> str:
     """Path to subresult file of given sample and wavelength."""
 
-    p = join(path_directory_subresult(set_name, sample_id), FN.filename_subresult(wl))
+    p = join(path_directory_subresult(set_name, sample_id), FN.filename_wl_result(wl))
     return p
 
 
@@ -361,7 +361,7 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
 
     folder = path_directory_render(target_type, imaging_type, base_path)
     for filename in os.listdir(folder):
-        image_wl = src.data.file_names.parse_wl_from_image_name(filename)
+        image_wl = src.data.file_names.parse_wl_from_filename(filename)
         if almost_equals(wl, image_wl):
             return path_file_rendered_image(target_type, imaging_type, wl, base_path)
 

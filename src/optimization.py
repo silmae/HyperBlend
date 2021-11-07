@@ -424,7 +424,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         C.key_wl_result_tran_modeled: t_best,
         C.key_wl_result_refl_error: math.fabs(r_best - r_m),
         C.key_wl_result_tran_error: math.fabs(t_best - t_m),
-        C.key_wl_result_iterations: len(history),
+        C.key_wl_result_render_calls: len(history),
         C.key_wl_result_optimizer: opt_method,
         C.key_wl_result_optimizer_ftol: ftol,
         C.key_wl_result_optimizer_xtol: xtol,
