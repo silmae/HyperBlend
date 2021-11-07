@@ -257,10 +257,10 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     ax[1].set_title('Target space')
     x_data = result[C.key_sample_result_wls]
     marker = '.'
-    ax[0].scatter(x_data, result[C.key_sample_result_ad], label=C.key_sample_result_ad, marker=marker)
-    ax[0].scatter(x_data, result[C.key_sample_result_sd], label=C.key_sample_result_sd, marker=marker)
-    ax[0].scatter(x_data, result[C.key_sample_result_ai], label=C.key_sample_result_ai, marker=marker)
-    ax[0].scatter(x_data, result[C.key_sample_result_mf], label=C.key_sample_result_mf, marker=marker)
+    ax[0].plot(x_data, result[C.key_sample_result_ad], label=C.key_sample_result_ad, marker=marker, color=color_ad)
+    ax[0].plot(x_data, result[C.key_sample_result_sd], label=C.key_sample_result_sd, marker=marker, color=color_sd)
+    ax[0].plot(x_data, result[C.key_sample_result_ai], label=C.key_sample_result_ai, marker=marker, color=color_ai)
+    ax[0].plot(x_data, result[C.key_sample_result_mf], label=C.key_sample_result_mf, marker=marker, color=color_mf)
     x_label = 'Wavelength [nm]'
     ax[0].set_xlabel(x_label)
     # ax[1].set_xlabel('Wavelength')
