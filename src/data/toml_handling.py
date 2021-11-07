@@ -13,6 +13,7 @@ import toml
 from src.data import file_handling as FH
 from src.data import file_names as FN
 from src import constants as C
+from src.data import path_handling as P
 
 
 def write_final_result(set_name: str):
@@ -30,7 +31,7 @@ def write_final_result(set_name: str):
     result_dict[C.key_set_result_tran_error_mean] = np.mean([sr[C.key_sample_result_te] for sr in r])
     result_dict[C.key_set_result_refl_error_std]= np.std([sr[C.key_sample_result_re] for sr in r])
     result_dict[C.key_set_result_tran_error_std]= np.std([sr[C.key_sample_result_te] for sr in r])
-    p = FH.join(FH.path_directory_set_result(set_name), FN.filename_final_result())
+    p = P.join(P.path_directory_set_result(set_name), FN.filename_final_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -63,7 +64,7 @@ def read_sample_result(set_name: str, sample_id: int):
         Result file content as a dict.
     """
 
-    p = FH.join(FH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = P.join(P.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -81,7 +82,7 @@ def write_sample_result(set_name: str, res_dict: dict, sample_id: int) -> None:
         Sample id.
     """
 
-    p = FH.join(FH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = P.join(P.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -97,11 +98,11 @@ def collect_wavelength_result(set_name: str, sample_id: int):
         A list of wavelength result dictionaries.
     """
 
-    p = FH.path_directory_subresult(set_name, sample_id)
+    p = P.path_directory_subresult(set_name, sample_id)
     subres_list = []
     for filename in os.listdir(p):
         if filename.endswith(C.postfix_text_data_format):
-            subres = toml.load(FH.join(p, filename))
+            subres = toml.load(P.join(p, filename))
             subres_list.append(subres)
     return subres_list
 
@@ -118,7 +119,7 @@ def write_wavelength_result(set_name: str, res_dict: dict, sample_id: int) -> No
     """
 
     wl = res_dict[C.key_wl_result_wl]
-    p = FH.path_file_subresult(set_name, wl, sample_id)
+    p = P.path_file_wl_result(set_name, wl, sample_id)
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -136,7 +137,7 @@ def read_wavelength_result(set_name: str, wl: float, sample_id: int):
         Subresult as a dictionary.
     """
 
-    p = FH.path_file_subresult(set_name, wl, sample_id)
+    p = P.path_file_wl_result(set_name, wl, sample_id)
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -157,7 +158,7 @@ def write_target(set_name:str, data, sample_id=0) -> None:
 
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {'wlrt': floated_list}
-    with open(FH.path_file_target(set_name, sample_id), 'w+') as file:
+    with open(P.path_file_target(set_name, sample_id), 'w+') as file:
         toml.dump(res, file)
 
 
@@ -172,7 +173,7 @@ def read_target(set_name: str, sample_id: int):
         List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
     """
 
-    with open(FH.path_file_target(set_name, sample_id), 'r') as file:
+    with open(P.path_file_target(set_name, sample_id), 'r') as file:
         data = toml.load(file)
         data = data['wlrt']
         data = np.array(data)
@@ -192,7 +193,7 @@ def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs) -> N
         Coefficients for mix factor as a list of floats.
     """
 
-    path = FH.path_file_default_starting_guess()
+    path = P.path_file_default_starting_guess()
     coeff_dict = {C.ad_coeffs:ad_coeffs, C.sd_coeffs:sd_coeffs, C.ai_coeffs:ai_coeffs, C.mf_coeffs:mf_coeffs}
     with open(path, 'w+') as file:
         toml.dump(coeff_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
@@ -205,7 +206,7 @@ def read_starting_guess_coeffs():
         Starting guess coefficients in a dictionary.
     """
 
-    path = FH.path_file_default_starting_guess()
+    path = P.path_file_default_starting_guess()
     with open(path, 'r') as file:
         data = toml.load(file)
         return data

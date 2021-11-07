@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src import constants as C
-from src.data import file_handling as FH, toml_handling as T, file_names as FN
+from src.data import file_handling as FH, toml_handling as T, file_names as FN, path_handling as P
 
 figsize = (12,6)
 """Figure size for two plot figures."""
@@ -83,9 +83,9 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
-        folder = FH.path_directory_subresult(set_name, sample_id)
+        folder = P.path_directory_subresult(set_name, sample_id)
         image_name = FN.filename_wl_result_plot(wl, file_extension=image_type)
-        path = FH.join(folder, image_name)
+        path = P.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -178,9 +178,9 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.plot(wls, t_m_mean, color=color_transmittance_measured, ls='dotted')
 
     if save_thumbnail:
-        folder = FH.path_directory_set_result(set_name)
+        folder = P.path_directory_set_result(set_name)
         image_name = FN.filename_set_result_plot(file_extension=image_type)
-        path = FH.join(folder, image_name)
+        path = P.join(folder, image_name)
         logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
@@ -228,9 +228,9 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        folder = FH.path_directory_set_result(set_name)
+        folder = P.path_directory_set_result(set_name)
         image_name = FN.filename_set_error_plot(file_extension=image_type)
-        path = FH.join(folder, image_name)
+        path = P.join(folder, image_name)
         logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -269,9 +269,9 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
-        folder = FH.path_directory_set_result(set_name)
+        folder = P.path_directory_set_result(set_name)
         image_name = FN.filename_sample_result_plot(sample_id=sample_id, file_extension=image_type)
-        path = FH.join(folder, image_name)
+        path = P.join(folder, image_name)
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -322,9 +322,9 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     plt.legend()
 
     if save_thumbnail:
-        p = FH.path_directory_set_result(set_name)
+        p = P.path_directory_set_result(set_name)
         image_name = f"variable_fitting.png"
-        path = FH.join(p, image_name)
+        path = P.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
         plt.savefig(path, dpi=300)
 

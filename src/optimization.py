@@ -10,10 +10,11 @@ from multiprocessing import Pool
 import scipy.optimize as optimize
 import numpy as np
 
+
 from src import constants as C
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
-from src.data import file_handling as FH, toml_handling as T
+from src.data import file_handling as FH, toml_handling as T, path_handling as P
 from src import plotter
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
@@ -90,7 +91,7 @@ class Optimization:
             FH.clear_rend_leaf(self.set_name, sample_id)
             FH.clear_rend_refs(self.set_name, sample_id)
             if clear_wl_results:
-                FH.clear_folder(FH.path_directory_subresult(self.set_name, sample_id))
+                FH.clear_folder(P.path_directory_subresult(self.set_name, sample_id))
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1):
         """Runs the optimization for each sample in the set.
@@ -306,7 +307,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     def f(x):
         """Function to be minimized F = sum(d_i²)."""
 
-        B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id),
+        B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                             wl=wl,
                             abs_dens=x[0] * density_scale,
                             scat_dens=x[1] * density_scale,
@@ -317,8 +318,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
                             render_references=False,
                             dry_run=False)
 
-        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.path_directory_working(set_name, sample_id))
-        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.path_directory_working(set_name, sample_id))
+        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
+        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
         # Scale distance with the desnity scale.
@@ -333,7 +334,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         return dist + penalty
 
     # Render references here as it only needs to be done once per wavelength
-    B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
+    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
                         mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
 
     if use_hard_coded_starting_guess:
@@ -400,7 +401,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     elapsed = time.perf_counter() - start
 
     # Render one more time with best values (in case it was not the last run)
-    B.run_render_single(rend_base_path=FH.path_directory_working(set_name, sample_id),
+    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                         wl=wl,
                         abs_dens= res.x[0] * density_scale,
                         scat_dens=res.x[1] * density_scale,
@@ -410,8 +411,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
                         clear_references=False,
                         render_references=False,
                         dry_run=False)
-    r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=FH.path_directory_working(set_name, sample_id))
-    t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=FH.path_directory_working(set_name, sample_id))
+    r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
+    t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
 
     # Create wavelength result dictionary to be saved on disk.
     res_dict = {
