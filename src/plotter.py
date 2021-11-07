@@ -179,9 +179,9 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
 
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
-        image_name = f"set_average_result_plot.{image_type}"
+        image_name = FN.filename_set_result_plot(file_extension=image_type)
         path = FH.join(folder, image_name)
-        logging.info(f"Saving the result plot to '{path}'.")
+        logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
@@ -229,9 +229,9 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
-        image_name = f"set_error_plot.{image_type}"
+        image_name = FN.filename_set_error_plot(file_extension=image_type)
         path = FH.join(folder, image_name)
-        logging.info(f"Saving the result plot to '{path}'.")
+        logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
         plt.show()
@@ -270,12 +270,26 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
         folder = FH.path_directory_set_result(set_name)
-        image_name = f"sample_{sample_id}_result_plot.{image_type}"
+        image_name = FN.filename_sample_result_plot(sample_id=sample_id, file_extension=image_type)
         path = FH.join(folder, image_name)
-        logging.info(f"Saving the result plot to '{path}'.")
+        logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
         plt.show()
+
+
+def replot_wl_results(set_name: str):
+    """Replot wavelength results.
+
+    Overwrites existing plots.
+    """
+
+    sample_ids = FH.list_finished_sample_ids(set_name)
+    for sample_id in sample_ids:
+        d = T.read_sample_result(set_name, sample_id=sample_id)
+        wls = d[C.key_sample_result_wls]
+        for wl in wls:
+            plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
 def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> None:
@@ -316,20 +330,6 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
 
     if not dont_show:
         plt.show()
-
-
-def replot_wl_results(set_name: str):
-    """Replot wavelength results.
-
-    Overwrites existing plots.
-    """
-
-    sample_ids = FH.list_finished_sample_ids(set_name)
-    for sample_id in sample_ids:
-        d = T.read_sample_result(set_name, sample_id=sample_id)
-        wls = d[C.key_sample_result_wls]
-        for wl in wls:
-            plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
 def _plot_with_shadow(ax_obj, x_data, y_data, y_data_std, color, label, ls='-') -> None:

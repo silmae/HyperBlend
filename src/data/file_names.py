@@ -92,8 +92,28 @@ def filename_final_result() -> str:
 
 
 def filename_sample_result(sample_id: int) -> str:
-    """Filename of the subresult file."""
+    """Filename of the sample result toml file."""
 
     filename = f'{C.file_sample_result}_{sample_id}{C.postfix_text_data_format}'
     return filename
 
+
+def filename_sample_result_plot(sample_id: int, file_extension: str) -> str:
+    """Filename of the sample result plot file."""
+
+    filename = f"sample_{sample_id}_result_plot.{file_extension}"
+    return filename
+
+
+def filename_set_result_plot(file_extension: str) -> str:
+    """Returns filename of set result plot. """
+
+    filename = f"set_average_result_plot.{file_extension}"
+    return filename
+
+
+def filename_set_error_plot(file_extension: str) -> str:
+    """Returns filename of set error plot. """
+
+    filename = f"set_error_plot.{file_extension}"
+    return filename
