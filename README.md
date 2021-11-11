@@ -1,6 +1,7 @@
 # HyperBlend
 
-This is the HyperBlend leaf spectra simulator developed in University of Jyväskylä. 
+This is the HyperBlend leaf spectra simulator developed in 
+[Spectral Laboratory](https://www.jyu.fi/it/en/research/our-laboratories/hsi) of University of Jyväskylä. 
 You can use and modify this software under MIT licence. 
 
 Currently, HyperBlend can only simulate point-spectrometer-like spectral data. It needs 
