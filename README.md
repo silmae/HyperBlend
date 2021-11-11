@@ -1,4 +1,4 @@
-# HyperBlend
+# HyperBlend version 0.1.0
 
 This is the HyperBlend leaf spectra simulator developed in 
 [Spectral Laboratory](https://www.jyu.fi/it/en/research/our-laboratories/hsi) of University of Jyväskylä. 
