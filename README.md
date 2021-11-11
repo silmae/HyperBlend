@@ -16,7 +16,7 @@ Command line build and run is untested, but it should work as well.
 
 You will also need open-source 3D-modeling and rendering software Blender, which 
 you can download and install from ([blender.org](blender.org)). At least versions 2.8x and 2.9x should 
-work (developed on version 2.93.5).
+work (developed on version 2.93.5). Change your Blender executable path to `constants.py`.
 
 ## Working principle
 
