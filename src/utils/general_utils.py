@@ -35,5 +35,4 @@ def fit_poly(x, y, degree):
 
     fit = Polynomial.fit(x, y, deg=degree, domain=[0, 1])
     coeffs = fit.convert().coef
-    print(f"fitting coeffs for {name}: {coeffs}")
     return coeffs
