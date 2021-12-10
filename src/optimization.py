@@ -148,6 +148,7 @@ class Optimization:
         # if len(FH.list_finished_sample_ids(self.set_name)) > 1:
         plotter.plot_set_result(self.set_name)
         plotter.plot_set_errors(self.set_name)
+        TH.write_set_result(self.set_name)
 
 
 def optimize_single_wl_threaded(args):
