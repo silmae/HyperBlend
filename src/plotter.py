@@ -145,8 +145,8 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     sdens_std = np.array(sd).std(axis=0)
     ai_std = np.array(ai).std(axis=0)
     mf_std = np.array(mf).std(axis=0)
-    # r_m_std= np.array(r_m).std(axis=0)
-    # t_m_std= np.array(t_m).std(axis=0)
+    r_m_std= np.array(r_m).std(axis=0)
+    t_m_std= np.array(t_m).std(axis=0)
     r_std = np.array(r).std(axis=0)
     t_std = np.array(t).std(axis=0)
 
@@ -169,6 +169,8 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax[1].tick_params(axis='y', labelcolor=color_reflectance)
     _plot_with_shadow(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
     ax[1].plot(wls, r_m_mean, color=color_reflectance_measured, ls='dotted')
+    ax[1].plot(wls, r_m_mean - (r_m_std/2), color='gray', ls='dashed')
+    ax[1].plot(wls, r_m_mean + (r_m_std/2), color='gray', ls='dashed')
 
     ax_inverted = ax[1].twinx()
     ax_inverted.set_ylim([1, 0])
@@ -176,6 +178,8 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
     _plot_with_shadow(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
     ax_inverted.plot(wls, t_m_mean, color=color_transmittance_measured, ls='dotted')
+    ax_inverted.plot(wls, t_m_mean - (t_m_std / 2), color='gray', ls='dashed')
+    ax_inverted.plot(wls, t_m_mean + (t_m_std / 2), color='gray', ls='dashed')
 
     if save_thumbnail:
         folder = P.path_directory_set_result(set_name)
@@ -223,6 +227,8 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Reflectance error',   marker='x', markersize=4, color=color_reflectance)
     ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Transmittance error', marker=marker, markersize=4, color=color_transmittance)
     x_label = 'Wavelength [nm]'
+
+    ax.xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
     ax.set_xlabel(x_label, fontsize=axis_label_font_size)
     ax.legend()
     # ax.set_ylim(variable_space_ylim)
@@ -309,16 +315,19 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
     mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
     a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
-    plt.scatter(a_list, ad_list, label=C.key_sample_result_ad)
-    plt.scatter(a_list, sd_list, label=C.key_sample_result_sd)
-    plt.scatter(a_list, ai_list, label=C.key_sample_result_ai)
-    plt.scatter(a_list, mf_list, label=C.key_sample_result_mf)
+    ms = 10 # markersize
+    ls = 2 # linesize
+    plt.scatter(a_list, ad_list, label='Absorption density', color=color_ad, s=ms)
+    plt.scatter(a_list, sd_list, label='Scattering density', color=color_sd, s=ms)
+    plt.scatter(a_list, ai_list, label='Scattering anisotropy', color=color_ai, s=ms)
+    plt.scatter(a_list, mf_list, label='Mix factor', color=color_mf, s=ms)
     for _,key in enumerate(coeffs):
         coeff  = coeffs[key]
         y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])
-        plt.plot(a_list, y, color='black')
+        plt.plot(a_list, y, color='black', linewidth=ls)
 
-    plt.xlabel('Absorption', fonsize=axis_label_font_size)
+    plt.xlabel('Absorption', fontsize=axis_label_font_size)
+    plt.ylabel('Material parameter', fontsize=axis_label_font_size)
     plt.legend()
 
     if save_thumbnail:
