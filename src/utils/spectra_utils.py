@@ -131,7 +131,7 @@ def fit_starting_guess_coefficients(degree=4):
     sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
     ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
     mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
-    a_list = np.ones_like(r_list) - (r_list + t_list)  # modeled absorptions
+    a_list = np.ones_like(r_list) - (r_list + t_list)  # modeled absorptions 1 - (r+t)
     ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree)
     sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree)
     ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree)
