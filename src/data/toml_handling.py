@@ -27,17 +27,82 @@ def write_set_result(set_name: str):
     result_dict[C.key_set_result_time_per_sample_hours] = np.sum([sr[C.key_sample_result_wall_clock_elapsed_min] for sr in r]) / 60 / sample_count
     result_dict[C.key_set_result_total_processor_time_hours] = np.sum([sr[C.key_sample_result_process_elapsed_min] for sr in r]) / 60
     result_dict[C.key_set_result_processor_time_per_sample_hours] = np.sum([sr[C.key_sample_result_process_elapsed_min] for sr in r]) / 60 / sample_count
+
+    # Total means
+    result_dict[C.key_set_result_r_mean]  = np.mean([sr[C.key_sample_result_r] for sr in r])
+    result_dict[C.key_set_result_t_mean]  = np.mean([sr[C.key_sample_result_t] for sr in r])
+    result_dict[C.key_set_result_rm_mean] = np.mean([sr[C.key_sample_result_rm] for sr in r])
+    result_dict[C.key_set_result_tm_mean] = np.mean([sr[C.key_sample_result_tm] for sr in r])
     result_dict[C.key_set_result_re_mean] = np.mean([sr[C.key_sample_result_re] for sr in r])
     result_dict[C.key_set_result_te_mean] = np.mean([sr[C.key_sample_result_te] for sr in r])
-    result_dict[C.key_set_result_re_std] = np.std([sr[C.key_sample_result_re] for sr in r])
-    result_dict[C.key_set_result_te_std] = np.std([sr[C.key_sample_result_te] for sr in r])
+
+    #Total standard deviations
+    if sample_count > 1:
+        result_dict[C.key_set_result_r_std]  = np.std([sr[C.key_sample_result_r] for sr in r])
+        result_dict[C.key_set_result_t_std]  = np.std([sr[C.key_sample_result_t] for sr in r])
+        result_dict[C.key_set_result_rm_std] = np.std([sr[C.key_sample_result_rm] for sr in r])
+        result_dict[C.key_set_result_tm_std] = np.std([sr[C.key_sample_result_tm] for sr in r])
+        result_dict[C.key_set_result_re_std] = np.std([sr[C.key_sample_result_re] for sr in r])
+        result_dict[C.key_set_result_te_std] = np.std([sr[C.key_sample_result_te] for sr in r])
+    else:
+        # Standard deviation not defined for only one sample. Set to zero so that plots can still use it.
+        result_dict[C.key_set_result_r_std]  = 0.
+        result_dict[C.key_set_result_t_std]  = 0.
+        result_dict[C.key_set_result_rm_std] = 0.
+        result_dict[C.key_set_result_tm_std] = 0.
+        result_dict[C.key_set_result_re_std] = 0.
+        result_dict[C.key_set_result_te_std] = 0.
+
+    result_dict[C.key_set_result_wls] = r[0][C.key_sample_result_wls]
+
+    # Wavelength means
+    result_dict[C.key_set_result_wl_r_mean]  = np.mean([sr[C.key_sample_result_r] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_t_mean]  = np.mean([sr[C.key_sample_result_t] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_rm_mean]  = np.mean([sr[C.key_sample_result_rm] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_tm_mean]  = np.mean([sr[C.key_sample_result_tm] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_re_mean] = np.mean([sr[C.key_sample_result_re] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_te_mean] = np.mean([sr[C.key_sample_result_te] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_ad_mean] = np.mean([sr[C.key_sample_result_ad] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_sd_mean] = np.mean([sr[C.key_sample_result_sd] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_ai_mean] = np.mean([sr[C.key_sample_result_ai] for sr in r], axis=0)
+    result_dict[C.key_set_result_wl_mf_mean] = np.mean([sr[C.key_sample_result_mf] for sr in r], axis=0)
+
+    # Wavelength standard deviations
+    if sample_count > 1:
+        result_dict[C.key_set_result_wl_r_std]  = np.std([sr[C.key_sample_result_r] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_t_std]  = np.std([sr[C.key_sample_result_t] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_rm_std] = np.std([sr[C.key_sample_result_rm] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_tm_std] = np.std([sr[C.key_sample_result_tm] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_re_std] = np.std([sr[C.key_sample_result_re] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_te_std] = np.std([sr[C.key_sample_result_te] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_ad_std] = np.std([sr[C.key_sample_result_ad] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_sd_std] = np.std([sr[C.key_sample_result_sd] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_ai_std] = np.std([sr[C.key_sample_result_ai] for sr in r], axis=0)
+        result_dict[C.key_set_result_wl_mf_std] = np.std([sr[C.key_sample_result_mf] for sr in r], axis=0)
+    else:
+        # Standard deviation not defined for only one sample. Set to zero so that plots can still use it.
+        result_dict[C.key_set_result_wl_r_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_t_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_rm_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_tm_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_re_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_te_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_ad_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_sd_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_ai_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+        result_dict[C.key_set_result_wl_mf_std] = np.zeros_like(r[0][C.key_sample_result_wls])
+
     p = P.join(P.path_directory_set_result(set_name), FN.filename_set_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
 def read_set_result(set_name: str):
+    """Reads the set result file. Created if does not exist."""
+
     p = P.join(P.path_directory_set_result(set_name), FN.filename_set_result())
+    if not os.path.exists(p):
+        write_set_result(set_name)
     with open(p, 'r') as file:
         result = toml.load(file)
 

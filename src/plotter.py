@@ -105,53 +105,33 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     :param save_thumbnail:
         If True, save plot to disk. Default is True.
     """
+
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
     # ax[0].set_title('Variable space')
     # ax[1].set_title('Target space')
 
-    ids = FH.list_finished_sample_ids(set_name)
-    wls = []
-    ad = []
-    sd = []
-    ai = []
-    mf = []
-    r_m = []
-    t_m = []
-    r = []
-    t = []
-    for _, sample_id in enumerate(ids):
-        result = T.read_sample_result(set_name, sample_id)
-        wls = result[C.key_sample_result_wls]
-        ad.append(result[C.key_sample_result_ad])
-        sd.append(result[C.key_sample_result_sd])
-        ai.append(result[C.key_sample_result_ai])
-        mf.append(result[C.key_sample_result_mf])
-        r_m.append(result[C.key_sample_result_rm])
-        t_m.append(result[C.key_sample_result_tm])
-        r.append(result[C.key_sample_result_r])
-        t.append(result[C.key_sample_result_t])
+    r = T.read_set_result(set_name)
+    wls = r[C.key_set_result_wls]
+    ad_mean = np.array(r[C.key_set_result_wl_ad_mean])
+    sd_mean = np.array(r[C.key_set_result_wl_sd_mean])
+    ai_mean = np.array(r[C.key_set_result_wl_ai_mean])
+    mf_mean = np.array(r[C.key_set_result_wl_mf_mean])
+    r_mean  = np.array(r[C.key_set_result_wl_r_mean])
+    t_mean  = np.array(r[C.key_set_result_wl_t_mean])
+    rm_mean = np.array(r[C.key_set_result_wl_rm_mean])
+    tm_mean = np.array(r[C.key_set_result_wl_tm_mean])
+    ad_std  = np.array(r[C.key_set_result_wl_ad_std])
+    sd_std  = np.array(r[C.key_set_result_wl_sd_std])
+    ai_std  = np.array(r[C.key_set_result_wl_ai_std])
+    mf_std  = np.array(r[C.key_set_result_wl_mf_std])
+    r_std   = np.array(r[C.key_set_result_wl_r_std])
+    t_std   = np.array(r[C.key_set_result_wl_t_std])
+    rm_std  = np.array(r[C.key_set_result_wl_rm_std])
+    tm_std  = np.array(r[C.key_set_result_wl_tm_std])
 
-    wls = np.array(wls)
-    adens_mean = np.array(ad).mean(axis=0)
-    sdens_mean = np.array(sd).mean(axis=0)
-    ai_mean = np.array(ai).mean(axis=0)
-    mf_mean = np.array(mf).mean(axis=0)
-    r_m_mean = np.array(r_m).mean(axis=0)
-    t_m_mean = np.array(t_m).mean(axis=0)
-    r_mean = np.array(r).mean(axis=0)
-    t_mean = np.array(t).mean(axis=0)
-    adens_std = np.array(ad).std(axis=0)
-    sdens_std = np.array(sd).std(axis=0)
-    ai_std = np.array(ai).std(axis=0)
-    mf_std = np.array(mf).std(axis=0)
-    r_m_std= np.array(r_m).std(axis=0)
-    t_m_std= np.array(t_m).std(axis=0)
-    r_std = np.array(r).std(axis=0)
-    t_std = np.array(t).std(axis=0)
-
-    _plot_with_shadow(ax[0], wls, adens_mean, adens_std, color_ad, 'Absorption density')
-    _plot_with_shadow(ax[0], wls, sdens_mean, sdens_std, color_sd, 'Scattering density')
+    _plot_with_shadow(ax[0], wls, ad_mean, ad_std, color_ad, 'Absorption density')
+    _plot_with_shadow(ax[0], wls, sd_mean, sd_std, color_sd, 'Scattering density')
     _plot_with_shadow(ax[0], wls, ai_mean, ai_std, color_ai, 'Scattering anistropy')
     _plot_with_shadow(ax[0], wls, mf_mean, mf_std, color_mf, 'Mix factor')
 
@@ -168,18 +148,18 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax[1].set_ylabel('Reflectance', color=color_reflectance, fontsize=axis_label_font_size)
     ax[1].tick_params(axis='y', labelcolor=color_reflectance)
     _plot_with_shadow(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
-    ax[1].plot(wls, r_m_mean, color=color_reflectance_measured, ls='dotted')
-    ax[1].plot(wls, r_m_mean - (r_m_std/2), color='gray', ls='dashed')
-    ax[1].plot(wls, r_m_mean + (r_m_std/2), color='gray', ls='dashed')
+    ax[1].plot(wls, rm_mean, color=color_reflectance_measured, ls='dotted')
+    ax[1].plot(wls, rm_mean - (rm_std/2), color='gray', ls='dashed')
+    ax[1].plot(wls, rm_mean + (rm_std/2), color='gray', ls='dashed')
 
     ax_inverted = ax[1].twinx()
     ax_inverted.set_ylim([1, 0])
     ax_inverted.set_ylabel('Transmittance', color=color_transmittance, fontsize=axis_label_font_size)
     ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
     _plot_with_shadow(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
-    ax_inverted.plot(wls, t_m_mean, color=color_transmittance_measured, ls='dotted')
-    ax_inverted.plot(wls, t_m_mean - (t_m_std / 2), color='gray', ls='dashed')
-    ax_inverted.plot(wls, t_m_mean + (t_m_std / 2), color='gray', ls='dashed')
+    ax_inverted.plot(wls, tm_mean, color=color_transmittance_measured, ls='dotted')
+    ax_inverted.plot(wls, tm_mean - (tm_std / 2), color='gray', ls='dashed')
+    ax_inverted.plot(wls, tm_mean + (tm_std / 2), color='gray', ls='dashed')
 
     if save_thumbnail:
         folder = P.path_directory_set_result(set_name)

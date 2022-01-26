@@ -226,16 +226,105 @@ key_set_result_processor_time_per_sample_hours = 'processor_time_per_sample_hour
 """Average processor time per sample in hours."""
 
 key_set_result_re_mean = 'refl_error_mean'
-"""Mean of RMSEs of reflectance over all samples. Listed by wavelength."""
+"""Total mean of RMSEs of reflectance over all samples and wavelengths. """
 
 key_set_result_te_mean = 'tran_error_mean'
-"""Mean of RMSEs of transmittance over all samples. Listed by wavelength."""
+"""Total mean of RMSEs of transmittance over all samples and wavelengths. """
+
+key_set_result_r_mean  = 'set_result_r_mean'
+"""Total mean of modeled reflectances over all samples and wavelengths. """
+
+key_set_result_t_mean  = 'set_result_t_mean'
+"""Total mean of modeled transmittances over all samples and wavelengths. """
+
+key_set_result_rm_mean = 'set_result_rm_mean'
+"""Total mean of measured reflectances over all samples and wavelengths. """
+
+key_set_result_tm_mean = 'set_result_tm_mean'
+"""Total mean of measured transmittances over all samples and wavelengths. """
+
+key_set_result_r_std  = 'set_result_tm_std'
+"""Total standard deviation of modeled reflectances over all samples and wavelengths. """
+
+key_set_result_t_std  = 'set_result_tm_std'
+"""Total standard deviation of modeled transmittances over all samples and wavelengths. """
+
+key_set_result_rm_std = 'set_result_tm_std'
+"""Total standard deviation of measured reflectances over all samples and wavelengths. """
+
+key_set_result_tm_std = 'set_result_tm_std'
+"""Total standard deviation of measured transmittances over all samples and wavelengths. """
 
 key_set_result_re_std = 'refl_error_std'
-"""Standard deviation of RMSEs of reflectance over all samples. Listed by wavelength."""
+"""Total standard deviation of RMSEs of reflectance over all samples and wavelengths."""
 
 key_set_result_te_std = 'tran_error_std'
-"""Standard deviation of RMSEs of transmittance over all samples. Listed by wavelength."""
+"""Total standard deviation of RMSEs of transmittance over all samples and wavelengths. """
+
+key_set_result_wls = 'wls'
+"""List of wavelengths used in the set."""
+
+key_set_result_wl_r_mean = 'set_result_wl_r_mean'
+"""Wavelength-wise mean of modeled reflectance. """
+
+key_set_result_wl_t_mean = 'set_result_wl_t_mean'
+"""Wavelength-wise mean of modeled transmittance. """
+
+key_set_result_wl_rm_mean = 'set_result_wl_rm_mean'
+"""Wavelength-wise mean of measured reflectance. """
+
+key_set_result_wl_tm_mean = 'set_result_wl_tm_mean'
+"""Wavelength-wise mean of measured transmittance. """
+
+key_set_result_wl_re_mean = 'set_result_wl_re_mean'
+"""Wavelength-wise mean of reflectance error. """
+
+key_set_result_wl_te_mean = 'set_result_wl_te_mean'
+"""Wavelength-wise mean of transmittance error. """
+
+key_set_result_wl_ad_mean = 'set_result_wl_ad_mean'
+"""Wavelength-wise mean of absorption particle density. """
+
+key_set_result_wl_sd_mean = 'set_result_wl_sd_mean'
+"""Wavelength-wise mean of scattering particle density. """
+
+key_set_result_wl_ai_mean = 'set_result_wl_ai_mean'
+"""Wavelength-wise mean of scattering anisotropy. """
+
+key_set_result_wl_mf_mean = 'set_result_wl_mf_mean'
+"""Wavelength-wise mean of mix factor. """
+
+
+key_set_result_wl_r_std = 'set_result_wl_r_std'
+"""Wavelength-wise standard deviation of modeled reflectance. Set to zero is only one sample was used. """
+
+key_set_result_wl_t_std = 'set_result_wl_t_std'
+"""Wavelength-wise standard deviation of modeled transmittance. Set to zero is only one sample was used. """
+
+key_set_result_wl_rm_std = 'set_result_wl_rm_std'
+"""Wavelength-wise standard deviation of measured reflectance. Set to zero is only one sample was used. """
+
+key_set_result_wl_tm_std = 'set_result_wl_tm_std'
+"""Wavelength-wise standard deviation of measured transmittance. Set to zero is only one sample was used. """
+
+key_set_result_wl_re_std = 'set_result_wl_re_std'
+"""Wavelength-wise standard deviation of reflectance error. Set to zero is only one sample was used. """
+
+key_set_result_wl_te_std = 'set_result_wl_te_std'
+"""Wavelength-wise standard deviation of transmittance error. Set to zero is only one sample was used. """
+
+key_set_result_wl_ad_std = 'set_result_wl_ad_std'
+"""Wavelength-wise standard deviation of absorption particle density. Set to zero is only one sample was used. """
+
+key_set_result_wl_sd_std = 'set_result_wl_sd_std'
+"""Wavelength-wise standard deviation of scattering particle density. Set to zero is only one sample was used. """
+
+key_set_result_wl_ai_std = 'set_result_wl_ai_std'
+"""Wavelength-wise standard deviation of scattering anisotropy. Set to zero is only one sample was used. """
+
+key_set_result_wl_mf_std = 'set_result_wl_mf_std'
+"""Wavelength-wise standard deviation of mix factor. Set to zero is only one sample was used. """
+
 
 # starting guess coefficients names
 ad_coeffs = 'ad_coeffs'
