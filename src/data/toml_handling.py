@@ -97,8 +97,6 @@ def write_set_result(set_name: str):
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-<<<<<<< HEAD
-=======
 def read_set_result(set_name: str):
     """Reads the set result file. Created if does not exist."""
 
@@ -111,7 +109,6 @@ def read_set_result(set_name: str):
     return result
 
 
->>>>>>> 468e069... Textual set result now maches to plotted one
 def collect_sample_results(set_name: str):
     """Collect results of finished samples in a list of dictionaries.
 
