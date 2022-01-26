@@ -75,8 +75,98 @@ if __name__ == '__main__':
     import prospect_d as PD
     import plotter as P
     import matplotlib.pyplot as plt
+    from src.data import file_handling as FH
+    from src.data import toml_handling as TH
+    from src import constants as C
 
-    fifi(15)
+    set_name = 'specchio_5nm'
+    # FH.expand(set_name)
+    # result_dict = TH.read_set_result(set_name)
+    ids = FH.list_finished_sample_ids(set_name)
+    wls = []
+    ad = []
+    sd = []
+    ai = []
+    mf = []
+    r_m = []
+    t_m = []
+    r = []
+    t = []
+    for _, sample_id in enumerate(ids):
+        result = TH.read_sample_result(set_name, sample_id)
+        wls = result[C.key_sample_result_wls]
+        ad.append(result[C.key_sample_result_ad])
+        sd.append(result[C.key_sample_result_sd])
+        ai.append(result[C.key_sample_result_ai])
+        mf.append(result[C.key_sample_result_mf])
+        r_m.append(result[C.key_sample_result_rm])
+        t_m.append(result[C.key_sample_result_tm])
+        r.append(result[C.key_sample_result_r])
+        t.append(result[C.key_sample_result_t])
+
+    wls = np.array(wls)
+    adens_mean = np.array(ad).mean(axis=0)
+    sdens_mean = np.array(sd).mean(axis=0)
+    ai_mean = np.array(ai).mean(axis=0)
+    mf_mean = np.array(mf).mean(axis=0)
+    r_m_mean = np.array(r_m).mean(axis=0)
+    t_m_mean = np.array(t_m).mean(axis=0)
+    r_mean = np.array(r).mean(axis=0)
+    t_mean = np.array(t).mean(axis=0)
+    # adens_std = np.array(ad).std(axis=0)
+    # sdens_std = np.array(sd).std(axis=0)
+    # ai_std = np.array(ai).std(axis=0)
+    # mf_std = np.array(mf).std(axis=0)
+    # r_m_std = np.array(r_m).std(axis=0)
+    # t_m_std = np.array(t_m).std(axis=0)
+    # r_std = np.array(r).std(axis=0)
+    # t_std = np.array(t).std(axis=0)
+
+    # fig, ax = plt.subplots(ncols=2, nrows=2)
+    # ax[0][0].axes(projection='3d')
+    # ax[0][1].axes(projection='3d')
+    # ax[1][0].axes(projection='3d')
+    # ax[1][1].axes(projection='3d')
+
+    # ax[0][0].scatter3D(r_mean, t_mean, adens_mean)
+    # ax[0][1].scatter3D(r_mean, t_mean, sdens_mean)
+    # ax[1][0].scatter3D(r_mean, t_mean, ai_mean)
+    # ax[1][1].scatter3D(r_mean, t_mean, mf_mean)
+    # ax[0][0].set_title('adens_mean')
+    # ax[0][1].set_title('sdens_mean')
+    # ax[1][0].set_title('ai_mean')
+    # ax[1][1].set_title('mf_mean')
+
+    fig = plt.figure()
+
+    # defining the axes with the projection
+    # as 3D so as to plot 3D graphs
+    ax = plt.axes(projection="3d")
+    ax.scatter3D(r_mean, t_mean, adens_mean)
+    ax.set_title('adens_mean')
+    ax.set_xlabel('r')
+    ax.set_ylabel('t')
+    plt.show()
+    ax = plt.axes(projection="3d")
+    ax.scatter3D(r_mean, t_mean, sdens_mean)
+    ax.set_title('sdens_mean')
+    ax.set_xlabel('r')
+    ax.set_ylabel('t')
+    plt.show()
+    ax = plt.axes(projection="3d")
+    ax.scatter3D(r_mean, t_mean, ai_mean)
+    ax.set_title('ai_mean')
+    ax.set_xlabel('r')
+    ax.set_ylabel('t')
+    plt.show()
+    ax = plt.axes(projection="3d")
+    ax.scatter3D(r_mean, t_mean, mf_mean)
+    ax.set_title('mf_mean')
+    ax.set_xlabel('r')
+    ax.set_ylabel('t')
+    plt.show()
+
+    # fifi(15)
 
     # wls,r,t = get_default_P_leaf()
     # fig, ax = plt.subplots()

@@ -36,6 +36,14 @@ def write_set_result(set_name: str):
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
+def read_set_result(set_name: str):
+    p = P.join(P.path_directory_set_result(set_name), FN.filename_set_result())
+    with open(p, 'r') as file:
+        result = toml.load(file)
+
+    return result
+
+
 def collect_sample_results(set_name: str):
     """Collect results of finished samples in a list of dictionaries.
 
