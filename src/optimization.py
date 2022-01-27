@@ -125,20 +125,51 @@ class Optimization:
             if resolution != 1:
                 targets = targets[::resolution]
 
+            # def get_param_path(set_name):
+            #     from src.data import path_handling as PH
+            #     bp = PH.path_directory_set(set_name)
+            #     fn = 'suface_fit.toml'
+            #     p = PH.join(bp, fn)
+            #     return p
+            #
+            # def get_model_params(set_name):
+            #     import toml
+            #     p = get_param_path(set_name)
+            #     with open(p, 'r') as file:
+            #         result = toml.load(file)
+            #     return result
+
+
+
             if use_threads:
-                param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
-                           self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-                           use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess) for a in targets]
+                param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id) for a in targets]
                 with Pool() as pool:
-                    pool.map(optimize_single_wl_threaded, param_list)
+                    pool.map(optimize_single_wl_threaded_sf, param_list)
             else:
                 for target in targets:
                     wl = target[0]
                     r_m = target[1]
                     t_m = target[2]
-                    optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
-                           self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-                           use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess)
+                    optimize_single_wl_sf(wl, r_m, t_m, self.set_name, self.density_scale, sample_id)
+
+
+            #
+            # The old way with optimizer #######
+            #
+            # if use_threads:
+            #     param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
+            #                self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
+            #                use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess) for a in targets]
+            #     with Pool() as pool:
+            #         pool.map(optimize_single_wl_threaded, param_list)
+            # else:
+            #     for target in targets:
+            #         wl = target[0]
+            #         r_m = target[1]
+            #         t_m = target[2]
+            #         optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
+            #                self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
+            #                use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess)
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
@@ -156,6 +187,88 @@ def optimize_single_wl_threaded(args):
 
     optimize_single_wl(*args)
 
+
+def optimize_single_wl_threaded_sf(args):
+    """Unpacks arguments from pool.map call."""
+
+    optimize_single_wl_sf(*args)
+
+
+def optimize_single_wl_sf(wl: float, r_m: float, t_m: float, set_name: str, density_scale, sample_id: int):
+    print(f'Optimizing wavelength {wl} nm started.', flush=True)
+    if FH.subresult_exists(set_name, wl, sample_id):
+        print(f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.", flush=True)
+        return
+
+    start = time.perf_counter()
+
+    # use hard-coded parameters for now
+    ad_p = [0.1404635216593974, -0.2895478074815633, -0.1236899431354284, ]
+    sd_p = [0.512566932024723, 0.2333136166183437, -0.04983803410002735, ]
+    ai_p = [0.8365950605945799, -0.19202318885255726, 0.22804803615755223, ]
+    mf_p = [0.13468594162695047, -0.4093743892816843, -0.057562200342688406, ]
+
+    # param_dict = get_model_params(set_name)
+    # ad_p = param_dict['ad']
+    # sd_p = param_dict['sd']
+    # ai_p = param_dict['ai']
+    # mf_p = param_dict['mf']
+
+    def function(data, a, b, c):
+        r = data[0]
+        t = data[1]
+        res = a * (r ** b) * (t ** c)
+        return res
+
+    ad = function(np.array([r_m, t_m]), *ad_p)
+    sd = function(np.array([r_m, t_m]), *sd_p)
+    ai = function(np.array([r_m, t_m]), *ai_p)
+    mf = function(np.array([r_m, t_m]), *mf_p)
+
+    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
+                        wl=wl,
+                        abs_dens=ad * density_scale,
+                        scat_dens=sd * density_scale,
+                        scat_ai=ai - 0.5,
+                        mix_fac=mf,
+                        clear_rend_folder=False,
+                        clear_references=False,
+                        render_references=True,
+                        dry_run=False)
+
+    r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
+    t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+
+    elapsed = time.perf_counter() - start
+
+    res_dict = {
+        C.key_wl_result_wl: wl,
+        C.key_wl_result_x0: 0,
+        C.key_wl_result_x_best: [ad, sd, ai, mf],
+        C.key_wl_result_refl_measured: r_m,
+        C.key_wl_result_tran_measured: t_m,
+        C.key_wl_result_refl_modeled: r,
+        C.key_wl_result_tran_modeled: t,
+        C.key_wl_result_refl_error: math.fabs(r - r_m),
+        C.key_wl_result_tran_error: math.fabs(t - t_m),
+        C.key_wl_result_render_calls: 1,
+        C.key_wl_result_optimizer: 'surface_model',
+        C.key_wl_result_optimizer_ftol: 0,
+        C.key_wl_result_optimizer_xtol: 0,
+        C.key_wl_result_optimizer_diffstep: 0,
+        C.key_wl_result_optimizer_result: '',
+        C.key_wl_result_elapsed_time_s: elapsed,
+        C.key_wl_result_history_r: [r],
+        C.key_wl_result_history_t: [t],
+        C.key_wl_result_history_ad: [ad],
+        C.key_wl_result_history_sd: [sd],
+        C.key_wl_result_history_ai: [ai],
+        C.key_wl_result_history_mf: [mf],
+    }
+    # print(res_dict)
+    logging.info(f'Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk.')
+
+    TH.write_wavelength_result(set_name, res_dict, sample_id)
 
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
