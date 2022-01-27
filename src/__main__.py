@@ -72,7 +72,8 @@ def get_default_P_leaf():
 def function(data, a, b, c):
     r = data[0]
     t = data[1]
-    return a * (r**b) * (t**c)
+    res = a * (r**b) * (t**c)
+    return res
 
 
 if __name__ == '__main__':
@@ -80,6 +81,7 @@ if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
     from scipy.optimize import curve_fit
+    from mpl_toolkits.mplot3d import Axes3D
 
     import prospect_d as PD
     import plotter as P
@@ -88,24 +90,42 @@ if __name__ == '__main__':
     from src.data import toml_handling as TH
     from src import constants as C
 
-    set_name = 'specchio_5nm'
-    # FH.expand(set_name)
-    # result_dict = TH.read_set_result(set_name)
-    # ids = FH.list_finished_sample_ids(set_name)
-    # ad = []
-    # sd = []
-    # ai = []
-    # mf = []
-    # r_m = []
-    # t_m = []
+    # set_name = 'specchio_5nm'
+    set_name = 'surface_test'
+    ids = FH.list_finished_sample_ids(set_name)
     # for _, sample_id in enumerate(ids):
-    #     result = TH.read_sample_result(set_name, sample_id)
-    #     ad.append(result[C.key_sample_result_ad])
-    #     sd.append(result[C.key_sample_result_sd])
-    #     ai.append(result[C.key_sample_result_ai])
-    #     mf.append(result[C.key_sample_result_mf])
-    #     r_m.append(result[C.key_sample_result_rm])
-    #     t_m.append(result[C.key_sample_result_tm])
+    result = TH.read_sample_result(set_name, sample_id=0)
+    ad = result[C.key_sample_result_ad]
+    sd = result[C.key_sample_result_sd]
+    ai = result[C.key_sample_result_ai]
+    mf = result[C.key_sample_result_mf]
+    r_m = result[C.key_sample_result_rm]
+    t_m = result[C.key_sample_result_tm]
+    variable_lol = [ad, sd, ai, mf]
+    # get fit parameters from scipy curve fit
+    for variable in variable_lol:
+        # https://stackoverflow.com/questions/56439930/how-to-use-the-datasets-to-fit-the-3d-surface
+        parameters, covariance = curve_fit(function, [r_m,t_m], variable)
+        num_points = 25
+        model_x_data = np.linspace(min(r_m), max(r_m), num_points)
+        model_y_data = np.linspace(min(t_m), max(t_m), num_points)
+        # create coordinate arrays for vectorized evaluations
+        X, Y = np.meshgrid(model_x_data, model_y_data)
+        # calculate Z coordinate array
+        Z = function(np.array([X, Y]), *parameters)
+        # setup figure object
+        fig = plt.figure()
+        # setup 3d object
+        ax = plt.axes(projection="3d")
+        # plot surface
+        ax.plot_surface(X, Y, Z, alpha=0.5)
+        # plot input data
+        ax.scatter(r_m,t_m, variable, color='red')
+        # set plot descriptions
+        ax.set_xlabel('R')
+        ax.set_ylabel('T')
+        ax.set_zlabel('Z data')
+        plt.show()
 
     # fig, ax = plt.subplots(ncols=2, nrows=2)
     # ax[0][0].axes(projection='3d')
@@ -154,9 +174,12 @@ if __name__ == '__main__':
     # fifi(15)
 
     set_name = 'surface_test'
-    wls,r,t = get_default_P_leaf()
+    # wls,r,t = get_default_P_leaf()
     from src.utils import spectra_utils as SU
-    SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
+    # SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=20)
+
     # fig, ax = plt.subplots()
     # P._plot_refl_tran_to_axis(ax, r, t, l, x_label='wavelength', invert_tran=True)
     # plt.show()
