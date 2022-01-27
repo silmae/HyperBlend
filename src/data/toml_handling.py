@@ -231,7 +231,11 @@ def write_target(set_name:str, data, sample_id=0) -> None:
 
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {'wlrt': floated_list}
-    with open(P.path_file_target(set_name, sample_id), 'w+') as file:
+    p = P.path_file_target(set_name, sample_id)
+    if not os.path.exists(p):
+        FH.create_first_level_folders(set_name)
+        FH.create_opt_folder_structure_for_samples(set_name, sample_id=0)
+    with open(p, 'w+') as file:
         toml.dump(res, file)
 
 
