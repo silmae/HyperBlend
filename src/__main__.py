@@ -15,44 +15,6 @@ from src.optimization import Optimization
 from data import toml_handling as TH
 from src.utils import general_utils as GU
 
-def fifi(max_degree = 30):
-    residuals = []
-    min_residual = 1e30
-    best_coef = []
-    best_i = 0
-    wls, r, _ = get_default_P_leaf()
-    for i in range(max_degree):
-        series, residue = fit(wls, r, degree=i)
-        residuals.append(residue)
-        print(f'residue: {residue}')
-        if residue < min_residual:
-            min_residual = residue
-            coeff = series.convert().coef
-            best_i = i
-
-        # fig, ax = plt.subplots(ncols=2)
-        # ax[0].plot(range(max_degree), residuals)
-        # ax[0].scatter(best_i, residuals[i], color='red')
-
-        # ax[1].plot(wls, r, color='red')
-        # y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in wls])
-        poly = np.poly1d(series)
-        new_x = np.linspace(wls[0], wls[-1])
-        new_y = poly(wls)
-        # plt.plot(wls, new_y, color='blue')
-        plt.plot(wls, r, ".", wls, new_y(wls))
-        plt.show()
-
-
-def fit(wls, r, degree):
-    from numpy.polynomial import Polynomial
-    series, stuff = Polynomial.fit(wls, r, deg=degree, domain=[0,1], full=True)
-    resi = stuff[0]
-    if resi.size == 1:
-        resi = resi[0]
-    else:
-        resi = 0
-    return series, resi
 
 
 def get_default_P_leaf():
