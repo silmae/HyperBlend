@@ -16,6 +16,23 @@ from src import constants as C, plotter
 from src.data import path_handling as P
 
 
+def get_param_path(set_name):
+    from src.data import path_handling as PH
+    bp = PH.path_directory_set(set_name)
+    fn = 'suface_fit.toml'
+    p = PH.join(bp, fn)
+    return p
+
+
+def read_surface_model_parameters():
+    p = P.path_file_surface_model_parameters()
+    if not os.path.exists(p):
+        raise RuntimeError(f'Surface model parameter file "{p}" not found.')
+    with open(p, 'r') as file:
+        result = toml.load(file)
+    return result
+
+
 def write_set_result(set_name: str):
     """Collect sample results and write final result to a toml file. """
 

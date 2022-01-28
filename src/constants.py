@@ -59,6 +59,9 @@ folder_rend_ref_tran = 'rend_tran_ref'
 folder_opt = 'optimization'
 """Top level optimization folder name."""
 
+folder_surface_model = 'surface_model'
+"""Top level surface model folder name."""
+
 folder_opt_sample_targets = 'sample_targets'
 """Target files are stored to this folder."""
 
@@ -90,6 +93,9 @@ file_opt_res = 'final_result'
 
 file_sample_result = 'sample_result'
 """Sample result file name."""
+
+file_model_parameters = 'model_parameters'
+"""Model parameter file name."""
 
 # Wavelength result's dictionary keys
 

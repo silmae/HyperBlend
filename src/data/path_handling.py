@@ -44,6 +44,16 @@ def path_directory_optimization() -> str:
     return p
 
 
+def path_directory_surface_model() -> str:
+    """Path to top level optimization root folder.
+
+    'project_root/optimization'
+    """
+
+    p = os.path.abspath(C.path_project_root + '/' + C.folder_surface_model)
+    return p
+
+
 def path_directory_set(set_name: str) -> str:
     """Path to set's folder.
 
@@ -136,6 +146,13 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
 ##########################################################################
 # Paths to files
 ##########################################################################
+
+
+def path_file_surface_model_parameters() -> str:
+    """Path to surface model parameter file."""
+
+    p = join(path_directory_surface_model(), C.file_model_parameters + C.postfix_text_data_format)
+    return p
 
 
 def path_file_wl_result(set_name: str, wl: float, sample_id: int) -> str:

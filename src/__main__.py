@@ -76,12 +76,6 @@ def function(data, a, b, c):
     return res
 
 
-def get_param_path(set_name):
-    bp = PH.path_directory_set(set_name)
-    fn = 'suface_fit.toml'
-    p = PH.join(bp, fn)
-    return p
-
 
 def fit_surface(set_name, show_plot=False):
     # ids = FH.list_finished_sample_ids(set_name)
@@ -164,11 +158,11 @@ if __name__ == '__main__':
 
 
     # set_name = 'specchio_5nm'
-    set_name = 'surface_test_predict'
+    set_name = 'surface_test_predict2'
     o = Optimization(set_name)
     # wls,r,t = get_default_P_leaf()
     # SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-    o.run_optimization(resolution=5)
+    o.run_optimization(resolution=100, use_threads=True, prediction_method='surface')
 
     # fit_surface(set_name, show_plot=False)
 

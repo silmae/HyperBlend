@@ -94,7 +94,7 @@ class Optimization:
             if clear_wl_results:
                 FH.clear_folder(P.path_directory_subresult(self.set_name, sample_id))
 
-    def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1):
+    def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1, prediction_method='surface'):
         """Runs the optimization for each sample in the set.
 
         It is safe to interrupt this method at any point as intermediate results are
@@ -110,9 +110,15 @@ class Optimization:
         :param resolution:
             Spectral resolution. Default value 1 will optimize all wavelengths. Value 10
             would optimize every 10th spectral band.
+        :param prediction_method:
+            Either 'optimization' for original method or 'surface' for new faster method.
         """
 
         ids = FH.list_target_ids(self.set_name)
+
+        if len(ids) < 1:
+            raise RuntimeError(f'Could not find any targets for set "{self.set_name}".')
+
         ids.sort()
 
         for _,sample_id in enumerate(ids):
@@ -125,51 +131,44 @@ class Optimization:
             if resolution != 1:
                 targets = targets[::resolution]
 
-            # def get_param_path(set_name):
-            #     from src.data import path_handling as PH
-            #     bp = PH.path_directory_set(set_name)
-            #     fn = 'suface_fit.toml'
-            #     p = PH.join(bp, fn)
-            #     return p
-            #
-            # def get_model_params(set_name):
-            #     import toml
-            #     p = get_param_path(set_name)
-            #     with open(p, 'r') as file:
-            #         result = toml.load(file)
-            #     return result
+            if prediction_method == 'surface':
 
+                param_dict = TH.read_surface_model_parameters()
+                ad_p = param_dict['ad']
+                sd_p = param_dict['sd']
+                ai_p = param_dict['ai']
+                mf_p = param_dict['mf']
 
+                if use_threads:
+                    param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p) for a in targets]
+                    with Pool() as pool:
+                        pool.map(run_surface_model_threaded, param_list)
+                else:
+                    for target in targets:
+                        wl = target[0]
+                        r_m = target[1]
+                        t_m = target[2]
+                        run_surface_model_wl(wl, r_m, t_m, self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p)
 
-            if use_threads:
-                param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id) for a in targets]
-                with Pool() as pool:
-                    pool.map(optimize_single_wl_threaded_sf, param_list)
+            elif prediction_method == 'optimization':
+
+                if use_threads:
+                    param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
+                               self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
+                               use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess) for a in targets]
+                    with Pool() as pool:
+                        pool.map(optimize_single_wl_threaded, param_list)
+                else:
+                    for target in targets:
+                        wl = target[0]
+                        r_m = target[1]
+                        t_m = target[2]
+                        optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
+                               self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
+                               use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess)
+
             else:
-                for target in targets:
-                    wl = target[0]
-                    r_m = target[1]
-                    t_m = target[2]
-                    optimize_single_wl_sf(wl, r_m, t_m, self.set_name, self.density_scale, sample_id)
-
-
-            #
-            # The old way with optimizer #######
-            #
-            # if use_threads:
-            #     param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
-            #                self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-            #                use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess) for a in targets]
-            #     with Pool() as pool:
-            #         pool.map(optimize_single_wl_threaded, param_list)
-            # else:
-            #     for target in targets:
-            #         wl = target[0]
-            #         r_m = target[1]
-            #         t_m = target[2]
-            #         optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
-            #                self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
-            #                use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess)
+                raise RuntimeError(f'Prediction method "{prediction_method}" not recognized.')
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
@@ -188,13 +187,29 @@ def optimize_single_wl_threaded(args):
     optimize_single_wl(*args)
 
 
-def optimize_single_wl_threaded_sf(args):
+def run_surface_model_threaded(args):
     """Unpacks arguments from pool.map call."""
 
-    optimize_single_wl_sf(*args)
+    run_surface_model_wl(*args)
 
 
-def optimize_single_wl_sf(wl: float, r_m: float, t_m: float, set_name: str, density_scale, sample_id: int):
+def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, density_scale, sample_id: int,
+                         ad_p, sd_p, ai_p, mf_p):
+    """
+
+    :param wl: Wavelength.
+    :param r_m: Measured reflectance.
+    :param t_m: Measured transmittance.
+    :param set_name: Set name.
+    :param density_scale: Density scaling factor for Blender.
+    :param sample_id: Sample id.
+    :param ad_p: Absorption density parameters. Loaded from a file.
+    :param sd_p: Scattering density parameters. Loaded from a file.
+    :param ai_p: Scattering anisotropy parameters. Loaded from a file.
+    :param mf_p: Mixing factor parameters. Loaded from a file.
+    :return:
+    """
+
     print(f'Optimizing wavelength {wl} nm started.', flush=True)
     if FH.subresult_exists(set_name, wl, sample_id):
         print(f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.", flush=True)
@@ -203,16 +218,11 @@ def optimize_single_wl_sf(wl: float, r_m: float, t_m: float, set_name: str, dens
     start = time.perf_counter()
 
     # use hard-coded parameters for now
-    ad_p = [0.1404635216593974, -0.2895478074815633, -0.1236899431354284, ]
-    sd_p = [0.512566932024723, 0.2333136166183437, -0.04983803410002735, ]
-    ai_p = [0.8365950605945799, -0.19202318885255726, 0.22804803615755223, ]
-    mf_p = [0.13468594162695047, -0.4093743892816843, -0.057562200342688406, ]
+    # ad_p = [0.1404635216593974, -0.2895478074815633, -0.1236899431354284, ]
+    # sd_p = [0.512566932024723, 0.2333136166183437, -0.04983803410002735, ]
+    # ai_p = [0.8365950605945799, -0.19202318885255726, 0.22804803615755223, ]
+    # mf_p = [0.13468594162695047, -0.4093743892816843, -0.057562200342688406, ]
 
-    # param_dict = get_model_params(set_name)
-    # ad_p = param_dict['ad']
-    # sd_p = param_dict['sd']
-    # ai_p = param_dict['ai']
-    # mf_p = param_dict['mf']
 
     def function(data, a, b, c):
         r = data[0]
