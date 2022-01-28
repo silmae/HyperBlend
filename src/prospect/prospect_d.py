@@ -8,7 +8,7 @@ Versions 5 and D
 import numpy as np
 from scipy.special import expi
 
-from src import spectral_library
+from src.prospect import spectral_library
 
 
 def run_prospect(n, cab, car, cbrown, cw, cm, ant=0.0,

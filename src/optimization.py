@@ -17,6 +17,7 @@ from src.rendering import blender_control as B
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
+from src.surface_model import fitting_function as FF
 
 hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
 """This should be used only if the starting guess based on polynomial fitting is not available. 
@@ -217,23 +218,10 @@ def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, densi
 
     start = time.perf_counter()
 
-    # use hard-coded parameters for now
-    # ad_p = [0.1404635216593974, -0.2895478074815633, -0.1236899431354284, ]
-    # sd_p = [0.512566932024723, 0.2333136166183437, -0.04983803410002735, ]
-    # ai_p = [0.8365950605945799, -0.19202318885255726, 0.22804803615755223, ]
-    # mf_p = [0.13468594162695047, -0.4093743892816843, -0.057562200342688406, ]
-
-
-    def function(data, a, b, c):
-        r = data[0]
-        t = data[1]
-        res = a * (r ** b) * (t ** c)
-        return res
-
-    ad = function(np.array([r_m, t_m]), *ad_p)
-    sd = function(np.array([r_m, t_m]), *sd_p)
-    ai = function(np.array([r_m, t_m]), *ai_p)
-    mf = function(np.array([r_m, t_m]), *mf_p)
+    ad = np.clip(FF.function(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
+    sd = np.clip(FF.function(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
+    ai = np.clip(FF.function(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
+    mf = np.clip(FF.function(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
 
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                         wl=wl,

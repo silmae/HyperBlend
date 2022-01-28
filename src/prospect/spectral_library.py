@@ -29,7 +29,7 @@ def get_spectra():
     start = time.time()
 
     rows = []
-    with open(path.abspath('./prospect_d_spectra.txt')) as file:
+    with open(path.abspath('prospect_d_spectra.txt')) as file:
         r = csv.reader(file, delimiter='\t')
         for i,row in enumerate(r):
             if i < 20:
