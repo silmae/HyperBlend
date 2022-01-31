@@ -17,12 +17,12 @@ from src.surface_model import fitting_function as FF
 set_name = 'surface_train'
 
 
-def train():
+def train(do_points=True):
     """Train surface model."""
-
-    generate_train_data(num_points=10)
-    o = Optimization(set_name)
-    o.run_optimization(prediction_method='optimization')
+    if do_points:
+        generate_train_data(num_points=20)
+        o = Optimization(set_name)
+        o.run_optimization(prediction_method='optimization')
     fit_surface(show_plot=False)
 
 
@@ -40,7 +40,7 @@ def generate_train_data(num_points=10):
             if r + t > 1.:
                 continue
             # ensure some amount of symmetry
-            if math.fabs(r-t) > 0.2:
+            if math.fabs(r-t) > 0.1:
                 continue
 
             wlrt = [fake_wl, r, t]
@@ -85,28 +85,53 @@ def fit_surface(show_plot=False):
     for i, variable in enumerate(variable_lol):
         # get fit parameters from scipy curve fit
         # https://stackoverflow.com/questions/56439930/how-to-use-the-datasets-to-fit-the-3d-surface
-        parameters, _ = curve_fit(FF.function, [r, t], variable)
-        result_dict[variable_names[i]] = parameters
-        if show_plot:
-            num_points = 25
-            model_x_data = np.linspace(min(r), max(r), num_points)
-            model_y_data = np.linspace(min(t), max(t), num_points)
-            # create coordinate arrays for vectorized evaluations
-            R, T = np.meshgrid(model_x_data, model_y_data)
-            # calculate Z coordinate array
-            Z = FF.function(np.array([R, T]), *parameters)
-            # setup figure object
-            fig = plt.figure()
-            # setup 3d object
-            ax = plt.axes(projection="3d")
-            # plot surface
-            ax.plot_surface(R, T, Z, alpha=0.5)
-            # plot input data
-            ax.scatter(r, t, variable, color='red')
-            # set plot descriptions
-            ax.set_xlabel('R')
-            ax.set_ylabel('T')
-            ax.set_zlabel(variable_names[i])
-            plt.show()
 
-    TH.write_surface_model_parameters(result_dict)
+        num_points = 25
+        model_x_data = np.linspace(min(r), max(r), num_points)
+        model_y_data = np.linspace(min(t), max(t), num_points)
+        # setup figure object
+        fig = plt.figure()
+        # setup 3d object
+        ax = plt.axes(projection="3d")
+        ax.set_xlabel('R')
+        ax.set_ylabel('T')
+        ax.set_zlabel(variable_names[i])
+        failed = False
+
+        try:
+            fittable = FF.function
+            if variable_names[i] == 'ai':
+                fittable = FF.function2
+
+            parameters, _ = curve_fit(fittable, [r, t], variable, p0=FF.get_x0())
+            result_dict[variable_names[i]] = parameters
+            if show_plot:
+                # create coordinate arrays for vectorized evaluations
+                R, T = np.meshgrid(model_x_data, model_y_data)
+                # calculate Z coordinate array
+                Z = fittable(np.array([R, T]), *parameters)
+                # plot input data
+                ax.scatter(r, t, variable, c=variable, cmap=plt.cm.hot)
+                # plot surface
+                ax.plot_surface(R, T, Z, alpha=0.5)
+                plt.show()
+        except RuntimeError as re:
+            logging.error(f'Failed to fit for parameter {variable_names[i]}')
+            if show_plot:
+                # plot input data
+                ax.scatter(r, t, variable, color='red')
+                plt.show()
+                failed = True
+            # raise
+
+        # if show_plot:
+        #         # set plot descriptions
+        #         ax.set_xlabel('R')
+        #         ax.set_ylabel('T')
+        #         ax.set_zlabel(variable_names[i])
+        #         plt.show()
+
+    if not failed:
+        TH.write_surface_model_parameters(result_dict)
+    else:
+        raise RuntimeError(f'Failed to fit all parameters. The result will not be saved.')

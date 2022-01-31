@@ -24,12 +24,12 @@ def get_spectra():
     """Reads the spectral information and stores is for future use."""
 
     # PROSPECT-D
-    prospect_d_spectraf = pkgutil.get_data('src', 'prospect_d_spectra.txt')
+    prospect_d_spectraf = pkgutil.get_data('src/prospect', 'prospect_d_spectra.txt')
 
     start = time.time()
 
     rows = []
-    with open(path.abspath('prospect_d_spectra.txt')) as file:
+    with open(path.abspath('prospect/prospect_d_spectra.txt')) as file:
         r = csv.reader(file, delimiter='\t')
         for i,row in enumerate(r):
             if i < 20:
