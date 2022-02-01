@@ -218,10 +218,10 @@ def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, densi
 
     start = time.perf_counter()
 
-    ad = np.clip(FF.function(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
-    sd = np.clip(FF.function(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
+    ad = np.clip(FF.function_exp(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
+    sd = np.clip(FF.function_log(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
     ai = np.clip(FF.function2(np.array([r_m, t_m]), *ai_p) - 0.5, 0.0, 1.0)
-    mf = np.clip(FF.function(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
+    mf = np.clip(FF.function_free(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
 
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                         wl=wl,

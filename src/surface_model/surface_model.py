@@ -17,10 +17,10 @@ from src.surface_model import fitting_function as FF
 set_name = 'surface_train'
 
 
-def train(do_points=True):
+def train(do_points=True, num_points=50):
     """Train surface model."""
     if do_points:
-        generate_train_data(num_points=20)
+        generate_train_data(num_points)
         o = Optimization(set_name)
         o.run_optimization(prediction_method='optimization')
     fit_surface(show_plot=False)
@@ -37,7 +37,7 @@ def generate_train_data(num_points=10):
     for i,r in enumerate(np.linspace(0, 0.6, num_points, endpoint=True)):
         for j,t in enumerate(np.linspace(0, 0.6, num_points, endpoint=True)):
             # Do not allow r+t to exceed 1 as it would break conservation of energy
-            if r + t > 1.:
+            if r + t >= 0.999999:
                 continue
             # ensure some amount of symmetry
             if math.fabs(r-t) > 0.1:
@@ -67,8 +67,8 @@ def fit_surface(show_plot=False):
     re = np.array(result[C.key_sample_result_re])
     te = np.array(result[C.key_sample_result_te])
 
-    max_error = 0.015
-    low_cut = 0.05
+    max_error = 0.003
+    low_cut = 0.0
     bad = [(a > max_error or b > max_error) for a,b in zip(re, te)]
     # bad = np.where(bad)[0]
     low_cut = [(a < low_cut or b < low_cut) for a,b in zip(r, t)]
@@ -105,9 +105,13 @@ def fit_surface(show_plot=False):
         failed = False
 
         try:
-            fittable = FF.function
+            fittable = FF.function_exp
             if variable_names[i] == 'ai':
                 fittable = FF.function2
+            if variable_names[i] == 'sd':
+                fittable = FF.function_log
+            if variable_names[i] == 'mf':
+                fittable = FF.function_free
 
             parameters, _ = curve_fit(fittable, [r, t], variable, p0=FF.get_x0())
             result_dict[variable_names[i]] = parameters

@@ -22,19 +22,19 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    # SM.train(do_points=False)
-    SM.fit_surface(show_plot=True)
+    SM.train(do_points=False)
+    # SM.fit_surface(show_plot=True)
 
     # set_name = 'specchio_5nm'
-    set_name = 'surface_test_predict2'
+    set_name = 'surface_test_predict3'
     FH.clear_folder(PH.path_directory_subresult(set_name, 0))
     o = Optimization(set_name)
     # wls,r,t = prospect.get_default_prospect_leaf()
     # diff = r-t
     # max_diff = diff.max()
     # print(f'max difference of r and t = {max_diff}')
-    # # SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-    o.run_optimization(resolution=50, use_threads=True, prediction_method='surface')
+    # SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
+    o.run_optimization(resolution=20, use_threads=True, prediction_method='surface')
 
     # # Test the software with hard coded data.
     # presets.optimize_default_target(spectral_resolution=50)
