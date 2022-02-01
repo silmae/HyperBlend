@@ -22,8 +22,8 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    SM.train(do_points=False)
-    # SM.fit_surface(show_plot=True)
+    # SM.train(do_points=False)
+    SM.fit_surface(show_plot=True)
 
     # set_name = 'specchio_5nm'
     set_name = 'surface_test_predict2'

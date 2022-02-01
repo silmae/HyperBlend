@@ -68,14 +68,20 @@ def fit_surface(show_plot=False):
     te = np.array(result[C.key_sample_result_te])
 
     max_error = 0.015
+    low_cut = 0.05
     bad = [(a > max_error or b > max_error) for a,b in zip(re, te)]
-    bad = np.where(bad)[0]
-    np.delete(ad, bad)
-    np.delete(sd, bad)
-    np.delete(ai, bad)
-    np.delete(mf, bad)
-    np.delete(r, bad)
-    np.delete(t, bad)
+    # bad = np.where(bad)[0]
+    low_cut = [(a < low_cut or b < low_cut) for a,b in zip(r, t)]
+    to_delete = np.logical_or(bad, low_cut)
+    # to_delete = bad
+
+    to_delete = np.where(to_delete)[0]
+    ad = np.delete(ad, to_delete)
+    sd = np.delete(sd, to_delete)
+    ai = np.delete(ai, to_delete)
+    mf = np.delete(mf, to_delete)
+    r  = np.delete(r , to_delete)
+    t  = np.delete(t , to_delete)
 
     variable_lol = [ad, sd, ai, mf]
     variable_names = ['ad', 'sd', 'ai', 'mf']
@@ -87,8 +93,8 @@ def fit_surface(show_plot=False):
         # https://stackoverflow.com/questions/56439930/how-to-use-the-datasets-to-fit-the-3d-surface
 
         num_points = 25
-        model_x_data = np.linspace(min(r), max(r), num_points)
-        model_y_data = np.linspace(min(t), max(t), num_points)
+        model_x_data = np.linspace(0, max(r), num_points)
+        model_y_data = np.linspace(0, max(t), num_points)
         # setup figure object
         fig = plt.figure()
         # setup 3d object

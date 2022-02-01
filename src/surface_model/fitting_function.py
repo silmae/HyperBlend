@@ -18,7 +18,7 @@ def function(data, a, b, c, d, e, f,g,h,):#i,j,k,l):
     r = data[0]
     t = data[1]
     # res = a*(r**b) + c*(t**d) #+ e*(r**f) + g*(t**h) + i*(r**j) + k*(t**l)
-    res = a*(np.exp(r*b)) + c*(np.exp(t*d)) + e*(r**f) + g*(t**h)
+    res = a*(np.exp(r*b)) + c*(np.exp(t*d)) #+ e*(r**f) + g*(t**h)
     return res
 
 
@@ -31,5 +31,5 @@ def function2(data, a, b, c, d, e, f,g,h,):#i,j,k,l):
     r = data[0]
     t = data[1]
     # res = a*(r**b) + c*(t**d) #+ e*(r**f) + g*(t**h) + i*(r**j) + k*(t**l)
-    res = a*(np.exp(r*b)) + c*(np.exp(t*d)) #+ e*(r**f) + g*(t**h)
+    res = a*(r**b) + c*(t**d) #+ e*(r**f) + g*(t**h)
     return res
