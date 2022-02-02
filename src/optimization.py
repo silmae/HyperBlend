@@ -15,6 +15,7 @@ from src import constants as C
 from src.data.toml_handling import make_sample_result
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
+from src.utils import general_utils as GU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
 from src.surface_model import fitting_function as FF
@@ -134,22 +135,81 @@ class Optimization:
 
             if prediction_method == 'surface':
 
+                start = time.perf_counter()
+                wls = targets[:, 0]
+                r_m = targets[:,1]
+                t_m = targets[:,2]
                 param_dict = TH.read_surface_model_parameters()
                 ad_p = param_dict['ad']
                 sd_p = param_dict['sd']
                 ai_p = param_dict['ai']
                 mf_p = param_dict['mf']
+                ad_raw = np.clip(FF.function_exp(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
+                sd_raw = np.clip(FF.function_log(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
+                ai_raw = np.clip(FF.function2(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
+                mf_raw = np.clip(FF.function_free(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
+                ad = ad_raw * self.density_scale
+                sd = sd_raw * self.density_scale
+                ai = np.clip(ai_raw - 0.5, 0., 1.)
+                mf = mf_raw
 
-                if use_threads:
-                    param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p) for a in targets]
-                    with Pool() as pool:
-                        pool.map(run_surface_model_threaded, param_list)
-                else:
-                    for target in targets:
-                        wl = target[0]
-                        r_m = target[1]
-                        t_m = target[2]
-                        run_surface_model_wl(wl, r_m, t_m, self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p)
+                with Pool() as pool:
+                    n = pool._processes
+                    print(f" thread count = {n}")
+                    wl_chunks = GU.chunks(wls, n)
+                    ad_chunks = GU.chunks(ad, n)
+                    sd_chunks = GU.chunks(sd, n)
+                    ai_chunks = GU.chunks(ai, n)
+                    mf_chunks = GU.chunks(mf, n)
+
+                    param_list = [(self.set_name, sample_id, wl,ad,sd,ai,mf) for wl,ad,sd,ai,mf in zip(wl_chunks, ad_chunks, sd_chunks, ai_chunks, mf_chunks)]
+                    pool.map(optimize_series, param_list)
+
+                # B.run_render_series(rend_base_path=P.path_directory_working(self.set_name, sample_id),wl=wls,ad=ad,
+                #                     sd=sd,ai=ai,mf=mf,clear_rend_folder=False,clear_references=False,
+                #                     render_references=True,dry_run=False)
+
+                r = []
+                t = []
+                for wl in wls:
+                    r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl,base_path=P.path_directory_working(self.set_name, sample_id))
+                    t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl,base_path=P.path_directory_working(self.set_name, sample_id))
+                    r.append(r_wl)
+                    t.append(t_wl)
+
+                re = np.abs(r - r_m)
+                te = np.abs(t - t_m)
+
+                sample_result_dict = {}
+                sample_result_dict[C.key_sample_result_wls] = wls
+                sample_result_dict[C.key_sample_result_r] = r
+                sample_result_dict[C.key_sample_result_rm] = r_m
+                sample_result_dict[C.key_sample_result_re] = re
+                sample_result_dict[C.key_sample_result_t] = t
+                sample_result_dict[C.key_sample_result_tm] = t_m
+                sample_result_dict[C.key_sample_result_te] = te
+                sample_result_dict[C.key_sample_result_ad] = ad_raw
+                sample_result_dict[C.key_sample_result_sd] = sd_raw
+                sample_result_dict[C.key_sample_result_ai] = ai_raw
+                sample_result_dict[C.key_sample_result_mf] = mf_raw
+                sample_result_dict[C.key_sample_result_process_elapsed_min] = (time.perf_counter() - start) / 60.0
+                sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = (time.perf_counter() - start) / 60.0
+                sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(re ** 2))
+                sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(te ** 2))
+
+                TH.write_sample_result(self.set_name, sample_result_dict, sample_id)
+                plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
+
+                # if use_threads:
+                #     param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p) for a in targets]
+                #     with Pool() as pool:
+                #         pool.map(run_surface_model_threaded, param_list)
+                # else:
+                #     for target in targets:
+                #         wl = target[0]
+                #         r_m = target[1]
+                #         t_m = target[2]
+                #         run_surface_model_wl(wl, r_m, t_m, self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p)
 
             elif prediction_method == 'optimization':
 
@@ -171,9 +231,10 @@ class Optimization:
             else:
                 raise RuntimeError(f'Prediction method "{prediction_method}" not recognized.')
 
-            logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
-            elapsed_min = (time.perf_counter() - total_time_start) / 60.
-            TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
+            if prediction_method == 'optimization':
+                logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
+                elapsed_min = (time.perf_counter() - total_time_start) / 60.
+                TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
 
         # Plot averages if there was more than one sample
         # if len(FH.list_finished_sample_ids(self.set_name)) > 1:
@@ -181,6 +242,19 @@ class Optimization:
         plotter.plot_set_errors(self.set_name)
         TH.write_set_result(self.set_name)
 
+
+def optimize_series(args):
+    set_name = args[0]
+    sample_id = args[1]
+    wls = args[2]
+    ad = args[3]
+    sd = args[4]
+    ai = args[5]
+    mf = args[6]
+    # print(f"#### {wls} ####")
+    B.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),wl=wls,ad=ad,
+                                    sd=sd,ai=ai,mf=mf,clear_rend_folder=False,clear_references=False,
+                                    render_references=True,dry_run=False)
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""
@@ -225,10 +299,10 @@ def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, densi
 
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                         wl=wl,
-                        abs_dens=ad * density_scale,
-                        scat_dens=sd * density_scale,
-                        scat_ai=ai,
-                        mix_fac=mf,
+                        ad=ad * density_scale,
+                        sd=sd * density_scale,
+                        ai=ai,
+                        mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=True,
@@ -339,10 +413,10 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
         B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                             wl=wl,
-                            abs_dens=x[0] * density_scale,
-                            scat_dens=x[1] * density_scale,
-                            scat_ai=x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
-                            mix_fac=x[3],
+                            ad=x[0] * density_scale,
+                            sd=x[1] * density_scale,
+                            ai=x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
+                            mf=x[3],
                             clear_rend_folder=False,
                             clear_references=False,
                             render_references=False,
@@ -364,8 +438,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         return dist + penalty
 
     # Render references here as it only needs to be done once per wavelength
-    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id), wl=wl, abs_dens=0, scat_dens=0, scat_ai=0,
-                        mix_fac=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
+    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
+                        mf=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
 
     if use_hard_coded_starting_guess:
         x_0 = hard_coded_starting_guess
@@ -433,10 +507,10 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     # Render one more time with best values (in case it was not the last run)
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
                         wl=wl,
-                        abs_dens= res.x[0] * density_scale,
-                        scat_dens=res.x[1] * density_scale,
-                        scat_ai=res.x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
-                        mix_fac=res.x[3],
+                        ad=res.x[0] * density_scale,
+                        sd=res.x[1] * density_scale,
+                        ai=res.x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
+                        mf=res.x[3],
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=False,
