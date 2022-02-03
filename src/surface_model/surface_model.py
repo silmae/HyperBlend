@@ -13,6 +13,7 @@ from src.data import toml_handling as TH
 from src import constants as C
 from src.optimization import Optimization
 from src.surface_model import fitting_function as FF
+from src import plotter
 
 set_name = 'surface_train'
 
@@ -92,16 +93,7 @@ def fit_surface(show_plot=False):
         # get fit parameters from scipy curve fit
         # https://stackoverflow.com/questions/56439930/how-to-use-the-datasets-to-fit-the-3d-surface
 
-        num_points = 25
-        model_x_data = np.linspace(0, max(r), num_points)
-        model_y_data = np.linspace(0, max(t), num_points)
-        # setup figure object
-        fig = plt.figure()
-        # setup 3d object
-        ax = plt.axes(projection="3d")
-        ax.set_xlabel('R')
-        ax.set_ylabel('T')
-        ax.set_zlabel(variable_names[i])
+        zlabel = variable_names[i]
         failed = False
 
         try:
@@ -116,30 +108,12 @@ def fit_surface(show_plot=False):
             parameters, _ = curve_fit(fittable, [r, t], variable, p0=FF.get_x0())
             result_dict[variable_names[i]] = parameters
             if show_plot:
-                # create coordinate arrays for vectorized evaluations
-                R, T = np.meshgrid(model_x_data, model_y_data)
-                # calculate Z coordinate array
-                Z = fittable(np.array([R, T]), *parameters)
-                # plot input data
-                ax.scatter(r, t, variable, c=variable, cmap=plt.cm.hot)
-                # plot surface
-                ax.plot_surface(R, T, Z, alpha=0.5)
-                plt.show()
+                plotter.plot_3d_rt(r,t,variable,zlabel,z_intensity=None,surface_parameters=parameters,fittable=fittable)
         except RuntimeError as re:
             logging.error(f'Failed to fit for parameter {variable_names[i]}')
             if show_plot:
-                # plot input data
-                ax.scatter(r, t, variable, color='red')
-                plt.show()
+                plotter.plot_3d_rt(r, t, variable, zlabel)
                 failed = True
-            # raise
-
-        # if show_plot:
-        #         # set plot descriptions
-        #         ax.set_xlabel('R')
-        #         ax.set_ylabel('T')
-        #         ax.set_zlabel(variable_names[i])
-        #         plt.show()
 
     if not failed:
         TH.write_surface_model_parameters(result_dict)
