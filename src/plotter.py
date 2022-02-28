@@ -11,9 +11,11 @@ import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 from src import constants as C
 from src.data import file_handling as FH, toml_handling as T, file_names as FN, path_handling as P
+
 
 figsize = (12,6)
 """Figure size for two plot figures."""
@@ -45,6 +47,28 @@ max_ticks = 8
 """Max tick count for wavelength."""
 
 image_type = 'png'
+
+
+def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=None):
+    # setup figure object
+    fig = plt.figure()
+    ax = plt.axes(projection="3d")
+    ax.set_xlabel('R')
+    ax.set_ylabel('T')
+    ax.set_zlabel(z_label)
+    num_points = 25
+    R, T = np.meshgrid(np.linspace(0, max(r), num_points), np.linspace(0, max(t), num_points))
+
+    if z_intensity is None:
+        z_intens = z
+    else:
+        z_intens = z_intensity
+    ax.scatter(r, t, z, c=z_intens, cmap=plt.cm.hot)
+
+    if surface_parameters is not None:
+        Z = fittable(np.array([R, T]), *surface_parameters)
+        ax.plot_surface(R, T, Z, alpha=0.5)
+    plt.show()
 
 
 def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True) -> None:
