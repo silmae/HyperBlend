@@ -24,7 +24,7 @@ def train(do_points=True, num_points=50):
         generate_train_data(num_points)
         o = Optimization(set_name)
         o.run_optimization(prediction_method='optimization')
-    fit_surface(show_plot=False)
+    fit_surface(show_plot=False, save_params=True)
 
 
 def generate_train_data(num_points=10):
@@ -51,10 +51,11 @@ def generate_train_data(num_points=10):
     TH.write_target(set_name, data, sample_id=0)
 
 
-def fit_surface(show_plot=False):
+def fit_surface(show_plot=False, save_params=False):
     """Fit surfaces.
 
     Surface fitting parameters written to disk and plots shown if show_plot=True.
+    :param save_params:
     """
     # ids = FH.list_finished_sample_ids(set_name)
     # for _, sample_id in enumerate(ids):
@@ -68,7 +69,7 @@ def fit_surface(show_plot=False):
     re = np.array(result[C.key_sample_result_re])
     te = np.array(result[C.key_sample_result_te])
 
-    max_error = 0.003
+    max_error = 0.01
     low_cut = 0.0
     bad = [(a > max_error or b > max_error) for a,b in zip(re, te)]
     # bad = np.where(bad)[0]
@@ -99,11 +100,11 @@ def fit_surface(show_plot=False):
         try:
             fittable = FF.function_exp
             if variable_names[i] == 'ai':
-                fittable = FF.function2
+                fittable = FF.function_polynomial
             if variable_names[i] == 'sd':
                 fittable = FF.function_log
             if variable_names[i] == 'mf':
-                fittable = FF.function_free
+                fittable = FF.function_exp
 
             parameters, _ = curve_fit(fittable, [r, t], variable, p0=FF.get_x0())
             result_dict[variable_names[i]] = parameters
@@ -116,6 +117,8 @@ def fit_surface(show_plot=False):
                 failed = True
 
     if not failed:
-        TH.write_surface_model_parameters(result_dict)
+        if save_params:
+            print(f'Saving surface model parameters')
+            TH.write_surface_model_parameters(result_dict)
     else:
         raise RuntimeError(f'Failed to fit all parameters. The result will not be saved.')
