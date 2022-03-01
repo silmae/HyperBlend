@@ -27,7 +27,7 @@ postfix_plot_image_format = '.png'
 postfix_text_data_format = '.toml'
 """Text file format with witch the results are saved."""
 
-blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 2.92/blender.exe'
+blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 3.0/blender.exe'
 """change this to where your Blender is installed."""
 
 blender_executable_path_linux = '/snap/bin/blender'
