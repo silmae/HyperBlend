@@ -145,3 +145,36 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
     # Direct Blender logging info to null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args, stdout=stream)
+
+
+def setup_forest(id):
+
+    logging.info(f"Calling forest scene setup")
+
+    bpath = C.blender_executable_path_win
+    if not platform.startswith('win'):
+        bpath = C.blender_executable_path_linux
+        # logging.info("Running on linux machine.")
+    else:
+        pass
+        # logging.info("Running on windows machine.")
+
+    blend_file = f"{C.path_project_root}/scenes/scene_{id}/scene_forest_{id}.blend"
+
+    # Basic arguments that will always be passed on:
+    blender_args = [
+        bpath,
+        "--background",  # Run Blender in the background.
+        os.path.normpath(blend_file),  # Blender file to be run.
+        "--python",  # Execute a python script with the Blender file.
+        os.path.normpath(path_folder_scripts + 'bs_setup_forest.py'),  # Python script file to be run.
+        # "--log-level", "0",
+    ]
+
+    scirpt_args = ['--']
+    p = os.path.abspath(blend_file)
+    scirpt_args += ['-p', f'{p}']
+
+    with open(os.devnull, 'wb') as stream:
+        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+    print("shit")

@@ -242,9 +242,10 @@ def duplicate_scene_from_template():
     scene_id = "0123456789"
 
     p_src = f"../scene_forest_template.blend"
-    scene_folder = "./scenes"
+    scene_folder = f"../scenes/scene_{scene_id}"
     if os.path.exists(p_src):
-        os.makedirs(f"../scenes/scene_{scene_id}")
+        if not os.path.exists(scene_folder):
+            os.makedirs(scene_folder)
         p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
         shutil.copy2(p_src, p_dest)
 
