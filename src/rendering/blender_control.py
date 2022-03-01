@@ -11,6 +11,7 @@ import logging
 
 from src import constants as C
 
+path_folder_scripts = C.path_project_root + '/src/blender_scripts/'
 
 def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
@@ -30,7 +31,7 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
         "--background",  # Run Blender in the background.
         os.path.normpath(C.path_project_root + C.blender_scene_name),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(C.path_project_root + 'bs_render_series.py'),  # Python script file to be run.
+        os.path.normpath(path_folder_scripts + 'bs_render_series.py'),  # Python script file to be run.
         # "--log-level", "0",
 
     ]
@@ -115,7 +116,7 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         "--background",  # Run Blender in the background.
         os.path.normpath(C.path_project_root + C.blender_scene_name),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(C.path_project_root + C.blender_script_name),  # Python script file to be run.
+        os.path.normpath(path_folder_scripts + C.blender_script_name),  # Python script file to be run.
         # "--log-level", "0",
 
     ]
