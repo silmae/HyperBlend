@@ -22,8 +22,11 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
+    # FH.duplicate_scene_from_template()
+    scene_id = "0123456789" # id for debugging
+
     # SM.train(do_points=False, num_points=50)
-    SM.fit_surface(show_plot=True, save_params=False)
+    # SM.fit_surface(show_plot=True, save_params=False)
 
     # set_name = 'specchio_5nm'
     # set_name = 'surface_test_predict'

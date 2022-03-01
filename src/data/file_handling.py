@@ -9,6 +9,8 @@ Path getters are named like path_directory_xxx or path_file_xxx.
 
 import logging
 import os
+import datetime
+import shutil
 
 from src import constants as C, optimization, plotter
 from src.data import file_names as FN, toml_handling as TH, path_handling as P
@@ -230,3 +232,20 @@ def reduce(set_name: str) -> None:
         sample_result_plot_path = P.join(P.path_directory_set_result(set_name), FN.filename_sample_result_plot(sample_id))
         os.unlink(sample_result_plot_path)
 
+
+def duplicate_scene_from_template():
+    """Creates a uniquely named copy of a scene and returns its id."""
+
+    # now = datetime.datetime.now()
+    # scene_id = f"{now.day:02}{now.month:02}{now.year-2000}{now.hour:02}{now.minute:02}"
+    # Use this for debugging
+    scene_id = "0123456789"
+
+    p_src = f"../scene_forest_template.blend"
+    scene_folder = "./scenes"
+    if os.path.exists(p_src):
+        os.makedirs(f"../scenes/scene_{scene_id}")
+        p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
+        shutil.copy2(p_src, p_dest)
+
+    return scene_id
