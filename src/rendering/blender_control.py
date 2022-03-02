@@ -159,22 +159,22 @@ def setup_forest(id):
         pass
         # logging.info("Running on windows machine.")
 
-    blend_file = f"{C.path_project_root}/scenes/scene_{id}/scene_forest_{id}.blend"
+    directory = f"{C.path_project_root}/scenes/scene_{id}/"
+    blend_file_name = f"scene_forest_{id}.blend"
 
     # Basic arguments that will always be passed on:
     blender_args = [
         bpath,
         "--background",  # Run Blender in the background.
-        os.path.normpath(blend_file),  # Blender file to be run.
+        os.path.normpath(directory + blend_file_name),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(path_folder_scripts + 'bs_setup_forest.py'),  # Python script file to be run.
         # "--log-level", "0",
     ]
 
     scirpt_args = ['--']
-    p = os.path.abspath(blend_file)
-    scirpt_args += ['-p', f'{p}']
+    scirpt_args += ['-p', f'{os.path.abspath(directory)}']
+    scirpt_args += ['-fn', f'{blend_file_name}']
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
-    print("shit")

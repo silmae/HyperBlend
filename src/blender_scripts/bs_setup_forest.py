@@ -5,6 +5,7 @@ import os
 import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
 import logging
+import math
 
 b_context = bpy.context
 b_data = bpy.data
@@ -14,6 +15,9 @@ cameras = b_data.collections['Cameras'].all_objects
 lights = b_data.collections['Lighting'].all_objects
 trees = b_data.collections['Trees'].all_objects
 forest = b_data.collections['Ground'].all_objects.get('Ground')
+
+
+forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
 
 
 def print_collection_items(collection_name):
@@ -26,6 +30,11 @@ def print_materials():
     print(f'Available materials:')
     for item in b_data.materials:
         print(f"\t{item.name}")
+
+
+def set_sun_angle(angle_deg):
+    sun = lights.get('Sun')
+    sun.rotation_euler = (math.radians(angle_deg), 0, math.radians(90))
 
 
 def list_tree_parameter_names():
@@ -75,38 +84,84 @@ def set_tree_parameter(tree_nr, parameter_name, value):
 
     gn = trees[tree_nr-1].modifiers['GeometryNodes'].node_group
     tree_geometry_node = gn.nodes.get('Group')
-    success = False
-    # for input in tree_geometry_node.inputs:
-    #     if input.name == parameter_name:
-    #         old_val = input.default_value
-    #         input.default_value = value
-    #         print(f"Parameter {input.name} value changed from {old_val} to {value}")
-    #         success = True
-    # if not success:
-    #     logging.warning(f"Parameter '{parameter_name}' value change failed. Check parameter name and data type.")
+    set_input(tree_geometry_node, parameter_name, value)
 
-    input = tree_geometry_node.inputs.get(parameter_name)
+
+def set_input(node, input_name, value):
+    input = node.inputs.get(input_name)
     if input == None:
-        raise AttributeError(f"Parameter called '{parameter_name}' seems not to exist. Check the name.")
+        raise AttributeError(f"Parameter called '{input_name}' seems not to exist. Check the name.")
     old_val = input.default_value
     input.default_value = value
-    print(f"Parameter {input.name} value changed from {old_val} to {value}")
+    print(f"{node.name}: parameter {input.name} value changed from {old_val} to {value}.")
 
 
 def list_forest_parameters():
-    gn = forest.modifiers['GeometryNodes'].node_group
-    print(f"Accessing {gn.name}")
-    for input in gn.inputs:
-        print(f"\t{input.name} ({input.type})")
+    for input in forest_geometry_node.inputs:
+        print(f"{input.name} ({input.type})")
 
 
 def set_forest_parameter(parameter_name, value):
-    input = forest.modifiers['GeometryNodes'].node_group.inputs.get(parameter_name)
-    if input == None:
-        raise AttributeError(f"Parameter called '{parameter_name}' seems not to exist. Check the name.")
-    old_val = input.default_value
-    input.default_value = value
-    print(f"Parameter {input.name} value changed from {old_val} to {value}")
+    """
+    Side length (VALUE)
+    Grid density (INT)
+    Use real object (BOOLEAN)
+    Spawn point density (INT)
+    Tree 1 density (INT)
+    Tree 2 density (INT)
+    Tree 3 density (INT)
+    Seed (INT)
+    Hill height (VALUE)
+    Hill scale (VALUE)
+
+    :param parameter_name:
+    :param value:
+    :return:
+    """
+
+    set_input(forest_geometry_node, parameter_name, value)
+
+
+def set_rendering_parameters():
+    resolution_x = 128
+    resolution_y = 128
+    for scene in b_data.scenes:
+        scene.render.resolution_x = resolution_x # OK
+        scene.render.resolution_y = resolution_y # OK
+        scene.render.resolution_percentage = 100 # OK
+
+        scene.render.image_settings.file_format = 'TIFF' # OK
+        scene.render.image_settings.tiff_codec = 'NONE'
+        scene.render.image_settings.color_mode = 'BW' # 'RGB', 'RGBA'
+        scene.render.image_settings.color_depth = '16'
+
+        scene.render.fps = 5 # OK
+        scene.frame_start = 1 # OK
+        scene.frame_end = 3 # OK
+
+
+        scene.render.filepath = rend_path
+
+        scene.render.use_persistent_data = True
+        # Keep render data around for faster re-renders and animation renders, at the cost of increased memory usage
+
+        scene.render.engine = 'CYCLES' # do not use 'BLENDER_EEVEE'  # OK
+        scene.cycles.samples = 16
+
+        # Set the device_type
+        b_context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA" # or "OPENCL"
+
+        # Set the device and feature set
+        b_context.scene.cycles.device = "GPU"
+
+        # get_devices() to let Blender detects GPU device
+        b_context.preferences.addons["cycles"].preferences.get_devices()
+        print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
+        for d in bpy.context.preferences.addons["cycles"].preferences.devices:
+            d["use"] = 1 # Using all devices, include GPU and CPU
+            print(d["name"], d["use"])
+
+
 
 if __name__ == '__main__':
 
@@ -120,15 +175,25 @@ if __name__ == '__main__':
 
     # Argument names
     key_base_path = ['-p', '--base_path']
+    key_blend_file_name = ['-fn', '--blend_file_name']
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument(key_base_path[0], key_base_path[1], dest=key_base_path[1], action="store",
-                        required=True, help="Blend file's path")
+                        required=True, help="Directory containing the Blend file to be operated on.")
+    parser.add_argument(key_blend_file_name[0], key_blend_file_name[1], dest=key_blend_file_name[1], action="store",
+                        required=True, help="Blender file name that is found from the Base path.")
 
     args = parser.parse_args(argv)
 
     base_path = vars(args)[key_base_path[1]]
+    print(f"base_path = {base_path}")
+    blend_file_name = vars(args)[key_blend_file_name[1]]
+    print(f"blend_file_name = {blend_file_name}")
+    rend_path = os.path.abspath(base_path + '/rend') + os.path.sep
+    print(f"rend_path = {rend_path}")
+    file_path = os.path.abspath(base_path + '/' + blend_file_name)
+    print(f"file_path = {file_path}")
 
     logging.error(f"Hello, I am forest setup script in '{base_path}'")
 
@@ -138,10 +203,13 @@ if __name__ == '__main__':
     # print_collection_items('Ground')
     # print_materials()
     # list_tree_parameter_names()
-    # set_tree_parameter(1, 'Tree lengt', 4.0)
+    set_tree_parameter(1, 'Tree length', 11.0)
     list_forest_parameters()
-    set_forest_parameter('Side length', 34.0)
-    # bpy.ops.wm.save_as_mainfile(filepath=base_path)
+    # set_forest_parameter('Ground resolution', 5)
+    set_rendering_parameters()
+    set_sun_angle(60)
+
+    # bpy.ops.wm.save_as_mainfile(filepath=file_path)
 
     # TODO set Cycles
     # TODO set rendering parameters (image size, sample count...)
@@ -151,3 +219,4 @@ if __name__ == '__main__':
     # TODO set material parameters
     # TODO set tree parameters
     # TODO set color space and screen parameters
+    # TODO how to disable using User preferences?
