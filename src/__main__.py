@@ -16,14 +16,16 @@ from src.surface_model import surface_model as SM
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
 from src.data import path_handling as PH
+from src.rendering import blender_control as BC
 
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    # FH.duplicate_scene_from_template()
+    # scene_id = FH.duplicate_scene_from_template()
     scene_id = "0123456789" # id for debugging
+    BC.setup_forest(scene_id)
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)
