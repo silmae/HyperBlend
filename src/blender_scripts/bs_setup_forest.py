@@ -11,11 +11,12 @@ b_context = bpy.context
 b_data = bpy.data
 b_ops = bpy.ops
 b_scene = b_data.scenes['Scene']
+
 cameras = b_data.collections['Cameras'].all_objects
 lights = b_data.collections['Lighting'].all_objects
 trees = b_data.collections['Trees'].all_objects
+markers = b_data.collections['Marker objects'].all_objects
 forest = b_data.collections['Ground'].all_objects.get('Ground')
-
 
 forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
 
@@ -162,6 +163,17 @@ def set_rendering_parameters():
             print(d["name"], d["use"])
 
 
+def framing_material(material_name):
+    mat = b_data.materials.get(material_name)
+    print(f"Touching material '{mat.name}'.")
+    data_path = 'nodes["Diffuse BSDF"].inputs["Color"].default_value'
+    mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (1, 0, 0, 1) # RGBA
+    mat.node_tree.keyframe_insert(data_path, frame=1)
+    mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (0, 1, 0, 1)  # RGBA
+    mat.node_tree.keyframe_insert(data_path, frame=2)
+    mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (0, 0, 1, 1)  # RGBA
+    mat.node_tree.keyframe_insert(data_path, frame=3)
+
 
 if __name__ == '__main__':
 
@@ -203,13 +215,14 @@ if __name__ == '__main__':
     # print_collection_items('Ground')
     # print_materials()
     # list_tree_parameter_names()
-    set_tree_parameter(1, 'Tree length', 11.0)
-    list_forest_parameters()
+    # set_tree_parameter(1, 'Tree length', 11.0)
+    # list_forest_parameters()
     # set_forest_parameter('Ground resolution', 5)
-    set_rendering_parameters()
-    set_sun_angle(60)
+    # set_rendering_parameters()
+    # set_sun_angle(60)
+    framing_material()
 
-    # bpy.ops.wm.save_as_mainfile(filepath=file_path)
+    bpy.ops.wm.save_as_mainfile(filepath=file_path)
 
     # TODO set Cycles
     # TODO set rendering parameters (image size, sample count...)
