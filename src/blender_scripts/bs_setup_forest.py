@@ -123,47 +123,15 @@ def set_forest_parameter(parameter_name, value):
     set_input(forest_geometry_node, parameter_name, value)
 
 
-def set_rendering_parameters():
-    resolution_x = 128
-    resolution_y = 128
-    for scene in b_data.scenes:
-        scene.render.resolution_x = resolution_x # OK
-        scene.render.resolution_y = resolution_y # OK
-        scene.render.resolution_percentage = 100 # OK
-
-        scene.render.image_settings.file_format = 'TIFF' # OK
-        scene.render.image_settings.tiff_codec = 'NONE'
-        scene.render.image_settings.color_mode = 'BW' # 'RGB', 'RGBA'
-        scene.render.image_settings.color_depth = '16'
-
-        scene.render.fps = 5 # OK
-        scene.frame_start = 1 # OK
-        scene.frame_end = 3 # OK
-
-
-        scene.render.filepath = rend_path
-
-        scene.render.use_persistent_data = True
-        # Keep render data around for faster re-renders and animation renders, at the cost of increased memory usage
-
-        scene.render.engine = 'CYCLES' # do not use 'BLENDER_EEVEE'  # OK
-        scene.cycles.samples = 16
-
-        # Set the device_type
-        b_context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA" # or "OPENCL"
-
-        # Set the device and feature set
-        b_context.scene.cycles.device = "GPU"
-
-        # get_devices() to let Blender detects GPU device
-        b_context.preferences.addons["cycles"].preferences.get_devices()
-        print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
-        for d in bpy.context.preferences.addons["cycles"].preferences.devices:
-            d["use"] = 1 # Using all devices, include GPU and CPU
-            print(d["name"], d["use"])
 
 
 def framing_material(material_name):
+
+    for scene in b_data.scenes:
+        scene.render.fps = 5  # OK
+        scene.frame_start = 1  # OK
+        scene.frame_end = 3  # OK
+
     mat = b_data.materials.get(material_name)
     print(f"Touching material '{mat.name}'.")
     data_path = 'nodes["Diffuse BSDF"].inputs["Color"].default_value'

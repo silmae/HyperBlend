@@ -148,8 +148,22 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
 
 
 def setup_forest(id):
+    """ Setup the forest for rendering.
+
+    Currently does not do much.
+
+    TODO setup ground
+    TODO setup trees
+    TODO setup materials for spectral and rgb rendering
+    TODO setup sun
+    TODO setup sky
+
+    :param id:
+    :return:
+    """
 
     logging.info(f"Calling forest scene setup")
+
 
     bpath = C.blender_executable_path_win
     if not platform.startswith('win'):
@@ -178,3 +192,33 @@ def setup_forest(id):
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+
+
+def render_forest_previews(id):
+    """Render forest preview images.
+
+    TODO consider folder structure.. maybe rend/spectral/ for HSI and previews directly to rend/
+    TODO set materials to RGB mode
+    TODO render map
+    TODO render Drone RGB
+    TODO render Walker RGB
+    TODO render Sleeper RGB
+
+    :param id:
+    :return:
+    """
+
+    logging.info(f"render_forest_previews() called, but I can't yet do anything.")
+
+
+def render_forest_spectral(id):
+    """Render spectral image as an animation.
+
+    TODO consider just setting parameters for animation rendering and render from the blend file.
+    TODO set materials to spectral
+    TODO set camera to Drone HSI and render
+
+
+    :param id:
+    :return:
+    """
