@@ -10,7 +10,7 @@ import math
 b_context = bpy.context
 b_data = bpy.data
 b_ops = bpy.ops
-b_scene = b_data.scenes['Scene']
+b_scene = b_data.scenes['Forest']
 
 cameras = b_data.collections['Cameras'].all_objects
 lights = b_data.collections['Lighting'].all_objects
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     # set_forest_parameter('Ground resolution', 5)
     # set_rendering_parameters()
     # set_sun_angle(60)
-    framing_material()
+    # framing_material()
 
     bpy.ops.wm.save_as_mainfile(filepath=file_path)
 
