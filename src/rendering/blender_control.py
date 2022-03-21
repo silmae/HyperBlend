@@ -184,6 +184,7 @@ def setup_forest(id):
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(path_folder_scripts + 'bs_setup_forest.py'),  # Python script file to be run.
         # "--log-level", "0",
+        "--factory-startup", # disable loading user preferenses
     ]
 
     scirpt_args = ['--']
@@ -231,6 +232,7 @@ def render_forest_previews(id):
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(path_folder_scripts + 'bs_render_forest.py'),  # Python script file to be run.
         # "--log-level", "0",
+        "--factory-startup", # disable loading user preferenses
     ]
 
     scirpt_args = ['--']

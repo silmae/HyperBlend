@@ -23,7 +23,7 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    scene_id = FH.duplicate_scene_from_template()
+    # scene_id = FH.duplicate_scene_from_template()
     scene_id = "0123456789" # id for debugging
     BC.setup_forest(scene_id)
     BC.render_forest_previews(scene_id)

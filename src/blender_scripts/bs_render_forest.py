@@ -7,56 +7,45 @@ import math
 
 """
 This is how one can import stuff to Blender
-
-blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
-script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
-if script_dir not in sys.path:
-    print(script_dir)
-    sys.path.append(script_dir)
-    
-
-import bs_render_forest
-import imp
-imp.reload(bs_render_forest)
-print(bs_render_forest.key_obj_sun)
 """
+blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
+logging.warning(f"blend_dir path: {blend_dir}")
+
+if 'scenes' in blend_dir:
+    # We are in a copied blend file in HyperBlend/scenes/scene_12345
+    script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
+else:
+    # We are in the template forest blend file
+    script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
+
+logging.warning(f"Script path: {script_dir}")
+
+# After this is set, any script in /blender_scripts can be imported
+if script_dir not in sys.path:
+    sys.path.append(script_dir)
+
+
+import forest_constants as FC
+import forest_utils as FU
+import importlib
+importlib.reload(FC)
+importlib.reload(FU)
+
+logging.warning(f"Testing imports {FC.key_obj_sun}, {FU.test_val}")
+
 
 b_context = bpy.context
 b_data = bpy.data
 b_ops = bpy.ops
-b_scene = b_data.scenes['Forest']
+b_scene = b_data.scenes[FC.key_scene_name]
 
-cameras = b_data.collections['Cameras'].all_objects
-lights = b_data.collections['Lighting'].all_objects
-trees = b_data.collections['Trees'].all_objects
-markers = b_data.collections['Marker objects'].all_objects
-ground = b_data.collections['Ground'].all_objects
+cameras = b_data.collections[FC.key_collection_cameras].all_objects
+lights = b_data.collections[FC.key_collection_lights].all_objects
+trees = b_data.collections[FC.key_collection_trees].all_objects
+markers = b_data.collections[FC.key_collection_markers].all_objects
+ground = b_data.collections[FC.key_collection_ground].all_objects
 
-forest = b_data.collections['Ground'].all_objects.get('Ground')
 
-forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
-
-########### Object names ###########
-
-key_obj_sun = 'Sun'
-
-key_obj_ground = 'Ground'
-key_obj_ground_test = 'Test ground'
-
-key_obj_tree_1 = 'Tree 1'
-key_obj_tree_2 = 'Tree 2'
-key_obj_tree_3 = 'Tree 3'
-
-key_obj_marker_1 = 'Marker 1'
-key_obj_marker_2 = 'Marker 2'
-key_obj_marker_3 = 'Marker 3'
-
-key_cam_drone_hsi = 'Drone HSI'
-key_cam_drone_rgb = 'Drone RGB'
-key_cam_walker_rgb = 'Walker RGB'
-key_cam_sleeper_rgb = 'Sleeper RGB'
-
-########################################
 
 
 def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', res_x=512, res_y=512, res_percent=100):
@@ -158,7 +147,7 @@ def set_visibility(mode: str):
         obj.hide_render = False
         obj.hide_set(False)
 
-    if mode != key_cam_sleeper_rgb and mode != key_cam_walker_rgb and mode != key_cam_drone_rgb and mode != 'Map' and mode != key_cam_drone_hsi and mode != 'Trees':
+    if mode != FC.key_cam_sleeper_rgb and mode != FC.key_cam_walker_rgb and mode != FC.key_cam_drone_rgb and mode != 'Map' and mode != FC.key_cam_drone_hsi and mode != 'Trees':
         raise AttributeError(f"Visibility for mode '{mode}' not recognised.")
 
     # First hide everything
@@ -169,51 +158,21 @@ def set_visibility(mode: str):
     for object in ground:
         hide(object)
 
-    unhide(lights.get(key_obj_sun)) # always show sun
+    unhide(lights.get(FC.key_obj_sun)) # always show sun
 
-    if mode == key_cam_sleeper_rgb or mode == key_cam_walker_rgb or mode == key_cam_drone_rgb or mode == 'Map':
-        unhide(ground.get(key_obj_ground))
+    if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map':
+        unhide(ground.get(FC.key_obj_ground))
     elif mode == 'Trees':
-        unhide(ground.get(key_obj_ground_test))
+        unhide(ground.get(FC.key_obj_ground_test))
         for tree in trees:
             unhide(tree)
-
-
-def set_input(node, input_name, value):
-    input = node.inputs.get(input_name)
-    if input == None:
-        raise AttributeError(f"Parameter called '{input_name}' seems not to exist. Check the name.")
-    old_val = input.default_value
-    input.default_value = value
-    print(f"{node.name}: parameter {input.name} value changed from {old_val} to {value}.")
-
-
-def set_forest_parameter(parameter_name, value):
-    """
-    Side length (VALUE)
-    Grid density (INT)
-    Use real object (BOOLEAN)
-    Spawn point density (INT)
-    Tree 1 density (INT)
-    Tree 2 density (INT)
-    Tree 3 density (INT)
-    Seed (INT)
-    Hill height (VALUE)
-    Hill scale (VALUE)
-
-    :param parameter_name:
-    :param value:
-    :return:
-    """
-
-    set_input(forest_geometry_node, parameter_name, value)
 
 
 def render_sleeper_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Sleeper RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Sleeper RGB')
-    set_forest_parameter('Use real object', True)
+    FU.set_forest_parameter('Use real object', True)
     image_name = f'sleeper_rgb.png'
     image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
@@ -225,7 +184,7 @@ def render_walker_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Walker RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Walker RGB')
-    set_forest_parameter('Use real object', True)
+    FU.set_forest_parameter('Use real object', True)
     image_name = f'walker_rgb.png'
     image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
@@ -237,7 +196,7 @@ def render_drone_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Drone RGB')
-    set_forest_parameter('Use real object', True)
+    FU.set_forest_parameter('Use real object', True)
     image_name = f'drone_rgb.png'
     image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
@@ -249,7 +208,7 @@ def render_map_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Drone RGB')
-    set_forest_parameter('Use real object', False)
+    FU.set_forest_parameter('Use real object', False)
     image_name = f'map_rgb.png'
     image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
@@ -295,9 +254,9 @@ if __name__ == '__main__':
 
     if render_mode == 'Sleeper':
         render_sleeper_rgb()
-        render_walker_rgb()
-        render_drone_rgb()
-        render_map_rgb()
+        # render_walker_rgb()
+        # render_drone_rgb()
+        # render_map_rgb()
     else:
         logging.error(f"Render mode '{render_mode}' not recognised.")
 
