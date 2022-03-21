@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # scene_id = FH.duplicate_scene_from_template()
     scene_id = "0123456789" # id for debugging
     BC.setup_forest(scene_id)
-    BC.render_forest_previews(scene_id)
+    # BC.render_forest_previews(scene_id)
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)

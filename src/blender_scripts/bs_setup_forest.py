@@ -6,25 +6,33 @@ import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
 import logging
 import math
+import importlib
+import csv
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
 if 'scenes' in blend_dir:
     # We are in a copied blend file in HyperBlend/scenes/scene_12345
     script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
+    data_dir = os.path.abspath(blend_dir + '../../../src/data')
 else:
     # We are in the template forest blend file
     script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
+    data_dir = os.path.abspath(blend_dir + '/src/data')
 
 # After this is set, any script in /blender_scripts can be imported
 if script_dir not in sys.path:
     sys.path.append(script_dir)
+    sys.path.append(data_dir)
 
 import forest_constants as FC
 import forest_utils as FU
-import importlib
+import file_names as FN
+import path_handling as PH
 importlib.reload(FC)
 importlib.reload(FU)
+importlib.reload(FN)
+importlib.reload(PH)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -45,22 +53,58 @@ def set_sun_angle(angle_deg):
     sun.rotation_euler = (math.radians(angle_deg), 0, math.radians(90))
 
 
-def framing_material(material_name):
+def framing_material(leaf_index, band, absorption_density, scattering_density, scattering_anisotropy, mix_factor):
+
+    logging.warning(f"Setting framed material for band {band} of leaf {leaf_index}: [{absorption_density}, {scattering_density}, {scattering_anisotropy}, {mix_factor}]")
+
+    # mat = b_data.materials.get(material_name)
+    # print(f"Touching material '{mat.name}'.")
+    # data_path = 'nodes["Diffuse BSDF"].inputs["Color"].default_value'
+    # bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs[0].default_value
+
+    # mat.node_tree.nodes["Group"].inputs['Absorption density'].default_value
+
+    def set_stuff(material, parameter, value, frame):
+        dp = f'nodes["Group"].inputs["{parameter}"].default_value'
+        material.node_tree.nodes["Group"].inputs[f"{parameter}"].default_value = value
+        material.node_tree.keyframe_insert(dp, frame=frame)
+
+    material = bpy.data.materials[f"Leaf material {leaf_index}"]
+    set_stuff(material, 'Absorption density', absorption_density, band)
+    set_stuff(material, 'Scattering density', scattering_density, band)
+    set_stuff(material, 'Scattering anisotropy', scattering_anisotropy, band)
+    set_stuff(material, 'Mix factor', mix_factor, band)
+    set_stuff(material, 'Density scale', 300, band) # TODO what should we do with this
+
+    # mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (1, 0, 0, 1) # RGBA
+    # mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (0, 1, 0, 1)  # RGBA
+    # mat.node_tree.keyframe_insert(data_path, frame=2)
+    # mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (0, 0, 1, 1)  # RGBA
+    # mat.node_tree.keyframe_insert(data_path, frame=3)
+
+
+def read_leaf_material_csv(leaf_index=1):
+    p = os.path.abspath(base_path + f"/leaf_material_{leaf_index}.csv")
+    band_count = 0
+    with open(p) as file:
+        reader = csv.reader(file, delimiter=' ')
+        for row in reader:
+            try:
+                band = int(row[0])
+                wavelength = float(row[1])
+                absorption_density = float(row[2])
+                scattering_density = float(row[3])
+                scattering_anisotropy = float(row[4])
+                mix_factor = float(row[5])
+                framing_material(leaf_index, band, absorption_density, scattering_density, scattering_anisotropy, mix_factor)
+                band_count += 1
+            except ValueError:
+                print(f"Material headers: {row}")
 
     for scene in b_data.scenes:
-        scene.render.fps = 5  # OK
-        scene.frame_start = 1  # OK
-        scene.frame_end = 3  # OK
-
-    mat = b_data.materials.get(material_name)
-    print(f"Touching material '{mat.name}'.")
-    data_path = 'nodes["Diffuse BSDF"].inputs["Color"].default_value'
-    mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (1, 0, 0, 1) # RGBA
-    mat.node_tree.keyframe_insert(data_path, frame=1)
-    mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (0, 1, 0, 1)  # RGBA
-    mat.node_tree.keyframe_insert(data_path, frame=2)
-    mat.node_tree.nodes['Diffuse BSDF'].inputs['Color'].default_value = (0, 0, 1, 1)  # RGBA
-    mat.node_tree.keyframe_insert(data_path, frame=3)
+        scene.render.fps = 5 # does not really matter
+        scene.frame_start = 1
+        scene.frame_end = band_count
 
 
 if __name__ == '__main__':
@@ -97,18 +141,22 @@ if __name__ == '__main__':
 
     logging.error(f"Hello, I am forest setup script in '{base_path}'")
 
-    FU.print_collection_items('Cameras')
-    FU.print_collection_items('Lighting')
-    FU.print_collection_items('Trees')
-    FU.print_collection_items('Ground')
-    FU.print_materials()
-    FU.list_tree_parameter_names()
-    FU.set_tree_parameter(1, 'Tree length', 11.0)
-    FU.list_forest_parameters()
-    FU.set_forest_parameter('Grid density', 5)
-    FU.set_rendering_parameters()
-    set_sun_angle(60)
+    # FU.print_collection_items('Cameras')
+    # FU.print_collection_items('Lighting')
+    # FU.print_collection_items('Trees')
+    # FU.print_collection_items('Ground')
+    # FU.print_materials()
+    # FU.list_tree_parameter_names()
+    # FU.set_tree_parameter(1, 'Tree length', 11.0)
+    # FU.list_forest_parameters()
+    # FU.set_forest_parameter('Grid density', 5)
+    # FU.set_rendering_parameters()
+    # set_sun_angle(60)
     # framing_material()
+
+    read_leaf_material_csv(1)
+    read_leaf_material_csv(2)
+    read_leaf_material_csv(3)
 
     bpy.ops.wm.save_as_mainfile(filepath=file_path)
 
