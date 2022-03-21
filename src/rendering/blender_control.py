@@ -238,7 +238,7 @@ def render_forest_previews(id):
     scirpt_args = ['--']
     scirpt_args += ['-p', f'{os.path.abspath(directory)}']
     scirpt_args += ['-fn', f'{blend_file_name}']
-    scirpt_args += ['-rm', "Sleeper"]
+    scirpt_args += ['-rm', "preview"]
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
@@ -255,3 +255,33 @@ def render_forest_spectral(id):
     :param id:
     :return:
     """
+
+    bpath = C.blender_executable_path_win
+    if not platform.startswith('win'):
+        bpath = C.blender_executable_path_linux
+        # logging.info("Running on linux machine.")
+    else:
+        pass
+        # logging.info("Running on windows machine.")
+
+    directory = f"{C.path_project_root}/scenes/scene_{id}/"
+    blend_file_name = f"scene_forest_{id}.blend"
+
+    # Basic arguments that will always be passed on:
+    blender_args = [
+        bpath,
+        "--background",  # Run Blender in the background.
+        os.path.normpath(directory + blend_file_name),  # Blender file to be run.
+        "--python",  # Execute a python script with the Blender file.
+        os.path.normpath(path_folder_scripts + 'bs_render_forest.py'),  # Python script file to be run.
+        # "--log-level", "0",
+        "--factory-startup",  # disable loading user preferenses
+    ]
+
+    scirpt_args = ['--']
+    scirpt_args += ['-p', f'{os.path.abspath(directory)}']
+    scirpt_args += ['-fn', f'{blend_file_name}']
+    scirpt_args += ['-rm', "spectral"]
+
+    with open(os.devnull, 'wb') as stream:
+        subprocess.run(blender_args + scirpt_args, stdout=stream)

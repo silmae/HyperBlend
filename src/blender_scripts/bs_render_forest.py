@@ -74,10 +74,14 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             scene.camera = cameras.get('Drone HSI')
 
             scene.display_settings.display_device = 'None'
-            scene.view_settings.view_transform = 'Raw'
+            # scene.view_settings.view_transform = 'Raw' # cannot be used when display device is None as it already turns off the display color transformations
             scene.view_settings.look = 'None'
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
+
+            bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
+            bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
+            bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
 
         elif render_mode.lower() == 'rgb':
 
@@ -95,6 +99,10 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             scene.view_settings.look = 'None'
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
+
+            bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
+            bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
+            bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
         else:
             raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral' or 'rgb'. Was '{render_mode}'.")
 
@@ -109,11 +117,6 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
         if res_percent < 1:
             res_percent = 1
         scene.render.resolution_percentage = res_percent # OK
-
-
-
-
-        scene.render.filepath = rend_path
 
         scene.render.use_persistent_data = True
         # Keep render data around for faster re-renders and animation renders, at the cost of increased memory usage
@@ -160,7 +163,7 @@ def set_visibility(mode: str):
 
     unhide(lights.get(FC.key_obj_sun)) # always show sun
 
-    if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map':
+    if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map' or mode == FC.key_cam_drone_hsi:
         unhide(ground.get(FC.key_obj_ground))
     elif mode == 'Trees':
         unhide(ground.get(FC.key_obj_ground_test))
@@ -216,6 +219,19 @@ def render_map_rgb():
     b_ops.render.render(write_still=True)
 
 
+def render_drone_hsi():
+    set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
+    set_visibility(mode='Drone HSI')
+    FU.set_forest_parameter('Use real object', True)
+    # image_name = f'map_rgb.png'
+    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
+    # logging.info(f"Trying to render '{image_path}'.")
+    # b_scene.render.filepath = image_path
+
+    b_scene.render.filepath = rend_path + "/spectral/band_####.tiff"
+    b_ops.render.render(write_still=True, animation=True)
+
+
 if __name__ == '__main__':
 
     # Store arguments passed from blender_control.py
@@ -252,11 +268,13 @@ if __name__ == '__main__':
     print(f"file_path = {file_path}")
     render_mode = vars(args)[key_render_mode[1]]
 
-    if render_mode == 'Sleeper':
+    if render_mode.lower() == 'preview':
         render_sleeper_rgb()
         # render_walker_rgb()
         # render_drone_rgb()
         # render_map_rgb()
+    elif render_mode.lower() == 'spectral':
+        render_drone_hsi()
     else:
         logging.error(f"Render mode '{render_mode}' not recognised.")
 
