@@ -144,9 +144,9 @@ if __name__ == '__main__':
     # set_sun_angle(60)
     # framing_material()
 
-    # read_leaf_material_csv(1)
-    # read_leaf_material_csv(2)
-    # read_leaf_material_csv(3)
+    read_leaf_material_csv(1)
+    read_leaf_material_csv(2)
+    read_leaf_material_csv(3)
 
     bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(scene_id))
 

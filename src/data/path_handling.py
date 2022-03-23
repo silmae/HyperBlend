@@ -242,6 +242,11 @@ def path_file_forest_scene(scene_id) -> str:
     return p
 
 
+def path_file_forest_leaf_csv(scene_id, leaf_index):
+    p = join(path_directory_forest_scene(scene_id), FN.filename_leaf_material_csv(leaf_index))
+    return p
+
+
 def join(*args) -> str:
     """Custom join function to avoid problems using os.path.join. """
 

@@ -209,7 +209,7 @@ def render_drone_rgb():
 
 def render_map_rgb():
 
-    set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=1028, res_y=512, res_percent=100)
+    set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=512, res_y=512, res_percent=100)
     set_visibility(mode='Drone RGB')
     FU.set_forest_parameter('Use real object', False)
     image_name = f'map_rgb.png'

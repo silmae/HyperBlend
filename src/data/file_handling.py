@@ -11,10 +11,10 @@ import logging
 import os
 import datetime
 import shutil
+import csv
 
-from src import constants as C, optimization, plotter
-from src.data import file_names as FN, toml_handling as TH, path_handling as P
-
+from src import constants as C, plotter
+from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
 
 def create_first_level_folders(set_name: str):
@@ -26,14 +26,14 @@ def create_first_level_folders(set_name: str):
         Set name.
     """
 
-    if not os.path.exists(P.path_directory_optimization()):
-        os.makedirs(P.path_directory_optimization())
-    if not os.path.exists(P.path_directory_target(set_name)):
-        os.makedirs(P.path_directory_target(set_name))
-    if not os.path.exists(P.path_directory_sample_result(set_name)):
-        os.makedirs(P.path_directory_sample_result(set_name))
-    if not os.path.exists(P.path_directory_set_result(set_name)):
-        os.makedirs(P.path_directory_set_result(set_name))
+    if not os.path.exists(PH.path_directory_optimization()):
+        os.makedirs(PH.path_directory_optimization())
+    if not os.path.exists(PH.path_directory_target(set_name)):
+        os.makedirs(PH.path_directory_target(set_name))
+    if not os.path.exists(PH.path_directory_sample_result(set_name)):
+        os.makedirs(PH.path_directory_sample_result(set_name))
+    if not os.path.exists(PH.path_directory_set_result(set_name)):
+        os.makedirs(PH.path_directory_set_result(set_name))
 
 
 def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
@@ -45,24 +45,24 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
         Sample id
     """
 
-    logging.info(f"Creating optimization folder structure to  path {os.path.abspath(P.path_directory_set(set_name))}")
+    logging.info(f"Creating optimization folder structure to  path {os.path.abspath(PH.path_directory_set(set_name))}")
 
     sample_folder_name = f'{C.folder_sample_prefix}_{sample_id}'
-    sample_path = P.join(P.path_directory_sample_result(set_name), sample_folder_name)
+    sample_path = PH.join(PH.path_directory_sample_result(set_name), sample_folder_name)
 
     if not os.path.exists(sample_path):
         os.makedirs(sample_path)
 
-    if not os.path.exists(P.path_directory_working(set_name, sample_id)):
-        os.makedirs(P.path_directory_working(set_name, sample_id))
-    if not os.path.exists(P.path_directory_rend_leaf(set_name, sample_id)):
-        os.makedirs(P.path_directory_rend_leaf(set_name, sample_id))
-    if not os.path.exists(P.path_directory_rend_reference(C.imaging_type_refl, P.path_directory_working(set_name, sample_id))):
-        os.makedirs(P.path_directory_rend_reference(C.imaging_type_refl, P.path_directory_working(set_name, sample_id)))
-    if not os.path.exists(P.path_directory_rend_reference(C.imaging_type_tran, P.path_directory_working(set_name, sample_id))):
-        os.makedirs(P.path_directory_rend_reference(C.imaging_type_tran, P.path_directory_working(set_name, sample_id)))
-    if not os.path.exists(P.path_directory_subresult(set_name, sample_id)):
-        os.makedirs(P.path_directory_subresult(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_working(set_name, sample_id)):
+        os.makedirs(PH.path_directory_working(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_rend_leaf(set_name, sample_id)):
+        os.makedirs(PH.path_directory_rend_leaf(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_rend_reference(C.imaging_type_refl, PH.path_directory_working(set_name, sample_id))):
+        os.makedirs(PH.path_directory_rend_reference(C.imaging_type_refl, PH.path_directory_working(set_name, sample_id)))
+    if not os.path.exists(PH.path_directory_rend_reference(C.imaging_type_tran, PH.path_directory_working(set_name, sample_id))):
+        os.makedirs(PH.path_directory_rend_reference(C.imaging_type_tran, PH.path_directory_working(set_name, sample_id)))
+    if not os.path.exists(PH.path_directory_subresult(set_name, sample_id)):
+        os.makedirs(PH.path_directory_subresult(set_name, sample_id))
 
 
 def list_target_ids(set_name: str):
@@ -77,7 +77,7 @@ def list_target_ids(set_name: str):
     """
 
     ids = []
-    for filename in os.listdir(P.path_directory_target(set_name)):
+    for filename in os.listdir(PH.path_directory_target(set_name)):
         ids.append(FN.parse_sample_id(filename))
     return ids
 
@@ -92,8 +92,8 @@ def list_finished_sample_ids(set_name: str) -> str:
     """
 
     ids = []
-    for sample_folder_name in os.listdir(P.path_directory_sample_result(set_name)):
-        p = P.join(P.path_directory_sample_result(set_name), sample_folder_name)
+    for sample_folder_name in os.listdir(PH.path_directory_sample_result(set_name)):
+        p = PH.join(PH.path_directory_sample_result(set_name), sample_folder_name)
         for filename in os.listdir(p):
             if filename.startswith(C.file_sample_result) and filename.endswith(C.postfix_text_data_format):
                 ids.append(FN.parse_sample_id(filename))
@@ -115,7 +115,7 @@ def subresult_exists(set_name: str, wl: float, sample_id: int) -> bool:
         True, if the subresult file was found, False otherwise.
     """
 
-    p = P.path_file_wl_result(set_name, wl, sample_id)
+    p = PH.path_file_wl_result(set_name, wl, sample_id)
     res = os.path.exists(p)
     return res
 
@@ -132,14 +132,14 @@ def clear_all_rendered_images(set_name: str) -> None:
 def clear_rend_leaf(set_name: str, sample_id: int) -> None:
     """Clears leaf render folder of given set, but leave reference renders untouched. """
 
-    clear_folder(P.path_directory_rend_leaf(set_name, sample_id))
+    clear_folder(PH.path_directory_rend_leaf(set_name, sample_id))
 
 
 def clear_rend_refs(set_name: str, sample_id: int) -> None:
     """Clears reference render folders of given set but leave leaf renders untouched. """
 
-    clear_folder(P.path_directory_rend_reference(C.imaging_type_refl, P.path_directory_working(set_name, sample_id)))
-    clear_folder(P.path_directory_rend_reference(C.imaging_type_tran, P.path_directory_working(set_name, sample_id)))
+    clear_folder(PH.path_directory_rend_reference(C.imaging_type_refl, PH.path_directory_working(set_name, sample_id)))
+    clear_folder(PH.path_directory_rend_reference(C.imaging_type_tran, PH.path_directory_working(set_name, sample_id)))
 
 
 def clear_folder(path: str) -> None:
@@ -147,7 +147,7 @@ def clear_folder(path: str) -> None:
 
     norm_path = os.path.abspath(path)
     if os.path.exists(norm_path):
-        list(map(os.unlink, (P.join(norm_path, f) for f in os.listdir(norm_path))))
+        list(map(os.unlink, (PH.join(norm_path, f) for f in os.listdir(norm_path))))
     else:
         logging.warning(f"No files to delete in '{norm_path}'.")
 
@@ -177,11 +177,11 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
         res = abs(f1 - f2) <= epsilon
         return res
 
-    folder = P.path_directory_render(target_type, imaging_type, base_path)
+    folder = PH.path_directory_render(target_type, imaging_type, base_path)
     for filename in os.listdir(folder):
         image_wl = FN.parse_wl_from_filename(filename)
         if almost_equals(wl, image_wl):
-            return P.path_file_rendered_image(target_type, imaging_type, wl, base_path)
+            return PH.path_file_rendered_image(target_type, imaging_type, wl, base_path)
 
     raise FileNotFoundError(f"Could not find {wl} nm image from {folder}.")
 
@@ -222,14 +222,14 @@ def reduce(set_name: str) -> None:
         d = TH.read_sample_result(set_name, sample_id=sample_id)
         wls = d[C.key_sample_result_wls]
         for wl in wls:
-            wl_result_plot_path = P.join(P.path_directory_subresult(set_name, sample_id), FN.filename_wl_result_plot(wl))
+            wl_result_plot_path = PH.join(PH.path_directory_subresult(set_name, sample_id), FN.filename_wl_result_plot(wl))
             os.unlink(wl_result_plot_path)
 
-        sample_result_path = P.join(P.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+        sample_result_path = PH.join(PH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
         os.unlink(sample_result_path)
 
         # Sample result plots are intuitively saved to same place where the set result
-        sample_result_plot_path = P.join(P.path_directory_set_result(set_name), FN.filename_sample_result_plot(sample_id))
+        sample_result_plot_path = PH.join(PH.path_directory_set_result(set_name), FN.filename_sample_result_plot(sample_id))
         os.unlink(sample_result_plot_path)
 
 
@@ -245,16 +245,50 @@ def duplicate_scene_from_template():
     # scene_folder = f"../scenes/scene_{scene_id}"
     # rend_folder = scene_folder + '/rend'
     # animation_folder = rend_folder + '/spectral'
-    if os.path.exists(P.path_forest_template()):
-        if not os.path.exists(P.path_directory_forest_scene(scene_id)):
-            os.makedirs(P.path_directory_forest_scene(scene_id))
+    if os.path.exists(PH.path_forest_template()):
+        if not os.path.exists(PH.path_directory_forest_scene(scene_id)):
+            os.makedirs(PH.path_directory_forest_scene(scene_id))
         # p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
-        shutil.copy2(P.path_forest_template(), P.path_file_forest_scene(scene_id))
-        if not os.path.exists(P.path_directory_forest_rend(scene_id)):
-            os.makedirs(P.path_directory_forest_rend(scene_id))
-        if not os.path.exists(P.path_directory_forest_rend_spectral(scene_id)):
-            os.makedirs(P.path_directory_forest_rend_spectral(scene_id))
+        shutil.copy2(PH.path_forest_template(), PH.path_file_forest_scene(scene_id))
+        if not os.path.exists(PH.path_directory_forest_rend(scene_id)):
+            os.makedirs(PH.path_directory_forest_rend(scene_id))
+        if not os.path.exists(PH.path_directory_forest_rend_spectral(scene_id)):
+            os.makedirs(PH.path_directory_forest_rend_spectral(scene_id))
     else:
         raise RuntimeError(f"Forest template scene not found for duplication.")
 
     return scene_id
+
+
+def copy_leaf_material_parameters_from(source_set_name, forest_id, leaf_id):
+    """Reads spectral set result and copies it as a leaf material parameter file
+    to be consumed by forest setup.
+
+    Leaf material parameters are written as a csv file to give to specified forest scene.
+
+    :param source_set_name:
+        Source set name that must be found from HyperBlend/optimization directory.
+    :param forest_id:
+        Forest id to be set the leaf material parameters to.
+    :param leaf_id:
+        Leaf index (1,2,3) to set the material parameters to.
+    """
+
+    res = TH.read_set_result(source_set_name)
+    wls = res[C.key_set_result_wls]
+    ad = res[C.key_set_result_wl_ad_mean]
+    sd = res[C.key_set_result_wl_sd_mean]
+    ai = res[C.key_set_result_wl_ai_mean]
+    mf = res[C.key_set_result_wl_mf_mean]
+
+    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline='') as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=' ', )
+
+        row = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
+        #just headers for human readibility
+
+        writer.writerow(row)
+        for i, wl in enumerate(wls):
+            row = [i + 1, wl, ad[i], sd[i], ai[i], mf[i]]
+            writer.writerow(row)
