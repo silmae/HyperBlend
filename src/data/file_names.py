@@ -115,3 +115,17 @@ def filename_set_error_plot() -> str:
 
     filename = f"set_error_plot{C.postfix_plot_image_format}"
     return filename
+
+
+def filename_forest_scene(scene_id):
+    """Name of the blend file of specific forest scene."""
+
+    filename = f"scene_forest_{scene_id}.blend"
+    return filename
+
+
+def filename_leaf_material_csv(leaf_id) -> str:
+    """Spectral leaf material parameters csv file name."""
+
+    filename = f"leaf_material_{leaf_id}.csv"
+    return filename

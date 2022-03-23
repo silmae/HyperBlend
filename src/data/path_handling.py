@@ -143,6 +143,33 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
     return p
 
 
+def path_directory_forest_scenes() -> str:
+    """Top level scene directory."""
+
+    p = C.path_project_root + '/' + 'scenes'
+    return os.path.abspath(p)
+
+
+def path_directory_forest_scene(scene_id) -> str:
+    """Specific forest scene directory."""
+
+    p = join(path_directory_forest_scenes(), f"scene_{scene_id}")
+    return p
+
+
+def path_directory_forest_rend(scene_id) -> str:
+    """Forest rend directory."""
+
+    p = join(path_directory_forest_scene(scene_id), 'rend')
+    return p
+
+
+def path_directory_forest_rend_spectral(scene_id) -> str:
+    """Forest spectral rend directory."""
+
+    p = join(path_directory_forest_rend(scene_id), 'spectral')
+    return p
+
 ##########################################################################
 # Paths to files
 ##########################################################################
@@ -199,6 +226,20 @@ def path_file_rendered_image(target_type: str, imaging_type: str, wl: float, bas
         return join(path_directory_rend_reference(imaging_type, base_path), image_name)
     else:
         raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
+
+
+def path_forest_template():
+    """Path to forest template blend file."""
+
+    p = join(C.path_project_root, 'scene_forest_template.blend')
+    return p
+
+
+def path_file_forest_scene(scene_id) -> str:
+    """Path to certain forest scene blend file."""
+
+    p = join(path_directory_forest_scene(scene_id), FN.filename_forest_scene(scene_id))
+    return p
 
 
 def join(*args) -> str:

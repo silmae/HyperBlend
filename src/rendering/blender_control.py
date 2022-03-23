@@ -10,8 +10,10 @@ from sys import platform
 import logging
 
 from src import constants as C
+from src.data import path_handling as PH
 
 path_folder_scripts = C.path_project_root + '/src/blender_scripts/'
+
 
 def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
@@ -173,14 +175,11 @@ def setup_forest(id):
         pass
         # logging.info("Running on windows machine.")
 
-    directory = f"{C.path_project_root}/scenes/scene_{id}/"
-    blend_file_name = f"scene_forest_{id}.blend"
-
     # Basic arguments that will always be passed on:
     blender_args = [
         bpath,
         "--background",  # Run Blender in the background.
-        os.path.normpath(directory + blend_file_name),  # Blender file to be run.
+        PH.path_file_forest_scene(id),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(path_folder_scripts + 'bs_setup_forest.py'),  # Python script file to be run.
         # "--log-level", "0",
@@ -188,8 +187,7 @@ def setup_forest(id):
     ]
 
     scirpt_args = ['--']
-    scirpt_args += ['-p', f'{os.path.abspath(directory)}']
-    scirpt_args += ['-fn', f'{blend_file_name}']
+    scirpt_args += ['-id', f'{id}']
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
@@ -221,14 +219,11 @@ def render_forest_previews(id):
         pass
         # logging.info("Running on windows machine.")
 
-    directory = f"{C.path_project_root}/scenes/scene_{id}/"
-    blend_file_name = f"scene_forest_{id}.blend"
-
     # Basic arguments that will always be passed on:
     blender_args = [
         bpath,
         "--background",  # Run Blender in the background.
-        os.path.normpath(directory + blend_file_name),  # Blender file to be run.
+        PH.path_file_forest_scene(id),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(path_folder_scripts + 'bs_render_forest.py'),  # Python script file to be run.
         # "--log-level", "0",
@@ -236,8 +231,7 @@ def render_forest_previews(id):
     ]
 
     scirpt_args = ['--']
-    scirpt_args += ['-p', f'{os.path.abspath(directory)}']
-    scirpt_args += ['-fn', f'{blend_file_name}']
+    scirpt_args += ['-id', f'{id}']
     scirpt_args += ['-rm', "preview"]
 
     with open(os.devnull, 'wb') as stream:
@@ -279,8 +273,7 @@ def render_forest_spectral(id):
     ]
 
     scirpt_args = ['--']
-    scirpt_args += ['-p', f'{os.path.abspath(directory)}']
-    scirpt_args += ['-fn', f'{blend_file_name}']
+    scirpt_args += ['-id', f'{id}']
     scirpt_args += ['-rm', "spectral"]
 
     with open(os.devnull, 'wb') as stream:

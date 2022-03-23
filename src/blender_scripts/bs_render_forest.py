@@ -3,35 +3,32 @@ import os
 import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
 import logging
-import math
+import importlib
 
-"""
-This is how one can import stuff to Blender
-"""
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
-logging.warning(f"blend_dir path: {blend_dir}")
 
 if 'scenes' in blend_dir:
     # We are in a copied blend file in HyperBlend/scenes/scene_12345
     script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
+    data_dir = os.path.abspath(blend_dir + '../../../src/data')
 else:
     # We are in the template forest blend file
     script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
-
-logging.warning(f"Script path: {script_dir}")
+    data_dir = os.path.abspath(blend_dir + '/src/data')
 
 # After this is set, any script in /blender_scripts can be imported
 if script_dir not in sys.path:
     sys.path.append(script_dir)
-
+    sys.path.append(data_dir)
 
 import forest_constants as FC
 import forest_utils as FU
-import importlib
+import file_names as FN
+import path_handling as PH
 importlib.reload(FC)
 importlib.reload(FU)
-
-logging.warning(f"Testing imports {FC.key_obj_sun}, {FU.test_val}")
+importlib.reload(FN)
+importlib.reload(PH)
 
 
 b_context = bpy.context
@@ -177,7 +174,8 @@ def render_sleeper_rgb():
     set_visibility(mode='Sleeper RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'sleeper_rgb.png'
-    image_path = os.path.normpath(f'{rend_path}/{image_name}')
+    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     b_ops.render.render(write_still=True)
@@ -189,7 +187,8 @@ def render_walker_rgb():
     set_visibility(mode='Walker RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'walker_rgb.png'
-    image_path = os.path.normpath(f'{rend_path}/{image_name}')
+    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     b_ops.render.render(write_still=True)
@@ -201,7 +200,8 @@ def render_drone_rgb():
     set_visibility(mode='Drone RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'drone_rgb.png'
-    image_path = os.path.normpath(f'{rend_path}/{image_name}')
+    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     b_ops.render.render(write_still=True)
@@ -213,7 +213,8 @@ def render_map_rgb():
     set_visibility(mode='Drone RGB')
     FU.set_forest_parameter('Use real object', False)
     image_name = f'map_rgb.png'
-    image_path = os.path.normpath(f'{rend_path}/{image_name}')
+    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     b_ops.render.render(write_still=True)
@@ -223,12 +224,7 @@ def render_drone_hsi():
     set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
     set_visibility(mode='Drone HSI')
     FU.set_forest_parameter('Use real object', True)
-    # image_name = f'map_rgb.png'
-    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
-    # logging.info(f"Trying to render '{image_path}'.")
-    # b_scene.render.filepath = image_path
-
-    b_scene.render.filepath = rend_path + "/spectral/band_####.tiff"
+    b_scene.render.filepath = PH.join(PH. path_directory_forest_rend_spectral(scene_id), "band_####.tiff")
     b_ops.render.render(write_still=True, animation=True)
 
 
@@ -243,39 +239,31 @@ if __name__ == '__main__':
         argv = argv[argv.index("--") + 1:]  # get all args after "--"
 
     # Argument names
-    key_base_path = ['-p', '--base_path']
-    key_blend_file_name = ['-fn', '--blend_file_name']
+    key_scene_id = ['-id', '--scene_id']
     key_render_mode = ['-rm', '--render_mode']
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(key_base_path[0], key_base_path[1], dest=key_base_path[1], action="store",
-                        required=True, help="Directory containing the Blend file to be operated on.")
-    parser.add_argument(key_blend_file_name[0], key_blend_file_name[1], dest=key_blend_file_name[1], action="store",
-                        required=True, help="Blender file name that is found from the Base path.")
+    parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
+                        required=True, help="Scene id.")
     parser.add_argument(key_render_mode[0], key_render_mode[1], dest=key_render_mode[1], action="store",
                         required=True, help="")
 
     args = parser.parse_args(argv)
 
-    base_path = vars(args)[key_base_path[1]]
-    print(f"base_path = {base_path}")
-    blend_file_name = vars(args)[key_blend_file_name[1]]
-    print(f"blend_file_name = {blend_file_name}")
-    rend_path = os.path.abspath(base_path + '/rend') + os.path.sep
-    print(f"rend_path = {rend_path}")
-    file_path = os.path.abspath(base_path + '/' + blend_file_name)
-    print(f"file_path = {file_path}")
+    scene_id = vars(args)[key_scene_id[1]]
+
+
+    logging.error(f"Hello, I am forest render script in '{PH.path_directory_forest_scene(scene_id)}'")
+
     render_mode = vars(args)[key_render_mode[1]]
 
     if render_mode.lower() == 'preview':
         render_sleeper_rgb()
-        # render_walker_rgb()
-        # render_drone_rgb()
-        # render_map_rgb()
+        render_walker_rgb()
+        render_drone_rgb()
+        render_map_rgb()
     elif render_mode.lower() == 'spectral':
         render_drone_hsi()
     else:
         logging.error(f"Render mode '{render_mode}' not recognised.")
-
-    logging.error(f"Hello, I am forest render script in '{base_path}'")

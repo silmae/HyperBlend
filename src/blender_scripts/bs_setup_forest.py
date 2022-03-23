@@ -84,7 +84,7 @@ def framing_material(leaf_index, band, absorption_density, scattering_density, s
 
 
 def read_leaf_material_csv(leaf_index=1):
-    p = os.path.abspath(base_path + f"/leaf_material_{leaf_index}.csv")
+    p = PH.join(PH.path_directory_forest_scene(scene_id), FN.filename_leaf_material_csv(leaf_index))
     band_count = 0
     with open(p) as file:
         reader = csv.reader(file, delimiter=' ')
@@ -104,7 +104,7 @@ def read_leaf_material_csv(leaf_index=1):
     for scene in b_data.scenes:
         scene.render.fps = 5 # does not really matter
         scene.frame_start = 1
-        scene.frame_end = band_count
+        scene.frame_end = band_count # can be safely set to zero as Blender will fix it into one
 
 
 if __name__ == '__main__':
@@ -118,28 +118,18 @@ if __name__ == '__main__':
         argv = argv[argv.index("--") + 1:]  # get all args after "--"
 
     # Argument names
-    key_base_path = ['-p', '--base_path']
-    key_blend_file_name = ['-fn', '--blend_file_name']
+    key_scene_id = ['-id', '--scene_id']
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(key_base_path[0], key_base_path[1], dest=key_base_path[1], action="store",
+    parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
                         required=True, help="Directory containing the Blend file to be operated on.")
-    parser.add_argument(key_blend_file_name[0], key_blend_file_name[1], dest=key_blend_file_name[1], action="store",
-                        required=True, help="Blender file name that is found from the Base path.")
 
     args = parser.parse_args(argv)
 
-    base_path = vars(args)[key_base_path[1]]
-    print(f"base_path = {base_path}")
-    blend_file_name = vars(args)[key_blend_file_name[1]]
-    print(f"blend_file_name = {blend_file_name}")
-    rend_path = os.path.abspath(base_path + '/rend') + os.path.sep
-    print(f"rend_path = {rend_path}")
-    file_path = os.path.abspath(base_path + '/' + blend_file_name)
-    print(f"file_path = {file_path}")
+    scene_id = vars(args)[key_scene_id[1]]
 
-    logging.error(f"Hello, I am forest setup script in '{base_path}'")
+    logging.error(f"Hello, I am forest setup script in '{PH.path_directory_forest_scene(scene_id)}'")
 
     # FU.print_collection_items('Cameras')
     # FU.print_collection_items('Lighting')
@@ -154,11 +144,11 @@ if __name__ == '__main__':
     # set_sun_angle(60)
     # framing_material()
 
-    read_leaf_material_csv(1)
-    read_leaf_material_csv(2)
-    read_leaf_material_csv(3)
+    # read_leaf_material_csv(1)
+    # read_leaf_material_csv(2)
+    # read_leaf_material_csv(3)
 
-    bpy.ops.wm.save_as_mainfile(filepath=file_path)
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(scene_id))
 
     # TODO set Cycles
     # TODO set rendering parameters (image size, sample count...)

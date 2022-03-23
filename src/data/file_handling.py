@@ -241,12 +241,20 @@ def duplicate_scene_from_template():
     # Use this for debugging
     scene_id = "0123456789"
 
-    p_src = f"../scene_forest_template.blend"
-    scene_folder = f"../scenes/scene_{scene_id}"
-    if os.path.exists(p_src):
-        if not os.path.exists(scene_folder):
-            os.makedirs(scene_folder)
-        p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
-        shutil.copy2(p_src, p_dest)
+    # p_src = f"../scene_forest_template.blend"
+    # scene_folder = f"../scenes/scene_{scene_id}"
+    # rend_folder = scene_folder + '/rend'
+    # animation_folder = rend_folder + '/spectral'
+    if os.path.exists(P.path_forest_template()):
+        if not os.path.exists(P.path_directory_forest_scene(scene_id)):
+            os.makedirs(P.path_directory_forest_scene(scene_id))
+        # p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
+        shutil.copy2(P.path_forest_template(), P.path_file_forest_scene(scene_id))
+        if not os.path.exists(P.path_directory_forest_rend(scene_id)):
+            os.makedirs(P.path_directory_forest_rend(scene_id))
+        if not os.path.exists(P.path_directory_forest_rend_spectral(scene_id)):
+            os.makedirs(P.path_directory_forest_rend_spectral(scene_id))
+    else:
+        raise RuntimeError(f"Forest template scene not found for duplication.")
 
     return scene_id
