@@ -3,6 +3,7 @@ import os
 import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
 import logging
+import random
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
@@ -59,6 +60,7 @@ def set_forest_parameter(parameter_name, value):
     Seed (INT)
     Hill height (VALUE)
     Hill scale (VALUE)
+    Show white reference (BOOLEAN)
 
     :param parameter_name:
     :param value:
@@ -68,6 +70,69 @@ def set_forest_parameter(parameter_name, value):
     set_input(forest_geometry_node, parameter_name, value)
 
 
+def random_ground(rand_state):
+    """Set ground parameters to random values to create unique scenes.
+
+    Parameter ranges are currently hard-coded.
+
+    TODO allow changing parameter ranges when the script is called.
+    """
+
+    random.setstate(rand_state)
+
+    hill_scale = random.uniform(5,15)
+    set_forest_parameter(parameter_name='Hill height', value=hill_scale*0.2)
+    set_forest_parameter(parameter_name='Hill scale', value=hill_scale)
+    set_forest_parameter(parameter_name='Seed', value=random.randint(0,1000000))
+
+    return random.getstate()
+
+
+def random_tree(tree_number, rand_state):
+    """Set tree parameters to random values to create unique scenes.
+
+    Parameter ranges are currently hard-coded.
+
+    TODO allow changing parameter ranges when the script is called.
+    """
+
+    random.setstate(rand_state)
+
+    tree_length_rand = random.uniform(5, 15)
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Tree length', value=tree_length_rand)
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Main branch length', value=tree_length_rand/5)
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Secondary branch length', value=tree_length_rand/25)
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Twig length', value=random.uniform(0.2, 0.4))
+
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Branches per m', value=random.randint(10, 20))
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Secondary branches per m', value=random.randint(5, 10))
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Twigs per m', value=random.randint(15, 30))
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Leaves per m', value=random.randint(10, 20))
+
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Branch inclination deg', value=random.randint(0, 180))
+
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Clear start trunk percent', value=random.randint(0, 40))
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Clear start Main branch percent', value=random.randint(0, 40))
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Clear start Secondary branch percent', value=random.randint(0, 40))
+
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Trunk pruning', value=random.uniform(0, 4))
+
+    # TODO thicknesses should have meaningful units, e.g., cm
+
+    trunk_thickness_rand = random.uniform(tree_length_rand-2, tree_length_rand+2)
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Trunk thickness', value=trunk_thickness_rand)
+    # set_tree_parameter(tree_nr=1, parameter_name='Main branch thickness', value=random.uniform(trunk_thickness_rand, tree_length_rand+2))
+    # set_tree_parameter(tree_nr=1, parameter_name='Secondary branch thickness', value=random.uniform(tree_length_rand-2, tree_length_rand+2))
+
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Leaf  side length cm', value=random.uniform(2, 8))
+
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Trunk material', value=b_data.materials[f'Trunk material {tree_number}'])
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Branch material', value=b_data.materials[f'Trunk material {tree_number}'])
+    set_tree_parameter(tree_nr=tree_number, parameter_name='Leaf material', value=b_data.materials[f'Leaf material {tree_number}'])
+
+    return random.getstate()
+
+
 def set_tree_parameter(tree_nr, parameter_name, value):
     """
 
@@ -75,7 +140,7 @@ def set_tree_parameter(tree_nr, parameter_name, value):
         Tree length (VALUE)
         Main branch length (VALUE)
         Secondary branch length (VALUE)
-        Twig lenght (VALUE)
+        Twig length (VALUE)
         Branches per m (INT)
         Secondary branches per m (INT)
         Twigs per m (INT)
@@ -83,7 +148,7 @@ def set_tree_parameter(tree_nr, parameter_name, value):
         Branch inclination deg (INT)
         Trunk pruning (VALUE)
         Clear start trunk percent (INT)
-        Clear start Main brach percent (INT)
+        Clear start Main branch percent (INT)
         Clear start Secondary branch percent (INT)
         Trunk thickness (VALUE)
         Main branch thickness (VALUE)

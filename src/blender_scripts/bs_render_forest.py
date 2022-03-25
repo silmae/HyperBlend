@@ -282,10 +282,10 @@ if __name__ == '__main__':
     render_mode = vars(args)[key_render_mode[1]]
 
     if render_mode.lower() == 'preview':
-        render_sleeper_rgb()
+        # render_sleeper_rgb()
         render_walker_rgb()
         render_drone_rgb()
-        render_map_rgb()
+        # render_map_rgb()
         render_tree_rgb()
     elif render_mode.lower() == 'spectral':
         render_drone_hsi()

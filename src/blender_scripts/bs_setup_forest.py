@@ -8,6 +8,7 @@ import logging
 import math
 import importlib
 import csv
+import random
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
@@ -48,9 +49,41 @@ forest = b_data.collections['Ground'].all_objects.get('Ground')
 forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
 
 
-def set_sun_angle(angle_deg):
+def random_sun(rand_state):
+    """Set sun parameters to random values to create unique scenes.
+
+    Parameter ranges are currently hard-coded.
+
+    TODO allow changing parameter ranges when the script is called.
+    """
+
+    random.setstate(rand_state)
+
+    set_sun_angle(random.uniform(0,40), random.uniform(0,360))
+
+    return random.getstate()
+
+
+def set_sun_angle(elevation_deg=0, azimuth=90):
+    """Set the sun elevation and azimuth angles in degrees.
+
+    :param elevation_deg:
+        Elevation angle between [0,90] degrees. Value 0 is sun zenith.
+    :param azimuth:
+        Azimuth angle between [0,360] degrees. With default value (90), the sun is shining directly from right.
+    :return:
+    """
+    if elevation_deg < 0:
+        elevation_deg = 0
+    if elevation_deg > 90:
+        elevation_deg = 90
+    if azimuth < 0:
+        azimuth = 0
+    if azimuth > 360:
+        azimuth = 360
+
     sun = lights.get(FC.key_obj_sun)
-    sun.rotation_euler = (math.radians(angle_deg), 0, math.radians(90))
+    sun.rotation_euler = (math.radians(elevation_deg), 0, math.radians(azimuth))
 
 
 def framing_material(leaf_index, band, absorption_density, scattering_density, scattering_anisotropy, mix_factor):
@@ -109,6 +142,7 @@ def read_leaf_material_csv(leaf_index=1):
 
 if __name__ == '__main__':
 
+
     # Store arguments passed from blender_control.py
     argv = sys.argv
 
@@ -143,10 +177,21 @@ if __name__ == '__main__':
     # FU.set_rendering_parameters()
     # set_sun_angle(60)
     # framing_material()
+    # FU.list_forest_parameters()
 
-    read_leaf_material_csv(1)
-    read_leaf_material_csv(2)
-    read_leaf_material_csv(3)
+    random.seed()
+    rand_state = random.getstate()
+    rand_state = random_sun(rand_state)
+
+    rand_state = FU.random_ground(rand_state)
+
+    rand_state = FU.random_tree(1, rand_state)
+    rand_state = FU.random_tree(2, rand_state)
+    FU.random_tree(3, rand_state)
+
+    # read_leaf_material_csv(1)
+    # read_leaf_material_csv(2)
+    # read_leaf_material_csv(3)
 
     bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(scene_id))
 

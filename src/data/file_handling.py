@@ -236,10 +236,10 @@ def reduce(set_name: str) -> None:
 def duplicate_scene_from_template():
     """Creates a uniquely named copy of a scene and returns its id."""
 
-    # now = datetime.datetime.now()
-    # scene_id = f"{now.day:02}{now.month:02}{now.year-2000}{now.hour:02}{now.minute:02}"
+    now = datetime.datetime.now()
+    scene_id = f"{now.day:02}{now.month:02}{now.year-2000}{now.hour:02}{now.minute:02}"
     # Use this for debugging
-    scene_id = "0123456789"
+    # scene_id = "0123456789"
 
     # p_src = f"../scene_forest_template.blend"
     # scene_folder = f"../scenes/scene_{scene_id}"
