@@ -33,5 +33,6 @@ key_cam_drone_hsi = 'Drone HSI'
 key_cam_drone_rgb = 'Drone RGB'
 key_cam_walker_rgb = 'Walker RGB'
 key_cam_sleeper_rgb = 'Sleeper RGB'
+key_cam_tree_rgb = 'Tree RGB'
 
 ########################################

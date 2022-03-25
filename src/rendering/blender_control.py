@@ -166,6 +166,9 @@ def setup_forest(id):
 
     logging.info(f"Calling forest scene setup")
 
+    if not os.path.exists(PH.path_file_forest_scene(id)):
+        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(id)} does not exist.")
+
 
     bpath = C.blender_executable_path_win
     if not platform.startswith('win'):
@@ -208,6 +211,9 @@ def render_forest_previews(id):
     """
 
     logging.info(f"render_forest_previews() called, I can possibly do something.")
+
+    if not os.path.exists(PH.path_file_forest_scene(id)):
+        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(id)} does not exist.")
 
     # TODO create a base argument to save some lines
 

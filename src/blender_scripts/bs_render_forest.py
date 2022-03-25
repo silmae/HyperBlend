@@ -80,6 +80,11 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
             bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
 
+            bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 0
+            # disable sky for spectral images
+
+            bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = True
+
         elif render_mode.lower() == 'rgb':
 
             scene.render.image_settings.file_format = 'PNG'  # OK
@@ -100,6 +105,11 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
             bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
             bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
+
+            bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 2
+
+            bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = True
+
         else:
             raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral' or 'rgb'. Was '{render_mode}'.")
 
@@ -147,7 +157,7 @@ def set_visibility(mode: str):
         obj.hide_render = False
         obj.hide_set(False)
 
-    if mode != FC.key_cam_sleeper_rgb and mode != FC.key_cam_walker_rgb and mode != FC.key_cam_drone_rgb and mode != 'Map' and mode != FC.key_cam_drone_hsi and mode != 'Trees':
+    if mode != FC.key_cam_sleeper_rgb and mode != FC.key_cam_walker_rgb and mode != FC.key_cam_drone_rgb and mode != 'Map' and mode != FC.key_cam_drone_hsi and mode != FC.key_cam_tree_rgb:
         raise AttributeError(f"Visibility for mode '{mode}' not recognised.")
 
     # First hide everything
@@ -162,7 +172,7 @@ def set_visibility(mode: str):
 
     if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map' or mode == FC.key_cam_drone_hsi:
         unhide(ground.get(FC.key_obj_ground))
-    elif mode == 'Trees':
+    elif mode == FC.key_cam_tree_rgb:
         unhide(ground.get(FC.key_obj_ground_test))
         for tree in trees:
             unhide(tree)
@@ -200,6 +210,19 @@ def render_drone_rgb():
     set_visibility(mode='Drone RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'drone_rgb.png'
+    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
+    logging.info(f"Trying to render '{image_path}'.")
+    b_scene.render.filepath = image_path
+    b_ops.render.render(write_still=True)
+
+
+def render_tree_rgb():
+
+    set_render_parameters(render_mode='rgb', camera='Tree RGB', res_x=1028, res_y=512, res_percent=100)
+    set_visibility(mode='Tree RGB')
+    # FU.set_forest_parameter('Use real object', True)
+    image_name = f'tree_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
     # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
@@ -263,6 +286,7 @@ if __name__ == '__main__':
         render_walker_rgb()
         render_drone_rgb()
         render_map_rgb()
+        render_tree_rgb()
     elif render_mode.lower() == 'spectral':
         render_drone_hsi()
     else:

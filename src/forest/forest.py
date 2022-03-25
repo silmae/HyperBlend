@@ -34,9 +34,13 @@ def do_leaves():
 
 
 def generate_some_leaf_stuff(forest_id = "0123456789"):
+
+
+    if not os.path.exists(PH.path_file_forest_scene(forest_id)):
+        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(forest_id)} does not exist. Cannot generate leafs.")
+
     do_leaves()
     logging.info(f"Copying leaf data to forest '{forest_id}'")
     FH.copy_leaf_material_parameters_from('p_normal', forest_id, 1)
     FH.copy_leaf_material_parameters_from('p_dry', forest_id, 2)
     FH.copy_leaf_material_parameters_from('p_dry', forest_id, 3)
-
