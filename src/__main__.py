@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     scene_id = FH.duplicate_scene_from_template()
     # scene_id = "0123456789" # id for debugging
-    # forest.generate_some_leaf_stuff(scene_id)
+    forest.generate_some_leaf_stuff(scene_id)
     BC.setup_forest(scene_id)
     BC.render_forest_previews(scene_id)
     # BC.render_forest_spectral(scene_id)

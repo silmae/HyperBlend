@@ -43,6 +43,22 @@ markers = b_data.collections[FC.key_collection_markers].all_objects
 ground = b_data.collections[FC.key_collection_ground].all_objects
 
 
+def set_materials_use_spectral(use_spectral):
+
+    bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+
+    bpy.data.materials["Trunk material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    bpy.data.materials["Trunk material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    bpy.data.materials["Trunk material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+
+    bpy.data.materials["Ground material"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+
+    if use_spectral:
+        bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 0
+    else:
+        bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 2
 
 
 def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', res_x=512, res_y=512, res_percent=100):
@@ -76,11 +92,8 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
 
-            bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
-            bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
-            bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 1.0
+            set_materials_use_spectral(True)
 
-            bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 0
             # disable sky for spectral images
 
             bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = True
@@ -102,13 +115,9 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
 
-            bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
-            bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
-            bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = 0.0
+            set_materials_use_spectral(False)
 
-            bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 2
-
-            bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = True
+            bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = False
 
         else:
             raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral' or 'rgb'. Was '{render_mode}'.")
