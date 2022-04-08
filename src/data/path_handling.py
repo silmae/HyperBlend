@@ -150,6 +150,13 @@ def path_directory_forest_scenes() -> str:
     return os.path.abspath(p)
 
 
+def path_directory_sun_data() -> str:
+    """Sun data directory."""
+
+    p = C.path_project_root + '/' + 'sun_data'
+    return os.path.abspath(p)
+
+
 def path_directory_forest_scene(scene_id) -> str:
     """Specific forest scene directory."""
 
