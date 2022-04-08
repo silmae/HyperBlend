@@ -12,6 +12,9 @@ measured_data/*
 blender_test_run/*
 scenes/*
 
+sun_data/*
+!sun_data/default_sun.txt
+
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
 examples/*
