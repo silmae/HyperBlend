@@ -189,9 +189,9 @@ if __name__ == '__main__':
     rand_state = FU.random_tree(2, rand_state)
     FU.random_tree(3, rand_state)
 
-    # read_leaf_material_csv(1)
-    # read_leaf_material_csv(2)
-    # read_leaf_material_csv(3)
+    read_leaf_material_csv(1)
+    read_leaf_material_csv(2)
+    read_leaf_material_csv(3)
 
     bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(scene_id))
 
