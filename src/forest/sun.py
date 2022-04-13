@@ -1,5 +1,28 @@
 """
-Sun-related stuff
+Sun-related stuff.
+
+Simple use-case:
+    1. call load_sun with no filename and get the default sun irradiance integrated
+        to whichever bandwith given.
+Custom sun use-case:
+    1. use https://psg.gsfc.nasa.gov/ to generate desired sun spectra
+    2. download the spectra and save it to either sun_data directory (to be available
+        for all scenes, or to top level directory of a certain scene.
+    3. call load_sun with filename you saved the file in previous step. Integrated
+        to whichever bandwith given.
+
+How to generate spectra with NASA's Planetary Spectrum generator:
+    1. Select template "Sun from Earth" and click "Load Spectra".
+    2. If you want to select certain location and date on Earth, click
+        "Change Object" button. Remember to click save settings!
+    3. Click "Change Instrument"
+        1. Set "Spectral range" to 400 - 2500 nm. Remember to change units
+            from um to nm!
+        2. Set "Resolution" to 1 nm and units from "Resolving power" to nm.
+        3. Set "Spectrum intensity unit" to W/m2/um (spectral irradiance)
+    4. Change other settings as you see fit, but know what you are doing!
+    5. Click "Generate Spectra"
+    6. From the first image, click "Download Spectra"
 """
 
 import numpy as np
@@ -34,7 +57,23 @@ def is_resolution_1nm(wls):
 
 
 def integrate(wls, irradiances, bandwith):
-    """Integrate irradiances to given bandwith."""
+    """Integrate irradiances to given bandwith.
+
+    If given bandwith is 10, the first 10 irradiances (in 1 nm resolution file) is
+    summed to 400 nm band. Then the next 10 are summed to 410 nm band, and so on.
+
+    Hard-coded to start from 400 nm.
+
+    :param wls:
+        Original wavelengths.
+    :param irradiances:
+        Irradiances corresponding to wls.
+    :param bandwith:
+        Bandwith of integration.
+    :returns:
+        (wls, irradiances) tuple where wls is a list of new integrated wavelengths and
+        irradiances is a list of corresponding irradiances.
+    """
 
     wls_binned = [wls[0]]
     irradiances_binned = []
@@ -64,7 +103,11 @@ def integrate(wls, irradiances, bandwith):
 
 
 def read_sun_data(path):
-    """Read sun data and return wavelngths, irradiances and comments."""
+    """Read sun data and return wavelengths, irradiances and comments.
+    :returns:
+        (wls, irradiances, comments) tuple where wls and irradiances are numpy arrays.
+        comments is a list of comment rows needed in file fixing.
+    """
 
     logging.info(f"Reading sun data.")
     wls = []
@@ -85,17 +128,7 @@ def read_sun_data(path):
     if not resolution_ok:
         raise RuntimeError(f"Resolution in given file is not 1 nm. Use default sun or fix the file.")
 
-
-    print('sdf')
     return np.array(wls), np.array(irradiances), comments
-
-
-def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None):
-    plt.plot(wls, irradiances, label='Sun 1 nm')
-    if wls_binned and irradiances_binned:
-        plt.plot(wls_binned, irradiances_binned, label='Binned', alpha=0.5)
-    plt.legend()
-    plt.show()
 
 
 def fix_double_space(path: str):
@@ -113,7 +146,11 @@ def fix_double_space(path: str):
 
 
 def fix_nasa_sun(path:str):
-    """ Fix double spaces and irradiance units provided by NASA."""
+    """ Fix double spaces and irradiance units provided by NASA.
+
+    Rewrites the file (several times) if needed. Adds a tag to the fixed file that
+    tells it is now OK.
+    """
 
     with open(path, 'r') as file:
         filedata = file.read()
@@ -158,7 +195,21 @@ def fix_nasa_sun(path:str):
         writer.writerows(list(zip(wls_i, irradiances_i)))
 
 
-def find_file(file_name: str, scene_id=None):
+def find_file(file_name: str, scene_id=None) -> str:
+    """Attempts to find a sun file with given filename.
+
+    :param file_name:
+        A file with this name is searched from sun_data directory. If
+        also scene_id is given, the search is extended to scene directory. Precedence
+        is then for the file in the scene directory.
+    :param scene_id:
+        Optional. If not given, scene directory is not searched.
+    :return:
+        Path to found file.
+    :raises FileNotFoundError:
+        if the file is not found.
+    """
+
     if scene_id:
         logging.info(f"Trying to find sun data from scene directory '{PH.path_directory_forest_scene(scene_id)}'.")
         if os.path.exists(PH.join(PH.path_directory_forest_scene(scene_id), file_name)):
@@ -174,8 +225,36 @@ def find_file(file_name: str, scene_id=None):
         p = PH.join(PH.path_directory_sun_data(), file_name)
         return p
 
+    raise FileNotFoundError(f"File with name '{file_name}' was not found.")
 
-def load_sun(file_name: str, scene_id=None, bandwith=1, spectral_range=(400,2500)):
+
+def load_sun(file_name: str = None, scene_id=None, bandwith=1):
+    """ Loads a sun file and returns wavelengths and corresponding irradiances.
+
+    If given file is not compatible with HyperBlend, an attempt is made to fix it.
+    Given file must contain wavelengths from 400 to 2500 (both inclusive) and have spectral
+    resolution of 1 nm.
+
+    :param file_name:
+        Optional. If given, this file is searched from sun_data directory. If
+        also scene_id is given, the search is extended to scene directory. Precedence
+        is then for the file in the scene directory. If not given, the default sun file
+        from the repository is used.
+    :param scene_id:
+        If scene_id is given, the search is extended to scene directory so that the scene
+        directory is searched first and if found, it is returned. If not found, the sun_data
+        directory is then searched.
+    :param bandwith:
+        Optional. Bandwith of integration, i.e., if given bandwith is 10, the first 10 irradiances (in 1 nm
+        resolution file) is summed to 400 nm band. Then the next 10 are summed to 410 nm band, and so on.
+        Default is 1.
+    :return:
+        (wls, irradiances) tuple where wls is a list of wavelengths (bands) and irradiances are
+        corresponding list of irradiances. The length of the lists vary depending on given bandwith.
+    """
+
+    if not file_name:
+        file_name = "default_sun.txt"
     path = find_file(file_name, scene_id)
     fix_nasa_sun(path)
     wls, irradiances, _ = read_sun_data(path)
@@ -187,20 +266,30 @@ def load_sun(file_name: str, scene_id=None, bandwith=1, spectral_range=(400,2500
 if __name__ == '__main__':
 
     """
+    This main can be used for testing.
+    
     Game plan:
-        1. if not at 1nm resolution, interpolate
-        2. extrapolate ends with constant value
-        3. sum over the shit
+        1. find sun file
+        2. read file and check if ok
+        3. if not, fix spaces and save
+        4. if irradiance not in [W/m^2/nm] read, fix units and save
+        5. read file to memory
+        6. integrate over bandwith 
+        7. return bands and irradiances
     """
     import sys
+    from src import plotter
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
     # load_sun('ASTM_G173-03.csv', bandwith=1, spectral_range=(400,2500))
     # load_sun('psg_rad.txt', bandwith=1, spectral_range=(400,2500))
-    wls, irradiances = load_sun('psg_rad.txt')
-    wls_b, irradiances_b = load_sun('psg_rad.txt', bandwith=10)
+    bandwith = 100
+    sunfile = 'default_sun.txt'
+    # wls, irradiances = load_sun(sunfile)
+    wls_b, irradiances_b = load_sun(file_name=sunfile, bandwith=bandwith)
     last = irradiances_b[-1]
-    plot_sun_data(wls, irradiances, wls_b, irradiances_b)
+    plotter.plot_sun_data(wls_b, irradiances_b, scene_id="0123456789", sun_filename='default_sun')
+    # plotter.plot_sun_data(wls, irradiances, scene_id="0123456789", sun_filename=sunfile, show=True)
     print('m')
 
     # TODO check and fix spectral range from 400 to 2500
