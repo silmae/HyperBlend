@@ -52,12 +52,18 @@ image_type = 'png'
 def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, scene_id=None, sun_filename=None, show=False):
     """Plot used sun data for a scene.
 
-    Plot can either be shown or saved.
+    Plot can either be shown or saved. Plot is saved if both scene_id and sun_filename
+    are given. 
+
+    Three main uses:
+        1. just original spectrum
+        2. just binned spectrum
+        3. both
 
     :param wls:
-        Wavelengths in original sun file with 1 nm resolution.
+        Either original (1 nm resolution) or binned wavelengths.
     :param irradiances:
-        Wavelengths in original sun file [W/m2/nm].
+        Irradiances corresponding to wls in [W/m2/nm].
     :param wls_binned:
         Optional. Binned (integrated) wavelengths over certain bandwith. Used
         bandwith is calculated by wls_binned[1] - wls_binned[0].
@@ -91,7 +97,7 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
         fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
         ax.set_xlabel('Wavelength [nm]')
-        ax.set_ylabel('Irradiance [W/m2/nm]')
+        ax.set_ylabel(f'Irradiance [W/m2/{bandwith:.0f}nm]')
         ax.plot(wls, irradiances, label=f'Bandwith {bandwith:.0f} nm')
 
     plt.legend()
