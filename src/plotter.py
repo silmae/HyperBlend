@@ -49,6 +49,59 @@ max_ticks = 8
 image_type = 'png'
 
 
+def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, scene_id=None, sun_filename=None, show=False):
+    """Plot used sun data for a scene.
+
+    Plot can either be shown or saved.
+
+    :param wls:
+        Wavelengths in original sun file with 1 nm resolution.
+    :param irradiances:
+        Wavelengths in original sun file [W/m2/nm].
+    :param wls_binned:
+        Optional. Binned (integrated) wavelengths over certain bandwith. Used
+        bandwith is calculated by wls_binned[1] - wls_binned[0].
+    :param irradiances_binned:
+        Optional. Binned (integrated) irradiances correcponding to wls_binned.
+        Both must be given so that binned irradiances can be plotted.
+    :param scene_id:
+        Optional. Scene id for saving the plot to the scene directory.
+    :param sun_filename:
+        Optional. Sun filename for naming the image file.
+    :param show:
+        If True, the plot is shown to the user. Default is False.
+    """
+
+    bandwith = wls[1] - wls[0]
+    if wls_binned and irradiances_binned:
+        bandwith_binned = wls_binned[1] - wls_binned[0]
+        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+        fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
+
+        ax[0].plot(wls, irradiances, label='Sun 1 nm')
+        ax[0].set_title('Spectra in file')
+        ax[0].set_xlabel('Wavelength [nm]')
+        ax[0].set_ylabel('Irradiance [W/m2/nm]')
+
+        ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwith {bandwith_binned:.0f} nm', alpha=0.5)
+        ax[1].set_title('Integrated spectra')
+        ax[1].set_xlabel('Wavelength [nm]')
+        ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]')
+    else:
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
+        fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
+        ax.set_xlabel('Wavelength [nm]')
+        ax.set_ylabel('Irradiance [W/m2/nm]')
+        ax.plot(wls, irradiances, label=f'Bandwith {bandwith:.0f} nm')
+
+    plt.legend()
+
+    if scene_id and sun_filename:
+        path = P.join(P.path_directory_forest_scene(scene_id), f"{sun_filename.rstrip('.txt')}.png")
+        plt.savefig(path, dpi=300)
+    if show:
+        plt.show()
+
 def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=None):
     # setup figure object
     fig = plt.figure()
