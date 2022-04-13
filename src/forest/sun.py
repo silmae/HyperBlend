@@ -33,6 +33,7 @@ import math
 import matplotlib.pyplot as plt
 
 from src.data import path_handling as PH
+from src import constants as C
 
 
 def is_resolution_1nm(wls):
@@ -254,7 +255,7 @@ def load_sun(file_name: str = None, scene_id=None, bandwith=1):
     """
 
     if not file_name:
-        file_name = "default_sun.txt"
+        file_name = C.file_default_sun
     path = find_file(file_name, scene_id)
     fix_nasa_sun(path)
     wls, irradiances, _ = read_sun_data(path)

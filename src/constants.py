@@ -97,6 +97,8 @@ file_sample_result = 'sample_result'
 file_model_parameters = 'model_parameters'
 """Model parameter file name."""
 
+file_default_sun = 'default_sun.txt'
+
 # Wavelength result's dictionary keys
 
 key_wl_result_wl = 'wl'
