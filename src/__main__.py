@@ -18,6 +18,16 @@ from src.data import file_handling as FH
 from src.data import path_handling as PH
 from src.rendering import blender_control as BC
 from src.forest import forest
+import matplotlib.pyplot as plt
+
+
+def show_forest_rend(band):
+
+    p = PH.join(PH.path_directory_forest_rend_spectral(scene_id), f"band_{band:04}.tiff")
+    band1 = plt.imread(p)
+    plt.imshow(band1)
+    plt.colorbar()
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -26,10 +36,13 @@ if __name__ == '__main__':
 
     scene_id = FH.duplicate_scene_from_template()
     # scene_id = "0123456789" # id for debugging
-    forest.generate_some_leaf_stuff(scene_id)
-    BC.setup_forest(scene_id)
-    BC.render_forest_previews(scene_id)
-    # BC.render_forest_spectral(scene_id)
+    forest.generate_some_leaf_stuff(scene_id, resolution=20)
+    BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
+    # BC.render_forest_previews(scene_id)
+    BC.render_forest_spectral(scene_id)
+
+    # show_forest_rend(1)
+
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)

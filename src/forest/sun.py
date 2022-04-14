@@ -30,7 +30,6 @@ import csv
 import os
 import logging
 import math
-import matplotlib.pyplot as plt
 
 from src.data import path_handling as PH
 from src import constants as C

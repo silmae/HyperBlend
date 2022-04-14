@@ -149,7 +149,7 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         subprocess.run(blender_args + scirpt_args, stdout=stream)
 
 
-def setup_forest(id):
+def setup_forest(scene_id, leaf_id_list=None):
     """ Setup the forest for rendering.
 
     Currently does not do much.
@@ -160,14 +160,15 @@ def setup_forest(id):
     TODO setup sun
     TODO setup sky
 
-    :param id:
+    :param scene_id:
+    :param leaf_id_list:
     :return:
     """
 
     logging.info(f"Calling forest scene setup")
 
-    if not os.path.exists(PH.path_file_forest_scene(id)):
-        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(id)} does not exist.")
+    if not os.path.exists(PH.path_file_forest_scene(scene_id)):
+        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(scene_id)} does not exist.")
 
 
     bpath = C.blender_executable_path_win
@@ -182,15 +183,18 @@ def setup_forest(id):
     blender_args = [
         bpath,
         "--background",  # Run Blender in the background.
-        PH.path_file_forest_scene(id),  # Blender file to be run.
+        PH.path_file_forest_scene(scene_id),  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         os.path.normpath(path_folder_scripts + 'bs_setup_forest.py'),  # Python script file to be run.
-        # "--log-level", "0",
+        "--log-level", "0",
         "--factory-startup", # disable loading user preferenses
     ]
 
     scirpt_args = ['--']
-    scirpt_args += ['-id', f'{id}']
+    scirpt_args += ['-id', f'{scene_id}']
+
+    if leaf_id_list is not None and len(leaf_id_list) > 0:
+        scirpt_args += ['-l_ids', f'{list(leaf_id_list)}']  # available leaf indexes
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
