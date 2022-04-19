@@ -21,7 +21,7 @@ from src.forest import forest
 import matplotlib.pyplot as plt
 
 
-def show_forest_rend(band):
+def show_forest_rend(band, scene_id):
 
     p = PH.join(PH.path_directory_forest_rend_spectral(scene_id), f"band_{band:04}.tiff")
     band1 = plt.imread(p)
@@ -34,14 +34,20 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    scene_id = FH.duplicate_scene_from_template()
-    # scene_id = "0123456789" # id for debugging
-    forest.generate_some_leaf_stuff(scene_id, resolution=20)
-    BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
-    # BC.render_forest_previews(scene_id)
-    BC.render_forest_spectral(scene_id)
+    scene_id = '1904221343'
 
-    # show_forest_rend(1)
+    # scene_id = FH.duplicate_scene_from_template()
+    # # scene_id = "0123456789" # id for debugging
+    # forest.generate_some_leaf_stuff(scene_id, resolution=20)
+    # BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
+    # BC.render_forest_previews(scene_id)
+    # BC.render_forest_spectral(scene_id)
+
+    # for i in range(1,107):
+    #     show_forest_rend(i, scene_id)
+    # show_forest_rend(2, scene_id)
+    # show_forest_rend(3, scene_id)
+    # show_forest_rend(15, scene_id)
 
 
     # SM.train(do_points=False, num_points=50)

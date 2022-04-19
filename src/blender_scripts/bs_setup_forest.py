@@ -242,6 +242,12 @@ if __name__ == '__main__':
         set_animation_frames(len(band_list))
         wls, irradiances = sun.load_sun(file_name=sun_filename, bandwith=bandwith)
         logging.error(f"Spectral range from {wls[0]:.1f} nm to {wls[-1]:.1f} nm")
+
+        # "Exposure": Scale values with magical constant to avoid overexposure. Tested with 10% white reflectance panel.
+        max_irr = np.max(irradiances)
+        factor = 35 / max_irr
+        irradiances = irradiances * factor
+
         set_sun_power_for_all(band_list, irradiances)
     except RuntimeWarning as e:
         logging.error(f"Could not automatically detect bandwith and band count from leaf data.")
