@@ -8,8 +8,11 @@ and run in IDE.
 import logging
 
 import sys
+import os
 import numpy as np
+import math
 from src.prospect import prospect
+
 
 from src.optimization import Optimization
 from src.surface_model import surface_model as SM
@@ -30,24 +33,63 @@ def show_forest_rend(band, scene_id):
     plt.show()
 
 
+def white_ref(frame, percent=2):
+    ref_half_width = int((frame.shape[0] / 100) * percent / 2)
+    ref_half_height = int((frame.shape[1] / 100) * percent / 2)
+    x_mid = frame.shape[0] / 2
+    y_mid = frame.shape[1] / 2
+    white_area = frame[int(x_mid-ref_half_width):int(x_mid+ref_half_width), int(y_mid-ref_half_height):int(y_mid+ref_half_height)]
+    white_mean = np.mean(white_area)
+    return white_mean
+
+
+def ndvi(scene_id):
+    red = plt.imread(PH.join(PH.path_directory_forest_rend_spectral(scene_id), f"band_{11:04}.tiff"))
+    nir = plt.imread(PH.join(PH.path_directory_forest_rend_spectral(scene_id), f"band_{21:04}.tiff"))
+    red = red / white_ref(red)
+    nir = nir / white_ref(nir)
+
+    # red = np.ndarray.astype(red, dtype=np.float32)
+    # nir = np.ndarray.astype(nir, dtype=np.float32)
+    # nir = nir / nir.max()
+    np.nan_to_num(red, copy=False)
+    np.nan_to_num(nir, copy=False)
+    vi = (nir - red) / (nir + red)
+    np.nan_to_num(vi, copy=False)
+    plt.imshow(vi)
+    plt.colorbar()
+    plt.show()
+
+def load_into_cube(scene_id):
+    p = PH.path_directory_forest_rend_spectral(scene_id)
+    for filename in os.listdir(p):
+        print(filename)
+
+
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    scene_id = '1904221343'
+    scene_id = '2704221302'
+    ndvi(scene_id)
 
     # scene_id = FH.duplicate_scene_from_template()
     # # scene_id = "0123456789" # id for debugging
-    # forest.generate_some_leaf_stuff(scene_id, resolution=20)
+    # forest.generate_some_leaf_stuff(scene_id, resolution=50)
     # BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
     # BC.render_forest_previews(scene_id)
     # BC.render_forest_spectral(scene_id)
+    # show_forest_rend(11, scene_id)
 
-    # for i in range(1,107):
+
+
+    # for i in range(1,44):
     #     show_forest_rend(i, scene_id)
     # show_forest_rend(2, scene_id)
     # show_forest_rend(3, scene_id)
     # show_forest_rend(15, scene_id)
+
+    load_into_cube(scene_id=scene_id)
 
 
     # SM.train(do_points=False, num_points=50)

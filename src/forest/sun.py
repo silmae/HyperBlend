@@ -260,7 +260,7 @@ def load_sun(file_name: str = None, scene_id=None, bandwith=1):
     wls, irradiances, _ = read_sun_data(path)
     if bandwith != 1:
         wls, irradiances = integrate(wls, irradiances, bandwith)
-    return wls, irradiances
+    return np.array(wls), np.array(irradiances)
 
 
 if __name__ == '__main__':

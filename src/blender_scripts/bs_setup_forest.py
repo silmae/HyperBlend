@@ -237,10 +237,10 @@ if __name__ == '__main__':
         leaf_ids = [int(id) for id in (leaf_ids.lstrip('[').rstrip(']')).split(', ')]
 
     try:
-        bandwith, band_list = get_leaf_bandwith_and_bandcount()
-        logging.error(f"Automatically detected bandwith {bandwith} nm and band count {len(band_list)}.")
+        bandwidth, band_list = get_leaf_bandwith_and_bandcount()
+        logging.error(f"Automatically detected bandwidth {bandwidth} nm and band count {len(band_list)}.")
         set_animation_frames(len(band_list))
-        wls, irradiances = sun.load_sun(file_name=sun_filename, bandwith=bandwith)
+        wls, irradiances = sun.load_sun(file_name=sun_filename, bandwith=bandwidth)
         logging.error(f"Spectral range from {wls[0]:.1f} nm to {wls[-1]:.1f} nm")
 
         # "Exposure": Scale values with magical constant to avoid overexposure. Tested with 10% white reflectance panel.
@@ -250,8 +250,10 @@ if __name__ == '__main__':
 
         set_sun_power_for_all(band_list, irradiances)
     except RuntimeWarning as e:
-        logging.error(f"Could not automatically detect bandwith and band count from leaf data.")
+        logging.error(f"Could not automatically detect bandwidth and band count from leaf data.")
         logging.error(e)
+
+    bpy.data.scenes["Forest"].cycles.use_denoising = False
 
     logging.error(f"Hello, I am forest setup script in '{PH.path_directory_forest_scene(scene_id)}'")
 
