@@ -4,6 +4,7 @@ __pycache__/
 .idea/
 
 # Exclude all renders, plots and Blender backups
+scenes*/*
 rend*/*
 plot*/*
 *.blend1
