@@ -3,6 +3,8 @@
 # Change "create" to "update" when updating.
 name: hb
 channels:
+  - pytorch
+  - conda-forge
   - defaults
 dependencies:
   - python=3.7
@@ -18,6 +20,9 @@ dependencies:
  # - tabulate
   - ipython
   - sphinx #API documentation
+  - pytorch
+  - torchvision
+  - torchaudio
   - pip
  # - pip:
  #     - netcdf4

@@ -23,7 +23,7 @@ if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
     # SM.train(do_points=False, num_points=50)
-    SM.fit_surface(show_plot=True, save_params=False)
+    SM.fit_nn(show_plot=False, save_params=False)
 
     # set_name = 'specchio_5nm'
     # set_name = 'surface_test_predict'
