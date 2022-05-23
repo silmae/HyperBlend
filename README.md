@@ -7,6 +7,25 @@ You can use and modify this software under MIT licence.
 Currently, HyperBlend can only simulate point-spectrometer-like spectral data. It needs 
 actual measured reflectance and transmittance data which it tries to replicate. 
 
+## How to cite
+
+If you find our work usefull in your project, please cite us:
+
+Riihiaho, K. A., Rossi, T., and Pölönen, I.: HYPERBLEND: SIMULATING SPECTRAL REFLECTANCE AND TRANSMITTANCE OF LEAF TISSUE WITH BLENDER, ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci., V-3-2022, 471–476, https://doi.org/10.5194/isprs-annals-V-3-2022-471-2022, 2022.
+
+```bibtex
+@Article{riihiaho22,
+AUTHOR = {Riihiaho, K. A. and Rossi, T. and P\"ol\"onen, I.},
+TITLE = {HYPERBLEND: SIMULATING SPECTRAL REFLECTANCE AND TRANSMITTANCE OF LEAF TISSUE WITH BLENDER},
+JOURNAL = {ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+VOLUME = {V-3-2022},
+YEAR = {2022},
+PAGES = {471--476},
+URL = {https://www.isprs-ann-photogramm-remote-sens-spatial-inf-sci.net/V-3-2022/471/2022/},
+DOI = {10.5194/isprs-annals-V-3-2022-471-2022}
+}
+```
+
 ## Installing
 
 Clone the repository to some location on your machine. Create a python environment by running 
