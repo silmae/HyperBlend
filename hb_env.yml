@@ -20,9 +20,8 @@ dependencies:
  # - tabulate
   - ipython
   - sphinx #API documentation
+  - cpuonly # disables pytorch CUDA that interferes with Blender's CUDA rendering (.dll loading errors)
   - pytorch
-  - torchvision
-  - torchaudio
   - pip
  # - pip:
  #     - netcdf4
