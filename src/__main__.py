@@ -16,25 +16,35 @@ from src.surface_model import surface_model as SM
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
 from src.data import path_handling as PH
-
+from src.surface_model import neural
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
     # SM.train(do_points=False, num_points=50)
-    SM.fit_nn(show_plot=False, save_params=False)
+    # neural.fit_nn(show_plot=False, save_params=False, epochs=150)
+    # ad, sd, ai, mf = neural.predict_nn([0.2,0.3], [0.24,0.27])
+    # print(ad)
+    # print(sd)
+    # print(ai)
+    # print(mf)
 
-    # set_name = 'specchio_5nm'
-    # set_name = 'surface_test_predict'
-    # # FH.clear_folder(PH.path_directory_subresult(set_name, 0))
-    # o = Optimization(set_name)
+    # duh = Duh()
+    # duh.call_stuff()
+
+
+    set_name = 'specchio_surface'
+    # set_name = 'surface_test_predict_2'
+
+    # FH.clear_folder(PH.path_directory_subresult(set_name, 0))
+    o = Optimization(set_name)
     # wls,r,t = prospect.get_default_prospect_leaf()
     # diff = r-t
     # max_diff = diff.max()
     # print(f'max difference of r and t = {max_diff}')
     # SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-    # o.run_optimization(resolution=20, use_threads=True, prediction_method='surface')
+    o.run_optimization(resolution=5, use_threads=True, prediction_method='surface')
 
     # # Test the software with hard coded data.
     # presets.optimize_default_target(spectral_resolution=50)
