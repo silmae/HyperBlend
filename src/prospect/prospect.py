@@ -33,11 +33,10 @@ from src.utils import spectra_utils as SU
 from src.optimization import Optimization
 import logging
 from src.data import file_handling as FH
+from src.data import toml_handling as TH
+from src.data import path_handling as PH
 
 prospect_set_name = 'prospect_randoms'
-
-
-# TODO save prospect parameter dictionary
 
 
 def run_prospect_randoms_simulation():
@@ -51,12 +50,12 @@ def make_random_leaf_targets(count=1, resolution=5):
 
     for i in range(count):
         wls, r, t, p_dict = run_prospect_random()
-        dict_hash = p_dict_to_hash(p_dict)
-        logging.info(f"Generating random leaf data with prospect hash '{dict_hash}'.")
+        logging.info(f"Generating random leaf data with prospect.")
+        SU._make_target(prospect_set_name, wls=wls, r_m=r, t_m=t, sample_id=i) # sample directories are now created
+        dict_dir = PH.path_directory_sample(prospect_set_name, sample_id=i)
+        dict_name = f'prospect_params_{i}'
+        TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
 
-        # if not os.path.exists(PH.path_directory_set_result(set_name)):
-        SU._make_target(prospect_set_name, wls=wls, r_m=r, t_m=t, sample_id=i)
-        # o.run_optimization(resolution=resolution, prediction_method='nn')
 
 
 def run_prospect(n, ab, ar, brown, w, m, ant):
@@ -85,14 +84,21 @@ def run_prospect(n, ab, ar, brown, w, m, ant):
 
 
 def run_prospect_random():
+
+    def get_val(center, range):
+        div = 10
+        res = np.random.normal(loc=center, scale=(range[1] - range[0]) / div)
+        res = np.clip(res, range[0], range[1])
+        return res
+
     p_dict = get_prospect_params(
-        n=      np.random.uniform(low=p_range_dict["n_range"][0], high=p_range_dict["n_range"][1]),
-        ab=     np.random.uniform(low=p_range_dict["ab_range"][0], high=p_range_dict["ab_range"][1]),
-        ar=     np.random.uniform(low=p_range_dict["ar_range"][0], high=p_range_dict["ar_range"][1]),
-        brown=  np.random.uniform(low=p_range_dict["brown_range"][0], high=p_range_dict["brown_range"][1]),
-        w=      np.random.uniform(low=p_range_dict["w_range"][0], high=p_range_dict["w_range"][1]),
-        m=      np.random.uniform(low=p_range_dict["m_range"][0], high=p_range_dict["m_range"][1]),
-        ant=    np.random.uniform(low=p_range_dict["ant_range"][0], high=p_range_dict["ant_range"][1]),
+        n       = get_val(p_default_dict["n"], p_range_dict["n_range"]),
+        ab      = get_val(p_default_dict["ab"], p_range_dict["ab_range"]),
+        ar      = get_val(p_default_dict["ar"], p_range_dict["ar_range"]),
+        brown   = get_val(p_default_dict["brown"], p_range_dict["brown_range"]),
+        w       = get_val(p_default_dict["w"], p_range_dict["w_range"]),
+        m       = get_val(p_default_dict["m"], p_range_dict["m_range"]),
+        ant     = get_val(p_default_dict["ant"], p_range_dict["ant_range"]),
     )
     wls, r, t = run_prospect_with_dict(p_dict)
     return wls, r, t, p_dict
