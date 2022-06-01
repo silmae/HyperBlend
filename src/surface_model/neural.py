@@ -23,7 +23,7 @@ from src import constants as C
 
 set_name = 'surface_train' # use same set name as surface_model
 
-model_path = PH.join(PH.path_directory_surface_model(), "surface_nn.pt")
+model_path = PH.join(PH.path_directory_surface_model(), "nn_default.pt")
 
 class Net(nn.Module):
 
