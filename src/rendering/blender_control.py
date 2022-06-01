@@ -12,9 +12,20 @@ import logging
 from src import constants as C
 
 
+def check_blender_executable():
+    bpath = C.blender_executable_path_win
+    if not platform.startswith('win'):
+        bpath = C.blender_executable_path_linux
+    if not os.path.exists(bpath):
+        raise FileNotFoundError(f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
+                                f"Check Blender installation and set correct path to 'constants.py'. ")
+
+
 def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
     """This is mainly an utility function to plot a full wavelength series once the parameters are found."""
+
+    check_blender_executable()
 
     bpath = C.blender_executable_path_win
     if not platform.startswith('win'):
@@ -100,6 +111,8 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
     :return:
         None
     """
+
+    check_blender_executable()
 
     bpath = C.blender_executable_path_win
     if not platform.startswith('win'):
