@@ -22,8 +22,20 @@ if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    # SM.train(do_points=False, num_points=50)
-    # neural.fit_nn(show_plot=False, save_params=False, epochs=150)
+    # Train new starting guess ##########
+    # Add to readme?
+    # SU.generate_starting_guess()
+    # SU.fit_starting_guess_coefficients()
+    #############################
+
+    # ########## Show surfaces
+    # SM.fit_surface(show_plot=True, save_params=False)
+
+    # ######### REDO points and training
+    # SM.train(do_points=True, num_points=150)
+    # neural.fit_nn(show_plot=True, save_params=True, epochs=150)
+    ###################
+
     # ad, sd, ai, mf = neural.predict_nn([0.2,0.3], [0.24,0.27])
     # print(ad)
     # print(sd)
@@ -39,7 +51,7 @@ if __name__ == '__main__':
     # print(np.max(r_diff))
     # print(np.max(t_diff))
 
-    # prospect.make_random_leaf_targets(count=3)
+    prospect.make_random_leaf_targets(count=10)
     prospect.run_prospect_randoms_simulation()
 
 

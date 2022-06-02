@@ -18,6 +18,42 @@ from src import plotter
 
 set_name = 'surface_train'
 
+# These special functions are for testing just the high absorption where most problems are.
+def train_special(do_points=True, num_points=50):
+    """Train surface model."""
+    if do_points:
+        generate_train_data_special(num_points)
+        o = Optimization(set_name)
+        o.run_optimization(prediction_method='optimization')
+    fit_surface(show_plot=False, save_params=True)
+
+
+def generate_train_data_special(num_points=10):
+    """Generate reflectance-transmittance pairs for surface fitting.
+
+    Generated data is saved to disk to be used in optimization.
+    """
+
+    data = []
+    fake_wl = 1 # Set dummy wavelengths so that the rest of the code is ok with the files
+    for i,r in enumerate(np.linspace(0, 0.6, num_points, endpoint=True)):
+        for j,t in enumerate(np.linspace(0, 0.6, num_points, endpoint=True)):
+            # Do not allow r+t to exceed 1 as it would break conservation of energy
+            if r + t >= 0.999999:
+                continue
+            # ensure some amount of symmetry
+            if math.fabs(r-t) > 0.1:
+                continue
+            # For this special function only
+            if r > 0.1 or t > 0.1:
+                break
+
+            wlrt = [fake_wl, r, t]
+            data.append(wlrt)
+            fake_wl += 1
+    logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance pairs.")
+    TH.write_target(set_name, data, sample_id=0)
+
 
 def train(do_points=True, num_points=50):
     """Train surface model."""

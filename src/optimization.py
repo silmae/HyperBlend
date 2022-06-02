@@ -23,7 +23,7 @@ from src.surface_model import fitting_function as FF
 from src.surface_model import neural
 
 
-hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
+hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
 """This should be used only if the starting guess based on polynomial fitting is not available. 
  Will produce worse results and is slower. """
 
@@ -103,6 +103,16 @@ def build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, m
     return sample_result_dict
 
 
+def convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw, density_scale):
+    """Convert machine learning parameters [0,1] to rendering parameters (scaling and re-centering."""
+
+    ad = ad_raw * density_scale
+    sd = sd_raw * density_scale
+    ai = np.clip((ai_raw - 0.5) * 2, 0., 1.)
+    mf = mf_raw
+    return ad, sd, ai, mf
+
+
 class Optimization:
     """
         Optimization class runs a least squares optimization of the HyperBlend leaf spectral model
@@ -146,7 +156,7 @@ class Optimization:
         self.bounds = (LOWER_BOUND, UPPER_BOUND)
         # Control how much density variables (absorption and scattering density) are scaled for rendering. Value of 100 cannot
         # produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
-        self.density_scale = 300
+        self.density_scale = 3000
 
         # Verbosity levels 0, 1 or 2
         self.optimizer_verbosity = 2
@@ -166,14 +176,6 @@ class Optimization:
             FH.clear_rend_refs(self.set_name, sample_id)
             if clear_wl_results:
                 FH.clear_folder(P.path_directory_subresult(self.set_name, sample_id))
-
-    def connvert_raw_params_to_renderable(self, ad_raw, sd_raw, ai_raw, mf_raw):
-
-        ad = ad_raw * self.density_scale
-        sd = sd_raw * self.density_scale
-        ai = np.clip(ai_raw - 0.5, 0., 1.)
-        mf = mf_raw
-        return ad, sd, ai, mf
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1, prediction_method='surface'):
         """Runs the optimization for each sample in the set.
@@ -220,7 +222,7 @@ class Optimization:
                 r_m = targets[:, 1]
                 t_m = targets[:, 2]
                 ad_raw, sd_raw, ai_raw, mf_raw = get_raw_rendering_params(wls, r_m, t_m, method=prediction_method)
-                ad, sd, ai, mf = self.connvert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw)
+                ad, sd, ai, mf = convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw, self.density_scale)
                 r,t = render_to_refl_tran(self.set_name, sample_id, wls, ad, sd, ai, mf)
 
                 re = np.abs(r - r_m)
@@ -231,16 +233,6 @@ class Optimization:
                 TH.write_sample_result(self.set_name, sample_result_dict, sample_id)
                 plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
 
-                # if use_threads:
-                #     param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p) for a in targets]
-                #     with Pool() as pool:
-                #         pool.map(run_surface_model_threaded, param_list)
-                # else:
-                #     for target in targets:
-                #         wl = target[0]
-                #         r_m = target[1]
-                #         t_m = target[2]
-                #         run_surface_model_wl(wl, r_m, t_m, self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p)
 
             elif prediction_method == 'optimization':
 
@@ -259,11 +251,6 @@ class Optimization:
                                self.ftol, self.xtol, self.bounds, self.density_scale, self.optimizer_verbosity,
                                use_basin_hopping, sample_id, self.ftol_abs, self.use_hard_coded_starting_guess)
 
-            elif prediction_method == 'nn':
-                start = time.perf_counter()
-                wls = targets[:, 0]
-                r_m = targets[:, 1]
-                t_m = targets[:, 2]
             else:
                 raise RuntimeError(f'Prediction method "{prediction_method}" not recognized.')
 
@@ -291,6 +278,7 @@ def optimize_series(args): # TODO change the name to render_series() or somethin
     B.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),wl=wls,ad=ad,
                                     sd=sd,ai=ai,mf=mf,clear_rend_folder=False,clear_references=False,
                                     render_references=True,dry_run=False)
+
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""
@@ -330,15 +318,13 @@ def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, densi
 
     ad = np.clip(FF.function_exp(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
     sd = np.clip(FF.function_log(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
-    ai = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p) - 0.5, 0.0, 1.0)
+    ai = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
     mf = np.clip(FF.function_free(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
 
+    ad, sd, ai, mf = convert_raw_params_to_renderable(ad, sd, ai, mf, density_scale=density_scale)
+
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
-                        wl=wl,
-                        ad=ad * density_scale,
-                        sd=sd * density_scale,
-                        ai=ai,
-                        mf=mf,
+                        wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=True,
@@ -447,12 +433,10 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     def f(x):
         """Function to be minimized F = sum(d_i²)."""
 
+        ad, sd, ai, mf = convert_raw_params_to_renderable(x[0], x[1], x[2], x[3], density_scale=density_scale)
+
         B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
-                            wl=wl,
-                            ad=x[0] * density_scale,
-                            sd=x[1] * density_scale,
-                            ai=x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
-                            mf=x[3],
+                            wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                             clear_rend_folder=False,
                             clear_references=False,
                             render_references=False,
@@ -540,17 +524,15 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     elapsed = time.perf_counter() - start
 
+    ad, sd, ai, mf = convert_raw_params_to_renderable(res.x[0], res.x[1], res.x[2], res.x[3], density_scale=density_scale)
     # Render one more time with best values (in case it was not the last run)
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
-                        wl=wl,
-                        ad=res.x[0] * density_scale,
-                        sd=res.x[1] * density_scale,
-                        ai=res.x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
-                        mf=res.x[3],
+                        wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=False,
                         dry_run=False)
+
     r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
     t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
 
