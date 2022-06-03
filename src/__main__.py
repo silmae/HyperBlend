@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # SM.fit_surface(show_plot=True, save_params=False)
 
     # ######### REDO points and training
-    # SM.train(do_points=True, num_points=150)
+    SM.train(do_points=True, num_points=80)
     # neural.fit_nn(show_plot=True, save_params=True, epochs=150)
     ###################
 

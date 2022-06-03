@@ -72,8 +72,11 @@ def generate_train_data(num_points=10):
 
     data = []
     fake_wl = 1 # Set dummy wavelengths so that the rest of the code is ok with the files
-    for i,r in enumerate(np.linspace(0, 0.6, num_points, endpoint=True)):
-        for j,t in enumerate(np.linspace(0, 0.6, num_points, endpoint=True)):
+    R = np.linspace(0, 0.6, num_points, endpoint=True)
+    T = np.linspace(0, 0.6, num_points, endpoint=True)
+    half_dist = (R[1] - R[0]) / 2 # for generating more points to cutoff areas
+    for i,r in enumerate(R):
+        for j,t in enumerate(T):
             # Do not allow r+t to exceed 1 as it would break conservation of energy
             if r + t >= 0.999999:
                 continue
@@ -81,9 +84,21 @@ def generate_train_data(num_points=10):
             if math.fabs(r-t) > 0.1:
                 continue
 
+            # normal case
             wlrt = [fake_wl, r, t]
             data.append(wlrt)
             fake_wl += 1
+
+            # generate 3 extra points to cutoff area
+            if t < 0.1 or t > 0.4 or r < 0.1 or r > 0.4:
+                data.append([fake_wl, r+half_dist, t])
+                fake_wl += 1
+                data.append([fake_wl, r, t + half_dist])
+                fake_wl += 1
+                data.append([fake_wl, r + half_dist, t + half_dist])
+                fake_wl += 1
+
+
     logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance pairs.")
     TH.write_target(set_name, data, sample_id=0)
 
