@@ -31,9 +31,9 @@ if __name__ == '__main__':
     # ########## Show surfaces
     # SM.fit_surface(show_plot=True, save_params=False)
 
-    # ######### REDO points and training
-    SM.train(do_points=True, num_points=80)
-    # neural.fit_nn(show_plot=True, save_params=True, epochs=150)
+    # ######### REDO points and NN training
+    # SM.train(do_points=True, num_points=80)
+    neural.fit_nn(show_plot=True, save_params=True, epochs=300)
     ###################
 
     # ad, sd, ai, mf = neural.predict_nn([0.2,0.3], [0.24,0.27])
@@ -51,11 +51,41 @@ if __name__ == '__main__':
     # print(np.max(r_diff))
     # print(np.max(t_diff))
 
-    prospect.make_random_leaf_targets(count=10)
-    prospect.run_prospect_randoms_simulation()
+    # prospect.make_random_leaf_targets(count=100)
+    # prospect.run_prospect_randoms_simulation()
 
+    # set_name = 'specchio_surf'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='surface')
+    #
+    # set_name = 'specchio_nn'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+    #
+    # set_name = 'specchio_opt'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='optimization')
 
-    # set_name = 'specchio_surface'
+    # set_name = 'specchio_nn_8layer_300epoch'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    # set_name = 'specchio_nn_8layer_early_stop'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    # set_name = 'specchio_nn_8layer_8batch'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    # set_name = 'specchio_nn_8layer_64batch'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    set_name = 'specchio_nn_8layer_16batch'
+    o = Optimization(set_name)
+    o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
     # set_name = 'surface_test_predict_2'
 
     # FH.clear_folder(PH.path_directory_subresult(set_name, 0))
