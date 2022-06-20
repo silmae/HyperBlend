@@ -19,6 +19,7 @@ import torch.optim as optim
 from src.data import path_handling as PH
 from src.data import toml_handling as TH
 from src import constants as C
+from src import plotter
 
 
 set_name = 'surface_train' # use same set name as surface_model
@@ -33,8 +34,8 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(16, 64)
         self.fc3 = nn.Linear(64, 512)
 
-        # self.fc31 = nn.Linear(512, 2048)
-        # self.fc32 = nn.Linear(2048, 512)
+        self.fc31 = nn.Linear(512, 2048)
+        self.fc32 = nn.Linear(2048, 512)
 
         self.fc4 = nn.Linear(512, 64)
         self.fc5 = nn.Linear(64, 16)
@@ -52,8 +53,8 @@ class Net(nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
 
-        # x = F.relu(self.fc31(x))
-        # x = F.relu(self.fc32(x))
+        x = F.relu(self.fc31(x))
+        x = F.relu(self.fc32(x))
 
         x = F.relu(self.fc4(x))
         x = F.relu(self.fc5(x))
@@ -118,11 +119,12 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
 
 
     whole_data = CustomDataset()
-    test_n = 50
+    test_n = 512
+    batch_size = 16
     train_set, test_set = random_split(whole_data, [len(whole_data)-test_n, test_n])
 
-    train_loader = DataLoader(train_set, batch_size=32, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=32, shuffle=True)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 
 
     net = Net()
@@ -139,6 +141,9 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
 
     n_epochs = epochs
     best_loss = 1e10
+    best_epoch_idx = None
+    patience = 30
+    patience_trigger = 0
 
     for epoch in range(n_epochs):
 
@@ -162,21 +167,33 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
             test_loss = criterion(z, y_test)
 
         test_losses.append(test_loss.item())
+
+        logging.info(f"Epoch {epoch}: losses {loss.item():.6f} - {test_loss.item():.6f} (train - test)")
+
         if test_loss < best_loss:
             best_loss = test_loss
+            best_epoch_idx = epoch
+            patience_trigger = 0
             save(net, model_path)
-            logging.info(f"Saved model with loss {best_loss:.6f}")
+            logging.info(f"Saved model with test loss {best_loss:.6f} epoch {epoch}")
+        else:
+            patience_trigger += 1
+
+        if patience_trigger >= patience:
+            logging.info(f"Early stopping criteria met: no improvement in test loss in {patience} epochs.")
+            break
 
             # _, yhat = torch.max(z.data, 1)
             # correct += (yhat == y_test).sum().item()
         # accuracy = correct / test_n
         # accuracy_list.append(accuracy)
 
-    import matplotlib.pyplot as plt
-    plt.plot(train_losses, label="Train loss")
-    plt.plot(test_losses, label="Test loss")
-    plt.legend()
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # plt.plot(train_losses, label="Train loss")
+    # plt.plot(test_losses, label="Test loss")
+    # plt.legend()
+    # plt.show()
+    plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx, save_thumbnail=True, dont_show=not show_plot)
 
     print(train_losses)
 
