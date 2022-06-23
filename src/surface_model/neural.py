@@ -111,21 +111,13 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
     :param save_params:
     """
 
-    # ids = FH.list_finished_sample_ids(set_name)
-    # for _, sample_id in enumerate(ids):
-
-#     something something
-
-
-
     whole_data = CustomDataset()
-    test_n = 512
+    test_n = int(len(whole_data) * 0.2)
     batch_size = 16
     train_set, test_set = random_split(whole_data, [len(whole_data)-test_n, test_n])
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
-
 
     net = Net()
     net = net.double()
@@ -142,7 +134,7 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
     n_epochs = epochs
     best_loss = 1e10
     best_epoch_idx = None
-    patience = 30
+    patience = 50
     patience_trigger = 0
 
     for epoch in range(n_epochs):
