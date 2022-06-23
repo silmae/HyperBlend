@@ -89,14 +89,21 @@ def generate_train_data(num_points=10):
             data.append(wlrt)
             fake_wl += 1
 
+            # TODO remove. This probably introduces bias
             # generate 3 extra points to cutoff area
-            if t < 0.1 or t > 0.4 or r < 0.1 or r > 0.4:
-                data.append([fake_wl, r+half_dist, t])
-                fake_wl += 1
-                data.append([fake_wl, r, t + half_dist])
-                fake_wl += 1
-                data.append([fake_wl, r + half_dist, t + half_dist])
-                fake_wl += 1
+            # if t < 0.1 or t > 0.4 or r < 0.1 or r > 0.4:
+            #     data.append([fake_wl, r+half_dist, t])
+            #     fake_wl += 1
+            #     data.append([fake_wl, r, t + half_dist])
+            #     fake_wl += 1
+            #     data.append([fake_wl, r + half_dist, t + half_dist])
+            #     fake_wl += 1
+
+    # rr = list(a for (_,a,_) in data)
+    # tt = list(a for (_,_,a) in data)
+    # import matplotlib.pyplot as plt
+    # plt.scatter(rr,tt, alpha=0.5)
+    # plt.show()
 
 
     logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance pairs.")
@@ -168,13 +175,11 @@ def fit_surface(show_plot=False, save_params=False):
 
             parameters, _ = curve_fit(fittable, [r, t], variable, p0=FF.get_x0())
             result_dict[variable_names[i]] = parameters
-            if show_plot:
-                plotter.plot_3d_rt(r,t,variable,zlabel,z_intensity=None,surface_parameters=parameters,fittable=fittable)
+            plotter.plot_3d_rt(r,t,variable,zlabel,z_intensity=None,surface_parameters=parameters,fittable=fittable, save_thumbnail=True, show_plot=show_plot)
         except RuntimeError as re:
             logging.error(f'Failed to fit for parameter {variable_names[i]}')
-            if show_plot:
-                plotter.plot_3d_rt(r, t, variable, zlabel)
-                failed = True
+            plotter.plot_3d_rt(r, t, variable, zlabel, save_thumbnail=False, show_plot=show_plot)
+            failed = True
 
     if not failed:
         if save_params:
