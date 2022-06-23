@@ -20,7 +20,8 @@ from src.surface_model import neural
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
-    logging.basicConfig(stream=sys.stdout, level='INFO')
+    # logging.basicConfig(stream=sys.stdout, level='INFO')
+    logging.basicConfig(filename="hb.log", level='INFO', format='%(asctime)s %(message)s', filemode='w')
 
     # Train new starting guess ##########
     # Add to readme?
@@ -32,8 +33,8 @@ if __name__ == '__main__':
     # SM.fit_surface(show_plot=True, save_params=False)
 
     # ######### REDO points and NN training
-    # SM.train(do_points=True, num_points=80)
-    neural.fit_nn(show_plot=True, save_params=True, epochs=300)
+    SM.train(do_points=True, num_points=200)
+    neural.fit_nn(show_plot=False, save_params=True, epochs=300)
     ###################
 
     # ad, sd, ai, mf = neural.predict_nn([0.2,0.3], [0.24,0.27])
@@ -82,9 +83,17 @@ if __name__ == '__main__':
     # o = Optimization(set_name)
     # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
 
-    set_name = 'specchio_nn_8layer_16batch'
+    # set_name = 'specchio_nn_8layer_16batch'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    set_name = 'specchio_nn_10k_points'
     o = Optimization(set_name)
     o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    set_name = 'specchio_surface_10k_points'
+    o = Optimization(set_name)
+    o.run_optimization(resolution=5, use_threads=True, prediction_method='surface')
 
     # set_name = 'surface_test_predict_2'
 
