@@ -76,7 +76,6 @@ def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=
         image_name = f"{z_label}.png"
         path = P.join(folder, image_name)
         logging.info(f"Saving surface plot to '{path}'.")
-        plt.tight_layout()
         plt.savefig(path, dpi=300)
 
     plt.show()
