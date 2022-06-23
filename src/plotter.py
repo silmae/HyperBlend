@@ -49,13 +49,15 @@ max_ticks = 8
 image_type = 'png'
 
 
-def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=None):
+def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=None,save_thumbnail=True,show_plot=False):
     # setup figure object
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize_single)
     ax = plt.axes(projection="3d")
     ax.set_xlabel('R')
     ax.set_ylabel('T')
     ax.set_zlabel(z_label)
+    ax.elev = 30
+    ax.azim = 225
     num_points = 25
     R, T = np.meshgrid(np.linspace(0, max(r), num_points), np.linspace(0, max(t), num_points))
 
@@ -68,6 +70,15 @@ def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=
     if surface_parameters is not None:
         Z = fittable(np.array([R, T]), *surface_parameters)
         ax.plot_surface(R, T, Z, alpha=0.5)
+
+    if save_thumbnail:
+        folder = P.path_directory_surface_model()
+        image_name = f"{z_label}.png"
+        path = P.join(folder, image_name)
+        logging.info(f"Saving surface plot to '{path}'.")
+        plt.tight_layout()
+        plt.savefig(path, dpi=300)
+
     plt.show()
 
 
