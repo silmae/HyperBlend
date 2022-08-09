@@ -11,6 +11,7 @@ plot*/*
 optimization/*
 measured_data/*
 blender_test_run/*
+log*/* 
 
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
