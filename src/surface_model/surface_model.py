@@ -15,6 +15,8 @@ from src import constants as C
 from src.optimization import Optimization
 from src.surface_model import fitting_function as FF
 from src import plotter
+from src.surface_model import neural
+from src.surface_model import surface_model_shared as shared
 
 set_name = 'surface_train'
 
@@ -55,16 +57,16 @@ def generate_train_data_special(num_points=10):
     TH.write_target(set_name, data, sample_id=0)
 
 
-def train(do_points=True, num_points=50):
+def train(do_points=True, num_points=50, maxdiff_rt=0.4):
     """Train surface model."""
     if do_points:
-        generate_train_data(num_points)
+        generate_train_data(num_points, maxdiff_rt=maxdiff_rt)
         o = Optimization(set_name)
         o.run_optimization(prediction_method='optimization')
     fit_surface(show_plot=False, save_params=True)
 
 
-def generate_train_data(num_points=10):
+def generate_train_data(num_points=10, maxdiff_rt=0.4):
     """Generate reflectance-transmittance pairs for surface fitting.
 
     Generated data is saved to disk to be used in optimization.
@@ -72,16 +74,16 @@ def generate_train_data(num_points=10):
 
     data = []
     fake_wl = 1 # Set dummy wavelengths so that the rest of the code is ok with the files
-    R = np.linspace(0, 0.6, num_points, endpoint=True)
-    T = np.linspace(0, 0.6, num_points, endpoint=True)
+    R = np.linspace(0, 1.0, num_points, endpoint=True)
+    T = np.linspace(0, 1.0, num_points, endpoint=True)
     half_dist = (R[1] - R[0]) / 2 # for generating more points to cutoff areas
     for i,r in enumerate(R):
         for j,t in enumerate(T):
             # Do not allow r+t to exceed 1 as it would break conservation of energy
-            if r + t >= 0.999999:
+            if not r + t < 1.0:
                 continue
             # ensure some amount of symmetry
-            if math.fabs(r-t) > 0.1:
+            if math.fabs(r-t) > maxdiff_rt:
                 continue
 
             # normal case
@@ -118,39 +120,52 @@ def generate_train_data(num_points=10):
 #         fit_surface(show_plot=show_plot, save_params=save_params)
 
 
-def fit_surface(show_plot=False, save_params=False):
+def fit_surface(show_plot=False, save_params=False, plot_data_as_surface=False,  show_nn=True):
     """Fit surfaces.
 
     Surface fitting parameters written to disk and plots shown if show_plot=True.
+    :param plot_data_as_surface:
     :param save_params:
     """
     # ids = FH.list_finished_sample_ids(set_name)
     # for _, sample_id in enumerate(ids):
     result = TH.read_sample_result(set_name, sample_id=0)
-    ad = np.array(result[C.key_sample_result_ad])
-    sd = np.array(result[C.key_sample_result_sd])
-    ai = np.array(result[C.key_sample_result_ai])
-    mf = np.array(result[C.key_sample_result_mf])
+    if show_nn:
+        rm = np.array(result[C.key_sample_result_rm])
+        tm = np.array(result[C.key_sample_result_tm])
+        ad, sd, ai, mf = neural.predict_nn(rm, tm)
+    else:
+        ad = np.array(result[C.key_sample_result_ad])
+        sd = np.array(result[C.key_sample_result_sd])
+        ai = np.array(result[C.key_sample_result_ai])
+        mf = np.array(result[C.key_sample_result_mf])
+
     r  = np.array(result[C.key_sample_result_r])
     t  = np.array(result[C.key_sample_result_t])
     re = np.array(result[C.key_sample_result_re])
     te = np.array(result[C.key_sample_result_te])
 
-    max_error = 0.01
-    low_cut = 0.0
-    bad = [(a > max_error or b > max_error) for a,b in zip(re, te)]
-    # bad = np.where(bad)[0]
-    low_cut = [(a < low_cut or b < low_cut) for a,b in zip(r, t)]
-    to_delete = np.logical_or(bad, low_cut)
-    # to_delete = bad
+    # max_error = 0.01
+    # low_cut = 0.0
+    # bad = [(a > max_error or b > max_error) for a,b in zip(re, te)]
+    # # bad = np.where(bad)[0]
+    # low_cut = [(a < low_cut or b < low_cut) for a,b in zip(r, t)]
+    # to_delete = np.logical_or(bad, low_cut)
+    # # to_delete = bad
+    #
+    # logging.info(f"Initial point count {len(ad)} for surface fitting.")
+    # to_delete = np.where(to_delete)[0]
+    # ad = np.delete(ad, to_delete)
+    # sd = np.delete(sd, to_delete)
+    # ai = np.delete(ai, to_delete)
+    # mf = np.delete(mf, to_delete)
+    # r  = np.delete(r , to_delete)
+    # t  = np.delete(t , to_delete)
+    #
+    # logging.info(f"Pruned {len(to_delete)} points because exceeding error threshold {max_error}.")
+    # logging.info(f"Point count after pruning {len(ad)}.")
 
-    to_delete = np.where(to_delete)[0]
-    ad = np.delete(ad, to_delete)
-    sd = np.delete(sd, to_delete)
-    ai = np.delete(ai, to_delete)
-    mf = np.delete(mf, to_delete)
-    r  = np.delete(r , to_delete)
-    t  = np.delete(t , to_delete)
+    ad, sd, ai, mf, r, t = shared.get_training_data(ad, sd, ai, mf, r, t, re, te, pruned=True)
 
     variable_lol = [ad, sd, ai, mf]
     variable_names = ['ad', 'sd', 'ai', 'mf']
@@ -175,7 +190,12 @@ def fit_surface(show_plot=False, save_params=False):
 
             parameters, _ = curve_fit(fittable, [r, t], variable, p0=FF.get_x0())
             result_dict[variable_names[i]] = parameters
-            plotter.plot_3d_rt(r,t,variable,zlabel,z_intensity=None,surface_parameters=parameters,fittable=fittable, save_thumbnail=True, show_plot=show_plot)
+            plotter.plot_3d_rt(r, t, variable, zlabel, z_intensity=None, surface_parameters=parameters,
+                               fittable=fittable, save_thumbnail=True, show_plot=show_plot,
+                               plot_data_as_surface=plot_data_as_surface)
+
+
+
         except RuntimeError as re:
             logging.error(f'Failed to fit for parameter {variable_names[i]}')
             plotter.plot_3d_rt(r, t, variable, zlabel, save_thumbnail=False, show_plot=show_plot)
