@@ -6,6 +6,8 @@ and run in IDE.
 """
 
 import logging
+import os.path
+import datetime
 
 import sys
 import numpy as np
@@ -16,12 +18,45 @@ from src.surface_model import surface_model as SM
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
 from src.data import path_handling as PH
+from src.data import toml_handling as TH
 from src.surface_model import neural
+from src import plotter
+
+from src.surface_model import surface_model_shared as shared
+
+def maxdiff(set_name="prospect_randoms"):
+
+    # Find maximum r t difference of sample.
+    res = TH.read_sample_result(set_name, 0)
+    r = np.array(res['refls_modeled'])
+    t = np.array(res['trans_modeled'])
+    diff = np.abs(r-t)
+    print(f"max diff : {diff.max()}")
+
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
-    logging.basicConfig(filename="hb.log", level='INFO', format='%(asctime)s %(message)s', filemode='w')
+    path_dir_logs = "../log"
+    if not os.path.exists(path_dir_logs):
+        os.makedirs(path_dir_logs)
+
+    log_identifier = str(datetime.datetime.now())
+    log_identifier = log_identifier.replace(' ', '_')
+    log_identifier = log_identifier.replace(':', '')
+    log_identifier = log_identifier.replace('.', '')
+
+    log_file_name = f"{log_identifier}.log"
+    log_path = PH.join(path_dir_logs, log_file_name)
+    logging.basicConfig(level='INFO', format='%(asctime)s %(message)s',
+                        handlers=[
+                            logging.FileHandler(log_path, mode='w'),
+                            logging.StreamHandler()
+                        ])
+
+    # plotter.plot_set_result("surface_train", dont_show=False, save_thumbnail=False)
+
+    # shared.visualize_training_data_pruning(set_name = "surface_train_good_airange05")
 
     # Train new starting guess ##########
     # Add to readme?
@@ -30,11 +65,12 @@ if __name__ == '__main__':
     #############################
 
     # ########## Show surfaces
-    # SM.fit_surface(show_plot=True, save_params=False)
+    # SM.fit_surface(show_plot=True, save_params=True, plot_data_as_surface=False,  show_nn=False)
+    SM.fit_surface(show_plot=True, save_params=False, plot_data_as_surface=False,  show_nn=True)
 
     # ######### REDO points and NN training
-    SM.train(do_points=True, num_points=200)
-    neural.fit_nn(show_plot=False, save_params=True, epochs=300)
+    # SM.train(do_points=True, num_points=20, maxdiff_rt=0.25)
+    # neural.fit_nn(show_plot=True, save_params=True, epochs=300, batch_size=8, learning_rate=0.0004, split=0.2, patience=30)
     ###################
 
     # ad, sd, ai, mf = neural.predict_nn([0.2,0.3], [0.24,0.27])
@@ -87,13 +123,23 @@ if __name__ == '__main__':
     # o = Optimization(set_name)
     # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
 
-    set_name = 'specchio_nn_10k_points'
-    o = Optimization(set_name)
-    o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+    # set_name = 'specchio_nn_10k_points'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
 
-    set_name = 'specchio_surface_10k_points'
-    o = Optimization(set_name)
-    o.run_optimization(resolution=5, use_threads=True, prediction_method='surface')
+    # set_name = 'specchio_nn_smallnet_2batch'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    # set_name = 'specchio_nn_smallnet_2batch_newstuff'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='nn')
+
+    # set_name = 'specchio_surface_10k_points'
+    # o = Optimization(set_name)
+    # o.run_optimization(resolution=5, use_threads=True, prediction_method='surface')
+
+
 
     # set_name = 'surface_test_predict_2'
 
