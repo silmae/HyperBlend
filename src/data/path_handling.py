@@ -45,12 +45,19 @@ def path_directory_optimization() -> str:
 
 
 def path_directory_surface_model() -> str:
-    """Path to top level optimization root folder.
+    """Path to surface model directory
+     where surface model parameters and neural networks is stored.
 
-    'project_root/optimization'
+    If the directory does not exist, it is created.
+
+    'project_root/surface_model'
     """
 
     p = os.path.abspath(C.path_project_root + '/' + C.folder_surface_model)
+
+    if not os.path.exists(p):
+        os.makedirs(p)
+
     return p
 
 
