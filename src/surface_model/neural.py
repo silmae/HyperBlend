@@ -20,6 +20,7 @@ from src.data import path_handling as PH
 from src.data import toml_handling as TH
 from src import constants as C
 from src import plotter
+from src.surface_model import surface_model_shared as shared
 
 
 set_name = 'surface_train' # use same set name as surface_model
@@ -29,17 +30,18 @@ model_path = PH.join(PH.path_directory_surface_model(), "nn_default.pt")
 class Net(nn.Module):
 
     def __init__(self):
+        l_width = 256
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(2, 16)  # 5*5 from image dimension
-        self.fc2 = nn.Linear(16, 64)
-        self.fc3 = nn.Linear(64, 512)
+        self.fc1 = nn.Linear(2, l_width)
+        self.fc2 = nn.Linear(l_width, l_width)
+        self.fc3 = nn.Linear(l_width, l_width)
 
-        self.fc31 = nn.Linear(512, 2048)
-        self.fc32 = nn.Linear(2048, 512)
+        self.fc31 = nn.Linear(l_width, l_width)
+        self.fc32 = nn.Linear(l_width, l_width)
 
-        self.fc4 = nn.Linear(512, 64)
-        self.fc5 = nn.Linear(64, 16)
-        self.fc6 = nn.Linear(16, 4)
+        self.fc4 = nn.Linear(l_width, l_width)
+        self.fc5 = nn.Linear(l_width, l_width)
+        self.fc6 = nn.Linear(l_width, 4)
 
         # nn.init.xavier_normal_(self.fc1.weight)
         # nn.init.xavier_normal_(self.fc2.weight)
@@ -75,21 +77,30 @@ class CustomDataset(Dataset):
         re = np.array(result[C.key_sample_result_re])
         te = np.array(result[C.key_sample_result_te])
 
-        max_error = 0.01
-        low_cut = 0.0
-        bad = [(a > max_error or b > max_error) for a, b in zip(re, te)]
-        # bad = np.where(bad)[0]
-        low_cut = [(a < low_cut or b < low_cut) for a, b in zip(r, t)]
-        to_delete = np.logical_or(bad, low_cut)
-        # to_delete = bad
+        # max_error = 0.01
+        # low_cut = 0.0
+        # bad = [(a > max_error or b > max_error) for a, b in zip(re, te)]
+        # # bad = np.where(bad)[0]
+        # low_cut = [(a < low_cut or b < low_cut) for a, b in zip(r, t)]
+        # to_delete = np.logical_or(bad, low_cut)
+        #
+        #
+        # # to_delete = bad
+        #
+        # logging.info(f"Initial point count {len(ad)} for training nn.")
+        #
+        # to_delete = np.where(to_delete)[0]
+        # ad = np.delete(ad, to_delete)
+        # sd = np.delete(sd, to_delete)
+        # ai = np.delete(ai, to_delete)
+        # mf = np.delete(mf, to_delete)
+        # r = np.delete(r, to_delete)
+        # t = np.delete(t, to_delete)
+        #
+        # logging.info(f"Pruned {len(to_delete)} points because exceeding error threshold {max_error}.")
+        # logging.info(f"Point count after pruning {len(ad)}.")
 
-        to_delete = np.where(to_delete)[0]
-        ad = np.delete(ad, to_delete)
-        sd = np.delete(sd, to_delete)
-        ai = np.delete(ai, to_delete)
-        mf = np.delete(mf, to_delete)
-        r = np.delete(r, to_delete)
-        t = np.delete(t, to_delete)
+        ad, sd, ai, mf, r, t = shared.get_training_data(ad, sd, ai, mf, r, t, re, te) # NOTE this replaces the above
 
         self.X = np.column_stack((r,t))
         self.Y = np.column_stack((ad, sd, ai, mf))
@@ -104,16 +115,20 @@ class CustomDataset(Dataset):
         return self.X[idx], self.Y[idx]
 
 
-def fit_nn(show_plot=False, save_params=False, epochs=150):
+def fit_nn(show_plot=False, save_params=False, epochs=150, batch_size=16, learning_rate=0.0001, patience=20, split=0.02):
     """Fit surfaces.
 
     Surface fitting parameters written to disk and plots shown if show_plot=True.
     :param save_params:
     """
 
+
+    logging.info(f"Learning rate {learning_rate}")
+    logging.info(f"Batch size {batch_size}")
+    logging.info(f"Max epochs {epochs}")
+
     whole_data = CustomDataset()
-    test_n = int(len(whole_data) * 0.2)
-    batch_size = 16
+    test_n = int(len(whole_data) * split)
     train_set, test_set = random_split(whole_data, [len(whole_data)-test_n, test_n])
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
@@ -121,12 +136,12 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
 
     net = Net()
     net = net.double()
-    print(net)
+    logging.info(net)
 
     criterion = nn.MSELoss()
 
     # create your optimizer
-    optimizer = optim.Adam(net.parameters(), lr=0.001)
+    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
     train_losses = []
     test_losses = []
@@ -134,7 +149,6 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
     n_epochs = epochs
     best_loss = 1e10
     best_epoch_idx = None
-    patience = 50
     patience_trigger = 0
 
     for epoch in range(n_epochs):
@@ -166,8 +180,9 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
             best_loss = test_loss
             best_epoch_idx = epoch
             patience_trigger = 0
-            save(net, model_path)
-            logging.info(f"Saved model with test loss {best_loss:.6f} epoch {epoch}")
+            if save_params:
+                save(net, model_path)
+                logging.info(f"Saved model with test loss {best_loss:.6f} epoch {epoch}")
         else:
             patience_trigger += 1
 
@@ -185,9 +200,11 @@ def fit_nn(show_plot=False, save_params=False, epochs=150):
     # plt.plot(test_losses, label="Test loss")
     # plt.legend()
     # plt.show()
-    plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx, save_thumbnail=True, dont_show=not show_plot)
 
     print(train_losses)
+    logging.info(f"Neural network training finished. Final loss {best_loss}")
+    plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx, save_thumbnail=True, dont_show=not show_plot)
+
 
 
 def predict_nn(r,t):
