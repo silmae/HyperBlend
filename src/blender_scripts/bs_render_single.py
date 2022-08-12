@@ -226,11 +226,11 @@ if __name__ == '__main__':
                         help="Wavelength to be rendered. Affects only the naming of resulting image file.")
 
     parser.add_argument(key_abs_dens[0], key_abs_dens[1], dest=key_abs_dens[1], action="store", type=float,
-                        choices=Range(0.0, 1000.0),
+                        choices=Range(0.0, 3000.0),
                         required=True, help="Shader volume absorption node's density input.")
 
     parser.add_argument(key_scat_dens[0], key_scat_dens[1], dest=key_scat_dens[1], action="store", type=float,
-                        choices=Range(0.0, 1000.0),
+                        choices=Range(0.0, 3000.0),
                         required=True, help="Shader volume scattering node's density input.")
 
     parser.add_argument(key_scat_ai[0], key_scat_ai[1], dest=key_scat_ai[1], action="store", type=float, choices=Range(-1.0, 1.0),

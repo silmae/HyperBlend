@@ -2,6 +2,7 @@
 Optimization class and related methods.
 """
 
+import torch
 import math
 import time
 import logging
@@ -19,8 +20,10 @@ from src.utils import general_utils as GU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
 from src.surface_model import fitting_function as FF
+from src.surface_model import neural
 
-hard_coded_starting_guess = [0.28, 0.43, 0.77, 0.28]
+
+hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
 """This should be used only if the starting guess based on polynomial fitting is not available. 
  Will produce worse results and is slower. """
 
@@ -30,6 +33,84 @@ zero as it may cause problems in rendering. """
 
 UPPER_BOUND = [1.0, 1.0, 1.0, 1.0]
 """Upper limit of the minimization problem."""
+
+
+def render_to_refl_tran(set_name, sample_id, wls, ad, sd, ai, mf):
+
+    # Render all wavelengths in series
+    with Pool() as pool:
+        n = pool._processes
+        print(f" thread count = {n}")
+        wl_chunks = GU.chunks(wls, n)
+        ad_chunks = GU.chunks(ad, n)
+        sd_chunks = GU.chunks(sd, n)
+        ai_chunks = GU.chunks(ai, n)
+        mf_chunks = GU.chunks(mf, n)
+
+        param_list = [(set_name, sample_id, wl, ad, sd, ai, mf) for wl, ad, sd, ai, mf in
+                      zip(wl_chunks, ad_chunks, sd_chunks, ai_chunks, mf_chunks)]
+        pool.map(optimize_series, param_list)
+
+    # Get reflectance and transmittance values of rendered images
+    r = []
+    t = []
+    for wl in wls:
+        r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
+        t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+        r.append(r_wl)
+        t.append(t_wl)
+
+    return r,t
+
+
+def get_raw_rendering_params(wls, r_m, t_m, method):
+
+    # Correct method name assumed to be checked before reaching this method so no errors thrown from here.
+
+    if method == 'surface':
+        param_dict = TH.read_surface_model_parameters()
+        ad_p = param_dict['ad']
+        sd_p = param_dict['sd']
+        ai_p = param_dict['ai']
+        mf_p = param_dict['mf']
+        ad_raw = np.clip(FF.function_exp(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
+        sd_raw = np.clip(FF.function_log(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
+        ai_raw = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
+        mf_raw = np.clip(FF.function_exp(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
+    elif method == "nn":
+        ad_raw, sd_raw, ai_raw, mf_raw = neural.predict_nn(r_m, t_m)
+
+    return ad_raw, sd_raw, ai_raw, mf_raw
+
+
+def build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, mf_raw, elapsed_process_min, elapsed_wall_clock_min):
+    sample_result_dict = {}
+    sample_result_dict[C.key_sample_result_wls] = wls
+    sample_result_dict[C.key_sample_result_r] = r
+    sample_result_dict[C.key_sample_result_rm] = r_m
+    sample_result_dict[C.key_sample_result_re] = re
+    sample_result_dict[C.key_sample_result_t] = t
+    sample_result_dict[C.key_sample_result_tm] = t_m
+    sample_result_dict[C.key_sample_result_te] = te
+    sample_result_dict[C.key_sample_result_ad] = ad_raw
+    sample_result_dict[C.key_sample_result_sd] = sd_raw
+    sample_result_dict[C.key_sample_result_ai] = ai_raw
+    sample_result_dict[C.key_sample_result_mf] = mf_raw
+    sample_result_dict[C.key_sample_result_process_elapsed_min] = elapsed_process_min
+    sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = elapsed_wall_clock_min
+    sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(re ** 2))
+    sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(te ** 2))
+    return sample_result_dict
+
+
+def convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw, density_scale):
+    """Convert machine learning parameters [0,1] to rendering parameters (scaling and re-centering."""
+
+    ad = ad_raw * density_scale
+    sd = sd_raw * density_scale
+    ai = np.clip((ai_raw - 0.5) * 2, 0., 1.)
+    mf = mf_raw
+    return ad, sd, ai, mf
 
 
 class Optimization:
@@ -75,7 +156,7 @@ class Optimization:
         self.bounds = (LOWER_BOUND, UPPER_BOUND)
         # Control how much density variables (absorption and scattering density) are scaled for rendering. Value of 100 cannot
         # produce r = 0 or t = 0. Produced values do not significantly change when greater than 300.
-        self.density_scale = 300
+        self.density_scale = 3000
 
         # Verbosity levels 0, 1 or 2
         self.optimizer_verbosity = 2
@@ -133,83 +214,25 @@ class Optimization:
             if resolution != 1:
                 targets = targets[::resolution]
 
-            if prediction_method == 'surface':
+            if prediction_method == 'surface' or prediction_method == "nn":
 
                 start = time.perf_counter()
+
                 wls = targets[:, 0]
-                r_m = targets[:,1]
-                t_m = targets[:,2]
-                param_dict = TH.read_surface_model_parameters()
-                ad_p = param_dict['ad']
-                sd_p = param_dict['sd']
-                ai_p = param_dict['ai']
-                mf_p = param_dict['mf']
-                ad_raw = np.clip(FF.function_exp(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
-                sd_raw = np.clip(FF.function_log(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
-                ai_raw = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
-                mf_raw = np.clip(FF.function_exp(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
-                ad = ad_raw * self.density_scale
-                sd = sd_raw * self.density_scale
-                ai = np.clip(ai_raw - 0.5, 0., 1.)
-                mf = mf_raw
-
-                with Pool() as pool:
-                    n = pool._processes
-                    print(f" thread count = {n}")
-                    wl_chunks = GU.chunks(wls, n)
-                    ad_chunks = GU.chunks(ad, n)
-                    sd_chunks = GU.chunks(sd, n)
-                    ai_chunks = GU.chunks(ai, n)
-                    mf_chunks = GU.chunks(mf, n)
-
-                    param_list = [(self.set_name, sample_id, wl,ad,sd,ai,mf) for wl,ad,sd,ai,mf in zip(wl_chunks, ad_chunks, sd_chunks, ai_chunks, mf_chunks)]
-                    pool.map(optimize_series, param_list)
-
-                # B.run_render_series(rend_base_path=P.path_directory_working(self.set_name, sample_id),wl=wls,ad=ad,
-                #                     sd=sd,ai=ai,mf=mf,clear_rend_folder=False,clear_references=False,
-                #                     render_references=True,dry_run=False)
-
-                r = []
-                t = []
-                for wl in wls:
-                    r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl,base_path=P.path_directory_working(self.set_name, sample_id))
-                    t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl,base_path=P.path_directory_working(self.set_name, sample_id))
-                    r.append(r_wl)
-                    t.append(t_wl)
+                r_m = targets[:, 1]
+                t_m = targets[:, 2]
+                ad_raw, sd_raw, ai_raw, mf_raw = get_raw_rendering_params(wls, r_m, t_m, method=prediction_method)
+                ad, sd, ai, mf = convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw, self.density_scale)
+                r,t = render_to_refl_tran(self.set_name, sample_id, wls, ad, sd, ai, mf)
 
                 re = np.abs(r - r_m)
                 te = np.abs(t - t_m)
-
-                sample_result_dict = {}
-                sample_result_dict[C.key_sample_result_wls] = wls
-                sample_result_dict[C.key_sample_result_r] = r
-                sample_result_dict[C.key_sample_result_rm] = r_m
-                sample_result_dict[C.key_sample_result_re] = re
-                sample_result_dict[C.key_sample_result_t] = t
-                sample_result_dict[C.key_sample_result_tm] = t_m
-                sample_result_dict[C.key_sample_result_te] = te
-                sample_result_dict[C.key_sample_result_ad] = ad_raw
-                sample_result_dict[C.key_sample_result_sd] = sd_raw
-                sample_result_dict[C.key_sample_result_ai] = ai_raw
-                sample_result_dict[C.key_sample_result_mf] = mf_raw
-                sample_result_dict[C.key_sample_result_process_elapsed_min] = (time.perf_counter() - start) / 60.0
-                sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = (time.perf_counter() - start) / 60.0
-                sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(re ** 2))
-                sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(te ** 2))
-
+                time_process_min = (time.perf_counter() - start) / 60.0
+                time_wall_clock_min = (time.perf_counter() - start) / 60.0
+                sample_result_dict = build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, mf_raw, time_process_min, time_wall_clock_min)
                 TH.write_sample_result(self.set_name, sample_result_dict, sample_id)
                 plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
 
-                # if use_threads:
-                #     param_list = [(a[0], a[1], a[2], self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p) for a in targets]
-                #     with Pool() as pool:
-                #         pool.map(run_surface_model_threaded, param_list)
-                # else:
-                #     for target in targets:
-                #         wl = target[0]
-                #         r_m = target[1]
-                #         t_m = target[2]
-                #         run_surface_model_wl(wl, r_m, t_m, self.set_name, self.density_scale, sample_id, ad_p, sd_p, ai_p, mf_p)
 
             elif prediction_method == 'optimization':
 
@@ -243,7 +266,7 @@ class Optimization:
         TH.write_set_result(self.set_name)
 
 
-def optimize_series(args):
+def optimize_series(args): # TODO change the name to render_series() or something
     set_name = args[0]
     sample_id = args[1]
     wls = args[2]
@@ -255,6 +278,7 @@ def optimize_series(args):
     B.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),wl=wls,ad=ad,
                                     sd=sd,ai=ai,mf=mf,clear_rend_folder=False,clear_references=False,
                                     render_references=True,dry_run=False)
+
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""
@@ -294,15 +318,13 @@ def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, densi
 
     ad = np.clip(FF.function_exp(np.array([r_m, t_m]), *ad_p), 0.0, 1.0)
     sd = np.clip(FF.function_log(np.array([r_m, t_m]), *sd_p), 0.0, 1.0)
-    ai = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p) - 0.5, 0.0, 1.0)
+    ai = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
     mf = np.clip(FF.function_free(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
 
+    ad, sd, ai, mf = convert_raw_params_to_renderable(ad, sd, ai, mf, density_scale=density_scale)
+
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
-                        wl=wl,
-                        ad=ad * density_scale,
-                        sd=sd * density_scale,
-                        ai=ai,
-                        mf=mf,
+                        wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=True,
@@ -411,12 +433,10 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     def f(x):
         """Function to be minimized F = sum(d_i²)."""
 
+        ad, sd, ai, mf = convert_raw_params_to_renderable(x[0], x[1], x[2], x[3], density_scale=density_scale)
+
         B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
-                            wl=wl,
-                            ad=x[0] * density_scale,
-                            sd=x[1] * density_scale,
-                            ai=x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
-                            mf=x[3],
+                            wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                             clear_rend_folder=False,
                             clear_references=False,
                             render_references=False,
@@ -504,17 +524,15 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     elapsed = time.perf_counter() - start
 
+    ad, sd, ai, mf = convert_raw_params_to_renderable(res.x[0], res.x[1], res.x[2], res.x[3], density_scale=density_scale)
     # Render one more time with best values (in case it was not the last run)
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
-                        wl=wl,
-                        ad=res.x[0] * density_scale,
-                        sd=res.x[1] * density_scale,
-                        ai=res.x[2] - 0.5,  # for optimization from for 0 to 1, but in Blender it goes [-0.5,0.5]
-                        mf=res.x[3],
+                        wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=False,
                         dry_run=False)
+
     r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
     t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
 

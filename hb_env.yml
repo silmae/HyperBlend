@@ -3,6 +3,8 @@
 # Change "create" to "update" when updating.
 name: hb
 channels:
+  - pytorch
+  - conda-forge
   - defaults
 dependencies:
   - python=3.7
@@ -19,6 +21,8 @@ dependencies:
  # - tabulate
   - ipython
   - sphinx #API documentation
+  - cpuonly # disables pytorch CUDA that interferes with Blender's CUDA rendering (.dll loading errors)
+  - pytorch
   - pip
   - pip:
       - spectral

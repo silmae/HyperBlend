@@ -86,7 +86,7 @@ def _make_target(set_name: str, wls, r_m, t_m, sample_id=None):
     target_data[1] = r_m
     target_data[2] = t_m
     target_data = np.transpose(target_data)
-    T.write_target(set_name, target_data)
+    T.write_target(set_name, target_data, sample_id=sample_id)
 
 
 def generate_starting_guess():

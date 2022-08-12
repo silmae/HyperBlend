@@ -11,6 +11,7 @@ import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from scipy.optimize import curve_fit
 
 from src import constants as C
@@ -108,13 +109,58 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
     if show:
         plt.show()
 
-def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=None):
+
+def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fittable=None, save_thumbnail=True,
+               show_plot=False, plot_data_as_surface=False):
+    """ Plot surface fitting result into 3D plot.
+
+    :param r:
+        List of reflectance values.
+    :param t:
+        List of transmittance values.
+    :param z:
+        List of function values (absorption density, scattering desnsity, scattering anisotropy or mix factor).
+    :param z_label:
+        Label of function (ad, sd, ai, mf). Converted to Latex notation used in published papers.
+    :param z_intensity:
+        Color of data points using heat map. Optional.
+    :param surface_parameters:
+        Surface parameters to draw a surface. If omitted, no surface is drawn.
+    :param fittable:
+        Surface function to be used. Does not take effect if 'surface_parameters' were omitted.
+        This has to be the same function that what the surface parameters were obtained with.
+    :param save_thumbnail:
+        If True, save plot to disk.
+    :param show_plot:
+        If True, show plot to user. NOTE showing the plot will halt the run until the plot window is manually closed.
+    :param plot_data_as_surface:
+        If True, plots data points as a surface, which can make it easier to see the shape of the data.
+        Causes default data points and fitted surfaces to be ignored. Default is False.
+    :return:
+    """
+
+    def variable_name_to_latex(v):
+        """Change variable name into Latex format."""
+
+        if v == 'ad':
+            return r'$\rho_a$'
+        elif v == 'sd':
+            return r'$\rho_s$'
+        elif v == 'ai':
+            return r'$\alpha$'
+        elif v == 'mf':
+            return r'$\beta$'
+        else:
+            return v
+
     # setup figure object
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize_single)
     ax = plt.axes(projection="3d")
     ax.set_xlabel('R')
     ax.set_ylabel('T')
-    ax.set_zlabel(z_label)
+    ax.set_zlabel(variable_name_to_latex(z_label))
+    ax.elev = 30
+    ax.azim = 225
     num_points = 25
     R, T = np.meshgrid(np.linspace(0, max(r), num_points), np.linspace(0, max(t), num_points))
 
@@ -122,12 +168,62 @@ def plot_3d_rt(r,t,z, z_label,z_intensity=None,surface_parameters=None,fittable=
         z_intens = z
     else:
         z_intens = z_intensity
-    ax.scatter(r, t, z, c=z_intens, cmap=plt.cm.hot)
 
-    if surface_parameters is not None:
+    if not plot_data_as_surface:
+        ax.scatter(r, t, z, c=z_intens, cmap=plt.cm.hot)
+    else:
+        surf = ax.plot_trisurf(r, t, z, linewidth=0)
+        fig.colorbar(surf)
+
+    if surface_parameters is not None and not plot_data_as_surface:
         Z = fittable(np.array([R, T]), *surface_parameters)
         ax.plot_surface(R, T, Z, alpha=0.5)
-    plt.show()
+
+    if save_thumbnail:
+        folder = P.path_directory_surface_model()
+        image_name = f"{z_label}.png"
+        path = P.join(folder, image_name)
+        logging.info(f"Saving surface plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+
+    if show_plot:
+        plt.show()
+
+
+def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True, save_thumbnail=True) -> None:
+    """Plots optimization history of a single wavelength using existing wavelength result toml file.
+
+    :param train_loss:
+        Training loss
+    :param test_loss:
+        Validation loss
+    :param best_epoch_idx:
+        Index of the best epoch
+    :param save_thumbnail:
+        If True, a PNG image is saved to result/plot folder. Default is True.
+    :param dont_show:
+        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+    """
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
+    fig.suptitle(f"Training history", fontsize=fig_title_font_size)
+    ax.plot(train_loss, label="Train loss")
+    ax.plot(test_loss, label="Test loss")
+    ax.scatter(best_epoch_idx, test_loss[best_epoch_idx], facecolors='none', edgecolors='r')
+    ax.set_xlabel('Epoch')
+    ax.legend()
+
+    if save_thumbnail:
+        folder = P.path_directory_surface_model()
+        image_name = "nn_train_history.png"
+        path = P.join(folder, image_name)
+        logging.info(f"Saving NN training history to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
+
+    # close the figure to avoid memory consumption warning when over 20 figs
+    plt.close(fig)
 
 
 def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True) -> None:

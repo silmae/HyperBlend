@@ -4,16 +4,21 @@ __pycache__/
 .idea/
 
 # Exclude all renders, plots and Blender backups
+scenes*/*
 rend*/*
 plot*/*
 *.blend1
 optimization/*
 measured_data/*
 blender_test_run/*
+<<<<<<< HEAD
 scenes/*
 
 sun_data/*
 !sun_data/default_sun.txt
+=======
+log*/* 
+surface_model/*.png
 
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
