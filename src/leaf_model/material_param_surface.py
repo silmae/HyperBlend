@@ -10,11 +10,11 @@ from scipy.optimize import curve_fit
 
 from src.data import toml_handling as TH
 from src import constants as C
-from src.leaf_model.optimization import Optimization
-from src.leaf_model import fitting_function as FF
+from src.leaf_model.material_param_optimization import Optimization
+from src.leaf_model import surface_functions as FF
 from src import plotter
-from src.leaf_model import neural
-from src.leaf_model import surface_model_shared as shared
+from src.leaf_model import material_param_neural
+from src.leaf_model import leaf_commons as shared
 
 set_name = 'surface_train'
 
@@ -131,7 +131,7 @@ def fit_surface(show_plot=False, save_params=False, plot_data_as_surface=False, 
     if show_nn:
         rm = np.array(result[C.key_sample_result_rm])
         tm = np.array(result[C.key_sample_result_tm])
-        ad, sd, ai, mf = neural.predict_nn(rm, tm)
+        ad, sd, ai, mf = material_param_neural.predict_nn(rm, tm)
     else:
         ad = np.array(result[C.key_sample_result_ad])
         sd = np.array(result[C.key_sample_result_sd])

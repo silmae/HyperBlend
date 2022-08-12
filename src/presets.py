@@ -3,7 +3,7 @@ Some presets to be run for testing the program.
 """
 
 from src.utils import spectra_utils as SU
-from src.leaf_model.optimization import Optimization
+from src.leaf_model.material_param_optimization import Optimization
 
 
 def optimize_default_target(spectral_resolution=50):

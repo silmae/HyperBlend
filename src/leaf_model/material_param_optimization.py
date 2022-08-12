@@ -19,8 +19,8 @@ from src.utils import data_utils as DU
 from src.utils import general_utils as GU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
-from src.leaf_model import fitting_function as FF
-from src.leaf_model import neural
+from src.leaf_model import surface_functions as FF
+from src.leaf_model import material_param_neural
 
 
 hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
@@ -78,7 +78,7 @@ def get_raw_rendering_params(wls, r_m, t_m, method):
         ai_raw = np.clip(FF.function_polynomial(np.array([r_m, t_m]), *ai_p), 0.0, 1.0)
         mf_raw = np.clip(FF.function_exp(np.array([r_m, t_m]), *mf_p), 0.0, 1.0)
     elif method == "nn":
-        ad_raw, sd_raw, ai_raw, mf_raw = neural.predict_nn(r_m, t_m)
+        ad_raw, sd_raw, ai_raw, mf_raw = material_param_neural.predict_nn(r_m, t_m)
 
     return ad_raw, sd_raw, ai_raw, mf_raw
 

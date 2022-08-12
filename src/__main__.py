@@ -13,7 +13,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.leaf_model import surface_model as SM
+from src.leaf_model import material_param_surface as SM
 from src.data import path_handling as PH
 
 from src.data import toml_handling as TH

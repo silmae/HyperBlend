@@ -4,7 +4,7 @@ import logging
 import os
 from src.prospect import prospect
 
-from src.leaf_model.optimization import Optimization
+from src.leaf_model.material_param_optimization import Optimization
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
 from src.data import path_handling as PH
