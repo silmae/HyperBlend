@@ -71,7 +71,7 @@ write the data to disk in human-readable toml-formatted form that the rest of th
 Now you can start the optimization process. To summarize a simple use case in one snippet:
 
 ```python
-from src.optimization import Optimization
+from src.leaf_model.optimization import Optimization
 from data import toml_handlling as TH
 
 data = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
@@ -108,4 +108,3 @@ Descriptions of the most important files.
   - `utils` Package containing miscellaneous utility modules.
 - `bs_render_single.py` Blender render script file.
 - `scene_leaf_material.blend` Bender scene file that is run by the `bs_render_single.py`.
-  

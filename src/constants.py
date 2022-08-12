@@ -59,7 +59,7 @@ folder_rend_ref_tran = 'rend_tran_ref'
 folder_opt = 'optimization'
 """Top level optimization folder name."""
 
-folder_surface_model = 'surface_model'
+folder_surface_model = 'leaf_model'
 """Top level surface model folder name."""
 
 folder_opt_sample_targets = 'sample_targets'

@@ -30,7 +30,7 @@ p_default_dict = {
 
 
 from src.utils import spectra_utils as SU
-from src.optimization import Optimization
+from src.leaf_model.optimization import Optimization
 import logging
 from src.data import file_handling as FH
 from src.data import toml_handling as TH

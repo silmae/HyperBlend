@@ -1,17 +1,13 @@
 
 import logging
 
-import sys
-import numpy as np
 import os
 from src.prospect import prospect
 
-from src.optimization import Optimization
-from src.surface_model import surface_model as SM
+from src.leaf_model.optimization import Optimization
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
 from src.data import path_handling as PH
-from src.rendering import blender_control as BC
 
 
 def leaf_csv_name(name, resolution):

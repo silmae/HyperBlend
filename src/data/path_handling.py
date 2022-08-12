@@ -50,7 +50,7 @@ def path_directory_surface_model() -> str:
 
     If the directory does not exist, it is created.
 
-    'project_root/surface_model'
+    'project_root/leaf_model'
     """
 
     p = os.path.abspath(C.path_project_root + '/' + C.folder_surface_model)

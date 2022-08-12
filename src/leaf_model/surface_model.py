@@ -7,16 +7,14 @@ import logging
 import math
 import numpy as np
 from scipy.optimize import curve_fit
-import matplotlib.pyplot as plt
 
 from src.data import toml_handling as TH
-from src.data import path_handling as PH
 from src import constants as C
-from src.optimization import Optimization
-from src.surface_model import fitting_function as FF
+from src.leaf_model.optimization import Optimization
+from src.leaf_model import fitting_function as FF
 from src import plotter
-from src.surface_model import neural
-from src.surface_model import surface_model_shared as shared
+from src.leaf_model import neural
+from src.leaf_model import surface_model_shared as shared
 
 set_name = 'surface_train'
 

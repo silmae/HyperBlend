@@ -12,7 +12,7 @@ from src import plotter
 from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU
 from src import constants as C
-from src.optimization import Optimization
+from src.leaf_model.optimization import Optimization
 
 
 def make_linear_test_target(set_name: str):

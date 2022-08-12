@@ -20,10 +20,10 @@ from src.data import path_handling as PH
 from src.data import toml_handling as TH
 from src import constants as C
 from src import plotter
-from src.surface_model import surface_model_shared as shared
+from src.leaf_model import surface_model_shared as shared
 
 
-set_name = 'surface_train' # use same set name as surface_model
+set_name = 'surface_train' # use same set name as leaf_model
 
 model_path = PH.join(PH.path_directory_surface_model(), "nn_default.pt")
 

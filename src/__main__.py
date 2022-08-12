@@ -9,27 +9,14 @@ import logging
 import os.path
 import datetime
 
-import sys
 import os
 import numpy as np
-import math
-from src.prospect import prospect
 import matplotlib.pyplot as plt
 
-
-from src.optimization import Optimization
-from src.surface_model import surface_model as SM
-from src.utils import spectra_utils as SU
-from src.data import file_handling as FH
+from src.leaf_model import surface_model as SM
 from src.data import path_handling as PH
-from src.rendering import blender_control as BC
-from src.forest import forest
 
 from src.data import toml_handling as TH
-from src.surface_model import neural
-from src import plotter
-
-from src.surface_model import surface_model_shared as shared
 
 
 def show_forest_rend(band, scene_id):
@@ -124,7 +111,7 @@ if __name__ == '__main__':
     # SM.fit_surface(show_plot=True, save_params=False, plot_data_as_surface=False,  show_nn=True)
 
     # ######### REDO points and NN training
-    # SM.train(do_points=True, num_points=20, maxdiff_rt=0.25)
+    SM.train(do_points=True, num_points=2, maxdiff_rt=0.25)
     # neural.fit_nn(show_plot=True, save_params=True, epochs=300, batch_size=8, learning_rate=0.0004, split=0.2, patience=30)
     ###################
 

@@ -19,8 +19,8 @@ from src.utils import data_utils as DU
 from src.utils import general_utils as GU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
-from src.surface_model import fitting_function as FF
-from src.surface_model import neural
+from src.leaf_model import fitting_function as FF
+from src.leaf_model import neural
 
 
 hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
@@ -346,7 +346,7 @@ def run_surface_model_wl(wl: float, r_m: float, t_m: float, set_name: str, densi
         C.key_wl_result_refl_error: math.fabs(r - r_m),
         C.key_wl_result_tran_error: math.fabs(t - t_m),
         C.key_wl_result_render_calls: 1,
-        C.key_wl_result_optimizer: 'surface_model',
+        C.key_wl_result_optimizer: 'leaf_model',
         C.key_wl_result_optimizer_ftol: 0,
         C.key_wl_result_optimizer_xtol: 0,
         C.key_wl_result_optimizer_diffstep: 0,
