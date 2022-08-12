@@ -14,6 +14,7 @@ import os
 import numpy as np
 import math
 from src.prospect import prospect
+import matplotlib.pyplot as plt
 
 
 from src.optimization import Optimization
@@ -23,7 +24,12 @@ from src.data import file_handling as FH
 from src.data import path_handling as PH
 from src.rendering import blender_control as BC
 from src.forest import forest
-import matplotlib.pyplot as plt
+
+from src.data import toml_handling as TH
+from src.surface_model import neural
+from src import plotter
+
+from src.surface_model import surface_model_shared as shared
 
 
 def show_forest_rend(band, scene_id):
@@ -62,16 +68,12 @@ def ndvi(scene_id):
     plt.colorbar()
     plt.show()
 
+
 def load_into_cube(scene_id):
     p = PH.path_directory_forest_rend_spectral(scene_id)
     for filename in os.listdir(p):
         print(filename)
 
-from src.data import toml_handling as TH
-from src.surface_model import neural
-from src import plotter
-
-from src.surface_model import surface_model_shared as shared
 
 def maxdiff(set_name="prospect_randoms"):
 
@@ -90,30 +92,6 @@ if __name__ == '__main__':
     if not os.path.exists(path_dir_logs):
         os.makedirs(path_dir_logs)
 
-    scene_id = '2704221302'
-    ndvi(scene_id)
-
-    # scene_id = FH.duplicate_scene_from_template()
-    # # scene_id = "0123456789" # id for debugging
-    # forest.generate_some_leaf_stuff(scene_id, resolution=50)
-    # BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
-    # BC.render_forest_previews(scene_id)
-    # BC.render_forest_spectral(scene_id)
-    # show_forest_rend(11, scene_id)
-
-
-
-    # for i in range(1,44):
-    #     show_forest_rend(i, scene_id)
-    # show_forest_rend(2, scene_id)
-    # show_forest_rend(3, scene_id)
-    # show_forest_rend(15, scene_id)
-
-    load_into_cube(scene_id=scene_id)
-
-
-    # SM.train(do_points=False, num_points=50)
-    # SM.fit_surface(show_plot=True, save_params=False)
     log_identifier = str(datetime.datetime.now())
     log_identifier = log_identifier.replace(' ', '_')
     log_identifier = log_identifier.replace(':', '')
@@ -127,9 +105,13 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+    # SM.train(do_points=False, num_points=50)
+    # SM.fit_surface(show_plot=True, save_params=False)
+
+    # Show surface train plot
     # plotter.plot_set_result("surface_train", dont_show=False, save_thumbnail=False)
 
-    # shared.visualize_training_data_pruning(set_name = "surface_train_good_airange05")
+    # shared.visualize_training_data_pruning(set_name = "surface_train")
 
     # Train new starting guess ##########
     # Add to readme?
@@ -139,7 +121,7 @@ if __name__ == '__main__':
 
     # ########## Show surfaces
     # SM.fit_surface(show_plot=True, save_params=True, plot_data_as_surface=False,  show_nn=False)
-    SM.fit_surface(show_plot=True, save_params=False, plot_data_as_surface=False,  show_nn=True)
+    # SM.fit_surface(show_plot=True, save_params=False, plot_data_as_surface=False,  show_nn=True)
 
     # ######### REDO points and NN training
     # SM.train(do_points=True, num_points=20, maxdiff_rt=0.25)
@@ -214,6 +196,8 @@ if __name__ == '__main__':
 
 
 
+    ######### Stuff for scenes testing #############
+
     # set_name = 'surface_test_predict_2'
 
     # FH.clear_folder(PH.path_directory_subresult(set_name, 0))
@@ -234,3 +218,22 @@ if __name__ == '__main__':
     # o = Optimization(set_name)
     # TH.write_target(set_name, data, sample_id=0)
     # o.run_optimization()
+
+    # scene_id = '2704221302'
+    # ndvi(scene_id)
+
+    # scene_id = FH.duplicate_scene_from_template()
+    # # scene_id = "0123456789" # id for debugging
+    # forest.generate_some_leaf_stuff(scene_id, resolution=50)
+    # BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
+    # BC.render_forest_previews(scene_id)
+    # BC.render_forest_spectral(scene_id)
+    # show_forest_rend(11, scene_id)
+
+    # for i in range(1,44):
+    #     show_forest_rend(i, scene_id)
+    # show_forest_rend(2, scene_id)
+    # show_forest_rend(3, scene_id)
+    # show_forest_rend(15, scene_id)
+
+    # load_into_cube(scene_id=scene_id)
