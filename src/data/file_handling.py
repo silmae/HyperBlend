@@ -17,6 +17,15 @@ from src import constants as C, plotter
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
 
+def copy_target(from_set, to_set):
+    create_first_level_folders(set_name=to_set)
+
+    sample_ids = list_target_ids(from_set)
+    for sample_id in sample_ids:
+        target = TH.read_target(set_name=from_set, sample_id=sample_id)
+        TH.write_target(set_name=to_set, data=target, sample_id=sample_id)
+
+
 def create_first_level_folders(set_name: str):
     """Create first level folders for a set.
 

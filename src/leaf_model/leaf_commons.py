@@ -2,79 +2,178 @@
 Shared functionality that is used in the surface fitting model and in neural network model.
 """
 
+from multiprocessing import Pool
+
 import numpy as np
 import logging
-import matplotlib.pyplot as plt
 
-from src.data import toml_handling as TH
+from src.data import path_handling as P, file_handling as FH
 from src import constants as C
 
+from src.rendering import blender_control as BC
+from src.utils import general_utils as GU, data_utils as DU
 
 
-def visualize_training_data_pruning(set_name="surface_train"):
-
-        result = TH.read_sample_result(set_name, sample_id=0)
-        ad = np.array(result[C.key_sample_result_ad])
-        sd = np.array(result[C.key_sample_result_sd])
-        ai = np.array(result[C.key_sample_result_ai])
-        mf = np.array(result[C.key_sample_result_mf])
-        r = np.array(result[C.key_sample_result_rm])
-        t = np.array(result[C.key_sample_result_tm])
-        re = np.array(result[C.key_sample_result_re])
-        te = np.array(result[C.key_sample_result_te])
-        _, _, _, _, r_bad, t_bad = get_training_data(ad, sd, ai, mf, r, t, re, te, pruned=False)
-        _, _, _, _, r_good, t_good = get_training_data(ad, sd, ai, mf, r, t, re, te, pruned=True)
-        plt.scatter(r_good,t_good,c='b', alpha=0.5, marker='.')
-        plt.scatter(r_bad,t_bad,c='r', alpha=0.5, marker='.')
-        plt.plot([0,0.6],[0,0.4], c='black', linewidth=3)
-        plt.plot([0,0.7],[0,0.7], c='black', linewidth=3)
-        # plt.plot([0,0.02],[0.09,0.033], c='black', linewidth=3)
-        k1 = 3
-        k2 = 0.5
-        plt.plot([0,0.09],[0.02,0.33], c='black', linewidth=3)
-        # plt.plot([0.05,0.0],[0.4,0.18], c='black', linewidth=3)
-        plt.plot([0.05,0.45],[0.0,0.2], c='black', linewidth=3)
-        plt.xlabel('R')
-        plt.ylabel('T')
-        plt.show()
+density_scale = 3000
+"""Control how much density variables (absorption and scattering density) are scaled 
+for rendering. Value of 1000 cannot produce r = 0 or t = 0. Produced values do not 
+significantly change when greater than 3000."""
 
 
+def _convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw):
+    """Convert machine learning parameters [0,1] to rendering parameters (scaling and re-centering).
 
-def get_training_data(ad,sd,ai,mf,r,t,re,te,pruned=True):
+    :param ad_raw:
+        Numpy array absorption particle density [0,1].
+    :param sd_raw:
+        Numpy array scattering particle density [0,1].
+    :param ai_raw:
+        Numpy array scattering anisotropy [0,1].
+    :param mf_raw:
+        Numpy array mix factor [0,1].
+    :return:
+        Returns corresponding (ad, sd, ai, mf) that can be fed to rendering script.
+    """
 
-        set_name = "surface_train"
-        max_error = 0.01
-        low_cut = 0.0
-
-        logging.info(f"Fetching training data from set '{set_name}'.")
-        logging.info(f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned.")
-
-        bad = [(a > max_error or b > max_error) for a, b in zip(re, te)]
-        # bad = [(a > max_error) for a, b in zip(re, te)] # errors of reflectance
-        # bad = [(b > max_error) for a, b in zip(re, te)] # errors of transmittance
-        low_cut = [(a < low_cut or b < low_cut) for a, b in zip(r, t)]
-        to_delete = np.logical_or(bad, low_cut)
-        # to_delete = low_cut
+    ad = ad_raw * density_scale
+    sd = sd_raw * density_scale
+    ai = np.clip((ai_raw - 0.5) * 2, 0., 1.)
+    mf = mf_raw
+    return ad, sd, ai, mf
 
 
-        if not pruned:
-                to_delete = np.invert(to_delete)
+def _render(args):
+    """Internal render function to be called from parallel code.
 
-        initial_count = len(ad)
-        logging.info(f"Initial point count {initial_count} in training data.")
+    Unpacks given arguments. NOTE that they must be given in correct order so this
+    is sensitive to refactoring.
+    """
 
-        to_delete = np.where(to_delete)[0]
-        ad = np.delete(ad, to_delete)
-        sd = np.delete(sd, to_delete)
-        ai = np.delete(ai, to_delete)
-        mf = np.delete(mf, to_delete)
-        r = np.delete(r, to_delete)
-        t = np.delete(t, to_delete)
+    set_name = args[0]
+    sample_id = args[1]
+    BC.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),
+                         wl= args[2],
+                         ad= args[3],
+                         sd=args[4],
+                         ai=args[5],
+                         mf= args[6],
+                         clear_rend_folder=False, clear_references=False,
+                         render_references=True, dry_run=False)
 
-        bad_points_count = initial_count - len(ad)
 
-        logging.info(f"Pruned {len(to_delete)} ({(bad_points_count/initial_count)*100:.2}%) points because exceeding error threshold {max_error}.")
-        logging.info(f"Point count after pruning {len(ad)}.")
+def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
+    """ Material parameters are converted to reflectance and transmittance by rendering the leaf model.
 
-        return ad,sd,ai,mf,r,t
+    :param set_name:
+        Set name.
+    :param sample_id:
+        Sample id.
+    :param wls:
+        Numpy array wavelengths.
+    :param ad:
+        Numpy array absorption particle density.
+    :param sd:
+        Numpy array scattering particle density.
+    :param ai:
+        Numpy array scattering anisotropy.
+    :param mf:
+        Numpy array mix factor.
+    :return:
+    """
 
+    # Render all wavelengths in parallel
+    with Pool() as pool:
+        n = pool._processes
+        logging.info(f"Using {n} threads for rendering.")
+        # Divide given parameter arrays into chucks for each worker thread.
+        wl_chunks = GU.chunks(wls, n)
+        ad_chunks = GU.chunks(ad, n)
+        sd_chunks = GU.chunks(sd, n)
+        ai_chunks = GU.chunks(ai, n)
+        mf_chunks = GU.chunks(mf, n)
+
+        param_list = [(set_name, sample_id, wl, ad, sd, ai, mf) for wl, ad, sd, ai, mf in
+                      zip(wl_chunks, ad_chunks, sd_chunks, ai_chunks, mf_chunks)]
+        pool.map(_render, param_list)
+
+    # Get reflectance and transmittance values of rendered images
+    r = []
+    t = []
+    for wl in wls:
+        r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
+        t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+        r.append(r_wl)
+        t.append(t_wl)
+
+    return r,t
+
+
+
+def _build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, mf_raw, elapsed_process_min, elapsed_wall_clock_min):
+    """Builds result dictionary to be saved on disk.
+
+    :param wls:
+        Wavelengths.
+    :param r:
+        Modeled reflectances.
+    :param r_m:
+        Measured reflectances.
+    :param re:
+        Error of modeled reflectances.
+    :param t:
+        Modeled transmittances.
+    :param t_m:
+        Measured transmittances.
+    :param te:
+        Error of modeled transmittances.
+    :param ad_raw:
+        Numpy array absorption particle density [0,1].
+    :param sd_raw:
+        Numpy array scattering particle density [0,1].
+    :param ai_raw:
+        Numpy array scattering anisotropy [0,1].
+    :param mf_raw:
+        Numpy array mix factor [0,1].
+    :param elapsed_process_min:
+        Elapsed time of the processes. Apllicabple only for optimization method.
+        For surface and NN method this will be the same than ```elapsed_wall_clock_min```.
+    :param elapsed_wall_clock_min:
+        Elapsed wall clock time.
+    :return:
+        Returns built dictionary.
+    """
+
+    sample_result_dict = {}
+    sample_result_dict[C.key_sample_result_wls] = wls
+    sample_result_dict[C.key_sample_result_r] = r
+    sample_result_dict[C.key_sample_result_rm] = r_m
+    sample_result_dict[C.key_sample_result_re] = re
+    sample_result_dict[C.key_sample_result_t] = t
+    sample_result_dict[C.key_sample_result_tm] = t_m
+    sample_result_dict[C.key_sample_result_te] = te
+    sample_result_dict[C.key_sample_result_ad] = ad_raw
+    sample_result_dict[C.key_sample_result_sd] = sd_raw
+    sample_result_dict[C.key_sample_result_ai] = ai_raw
+    sample_result_dict[C.key_sample_result_mf] = mf_raw
+    sample_result_dict[C.key_sample_result_process_elapsed_min] = elapsed_process_min
+    sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = elapsed_wall_clock_min
+    sample_result_dict[C.key_sample_result_r_RMSE] = np.sqrt(np.mean(re ** 2))
+    sample_result_dict[C.key_sample_result_t_RMSE] = np.sqrt(np.mean(te ** 2))
+    return sample_result_dict
+
+
+def initialize_directories(set_name, clear_old_results=False):
+    """
+    Create necessary directories.
+
+    Optionally, one can wipe out old results of the same set by setting ```clear_old_results=True```.
+    """
+
+    FH.create_first_level_folders(set_name)
+
+    ids = FH.list_target_ids(set_name)
+    for _, sample_id in enumerate(ids):
+        FH.clear_rend_leaf(set_name, sample_id)
+        FH.clear_rend_refs(set_name, sample_id)
+        if clear_old_results:
+            FH.clear_folder(P.path_directory_subresult(set_name, sample_id))

@@ -110,6 +110,46 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
         plt.show()
 
 
+def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True, save_thumbnail=True,
+                          file_name="nn_train_history.png") -> None:
+    """Plots optimization history of a single wavelength using existing wavelength result toml file.
+
+    :param file_name:
+    :param train_loss:
+        Training loss
+    :param test_loss:
+        Validation loss
+    :param best_epoch_idx:
+        Index of the best epoch
+    :param save_thumbnail:
+        If True, a PNG image is saved to result/plot folder. Default is True.
+    :param dont_show:
+        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+    """
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
+    fig.suptitle(f"Training history", fontsize=fig_title_font_size)
+    ax.plot(train_loss, label="Train loss")
+    ax.plot(test_loss, label="Test loss")
+    ax.scatter(best_epoch_idx, test_loss[best_epoch_idx], facecolors='none', edgecolors='r')
+    ax.set_xlabel('Epoch')
+    ax.legend()
+
+    if save_thumbnail:
+        folder = P.path_directory_surface_model()
+        # image_name = "nn_train_history.png"
+        if not file_name.endswith(".png"):
+            file_name = file_name + '.png'
+        path = P.join(folder, file_name)
+        logging.info(f"Saving NN training history to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if not dont_show:
+        plt.show()
+
+    # close the figure to avoid memory consumption warning when over 20 figs
+    plt.close(fig)
+
+
 def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fittable=None, save_thumbnail=True,
                show_plot=False, plot_data_as_surface=False):
     """ Plot surface fitting result into 3D plot.
@@ -188,42 +228,6 @@ def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fitt
 
     if show_plot:
         plt.show()
-
-
-def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True, save_thumbnail=True) -> None:
-    """Plots optimization history of a single wavelength using existing wavelength result toml file.
-
-    :param train_loss:
-        Training loss
-    :param test_loss:
-        Validation loss
-    :param best_epoch_idx:
-        Index of the best epoch
-    :param save_thumbnail:
-        If True, a PNG image is saved to result/plot folder. Default is True.
-    :param dont_show:
-        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
-    """
-
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
-    fig.suptitle(f"Training history", fontsize=fig_title_font_size)
-    ax.plot(train_loss, label="Train loss")
-    ax.plot(test_loss, label="Test loss")
-    ax.scatter(best_epoch_idx, test_loss[best_epoch_idx], facecolors='none', edgecolors='r')
-    ax.set_xlabel('Epoch')
-    ax.legend()
-
-    if save_thumbnail:
-        folder = P.path_directory_surface_model()
-        image_name = "nn_train_history.png"
-        path = P.join(folder, image_name)
-        logging.info(f"Saving NN training history to '{path}'.")
-        plt.savefig(path, dpi=300)
-    if not dont_show:
-        plt.show()
-
-    # close the figure to avoid memory consumption warning when over 20 figs
-    plt.close(fig)
 
 
 def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True) -> None:

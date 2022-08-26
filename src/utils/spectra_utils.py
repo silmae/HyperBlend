@@ -12,7 +12,7 @@ from src import plotter
 from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU
 from src import constants as C
-from src.leaf_model.material_param_optimization import Optimization
+from src.leaf_model.opt import Optimization
 
 
 def make_linear_test_target(set_name: str):
@@ -102,7 +102,7 @@ def generate_starting_guess():
     set_name = C.starting_guess_set_name
 
     FH.create_first_level_folders(set_name)
-    o = Optimization(set_name=set_name, clear_wl_results=True, use_hard_coded_starting_guess=True)
+    o = Optimization(set_name=set_name, use_hard_coded_starting_guess=True)
     make_linear_test_target(set_name)
     o.run_optimization(resolution=10, use_basin_hopping=False, use_threads=True, prediction_method='optimization')
     fit_starting_guess_coefficients()

@@ -13,10 +13,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.leaf_model import material_param_surface as SM
+from src.leaf_model import surf as SM
 from src.data import path_handling as PH
 
 from src.data import toml_handling as TH
+from src.leaf_model import interface
 
 
 def show_forest_rend(band, scene_id):
@@ -92,6 +93,12 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+    interface.train_models(set_name='training_data_test',generate_data=True,train_points_per_dim=5)
+
+    interface.solve_leaf_material_parameters(set_name='newthing5', resolution=50, solver='surf', copyof='p_dry')
+
+    # TODO build training stuff to the interface. Also create new script responsible for training data generation.
+
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)
 
@@ -111,7 +118,7 @@ if __name__ == '__main__':
     # SM.fit_surface(show_plot=True, save_params=False, plot_data_as_surface=False,  show_nn=True)
 
     # ######### REDO points and NN training
-    SM.train(do_points=True, num_points=2, maxdiff_rt=0.25)
+    # SM.train(do_points=True, num_points=2, maxdiff_rt=0.25)
     # neural.fit_nn(show_plot=True, save_params=True, epochs=300, batch_size=8, learning_rate=0.0004, split=0.2, patience=30)
     ###################
 
