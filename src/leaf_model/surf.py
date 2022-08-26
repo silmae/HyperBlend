@@ -71,7 +71,7 @@ def _fit_surface(set_name='training_data', show_plot=False, save_params=False, p
     te = np.array(result[C.key_sample_result_te])
 
     ad, sd, ai, mf, r, t = src.leaf_model.training_data.prune_training_data(ad, sd, ai, mf, r, t, re, te,
-                                                                            invereted=True)
+                                                                            invereted=False)
 
     variable_lol = [ad, sd, ai, mf]
     variable_names = ['ad', 'sd', 'ai', 'mf']
