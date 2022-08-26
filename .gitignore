@@ -11,14 +11,14 @@ plot*/*
 optimization/*
 measured_data/*
 blender_test_run/*
-<<<<<<< HEAD
 scenes/*
 
 sun_data/*
 !sun_data/default_sun.txt
-=======
 log*/* 
-surface_model/*.png
+leaf_model/*
+!leaf_model/nn_default.pt
+!leaf_model/model_parameters.toml
 
 # Ignore generated examples, but keep the sourse 
 # spectrogram in git
