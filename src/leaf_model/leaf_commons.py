@@ -1,5 +1,5 @@
 """
-Shared functionality that is used in the surface fitting model and in neural network model.
+Shared functionality that is used by the three leaf models.
 """
 
 from multiprocessing import Pool
@@ -52,8 +52,8 @@ def _render(args):
     set_name = args[0]
     sample_id = args[1]
     BC.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),
-                         wl= args[2],
-                         ad= args[3],
+                         wl=args[2],
+                         ad=args[3],
                          sd=args[4],
                          ai=args[5],
                          mf= args[6],
@@ -79,6 +79,7 @@ def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
     :param mf:
         Numpy array mix factor.
     :return:
+        Returns (r,t) lists of reflectances and transmittances, respectively.
     """
 
     # Render all wavelengths in parallel
@@ -108,7 +109,6 @@ def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
     return r,t
 
 
-
 def _build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, mf_raw, elapsed_process_min, elapsed_wall_clock_min):
     """Builds result dictionary to be saved on disk.
 
@@ -135,8 +135,8 @@ def _build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, 
     :param mf_raw:
         Numpy array mix factor [0,1].
     :param elapsed_process_min:
-        Elapsed time of the processes. Apllicabple only for optimization method.
-        For surface and NN method this will be the same than ```elapsed_wall_clock_min```.
+        Elapsed time of the processes. Applicable only for optimization method.
+        For surface and NN method this will be the same than ``elapsed_wall_clock_min``.
     :param elapsed_wall_clock_min:
         Elapsed wall clock time.
     :return:
@@ -166,7 +166,7 @@ def initialize_directories(set_name, clear_old_results=False):
     """
     Create necessary directories.
 
-    Optionally, one can wipe out old results of the same set by setting ```clear_old_results=True```.
+    Optionally, one can wipe out old results of the same set by setting ``clear_old_results=True``.
     """
 
     FH.create_first_level_folders(set_name)
