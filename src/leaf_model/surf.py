@@ -8,10 +8,9 @@ import math
 import numpy as np
 from scipy.optimize import curve_fit
 
-import src.leaf_model.training_data
+import src.leaf_model.training_data as training
 from src.data import toml_handling as TH
 from src import constants as C
-from src.leaf_model.training_data import generate_train_data
 from src.leaf_model.opt import Optimization
 from src.leaf_model import surface_functions as FF
 from src import plotter
@@ -70,8 +69,7 @@ def _fit_surface(set_name='training_data', show_plot=False, save_params=False, p
     re = np.array(result[C.key_sample_result_re])
     te = np.array(result[C.key_sample_result_te])
 
-    ad, sd, ai, mf, r, t = src.leaf_model.training_data.prune_training_data(ad, sd, ai, mf, r, t, re, te,
-                                                                            invereted=False)
+    ad, sd, ai, mf, r, t = training.prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
 
     variable_lol = [ad, sd, ai, mf]
     variable_names = ['ad', 'sd', 'ai', 'mf']
@@ -99,8 +97,6 @@ def _fit_surface(set_name='training_data', show_plot=False, save_params=False, p
             plotter.plot_3d_rt(r, t, variable, zlabel, z_intensity=None, surface_parameters=parameters,
                                fittable=fittable, save_thumbnail=True, show_plot=show_plot,
                                plot_data_as_surface=plot_data_as_surface)
-
-
 
         except RuntimeError as re:
             logging.error(f'Failed to fit for parameter {variable_names[i]}')
