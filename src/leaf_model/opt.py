@@ -2,7 +2,6 @@
 Optimization class and related methods.
 """
 
-import torch
 import math
 import time
 import logging
@@ -12,14 +11,10 @@ import scipy.optimize as optimize
 import numpy as np
 
 from src import constants as C
-from src.data.toml_handling import make_sample_result
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
-from src.utils import general_utils as GU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
-from src.leaf_model import surface_functions as FF
-from src.leaf_model import nn
 from src.leaf_model import leaf_commons as LC
 
 
@@ -141,20 +136,6 @@ class Optimization:
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
             TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
-
-
-
-def render_parallel(args):
-    set_name = args[0]
-    sample_id = args[1]
-    wls = args[2]
-    ad = args[3]
-    sd = args[4]
-    ai = args[5]
-    mf = args[6]
-    B.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),wl=wls,ad=ad,
-                                    sd=sd,ai=ai,mf=mf,clear_rend_folder=False,clear_references=False,
-                                    render_references=True,dry_run=False)
 
 
 def optimize_single_wl_threaded(args):
