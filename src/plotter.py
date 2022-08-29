@@ -16,6 +16,7 @@ from scipy.optimize import curve_fit
 
 from src import constants as C
 from src.data import file_handling as FH, toml_handling as T, file_names as FN, path_handling as P
+from src.leaf_model import nn, surf, training_data as training, surface_functions
 
 
 figsize = (12,6)
@@ -156,34 +157,8 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     plt.close(fig)
 
 
-def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fittable=None, save_thumbnail=True,
-               show_plot=False, plot_data_as_surface=False):
-    """ Plot surface fitting result into 3D plot.
-
-    :param r:
-        List of reflectance values.
-    :param t:
-        List of transmittance values.
-    :param z:
-        List of function values (absorption density, scattering desnsity, scattering anisotropy or mix factor).
-    :param z_label:
-        Label of function (ad, sd, ai, mf). Converted to Latex notation used in published papers.
-    :param z_intensity:
-        Color of data points using heat map. Optional.
-    :param surface_parameters:
-        Surface parameters to draw a surface. If omitted, no surface is drawn.
-    :param fittable:
-        Surface function to be used. Does not take effect if 'surface_parameters' were omitted.
-        This has to be the same function that what the surface parameters were obtained with.
-    :param save_thumbnail:
-        If True, save plot to disk.
-    :param show_plot:
-        If True, show plot to user. NOTE showing the plot will halt the run until the plot window is manually closed.
-    :param plot_data_as_surface:
-        If True, plots data points as a surface, which can make it easier to see the shape of the data.
-        Causes default data points and fitted surfaces to be ignored. Default is False.
-    :return:
-    """
+def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True,
+                             show_plot=False, plot_surf=True, plot_nn=True):
 
     def variable_name_to_latex(v):
         """Change variable name into Latex format."""
@@ -199,41 +174,62 @@ def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fitt
         else:
             return v
 
-    # setup figure object
-    fig = plt.figure(figsize=figsize_single)
-    ax = plt.axes(projection="3d")
-    ax.set_xlabel('R', fontsize=axis_label_font_size)
-    ax.set_ylabel('T', fontsize=axis_label_font_size)
-    ax.set_zlabel(variable_name_to_latex(z_label), fontsize=axis_label_font_size)
-    ax.elev = 30
-    ax.azim = 225
-    num_points = 25
-    R, T = np.meshgrid(np.linspace(0, max(r), num_points), np.linspace(0, max(t), num_points))
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(set_name=set_name)
+    train_params = [ad_train, sd_train, ai_train, mf_train]
+    leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
-    if z_intensity is None:
-        z_intens = z
+    if plot_surf and surf.exists():
+        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train)
+        surf_params = [ad_surf, sd_surf, ai_surf, mf_surf]
     else:
-        z_intens = z_intensity
+        surf_params = None
 
-    if not plot_data_as_surface:
-        ax.scatter(r, t, z, c=z_intens, cmap=plt.cm.hot)
+    if plot_nn and nn.exists():
+        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train)
+        nn_params = [ad_nn, sd_nn, ai_nn, mf_nn]
     else:
-        surf = ax.plot_trisurf(r, t, z, linewidth=0)
-        fig.colorbar(surf)
+        nn_params = None
 
-    if surface_parameters is not None and not plot_data_as_surface:
-        Z = fittable(np.array([R, T]), *surface_parameters)
-        ax.plot_surface(R, T, Z, alpha=0.5)
+    for i in range(4):
 
-    if save_thumbnail:
-        folder = P.path_directory_surface_model()
-        image_name = f"{z_label}.png"
-        path = P.join(folder, image_name)
-        logging.info(f"Saving surface plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        # setup figure object
+        fig = plt.figure(figsize=figsize_single)
+        ax = plt.axes(projection="3d")
+        ax.set_xlabel('R', fontsize=axis_label_font_size)
+        ax.set_ylabel('T', fontsize=axis_label_font_size)
+        ax.elev = 30
+        ax.azim = 225
 
-    if show_plot:
-        plt.show()
+        ax.set_zlabel(variable_name_to_latex(leaf_param_names[i]), fontsize=axis_label_font_size)
+
+        ax.scatter(r_train, t_train, train_params[i], marker='.', color='black', alpha=0.1)
+
+        if surf_params is not None:
+            surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf')
+            surf_surf._edgecolors2d = surf_surf._edgecolor3d
+            surf_surf._facecolors2d = surf_surf._facecolor3d
+        else:
+            logging.warning(f"Cannot plot surface model plot as the model could not be used.")
+        if nn_params is not None:
+            nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn')
+            nn_surf._edgecolors2d = nn_surf._edgecolor3d
+            nn_surf._facecolors2d = nn_surf._facecolor3d
+        else:
+            logging.warning(f"Cannot plot nn model plot as the model could not be used.")
+
+        if surf_params is not None and nn_params is not None:
+            # legend breaks if not manually set as above. This is a known bug in matplotlib.
+            ax.legend()
+
+        if save_thumbnail:
+            folder = P.path_directory_surface_model()
+            image_name = f"{leaf_param_names[i]}.png"
+            path = P.join(folder, image_name)
+            logging.info(f"Saving surface plot to '{path}'.")
+            plt.savefig(path, dpi=300)
+
+        if show_plot:
+            plt.show()
 
 
 def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True):

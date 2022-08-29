@@ -95,8 +95,9 @@ if __name__ == '__main__':
 
     # interface.train_models(set_name='training_data',generate_data=False,train_points_per_dim=5)
 
-    interface.solve_leaf_material_parameters(set_name='newthing6', resolution=50, solver='nn', copyof='p_dry')
+    # interface.solve_leaf_material_parameters(set_name='newthing6', resolution=50, solver='surf', copyof='p_dry')
 
+    interface.visualize_leaf_models(show_plot=True)
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)

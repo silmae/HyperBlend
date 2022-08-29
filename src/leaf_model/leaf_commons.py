@@ -8,10 +8,10 @@ import numpy as np
 import logging
 
 from src.data import path_handling as P, file_handling as FH
-from src import constants as C
-
+from src import constants as C, plotter
 from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU
+from src.leaf_model import nn, surf, training_data as training
 
 
 density_scale = 3000

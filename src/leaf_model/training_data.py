@@ -172,3 +172,25 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
                      f"but this was just a dry run..")
 
     visualize_training_data_pruning(set_name=set_name, show=False, save=True)
+
+
+def get_training_data(set_name='training_data'):
+    """Returns training data.
+
+    :param set_name:
+        Set name of the training data. No need to change the default unless you
+        generated the data with custom name.
+    :return:
+        Returns ad, sd, ai, mf, r, t, re, te Numpy arrays (vector).
+    """
+    result = TH.read_sample_result(set_name, sample_id=0)
+    ad = np.array(result[C.key_sample_result_ad])
+    sd = np.array(result[C.key_sample_result_sd])
+    ai = np.array(result[C.key_sample_result_ai])
+    mf = np.array(result[C.key_sample_result_mf])
+
+    r = np.array(result[C.key_sample_result_r])
+    t = np.array(result[C.key_sample_result_t])
+    re = np.array(result[C.key_sample_result_re])
+    te = np.array(result[C.key_sample_result_te])
+    return ad, sd, ai, mf, r, t, re, te

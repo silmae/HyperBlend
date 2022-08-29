@@ -16,6 +16,10 @@ from src import plotter
 from src.leaf_model import nn, surf, leaf_commons as LC
 
 
+def visualize_leaf_models(show_plot=False):
+    plotter.plot_trained_leaf_models(show_plot=show_plot, save_thumbnail=True, plot_surf=True, plot_nn=True)
+
+
 def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', clear_old_results=False, nn_name=None,
                                    copyof=None, prospect_parameters: dict = None):
 

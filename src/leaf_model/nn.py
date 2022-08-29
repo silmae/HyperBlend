@@ -73,16 +73,7 @@ class TrainingData(Dataset):
             Set name from where the data is loaded.
         """
 
-        result = TH.read_sample_result(set_name, sample_id=0)
-        ad = np.array(result[C.key_sample_result_ad])
-        sd = np.array(result[C.key_sample_result_sd])
-        ai = np.array(result[C.key_sample_result_ai])
-        mf = np.array(result[C.key_sample_result_mf])
-        r = np.array(result[C.key_sample_result_r])
-        t = np.array(result[C.key_sample_result_t])
-        re = np.array(result[C.key_sample_result_re])
-        te = np.array(result[C.key_sample_result_te])
-
+        ad, sd, ai, mf, r, t, re, te = TD.get_training_data(set_name=set_name)
         ad, sd, ai, mf, r, t = TD.prune_training_data(ad, sd, ai, mf, r, t, re, te)
 
         self.X = np.column_stack((r,t))
