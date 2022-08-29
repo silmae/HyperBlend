@@ -9,13 +9,32 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src import constants as C
+from src import constants as C, plotter
 from src.data import toml_handling as TH, file_handling as FH
 from src.leaf_model.opt import Optimization
 
 
-def visualize_training_data_pruning(set_name="surface_train"):
-    # TODO move to plotter.py
+"""
+Additional conditions after analyzing erronous areas. 
+Constants for two lines equation k*r + b that cut the 
+edges of data set away. 
+"""
+k1 = 3.8
+k2 = 0.5
+b1 = 0.02
+b2 = -0.035
+
+
+def visualize_training_data_pruning(set_name="training_data", show=False, save=True):
+    """Visualizes training data. Can be saved to disk or shown directly (or both).
+
+    :param set_name:
+        Name of the training data set. Change only if custom name was used in data generation.
+    :param show:
+        Show interactive plot to user. Default is ```False```.
+    :param save:
+        Save plot to disk. Default is ```True```.
+    """
 
     result = TH.read_sample_result(set_name, sample_id=0)
     ad = np.array(result[C.key_sample_result_ad])
@@ -28,19 +47,8 @@ def visualize_training_data_pruning(set_name="surface_train"):
     te = np.array(result[C.key_sample_result_te])
     _, _, _, _, r_bad, t_bad = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=True)
     _, _, _, _, r_good, t_good = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
-    plt.scatter(r_good,t_good,c='b', alpha=0.5, marker='.')
-    plt.scatter(r_bad,t_bad,c='r', alpha=0.5, marker='.')
-    plt.plot([0,0.6],[0,0.4], c='black', linewidth=3)
-    plt.plot([0,0.7],[0,0.7], c='black', linewidth=3)
-    # plt.plot([0,0.02],[0.09,0.033], c='black', linewidth=3)
-    k1 = 3
-    k2 = 0.5
-    plt.plot([0,0.09],[0.02,0.33], c='black', linewidth=3)
-    # plt.plot([0.05,0.0],[0.4,0.18], c='black', linewidth=3)
-    plt.plot([0.05,0.45],[0.0,0.2], c='black', linewidth=3)
-    plt.xlabel('R')
-    plt.ylabel('T')
-    plt.show()
+    plotter.plot_training_data_set(r_good=r_good, r_bad=r_bad, t_good=t_good, t_bad=t_bad,
+                                   k1=k1, b1=b1,k2=k2,b2=b2, show=show, save=save)
 
 
 def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
@@ -107,6 +115,7 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     If ```dry_run=True```, only pretends to generate the points. This is useful for testing how
     different ```cuts_per_dim``` values affect the actual point count.
 
+    Data visualization is saved to disk when the data has been generated.
 
     :param set_name:
         Optionally change the ```set_name``` that is used for destination directory. If other
@@ -139,12 +148,9 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
             if math.fabs(r - t) > maxdiff_rt:
                 continue
 
-            # Additional conditions after analyzing erronous areas.
-            k1 = 3.8
-            k2 = 0.5
-            if t > r * k1 + 0.02:
+            if t > r * k1 + b1:
                 continue
-            if t < r * k2 - 0.035:
+            if t < r * k2 + b2:
                 continue
 
             # normal case
@@ -160,3 +166,5 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     else:
         logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
                      f"but this was just a dry run..")
+
+    visualize_training_data_pruning(set_name=set_name, show=False, save=True)

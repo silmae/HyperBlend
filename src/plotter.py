@@ -230,6 +230,71 @@ def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fitt
         plt.show()
 
 
+def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True):
+    """Plot training data either interactively or save to disk.
+
+    Constants k1,2 and b1,2 are used to visualize cutting lines along equation k*r + b.
+
+    :param r_good:
+        List of reflectances of good points.
+    :param t_good:
+        List of transmittances of good points.
+    :param r_bad:
+        List of reflectances of bad points.
+    :param t_bad:
+        List of transmittances of bad points.
+    :param k1:
+        First cutting line k.
+    :param b1:
+        First cutting line b.
+    :param k2:
+        Second cutting line k.
+    :param b2:
+        First cutting line b.
+    :param show:
+        Show interactive plot to user. Default is ```False```.
+    :param save:
+        Save plot to disk. Default is ```True```.
+    """
+
+    color_good = 'blue'
+    color_bad = 'red'
+    color_cut = 'brown'
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
+    fig.suptitle(f"Training data", fontsize=fig_title_font_size)
+
+    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker='.', label='Good points')
+
+    if r_bad is not None and t_bad is not None:
+        ax.scatter(r_bad, t_bad, c=color_bad, alpha=0.5, marker='.', label='Bad points')
+    else:
+        logging.info("Badly fitted training data points were not given so they are not plotted.")
+
+    if k1 and b1:
+        x = np.array([0,0.1])
+        y = x*k1 + b1
+        plt.plot(x, y, c=color_cut, linewidth=1)
+
+    if k2 and b2:
+        x = np.array([-b2,0.3])
+        y = x*k2 + b2
+        ax.plot(x, y, c=color_cut, linewidth=1)
+
+    ax.set_xlabel('R', fontsize=axis_label_font_size)
+    ax.set_ylabel('T', fontsize=axis_label_font_size)
+    ax.legend()
+
+    if save:
+        folder = P.path_directory_surface_model()
+        image_name = "training_data" + C.postfix_plot_image_format
+        path = P.join(folder, image_name)
+        logging.info(f"Saving the training data visualization plot to '{path}'.")
+        plt.savefig(path, dpi=300)
+    if show:
+        plt.show()
+
+
 def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True) -> None:
     """Plots optimization history of a single wavelength using existing wavelength result toml file.
 
