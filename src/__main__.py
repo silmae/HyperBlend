@@ -93,11 +93,10 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    interface.train_models(set_name='training_data_test',generate_data=True,train_points_per_dim=5)
+    # interface.train_models(set_name='training_data',generate_data=False,train_points_per_dim=5)
 
-    interface.solve_leaf_material_parameters(set_name='newthing5', resolution=50, solver='surf', copyof='p_dry')
+    interface.solve_leaf_material_parameters(set_name='newthing6', resolution=50, solver='nn', copyof='p_dry')
 
-    # TODO build training stuff to the interface. Also create new script responsible for training data generation.
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)

@@ -5,6 +5,29 @@ Parsing and generating file names.
 from src import constants as C
 
 
+def get_nn_save_name(layer_count, layer_width, batch_size, lr, split):
+    """Generate filename for neural network.
+
+    This is used for the NN models and training history plot with according postfix.
+
+    :param layer_count:
+        Hidden layer count.
+    :param layer_width:
+        Width of hidden layers.
+    :param batch_size:
+        Batch size
+    :param lr:
+        Learning rate
+    :param split:
+        Persentage of data reserved to testing.
+    :return:
+        Returns generated name.
+    """
+
+    name = f"lc{layer_count}_lw{layer_width}_b{batch_size}_lr{lr:.3f}_split{split:.2f}"
+    return name
+
+
 def parse_sample_id(filename: str) -> int:
     """Parse sample id from given filename as listed by os.listdir().
 

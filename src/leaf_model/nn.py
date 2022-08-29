@@ -1,7 +1,10 @@
+"""
+Leaf model implementation as a neural network.
 
-##########################
-# From tutorial: https://pytorch.org/tutorials/beginner/blitz/neural_networks_tutorial.html
-##########################
+Greatly accelerates prediction time compared to the original
+optimization method with some loss to accuracy.
+
+"""
 
 import logging
 import os
@@ -17,33 +20,38 @@ from torch import load
 from torch import from_numpy
 import torch.optim as optim
 
-import src.leaf_model.training_data
-from src.data import path_handling as PH
-from src.data import toml_handling as TH
+import src.leaf_model.training_data as TD
+from src.data import path_handling as PH, toml_handling as TH, file_names as FN
 from src import constants as C
 from src import plotter
-from src.leaf_model import leaf_commons as shared
 
-
+# Set manual seed when doing hyperparameter search for comparable results
+# between training runs.
 torch.manual_seed(666)
 
 
-class Net(nn.Module):
+class Leafnet(nn.Module):
+    """Neural network implementation."""
 
     def __init__(self, layer_count, layer_width):
-        super(Net, self).__init__()
+        """Initialize neural network with given architecture.
+
+        Number and width of hidden layers as parameters. Activation for all hidden layers is
+        leaky relu.
+        """
+
+        super(Leafnet, self).__init__()
         input_dim = 2
         output_dim = 4
         self.layer_count = layer_count
         self.layer_width = layer_width
         current_dim = input_dim
         self.layers = nn.ModuleList()
-        for i in range(layer_count+1):
+        for i in range(layer_count+1): # +1 because the input layer is also added in the loop
             layer = nn.Linear(current_dim, layer_width)
-            # nn.init.constant_(layer.weight, val=1.0)#nonlinearity='relu')
             self.layers.append(layer)
             current_dim = layer_width
-        self.layers.append(nn.Linear(current_dim, output_dim))
+        self.layers.append(nn.Linear(current_dim, output_dim)) # add output layer separately
         self.activation = F.leaky_relu_
 
     def forward(self, x):
@@ -53,8 +61,17 @@ class Net(nn.Module):
         return out
 
 
-class CustomDataset(Dataset):
+class TrainingData(Dataset):
+    """Handles catering the training data from disk to NN."""
+
     def __init__(self, set_name):
+        """Initialize data.
+
+        Prunes badly fitted data points from the set.
+
+        :param set_name:
+            Set name from where the data is loaded.
+        """
 
         result = TH.read_sample_result(set_name, sample_id=0)
         ad = np.array(result[C.key_sample_result_ad])
@@ -66,7 +83,7 @@ class CustomDataset(Dataset):
         re = np.array(result[C.key_sample_result_re])
         te = np.array(result[C.key_sample_result_te])
 
-        ad, sd, ai, mf, r, t = src.leaf_model.training_data.prune_training_data(ad, sd, ai, mf, r, t, re, te)
+        ad, sd, ai, mf, r, t = TD.prune_training_data(ad, sd, ai, mf, r, t, re, te)
 
         self.X = np.column_stack((r,t))
         self.Y = np.column_stack((ad, sd, ai, mf))
@@ -80,15 +97,45 @@ class CustomDataset(Dataset):
 
 def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size=2, learning_rate=0.001, patience=30,
           split=0.1, set_name='training_data'):
+    """Train the neural network with given parameters.
 
-    whole_data = CustomDataset(set_name=set_name)
+    Saves the best performing model onto disk with generated name (according to NN architecture and some training
+    parameters). You can manually change the name later to
+    'nn_default.pt' if you want to replace the old default network that comes from the Git repository.
+
+    :param show_plot:
+        Show training history at the end of training. Set False when doing multiple runs.
+        The plot is always saved to disk, even if not shown. Default is False.
+    :param layer_count:
+        Number of hidden layers.
+    :param layer_width:
+        Width of hidden layers.
+    :param epochs:
+        Maximum epochs.
+    :param batch_size:
+        Batch size. Best results with small batches (2). Bigger batches (e.g. 32) train faster
+        but reduce accuracy.
+    :param learning_rate:
+        Learning rate for Adam optimizer. Default 0.001 usually performs best.
+    :param patience:
+        Early stop training if test loss has not improved in this many epochs.
+    :param split:
+        Percentage [0,1] of data reserved for testing between epochs. Value between 0.1 and 0.2
+        is usually sufficient.
+    :param set_name:
+        Set name of the training data. Default is OK if you didn't generate training data with a custom name.
+    :return:
+        Returns the best loss for hyperparameter tuning loops.
+    """
+
+    whole_data = TrainingData(set_name=set_name)
     test_n = int(len(whole_data) * split)
     train_set, test_set = random_split(whole_data, [len(whole_data) - test_n, test_n])
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 
-    net = Net(layer_count=layer_count, layer_width=layer_width)
+    net = Leafnet(layer_count=layer_count, layer_width=layer_width)
 
     logging.info(f"Learning rate {learning_rate}")
     logging.info(f"Batch size {batch_size}")
@@ -96,17 +143,14 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     logging.info(f"Test split {split}")
     logging.info(f"Net has {net.layer_count} hidden layers that are {net.layer_width} wide")
 
-    save_name = get_nn_save_name(layer_count=net.layer_count, layer_width=net.layer_width, batch_size=batch_size,
+    save_name = FN.get_nn_save_name(layer_count=net.layer_count, layer_width=net.layer_width, batch_size=batch_size,
                                  lr=learning_rate, split=split)
 
     net = net.double()
     logging.info(net)
-    # params = net.parameters()
 
-    # critcerion = nn.L1Loss(reduction = 'sum')
     criterion = nn.MSELoss()
 
-    # create your optimizer
     optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
     train_losses = []
@@ -131,7 +175,6 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
         train_losses.append(loss.item())
 
         net.train(False)
-        correct = 0
 
         # perform a prediction on the test  data
         for x_test, y_test in test_loader:
@@ -148,7 +191,7 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
             patience_trigger = 0
             nn_path = save_name + '.pt'
             save(net, PH.join(PH.path_directory_surface_model(), nn_path))
-            logging.info(f"Saved model with test loss {best_loss:.6f} epoch {epoch}")
+            logging.info(f"Saved model with test loss {best_loss:.8f} epoch {epoch}")
         else:
             patience_trigger += 1
 
@@ -163,13 +206,21 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     return best_loss
 
 
-def get_nn_save_name(layer_count, layer_width, batch_size, lr, split):
-    # TODO move to FileNames
-    name = f"lc{layer_count}_lw{layer_width}_b{batch_size}_lr{lr}_split{split}"
-    return name
-
-
 def predict(r_m, t_m, nn_name='nn_default'):
+    """Use neural network to predict HyperBlend leaf model parameters from measured reflectance and transmittance.
+
+    :param r_m:
+        Measured reflectance.
+    :param t_m:
+        Measured transmittance.
+    :param nn_name:
+        Neural network name. Default name 'nn_default' is used if not given.
+        Provide only if you want to use your trained custom NN.
+    :return:
+        Lists ad, sd, ai, mf (absorption density, scattering desnity, scattering anisotropy, and mixing factor).
+        Use ``leaf_commons._convert_raw_params_to_renderable()`` before passing them to rendering method.
+    """
+
     net = _load_model(nn_name=nn_name)
     r_m = np.array(r_m)
     t_m = np.array(t_m)
@@ -183,6 +234,17 @@ def predict(r_m, t_m, nn_name='nn_default'):
 
 
 def _load_model(nn_name):
+    """Loads the NN from disk.
+
+    :param nn_name:
+        Name of the model file.
+    :return:
+        Returns loaded NN.
+    :exception:
+        ModuleNotFoundError can happen if the network was trained when the name
+        of this script was something else than what it is now. Your only help
+        is to train again.
+    """
     try:
         net = load(_get_model_path(nn_name))
         net.eval()
@@ -195,6 +257,16 @@ def _load_model(nn_name):
 
 
 def _get_model_path(nn_name='nn_default'):
+    """Returns path to the NN model.
+
+    :param nn_name:
+        Name of the NN.
+    :return:
+        Returns path to the NN model.
+    :exception:
+        FileNotFoundError if the model cannot be found.
+    """
+
     if not nn_name.endswith('.pt'):
         nn_name = nn_name + '.pt'
     model_path = PH.join(PH.path_directory_surface_model(), nn_name)
@@ -202,3 +274,15 @@ def _get_model_path(nn_name='nn_default'):
         return model_path
     else:
         raise FileNotFoundError(f"Model '{model_path}' was not found. Check spelling.")
+
+
+def exists():
+    """Checks whether the default NN model exists.
+
+    :return:
+        True if found, False otherwise.
+    """
+
+    nn_name = 'nn_default.pt'
+    model_path = PH.join(PH.path_directory_surface_model(), nn_name)
+    return os.path.exists(model_path)

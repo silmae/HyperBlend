@@ -142,11 +142,6 @@ class Optimization:
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
             TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
 
-        # Plot averages if there was more than one sample
-        # if len(FH.list_finished_sample_ids(self.set_name)) > 1:
-        plotter.plot_set_result(self.set_name)
-        plotter.plot_set_errors(self.set_name)
-        TH.write_set_result(self.set_name)
 
 
 def render_parallel(args):
