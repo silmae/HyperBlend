@@ -1,6 +1,9 @@
 """
 Functionality regarding training data generation for
 surface model and neural network training.
+
+This is somewhat specific functionality so it is not included
+in the leaf model interface script.
 """
 
 import logging
@@ -48,7 +51,7 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
     _, _, _, _, r_bad, t_bad = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=True)
     _, _, _, _, r_good, t_good = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
     plotter.plot_training_data_set(r_good=r_good, r_bad=r_bad, t_good=t_good, t_bad=t_bad,
-                                   k1=k1, b1=b1,k2=k2,b2=b2, show=show, save=save)
+                                   k1=k1, b1=b1, k2=k2, b2=b2, show=show, save=save)
 
 
 def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
@@ -79,10 +82,7 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
         Pruned ad,sd,ai,mf,r,t corresponding to arguments.
     """
 
-    # set_name = "surface_train"
-    max_error = 0.01
-
-    # logging.info(f"Fetching training data from set '{set_name}'.")
+    max_error = 0.01 # 1%
     logging.info(f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned.")
 
     to_delete = [(a > max_error or b > max_error) for a, b in zip(re, te)]
@@ -103,34 +103,38 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
 
     bad_points_count = initial_count - len(ad)
 
-    logging.info(f"Pruned {len(to_delete)} ({(bad_points_count/initial_count)*100:.2}%) points because exceeding error threshold {max_error}.")
-    logging.info(f"Point count after pruning {len(ad)}.")
+    if not invereted:
+        logging.info(f"Pruned {len(to_delete)} ({(bad_points_count/initial_count)*100:.2}%) points because exceeding error threshold {max_error}.")
+        logging.info(f"Point count after pruning {len(ad)}.")
 
-    return ad,sd,ai,mf,r,t
+    return ad, sd, ai, mf, r, t
 
 
 def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, maxdiff_rt=0.25):
     """Generate reflectance-transmittance pairs as training data for surface fitting and neural network.
 
-    If ```dry_run=True```, only pretends to generate the points. This is useful for testing how
-    different ```cuts_per_dim``` values affect the actual point count.
+    Generated data will have fake wavelengths attached to them. They run from 1 to the number of
+    generated points.
+
+    If ``dry_run=True``, only pretends to generate the points. This is useful for testing how
+    different ``cuts_per_dim`` values affect the actual point count.
 
     Data visualization is saved to disk when the data has been generated.
 
     :param set_name:
-        Optionally change the ```set_name``` that is used for destination directory. If other
+        Optionally change the ``set_name`` that is used for destination directory. If other
         than default is used, it must be taken into account when training, i.e., pass the same
         name for training method.
     :param dry_run:
         If true, just prints how many points would have been generated. Note that it
-        is not the same as ```cuts_per_dim```^2 because parts of the space are not
+        is not the same as ``cuts_per_dim`` ^2 because parts of the space are not
         usable and will be cut out.
     :param cuts_per_dim:
         Into how many parts each dimension (R,T) are cut in interval [0,1].
     :param maxdiff_rt:
         Controls the symmetry of generated pairs, i.e., how much each R value can differ from
         respective T value. Using greater than 0.25 will cause generating a lot of points
-        that will fail to be optimized properly.
+        that will fail to be optimized properly (and will be pruned before training).
     """
 
     FH.create_first_level_folders(set_name)
@@ -148,12 +152,12 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
             if math.fabs(r - t) > maxdiff_rt:
                 continue
 
+            # Cutoff points where R and T are low and dissimilar as they will fail anyway.
             if t > r * k1 + b1:
                 continue
             if t < r * k2 + b2:
                 continue
 
-            # normal case
             wlrt = [fake_wl, r, t]
             data.append(wlrt)
             fake_wl += 1
