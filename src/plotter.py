@@ -87,18 +87,18 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
 
         ax[0].plot(wls, irradiances, label='Sun 1 nm')
         ax[0].set_title('Spectra in file')
-        ax[0].set_xlabel('Wavelength [nm]')
-        ax[0].set_ylabel('Irradiance [W/m2/nm]')
+        ax[0].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
+        ax[0].set_ylabel('Irradiance [W/m2/nm]', fontsize=axis_label_font_size)
 
         ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwith {bandwith_binned:.0f} nm', alpha=0.5)
         ax[1].set_title('Integrated spectra')
-        ax[1].set_xlabel('Wavelength [nm]')
-        ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]')
+        ax[1].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
+        ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]', fontsize=axis_label_font_size)
     else:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
         fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
-        ax.set_xlabel('Wavelength [nm]')
-        ax.set_ylabel(f'Irradiance [W/m2/{bandwith:.0f}nm]')
+        ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
+        ax.set_ylabel(f'Irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
         ax.plot(wls, irradiances, label=f'Bandwith {bandwith:.0f} nm')
 
     plt.legend()
@@ -112,27 +112,33 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
 
 def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True, save_thumbnail=True,
                           file_name="nn_train_history.png") -> None:
-    """Plots optimization history of a single wavelength using existing wavelength result toml file.
+    """Plot training history of neural network.
 
-    :param file_name:
     :param train_loss:
-        Training loss
+        List of training losses (per epoch).
     :param test_loss:
-        Validation loss
+        List of test losses (per epoch).
     :param best_epoch_idx:
-        Index of the best epoch
-    :param save_thumbnail:
-        If True, a PNG image is saved to result/plot folder. Default is True.
+        Index of best epoch for highlighting.
     :param dont_show:
-        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+        If true, does not show the interactive plot (that halts excecution). Always use True when
+        running multiple times in a loop (hyperparameter tuning). Default True.
+    :param save_thumbnail:
+        If True, save plot to disk. Default True.
+    :param file_name:
+        Filename for saving the plot. Postfix '.png' is added if missing. Default name is "nn_train_history.png".
+    :return:
     """
+
+    if not file_name.endswith(C.postfix_plot_image_format):
+        file_name = file_name + C.postfix_plot_image_format
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training history", fontsize=fig_title_font_size)
-    ax.plot(train_loss, label="Train loss")
+    ax.plot(train_loss, label="Training loss")
     ax.plot(test_loss, label="Test loss")
     ax.scatter(best_epoch_idx, test_loss[best_epoch_idx], facecolors='none', edgecolors='r')
-    ax.set_xlabel('Epoch')
+    ax.set_xlabel('Epoch', fontsize=axis_label_font_size)
     ax.legend()
 
     if save_thumbnail:
@@ -196,9 +202,9 @@ def plot_3d_rt(r, t, z, z_label, z_intensity=None, surface_parameters=None, fitt
     # setup figure object
     fig = plt.figure(figsize=figsize_single)
     ax = plt.axes(projection="3d")
-    ax.set_xlabel('R')
-    ax.set_ylabel('T')
-    ax.set_zlabel(variable_name_to_latex(z_label))
+    ax.set_xlabel('R', fontsize=axis_label_font_size)
+    ax.set_ylabel('T', fontsize=axis_label_font_size)
+    ax.set_zlabel(variable_name_to_latex(z_label), fontsize=axis_label_font_size)
     ax.elev = 30
     ax.azim = 225
     num_points = 25
@@ -319,7 +325,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_sd])), subres_dict[C.key_wl_result_history_sd], label=C.key_wl_result_history_sd, color=color_sd)
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ai])), subres_dict[C.key_wl_result_history_ai], label=C.key_wl_result_history_ai, color=color_ai)
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_mf])), subres_dict[C.key_wl_result_history_mf], label=C.key_wl_result_history_mf, color=color_mf)
-    ax[0].set_xlabel('Render call')
+    ax[0].set_xlabel('Render call', fontsize=axis_label_font_size)
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
 
@@ -424,7 +430,6 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
-    # ax.set_title('Optimization errors')
     marker = '.'
 
     ax.set_ylabel('RMSE', fontsize=axis_label_font_size)
@@ -445,11 +450,6 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     refl_errs_std = np.array(refl_errs).std(axis=0)
     tran_errs_std = np.array(tran_errs).std(axis=0)
 
-    # x_data = result[C.result_key_wls]
-    # plot_neat_errors(ax, wls, refl_errs_mean, refl_errs_std, color_reflectance, 'Reflectance error')
-    # plot_neat_errors(ax, wls, tran_errs_mean, tran_errs_std, color_transmittance, 'Transmittance error')
-    # ax.scatter(wls, refl_errs_mean, color=color_reflectance,   marker_size=2)
-    # ax.scatter(wls, tran_errs_mean, color=color_transmittance, marker_size=2)
     error_every = 5
     line_width = 0.0 # does not draw line STD if linewidth is 0.0
     ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Reflectance error',   marker='x', markersize=4, color=color_reflectance)
@@ -496,8 +496,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     ax[0].plot(x_data, result[C.key_sample_result_ai], label=C.key_sample_result_ai, marker=marker, color=color_ai)
     ax[0].plot(x_data, result[C.key_sample_result_mf], label=C.key_sample_result_mf, marker=marker, color=color_mf)
     x_label = 'Wavelength [nm]'
-    ax[0].set_xlabel(x_label)
-    # ax[1].set_xlabel('Wavelength')
+    ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
@@ -617,12 +616,12 @@ def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_t
         None
     """
 
-    axis_object.set_xlabel(x_label)
-    axis_object.set_ylabel('Reflectance', color=refl_color)
+    axis_object.set_xlabel(x_label, fontsize=axis_label_font_size)
+    axis_object.set_ylabel('Reflectance', color=refl_color, fontsize=axis_label_font_size)
     axis_object.tick_params(axis='y', labelcolor=refl_color)
     # Make twin axis for transmittance
     axt = axis_object.twinx()
-    axt.set_ylabel('Transmittance', color=tran_color)
+    axt.set_ylabel('Transmittance', color=tran_color, fontsize=axis_label_font_size)
     axt.tick_params(axis='y', labelcolor=tran_color)
     # But use given x_values for plotting
     marker = '.'
