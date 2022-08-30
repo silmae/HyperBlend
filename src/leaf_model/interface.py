@@ -118,8 +118,8 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
             raise AttributeError(f"Unknown solver '{solver}'. Use one of ['nn','surf','opt'].")
 
     TH.write_set_result(set_name)
-    plotter.plot_set_result(set_name)
-    plotter.plot_set_errors(set_name)
+    plotter.plot_set_result(set_name, dont_show=True, save_thumbnail=True)
+    plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
 
 
 def train_models(set_name='training_data', show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size=2,

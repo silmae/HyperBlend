@@ -8,7 +8,7 @@ scenes*/*
 rend*/*
 plot*/*
 *.blend1
-optimization/*
+leaf_measurement_sets/*
 measured_data/*
 blender_test_run/*
 scenes/*

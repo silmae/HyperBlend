@@ -34,13 +34,13 @@ def path_directory_sample(set_name: str, sample_id: int) -> str:
     return p
 
 
-def path_directory_optimization() -> str:
-    """Path to top level optimization root folder.
+def path_directory_leaf_measurement_sets() -> str:
+    """Path to top level leaf measurement sets root folder.
 
-    'project_root/optimization'
+    'project_root/leaf_measurement_sets'
     """
 
-    p = os.path.abspath(C.path_project_root + '/' + C.folder_opt)
+    p = os.path.abspath(C.path_project_root + '/' + C.folder_leaf_measurement_sets)
     return p
 
 
@@ -67,7 +67,7 @@ def path_directory_set(set_name: str) -> str:
     'project_root/optimization/<set_name>'
     """
 
-    p = os.path.abspath(path_directory_optimization() + '/' + set_name)
+    p = os.path.abspath(path_directory_leaf_measurement_sets() + '/' + set_name)
     return p
 
 

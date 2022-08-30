@@ -137,6 +137,10 @@ class Optimization:
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
             TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
 
+        TH.write_set_result(self.set_name)
+        plotter.plot_set_result(self.set_name, dont_show=True, save_thumbnail=True)
+        plotter.plot_set_errors(self.set_name, dont_show=True, save_thumbnail=True)
+
 
 def optimize_single_wl_threaded(args):
     """Unpacks arguments from pool.map call."""

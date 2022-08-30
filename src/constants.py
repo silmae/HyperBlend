@@ -56,8 +56,8 @@ folder_rend_ref_refl = 'rend_refl_ref'
 folder_rend_ref_tran = 'rend_tran_ref'
 """Folder name for transmittancewhite reference renders."""
 
-folder_opt = 'optimization'
-"""Top level optimization folder name."""
+folder_leaf_measurement_sets = 'leaf_measurement_sets'
+"""Top level leaf measurement sets folder name."""
 
 folder_surface_model = 'leaf_model'
 """Top level surface model folder name."""

@@ -93,11 +93,12 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    # interface.train_models(set_name='training_data',generate_data=False,train_points_per_dim=5)
+    # interface.train_models(set_name='training_data_new_test',generate_data=True,train_points_per_dim=10)
 
-    # interface.solve_leaf_material_parameters(set_name='newthing6', resolution=50, solver='surf', copyof='p_dry')
+    interface.solve_leaf_material_parameters(set_name='surf1', resolution=50, solver='surf', copyof='p_dry', clear_old_results=True)
+    interface.solve_leaf_material_parameters(set_name='nn1', resolution=50, solver='nn', copyof='p_dry', clear_old_results=True)
 
-    interface.visualize_leaf_models(show_plot=True)
+    # interface.visualize_leaf_models(show_plot=True)
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)

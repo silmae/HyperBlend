@@ -35,8 +35,8 @@ def create_first_level_folders(set_name: str):
         Set name.
     """
 
-    if not os.path.exists(PH.path_directory_optimization()):
-        os.makedirs(PH.path_directory_optimization())
+    if not os.path.exists(PH.path_directory_leaf_measurement_sets()):
+        os.makedirs(PH.path_directory_leaf_measurement_sets())
     if not os.path.exists(PH.path_directory_target(set_name)):
         os.makedirs(PH.path_directory_target(set_name))
     if not os.path.exists(PH.path_directory_sample_result(set_name)):
