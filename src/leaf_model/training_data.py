@@ -10,7 +10,6 @@ import logging
 import math
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from src import constants as C, plotter
 from src.data import toml_handling as TH, file_handling as FH
@@ -39,6 +38,8 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
         Save plot to disk. Default is ```True```.
     """
 
+    # We do not use get_training_data() here because we want the original measured r and t
+    # for evenly spaced grid
     result = TH.read_sample_result(set_name, sample_id=0)
     ad = np.array(result[C.key_sample_result_ad])
     sd = np.array(result[C.key_sample_result_sd])

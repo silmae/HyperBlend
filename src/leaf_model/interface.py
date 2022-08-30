@@ -58,7 +58,6 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
         TODO remove and make separate method
     """
 
-
     if prospect_parameters is not None:
         logging.info(f"Prospect parameter generation asked but I don't know how yet.")
         # TODO generate new targets and save to disk with given name

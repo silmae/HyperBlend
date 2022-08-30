@@ -7,7 +7,7 @@ into leaf material parameters:
 
 1. material_param_optimization: original optimization method that is very slow
 2. material_param_surface: surface fitting method that is fast but rather inaccurate
-3. material_param_neural: neural network method that is fast and sligthly less accurate than optimization but much
+3. material_param_neural: neural network method that is fast and slightly less accurate than optimization but much
 more accurate than surface fit. This is the recommended method.
 
 """

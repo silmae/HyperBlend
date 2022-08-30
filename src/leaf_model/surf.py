@@ -10,9 +10,7 @@ from scipy.optimize import curve_fit
 
 import src.leaf_model.training_data as training
 from src.data import toml_handling as TH, path_handling as PH
-from src import constants as C
 from src.leaf_model import surface_functions as FF
-from src import plotter
 
 
 def predict(r_m, t_m):

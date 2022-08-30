@@ -21,8 +21,7 @@ from torch import from_numpy
 import torch.optim as optim
 
 import src.leaf_model.training_data as TD
-from src.data import path_handling as PH, toml_handling as TH, file_names as FN
-from src import constants as C
+from src.data import path_handling as PH, file_names as FN
 from src import plotter
 
 # Set manual seed when doing hyperparameter search for comparable results
