@@ -59,7 +59,7 @@ folder_rend_ref_tran = 'rend_tran_ref'
 folder_leaf_measurement_sets = 'leaf_measurement_sets'
 """Top level leaf measurement sets folder name."""
 
-folder_surface_model = 'leaf_model'
+folder_leaf_model = 'leaf_model'
 """Top level surface model folder name."""
 
 folder_opt_sample_targets = 'sample_targets'

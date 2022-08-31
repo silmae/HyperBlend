@@ -45,7 +45,7 @@ def path_directory_leaf_measurement_sets() -> str:
 
 
 def path_directory_surface_model() -> str:
-    """Path to surface model directory
+    """Path to leaf model directory
      where surface model parameters and neural networks is stored.
 
     If the directory does not exist, it is created.
@@ -53,7 +53,7 @@ def path_directory_surface_model() -> str:
     'project_root/leaf_model'
     """
 
-    p = os.path.abspath(C.path_project_root + '/' + C.folder_surface_model)
+    p = os.path.abspath(C.path_project_root + '/' + C.folder_leaf_model)
 
     if not os.path.exists(p):
         os.makedirs(p)
@@ -64,7 +64,7 @@ def path_directory_surface_model() -> str:
 def path_directory_set(set_name: str) -> str:
     """Path to set's folder.
 
-    'project_root/optimization/<set_name>'
+    'project_root/leaf_measurement_set/<set_name>'
     """
 
     p = os.path.abspath(path_directory_leaf_measurement_sets() + '/' + set_name)
