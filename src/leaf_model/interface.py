@@ -16,7 +16,8 @@ from src import plotter
 from src.leaf_model import nn, surf, leaf_commons as LC
 
 
-def visualize_leaf_models(show_plot=False, nn_name='nn_deault'):
+def visualize_leaf_models(show_plot=False, nn_name='nn_deault', plot_surf=True,
+                             plot_nn=True, plot_points=True):
     """Visualize trained surface and and neural network model against training data.   
     
     The plot is always saved to disk regardless of ``show_plot`` flag.
@@ -26,7 +27,8 @@ def visualize_leaf_models(show_plot=False, nn_name='nn_deault'):
         If True, show interactive plot. Default is false. 
     """
 
-    plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=True, plot_nn=True, nn_name=nn_name)
+    plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
+                                     plot_points=plot_points, nn_name=nn_name)
 
 
 def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', clear_old_results=False, nn_name=None,
