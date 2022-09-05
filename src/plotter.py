@@ -158,7 +158,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
 
 
 def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show_plot=False, plot_surf=True,
-                             plot_nn=True, nn_name='nn_default'):
+                             plot_nn=True, plot_points=True, nn_name='nn_default'):
 
     def variable_name_to_latex(v):
         """Change variable name into Latex format."""
@@ -175,6 +175,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             return v
 
     ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(set_name=set_name)
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train = training.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
@@ -198,20 +199,27 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
         ax.set_xlabel('R', fontsize=axis_label_font_size)
         ax.set_ylabel('T', fontsize=axis_label_font_size)
         ax.elev = 30
-        ax.azim = 225
+        # ax.azim = 225
+        ax.azim = 180
 
         ax.set_zlabel(variable_name_to_latex(leaf_param_names[i]), fontsize=axis_label_font_size)
 
-        ax.scatter(r_train, t_train, train_params[i], marker='.', color='black', alpha=0.1)
+        if plot_points:
+            # ax.scatter(r_train, t_train, train_params[i], marker='.', color='grey', alpha=0.1)
+            train_surf = ax.plot_trisurf(r_train, t_train, train_params[i], label='training_data', alpha=0.3)
+            train_surf._edgecolors2d = train_surf._edgecolor3d
+            train_surf._facecolors2d = train_surf._facecolor3d
 
         if surf_params is not None:
-            surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf')
+            # surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf', shade=True)
+            surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], label='surf')
             surf_surf._edgecolors2d = surf_surf._edgecolor3d
             surf_surf._facecolors2d = surf_surf._facecolor3d
         else:
             logging.warning(f"Cannot plot surface model plot as the model could not be used.")
         if nn_params is not None:
-            nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn')
+            # nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn', shade=True)
+            nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i],  label='nn')
             nn_surf._edgecolors2d = nn_surf._edgecolor3d
             nn_surf._facecolors2d = nn_surf._facecolor3d
         else:
@@ -261,7 +269,7 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
 
     color_good = 'blue'
     color_bad = 'red'
-    color_cut = 'brown'
+    color_cut = 'black'
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training data", fontsize=fig_title_font_size)
@@ -274,12 +282,12 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         logging.info("Badly fitted training data points were not given so they are not plotted.")
 
     if k1 and b1:
-        x = np.array([0,0.1])
+        x = np.array([-0.01,0.1])
         y = x*k1 + b1
         plt.plot(x, y, c=color_cut, linewidth=1)
 
     if k2 and b2:
-        x = np.array([-b2,0.3])
+        x = np.array([-b2,0.5])
         y = x*k2 + b2
         ax.plot(x, y, c=color_cut, linewidth=1)
 
