@@ -266,13 +266,12 @@ def _get_model_path(nn_name='nn_default'):
         raise FileNotFoundError(f"Model '{model_path}' was not found. Check spelling.")
 
 
-def exists():
-    """Checks whether the default NN model exists.
+def exists(nn_name='nn_default.pt'):
+    """Checks whether NN with given name exists.
 
     :return:
         True if found, False otherwise.
     """
 
-    nn_name = 'nn_default.pt'
     model_path = PH.join(PH.path_directory_surface_model(), nn_name)
     return os.path.exists(model_path)
