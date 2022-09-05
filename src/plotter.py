@@ -157,8 +157,8 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     plt.close(fig)
 
 
-def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True,
-                             show_plot=False, plot_surf=True, plot_nn=True):
+def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show_plot=False, plot_surf=True,
+                             plot_nn=True, nn_name='nn_default'):
 
     def variable_name_to_latex(v):
         """Change variable name into Latex format."""
@@ -184,8 +184,8 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True,
     else:
         surf_params = None
 
-    if plot_nn and nn.exists():
-        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train)
+    if plot_nn and nn.exists(nn_name=nn_name):
+        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, nn_name=nn_name)
         nn_params = [ad_nn, sd_nn, ai_nn, mf_nn]
     else:
         nn_params = None
