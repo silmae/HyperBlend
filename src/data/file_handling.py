@@ -198,6 +198,8 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
 def expand(set_name: str) -> None:
     """Generate back files removed by reduce().
 
+    Does not do anything for sets modeled with 'surf' or 'nn' models.
+
     NOTE: Can not generate rendered images.
     """
 
@@ -214,7 +216,9 @@ def expand(set_name: str) -> None:
 
 
 def reduce(set_name: str) -> None:
-    """Removes all not essential files that can be generated back.
+    """Removes wavelength-wise optimization history plots and cleans temp working directories.
+
+    Does not do anything for sets modeled with 'surf' or 'nn' models.
 
     Useful for reducing file size when sharing over internet, for example.
     Use expand() method to generate files as they were.
@@ -227,20 +231,20 @@ def reduce(set_name: str) -> None:
     clear_all_rendered_images(set_name)
 
     sample_ids = list_finished_sample_ids(set_name)
+    logging.info(f"Removing generated plots from set '{set_name}'.")
     for sample_id in sample_ids:
-        d = TH.read_sample_result(set_name, sample_id=sample_id)
-        wls = d[C.key_sample_result_wls]
-        for wl in wls:
-            wl_result_plot_path = PH.join(PH.path_directory_subresult(set_name, sample_id), FN.filename_wl_result_plot(wl))
-            os.unlink(wl_result_plot_path)
-
-        sample_result_path = PH.join(PH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
-        os.unlink(sample_result_path)
-
-        # Sample result plots are intuitively saved to same place where the set result
-        sample_result_plot_path = PH.join(PH.path_directory_set_result(set_name), FN.filename_sample_result_plot(sample_id))
-        os.unlink(sample_result_plot_path)
-
+        p = PH.path_directory_subresult(set_name, sample_id)
+        file_list = os.listdir(p)
+        if len(file_list) == 0:
+            logging.info(f"Nothing to remove. Directory '{p}' already empty.")
+            continue
+        else:
+            logging.info(f"Cleaning subresult '{sample_id}'.")
+        for plot in file_list:
+            plot_path = PH.join(p, plot)
+            if plot_path.endswith(C.postfix_plot_image_format):
+                os.unlink(plot_path)
+                # print(plot_path)
 
 def duplicate_scene_from_template():
     """Creates a uniquely named copy of a scene and returns its id."""
