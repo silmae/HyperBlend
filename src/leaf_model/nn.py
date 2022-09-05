@@ -236,8 +236,10 @@ def _load_model(nn_name):
         is to train again.
     """
     try:
-        net = load(_get_model_path(nn_name))
+        p = _get_model_path(nn_name)
+        net = load(p)
         net.eval()
+        logging.info(f"NN model loaded from '{p}'")
     except ModuleNotFoundError as e:
         logging.error(f"Pytorch could not load requested neural network. "
                       f"This happens if class or file names associated with "
@@ -273,5 +275,7 @@ def exists(nn_name='nn_default.pt'):
         True if found, False otherwise.
     """
 
+    if not nn_name.endswith('.pt'):
+        nn_name = nn_name + '.pt'
     model_path = PH.join(PH.path_directory_surface_model(), nn_name)
     return os.path.exists(model_path)
