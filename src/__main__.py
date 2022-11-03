@@ -13,11 +13,13 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+import src.leaf_model.nn
 from src.leaf_model import surf as SM
 from src.data import path_handling as PH
 
 from src.data import toml_handling as TH
 from src.leaf_model import interface
+from src import constants as C
 
 
 def show_forest_rend(band, scene_id):
@@ -93,12 +95,45 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    # interface.train_models(set_name='training_data_new_test',generate_data=True,train_points_per_dim=10)
+    # from src.leaf_model import training_data as training
+    # training.visualize_training_data_pruning(show=True)
 
-    interface.solve_leaf_material_parameters(set_name='surf1', resolution=50, solver='surf', copyof='p_dry', clear_old_results=True)
-    interface.solve_leaf_material_parameters(set_name='nn1', resolution=50, solver='nn', copyof='p_dry', clear_old_results=True)
+    # for layer_count in range(4,8):
+    #     for layer_width in range(100,1000,200):
+    #         logging.info(f" Starting nn train with layer_count = {layer_count}, width {layer_width}")
+    #         interface.train_models(set_name='training_data',generate_data=False,layer_count=layer_count,layer_width=layer_width, train_surf=False)
 
-    # interface.visualize_leaf_models(show_plot=True)
+    # interface.train_models(set_name='training_data',generate_data=False,layer_count=5,layer_width=1000, train_surf=True, train_nn=False, batch_size=32)
+
+    # interface.solve_leaf_material_parameters(set_name='specchio_surf2', resolution=5, solver='surf', copyof='specchio_small', clear_old_results=True)
+
+    # set_name_nn = 'specchio_surf_40k_full'
+    # interface.solve_leaf_material_parameters(nn_name='lc5_lw1000_b32_lr0.001_split0.10', set_name='specchio_nn_9-22',
+    #                                          resolution=5, solver='nn', copyof='specchio', clear_old_results=True)
+    # interface.solve_leaf_material_parameters(nn_name='lc5_lw1000_b32_lr0.001_split0.10', set_name='specchio_surf_9-22',
+    #                                          resolution=5, solver='surf', copyof='specchio', clear_old_results=True)
+    # interface.solve_leaf_material_parameters(nn_name='lc5_lw1000_b32_lr0.001_split0.10', set_name='prospect_nn_9-22',
+    #                                          resolution=5, solver='nn', copyof='prospect_randoms', clear_old_results=True)
+    # interface.solve_leaf_material_parameters(nn_name='lc5_lw1000_b32_lr0.001_split0.10', set_name='prospect_surf_9-22',
+    #                                          resolution=5, solver='surf', copyof='prospect_randoms', clear_old_results=True)
+    # nn_res = TH.read_set_result(set_name=set_name_nn)
+    # re = nn_res[C.key_set_result_re_mean]
+    # te = nn_res[C.key_set_result_te_mean]
+    # logging.info(f"Validation error: re = {re:.3f} , te = {te:.3f}")
+
+    from src.data import file_handling as FH, toml_handling as TH
+    # set_name = 'training_data'
+    # sr = TH.collect_wavelength_result(set_name=set_name,sample_id=0)
+    # TH.make_sample_result(set_name=set_name,sample_id=0)
+    FH.clear_all_rendered_images('specchio_nn_9-22')
+    FH.clear_all_rendered_images('specchio_surf_9-22')
+    FH.clear_all_rendered_images('prospect_nn_9-22')
+    FH.clear_all_rendered_images('prospect_surf_9-22')
+
+    from src.leaf_model import training_data as train
+    # train.visualize_training_data_pruning(show=True)
+
+    # interface.visualize_leaf_models(show_plot=True, nn_name='lc5_lw1000_b32_lr0.001_split0.10', plot_points=True)
 
     # SM.train(do_points=False, num_points=50)
     # SM.fit_surface(show_plot=True, save_params=False)
