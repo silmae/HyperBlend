@@ -1,5 +1,0 @@
-To create a ramdisk
-
-sudo mkdir -p /media/ramdisk
-
-sudo mount -t tmpfs -o size=2048M tmpfs /media/ramdisk/
