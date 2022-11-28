@@ -343,3 +343,4 @@ Descriptions of the most important files.
   - `prospect` Package handling prospect simulations. Module `prospect.py` is an interface for this package
   - `rendering` Package responsible for calling Blender.
   - `utils` Package containing miscellaneous utility modules.
+
