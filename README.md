@@ -152,7 +152,101 @@ but not as accurate.
 
 ## <a name="Usage"></a> Usage
 
-## Generating new starting 
+The entry point of the software is `__main__.py` file. 
+The base element of the leaf model is a measurement set identified by `set_name`, which consists 
+of one or more samples identified by `sample_id`. 
+The results are written onto disk in the set's directory as toml files and plotted to .png images.
+
+In the following examples, we assume you are editing the `__main__.py`. We use `leaf_model.interface` 
+module to access almost all functionality. These examples cover the basic usage of HyperBlend leaf 
+model. If you want to do some advanced stuff or want to change the functionality, follow the 
+documentation. We have made an effort to document the code well, so you should be alright.
+
+### PROSPECT leaves
+
+Let's try generating random leaves with PROSPECT and running leaf material parameter solver.
+
+```python
+from src.leaf_model import interface as LI
+
+set_name = "try_random_p_leaves"
+
+# generates three leaf targets to \HyperBlend\leaf_measurement_sets\try_random_p_leaves\sample_targets
+LI.generate_prospect_leaf_random(set_name=set_name, count=3)
+
+# Solve renderable leaf material parameters that produce target reflectance and transmittance
+LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
+
+# After solver has run, check results from HyperBlend\leaf_measurement_sets\try_random_p_leaves\set_result
+```
+
+If you want to give certain PROSPECT parameters instead of using random ones, you 
+can call it like this:
+
+```python
+from src.leaf_model import interface as LI
+
+# Similarly, we can provide exact parameters. Lets give a new set name.
+set_name = "try_p_leaves"
+
+# generates a leaf target with certain parameters to \HyperBlend\leaf_measurement_sets\try_p_leaves\sample_targets.
+# The values used here are the default values.
+LI.generate_prospect_leaf(set_name=set_name, sample_id=0, n=1.5, ab=32, ar=8, brown=0, w=0.016, m=0.009, ant=0)
+
+# You can also give only some parameters. Defaults will be used for the ones not provided.
+# Remember to give new sample_id so that the previously created leaf is not overwritten.
+LI.generate_prospect_leaf(set_name=set_name, sample_id=1, w=0.001, m=0.03)
+
+# Solve renderable leaf material parameters as before
+LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
+
+# After solver has run, check results from HyperBlend\leaf_measurement_sets\try_p_leaves\set_result
+```
+
+We can also copy existing set and solve it with a different solver for example. Let's try that with
+surface fitting solver called 'surf'. Surface solve is not as accurate as the Neural Network we have 
+used until now. Try running the code below and see the results 
+in `\HyperBlend\leaf_measurement_sets\try_copying_set\set_result`
+
+```python
+from src.leaf_model import interface as LI
+
+copy_set = "try_copying_set"
+LI.solve_leaf_material_parameters(set_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
+```
+
+
+### Real-world measurements
+
+If you have reflectance-transmittance data from real world measurements (or from some other simulator) 
+you must write the targets before solving for leaf material parameters. Let's assume you have some 
+data in a list (we will write the list manually for the sake of example)
+
+```python
+from src.leaf_model import interface as LI
+from src.data import toml_handling as TH
+
+set_name = "try_manual_set"
+
+# Example data list of lists where inner list holds the data ordered as [wavelength, reflectance, transmittance]
+data = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
+
+# Write data to disk in a format the HyperBlend can understand
+TH.write_target(set_name, data, sample_id=0)
+
+# Solve as before
+LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
+```
+
+The same workflow we have seen in earlier examples applies here. We just have to have some data to work with.
+
+
+### Re-training solvers
+
+Out of the three available solvers (optimization, neural network, and surface fitting), NN and Surface 
+can be retrained. The Optimization method does not need training, but its starting guess can be changed.
+
+#### Generating new starting guess
 
 The starting guess affects how fast the optimization method can find 
 target reflectance and transmittance. Reasonable starting guess is 
@@ -174,68 +268,74 @@ Copy paste this to ```__main__.py``` and run.
 New starting guess is automatically used from this point onwards. 
 Starting guess is stored in the root folder ```src```.
 
-The entry point of the software is `__main__.py` file. For testing the software without actual data, 
-run 
+
+#### Training data
+
+You can obtain training data we used to train the default models that are included in this repository 
+from [osf.io/trhf8](osf.io/trhf8). Download the zip file and unpack it 
+into `\HyperBlend\HyperBlend\leaf_measurement_sets`. Yes, it is the same location where we put all the other 
+results until now. That is because the training set is nothing more than evenly spaced reflectance and transmittance 
+values with fake wavelengths. 
+
+If you want to create your own training set, you can do so by calling `generate_train_data()` in 
+`src.leaf_model.training_data`. A fair warning though: generating the date uses the Optimization method 
+underneath, so depending on how many data points you ask for, it can take days to generate. 
+As training data generation is quite advanced stuff, we will not cover it in detail. You should 
+get by following the documentation of the `training_data` module.
+
+#### Actual training
+
+The actual training is simple by calling the leaf model interface again 
 
 ```python
-from src import presets
+from src.leaf_model import interface as LI
 
-presets.optimize_default_target()
+LI.train_models()
 ```
 
-that uses hard-coded test spectrum of a leaf. 
+The `train_models()` method takes a bunch of arguments. If you downloaded the training data we provided, 
+you can call it without arguments. You can select to train only one of the models 
+or all. You can use existing training data or generate new. See the documentation for more details.
 
-The base element of the software is a measurement set identified by `set_name`, which consists 
-of one or more samples identified by `sample_id`. To initialize a new set, initialize an 
-`Optimization` object which will create a directory structure for given `set_name` under 
-`optimization` directory. 
-
-To use real measured data, you should use 
-
-```
-data.toml_handling.write_target(set_name:str, data, sample_id=0)
-```
-
-where `data` is a list of wavelength, reflectance, transmittance 3-tuples (or lists). This will 
-write the data to disk in human-readable toml-formatted form that the rest of the code can understand.
-
-Now you can start the optimization process. To summarize a simple use case in one snippet:
+Once the training is done, you can visualize the result by calling 
 
 ```python
-from src.leaf_model.material_param_optimization import Optimization
-from data import toml_handlling as TH
+from src.leaf_model import interface as LI
 
-data = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
-set_name = 'test_set'
-
-o = Optimization(set_name)
-TH.write_target(set_name, data, sample_id=0)
-o.run_optimization()
+LI.visualize_leaf_models()
 ```
 
-The results are written onto disk in the set's directory as toml files and plotted to .png images.
+which will create a 3D plot similar to the ones in the published paper. 
+
+### Forest canopies
+
+**The canopy model is not yet ready.** It will be released (probably) as v0.3.0 during 
+2023, hopefully. The functionality is mostly contained in `src/forest` and in Blender 
+file `scene_forest_template.blend`. Feel free to poke around, but we will not give 
+any instructions of its usage at this time because it is highly unstable. 
 
 ## <a name="Project structure"></a>  Project structure, *i.e.*, where to find stuff
 
 Descriptions of the most important files.
 
-- `optimization` Optimization results and targets are stored here in set-wise sub-directories.
+- `leaf_measurement_sets` Solved sets and targets are stored here in set-wise sub-directories.
 - `src` Top level source code package.
   - `__main__.py` Entrypoint of the software.
   - `constants.py` Mainly names of things that should not be changed unless you are sure what you are doing. 
   With the exception of path to Blender executable that you have to change to match your installation.
-  - `optimization.py` Optimization work is done here. 
   - `plotter.py` Responsible for plotting the results.
-  - `presets.py` Default runnable example with hard-coded spectral values.
-  - `data` Package responsible for data structure. Making changes in here will likely result in 
-  failure to read old optimization results.
+  - `blender_scripts` Blender scripts for rendering. You should not have a need to touch these. If you do, however, 
+    be sure you understand how Blender scripts work and check the provided Blender template files for correct 
+    variable names to use.
+  - `data` Package responsible for data structures and reading and writing any files. 
     - `file_handling.py` Creation and removal of files and directories. Data structure reduction and expansion 
     for more convenient file sharing.
     - `file_names.py` Knows all filenames in the project. Generator-parser pairs.
     - `path_handling.py` Knows the most important paths used in the project. Some paths may still need 
     to be generated manually.
     - `toml_handling.py` Writing and reading of result data files.
+  - `forest` Package for future canopy simulations. **Do not use, as it is not ready in v0.2.0.**
+  - `leaf_model` Package storing solvers and their interface. Module `interface.py` is an interface for this package.
+  - `prospect` Package handling prospect simulations. Module `prospect.py` is an interface for this package
   - `rendering` Package responsible for calling Blender.
   - `utils` Package containing miscellaneous utility modules.
-- `bs_render_single.py` Blender render script file.
-- `scene_leaf_material.blend` Bender scene file that is run by the `bs_render_single.py`.
