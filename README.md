@@ -28,14 +28,18 @@ usage of HyperBlend.
 
 ### Table of contents 
 
-  1. [About HyperBlend](#About HyperBlend) 
-  1. [How to cite](#How to cite)
+  1. [About HyperBlend](#About_HyperBlend) 
+  1. [How to cite](#How_to_cite)
   1. [Installing](#Installing)
-  1. [Working principle](#Working principle)
+  1. [Working principle](#Working_principle)
   1. [Usage](#Usage)
-  1. [Project structure](#Project structure)
+     1. [PROSPECT leaves](#p_leaves)  
+     1. [Real_leaves](#Real_leaves)
+     1. [Re-training solvers](#Re-training)
+     1. [Forest canopies](#Forest)
+  1. [Project structure](#Project_structure)
 
-## <a name="About HyperBlend"></a> About HyperBlend
+## <a name="About_HyperBlend"></a> About HyperBlend
 
 In recent decades, remote sensing of vegetation by hyperspectral imaging has been of great interest. 
 A plant’s growth and development can be negatively affected by biotic or abiotic stress factors. 
@@ -85,7 +89,7 @@ well and can be used to accurately simulate a wide variety of plant leaf spectra
 For more information on the working principle of HyperBlend, see the scientific papers listed below.
 
 
-##  <a name="How to cite"></a> How to cite
+##  <a name="How_to_cite"></a> How to cite
 
 If you find our work usefull in your project, please cite us:
 
@@ -117,7 +121,7 @@ You will also need open-source 3D-modeling and rendering software Blender, which
 you can download and install from ([blender.org](blender.org)). At least versions 2.8x and 2.9x should 
 work (developed on version 2.93.5). Change your Blender executable path to `constants.py`.
 
-## <a name="Working principle"></a> Working principle
+## <a name="Working_principle"></a> Working principle
 
 The measured (or simulated) reflectances and transmittances look like this:  
 
@@ -162,7 +166,7 @@ module to access almost all functionality. These examples cover the basic usage 
 model. If you want to do some advanced stuff or want to change the functionality, follow the 
 documentation. We have made an effort to document the code well, so you should be alright.
 
-### PROSPECT leaves
+### <a name="p_leaves"> PROSPECT leaves
 
 Let's try generating random leaves with PROSPECT and running leaf material parameter solver.
 
@@ -216,7 +220,7 @@ LI.solve_leaf_material_parameters(set_name=copy_set, resolution=10, solver='surf
 ```
 
 
-### Real-world measurements
+### <a name="Real_leaves"> Real-world measurements
 
 If you have reflectance-transmittance data from real world measurements (or from some other simulator) 
 you must write the targets before solving for leaf material parameters. Let's assume you have some 
@@ -241,7 +245,7 @@ LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
 The same workflow we have seen in earlier examples applies here. We just have to have some data to work with.
 
 
-### Re-training solvers
+### <a name="Re-training"> Re-training solvers
 
 Out of the three available solvers (optimization, neural network, and surface fitting), NN and Surface 
 can be retrained. The Optimization method does not need training, but its starting guess can be changed.
@@ -307,14 +311,14 @@ LI.visualize_leaf_models()
 
 which will create a 3D plot similar to the ones in the published paper. 
 
-### Forest canopies
+### <a name="Forest"> Forest canopies
 
 **The canopy model is not yet ready.** It will be released (probably) as v0.3.0 during 
 2023, hopefully. The functionality is mostly contained in `src/forest` and in Blender 
 file `scene_forest_template.blend`. Feel free to poke around, but we will not give 
 any instructions of its usage at this time because it is highly unstable. 
 
-## <a name="Project structure"></a>  Project structure, *i.e.*, where to find stuff
+## <a name="Project_structure"></a>  Project structure, *i.e.*, where to find stuff
 
 Descriptions of the most important files.
 
