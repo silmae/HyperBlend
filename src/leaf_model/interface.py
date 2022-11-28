@@ -14,25 +14,58 @@ from src.leaf_model.opt import Optimization
 from src.data import file_handling as FH, toml_handling as TH
 from src import plotter
 from src.leaf_model import nn, surf, leaf_commons as LC
+from src.prospect import prospect
 
 
-def visualize_leaf_models(show_plot=False, nn_name='nn_deault', plot_surf=True,
-                             plot_nn=True, plot_points=True):
-    """Visualize trained surface and and neural network model against training data.   
-    
-    The plot is always saved to disk regardless of ``show_plot`` flag.
-    
-    :param nn_name:
-    :param show_plot:
-        If True, show interactive plot. Default is false. 
+def generate_prospect_leaf(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None, w=None, m=None, ant=None):
+    """ Run prospect simulation with given PROSPECT parameters.
+
+    If any of the values are not provided, default values are used (see prospect.p_default_dict).
+    You get the default PROSPECT leaf by calling without any arguments.
+
+    Calling this is the same as calling prospect.make_leaf_target().
+
+    :param set_name:
+        Set name where the target is saved.
+    :param sample_id:
+        Sample id for this target. Default is 0. Overwrites existing targets if existing id is given.
+    :param n:
+        PROSPECT N parameter [unitless]
+    :param ab:
+        chlorophyll a + b concentration [ug / cm^2]
+    :param ar:
+        cartenoid content [ug / cm^2]
+    :param brown:
+        brown pigment [unitless]
+    :param w:
+        equivalent water thickness [cm]
+    :param m:
+        dry mater content [g / cm^2]
+    :param ant:
+        anthocyanin content [ug / cm^2]
+    :return:
+        Tuple (wls, r, t) and writes the target to the disk.
     """
 
-    plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
-                                     plot_points=plot_points, nn_name=nn_name)
+    prospect.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
+
+
+def generate_prospect_leaf_random(set_name, count=1):
+    """ Generate count number of random PROSPECT leaves.
+
+    Calling this is the same as calling prospect.make_random_leaf_targets().
+
+    :param set_name:
+        Set name to be used.
+    :param count:
+        How many target leaves are generated to the set.
+    """
+
+    prospect.make_random_leaf_targets(set_name, count)
 
 
 def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', clear_old_results=False, nn_name=None,
-                                   copyof=None, prospect_parameters: dict = None):
+                                   copyof=None):
     """Solves leaf material parameters for rendering.
     
     The result is saved to disk: this method does not have a return value.
@@ -57,13 +90,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
         NN, use that name (or rename your NN to 'nn_default.pt'.
     :param copyof: 
         Name of the set to copy. Copies target from existing set (walengths, reflectances, and transmittances).
-    :param prospect_parameters: 
-        TODO remove and make separate method
     """
-
-    if prospect_parameters is not None:
-        logging.info(f"Prospect parameter generation asked but I don't know how yet.")
-        # TODO generate new targets and save to disk with given name
 
     if copyof:
         FH.copy_target(from_set=copyof, to_set=set_name)
@@ -191,3 +218,18 @@ def train_models(set_name='training_data', show_plot=False, layer_count=9, layer
                  batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split, set_name=set_name)
 
     visualize_leaf_models(show_plot=False)
+
+
+def visualize_leaf_models(show_plot=False, nn_name='nn_deault', plot_surf=True,
+                          plot_nn=True, plot_points=True):
+    """Visualize trained surface and and neural network model against training data.
+
+    The plot is always saved to disk regardless of ``show_plot`` flag.
+
+    :param nn_name:
+    :param show_plot:
+        If True, show interactive plot. Default is false.
+    """
+
+    plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
+                                     plot_points=plot_points, nn_name=nn_name)
