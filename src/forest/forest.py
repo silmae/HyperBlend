@@ -14,23 +14,24 @@ def leaf_csv_name(name, resolution):
     name = f'{name}_res_{resolution:.0f}'
     return name
 
-def do_leaves(resolution=50):
-
-    logging.info(f"Generating leaf data if it does not exist yet.")
-
-    set_name = leaf_csv_name('normal', resolution)
-    if not os.path.exists(PH.path_directory_set_result(set_name)):
-        wls,r,t = prospect.get_default_prospect_leaf()
-        SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-        o = Optimization(set_name=set_name)
-        o.run_optimization(resolution=resolution, prediction_method='surface')
-
-    set_name = leaf_csv_name('dry', resolution)
-    if not os.path.exists(PH.path_directory_set_result(set_name)):
-        wls, r, t = prospect.get_default_prospect_leaf_dry()
-        SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-        o = Optimization(set_name=set_name)
-        o.run_optimization(resolution=resolution, prediction_method='surface')
+# TODO delete
+# def do_leaves(resolution=50):
+#
+#     logging.info(f"Generating leaf data if it does not exist yet.")
+#
+#     set_name = leaf_csv_name('normal', resolution)
+#     if not os.path.exists(PH.path_directory_set_result(set_name)):
+#         wls,r,t = prospect.get_default_prospect_leaf()
+#         SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
+#         o = Optimization(set_name=set_name)
+#         o.run_optimization(resolution=resolution, prediction_method='surface')
+#
+#     set_name = leaf_csv_name('dry', resolution)
+#     if not os.path.exists(PH.path_directory_set_result(set_name)):
+#         wls, r, t = prospect.get_default_prospect_leaf_dry()
+#         SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
+#         o = Optimization(set_name=set_name)
+#         o.run_optimization(resolution=resolution, prediction_method='surface')
 
 
 def generate_some_leaf_stuff(scene_id ="0123456789", resolution=50):
