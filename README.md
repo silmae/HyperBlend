@@ -70,7 +70,7 @@ geometry as shown in the image below. Detailed geometry is needed when drone-bas
 simulated because the ground pixel size is on the millimeter or centimeter scale and the geometry 
 of the plants really matters.
 
-![Preview of HyperBlend's canopy model forest.](readme_img/forest_walker.png){style="width:60%; "}
+![Preview of HyperBlend's canopy model forest.](readme_img/forest_walker.png)
 
 HyperBlend is currently (v0.2.0) operating at leaf scale level, but preliminary tests on expanding the 
 simulator into a canopy scale model have shown promising results. HyperBlend leaf model depicts a leaf 
