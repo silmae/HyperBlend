@@ -152,6 +152,28 @@ but not as accurate.
 
 ## <a name="Usage"></a> Usage
 
+## Generating new starting 
+
+The starting guess affects how fast the optimization method can find 
+target reflectance and transmittance. Reasonable starting guess is 
+included in the repository, but you can fiddle around with it if you want 
+to. You might want to rename the old starting guess first, so that it will 
+not get overwritten. You can always get the starting guess from the Git repository 
+as well. 
+
+Generating new starting for original optimization method can be done by 
+
+```python
+from src.utils import spectra_utils as SU
+
+SU.generate_starting_guess()
+SU.fit_starting_guess_coefficients()
+```
+
+Copy paste this to ```__main__.py``` and run.
+New starting guess is automatically used from this point onwards. 
+Starting guess is stored in the root folder ```src```.
+
 The entry point of the software is `__main__.py` file. For testing the software without actual data, 
 run 
 
