@@ -35,12 +35,69 @@ b_context = bpy.context
 b_data = bpy.data
 b_ops = bpy.ops
 b_scene = b_data.scenes[FC.key_scene_name]
+# TODO should this be taken as : scene = bpy.context.scene ?
+
 
 cameras = b_data.collections[FC.key_collection_cameras].all_objects
 lights = b_data.collections[FC.key_collection_lights].all_objects
 trees = b_data.collections[FC.key_collection_trees].all_objects
 markers = b_data.collections[FC.key_collection_markers].all_objects
 ground = b_data.collections[FC.key_collection_ground].all_objects
+
+
+def assign_material_indices():
+    """Assign pass indices to materials for abundance masking.
+
+    This must be run before using composite_material_mask() to set certain material
+    index to be rendered.
+
+    Adapted from
+    https://blenderartists.org/t/simple-script-to-create-a-unique-material-index-for-all-cycles-materials-in-the-scene/581087
+
+    :returns
+        List of material names that have indices assigned to. List index is used as material index for each material.
+    """
+
+    n = 0
+    material_names = []
+    for material in bpy.data.materials:
+        material.pass_index = n
+        material_names.append(material.name)
+        n += 1
+    return material_names
+
+
+def composite_material_mask(idx):
+    """Set up render output (compositing) to produce abundance mask for given material pass index."""
+
+    scene = bpy.context.scene
+    node_tree = scene.node_tree
+    src = node_tree.nodes["Render Layers"]
+    dst = node_tree.nodes["Composite"]
+    node_id_mask = node_tree.nodes.get('ID Mask', None)
+
+    if node_id_mask is None:
+        print("Did not find, adding new")
+        node_id_mask = node_tree.nodes.new('CompositorNodeIDMask')
+    else:
+        print("Found existing id mask")
+
+    node_id_mask.index = idx
+    x, y = src.location
+    node_id_mask.location = (x + 500, y)
+    node_id_mask.label = node_id_mask.name
+    node_tree.links.new(src.outputs['IndexMA'], node_id_mask.inputs[0])
+    node_tree.links.new(node_id_mask.outputs[0], dst.inputs['Image'])
+
+
+def composite_raw():
+    """Set up render output (compositing) to produce raw render result."""
+
+    scene = bpy.context.scene
+    node_tree = scene.node_tree
+    src = node_tree.nodes["Render Layers"]
+    dst = node_tree.nodes["Composite"]
+    node_tree.links.new(src.outputs['Image'], dst.inputs['Image'])
 
 
 def set_materials_use_spectral(use_spectral):
@@ -260,6 +317,12 @@ def render_drone_hsi():
     b_ops.render.render(write_still=True, animation=True)
 
 
+def render_drone_abundances():
+    material_indices = assign_material_indices()
+    for i,material in enumerate(material_indices):
+        print(f"{material} - {i}")
+
+
 if __name__ == '__main__':
 
     # Store arguments passed from blender_control.py
@@ -279,12 +342,11 @@ if __name__ == '__main__':
     parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
                         required=True, help="Scene id.")
     parser.add_argument(key_render_mode[0], key_render_mode[1], dest=key_render_mode[1], action="store",
-                        required=True, help="")
+                        required=True, help="Rendering mode")
 
     args = parser.parse_args(argv)
 
     scene_id = vars(args)[key_scene_id[1]]
-
 
     logging.error(f"Hello, I am forest render script in '{PH.path_directory_forest_scene(scene_id)}'")
 
@@ -298,5 +360,7 @@ if __name__ == '__main__':
         render_tree_rgb()
     elif render_mode.lower() == 'spectral':
         render_drone_hsi()
+    elif render_mode.lower() == 'abundances':
+        render_drone_abundances()
     else:
         logging.error(f"Render mode '{render_mode}' not recognised.")
