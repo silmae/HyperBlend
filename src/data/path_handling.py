@@ -142,9 +142,9 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
     """
 
     if imaging_type == C.imaging_type_refl:
-        p = os.path.abspath(base_path + '/' + C.folder_rend_ref_refl)
+        p = join(base_path, C.folder_rend_ref_refl)
     elif imaging_type == C.imaging_type_tran:
-        p = os.path.abspath(base_path + '/' + C.folder_rend_ref_tran)
+        p = join(base_path, C.folder_rend_ref_tran)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
     return p
@@ -153,15 +153,22 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
 def path_directory_forest_scenes() -> str:
     """Top level scene directory."""
 
-    p = C.path_project_root + '/' + 'scenes'
+    p = join(C.path_project_root, 'scenes')
     return os.path.abspath(p)
 
 
 def path_directory_sun_data() -> str:
     """Sun data directory."""
 
-    p = C.path_project_root + '/' + 'sun_data'
-    return os.path.abspath(p)
+    p = join(C.path_project_root, 'sun_data')
+    return p
+
+
+def path_directory_blender_scripts() -> str:
+    """Blender scripts directory."""
+
+    p = join(C.path_project_root, 'src', 'blender_scripts')
+    return p
 
 
 def path_directory_forest_scene(scene_id) -> str:
@@ -182,6 +189,13 @@ def path_directory_forest_rend_spectral(scene_id) -> str:
     """Forest spectral rend directory."""
 
     p = join(path_directory_forest_rend(scene_id), 'spectral')
+    return p
+
+
+def path_directory_forest_rend_abundances(scene_id) -> str:
+    """Forest abundance maps rend directory."""
+
+    p = join(path_directory_forest_rend(scene_id), 'abundances')
     return p
 
 ##########################################################################
