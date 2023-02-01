@@ -246,29 +246,30 @@ def reduce(set_name: str) -> None:
                 os.unlink(plot_path)
                 # print(plot_path)
 
-def duplicate_scene_from_template():
-    """Creates a uniquely named copy of a scene and returns its id."""
+
+def duplicate_forest_scene_from_template():
+    """Creates a uniquely named copy of a forest scene template and returns its id."""
 
     now = datetime.datetime.now()
     scene_id = f"{now.day:02}{now.month:02}{now.year-2000}{now.hour:02}{now.minute:02}"
     # Use this for debugging
     # scene_id = "0123456789"
 
-    # p_src = f"../scene_forest_template.blend"
-    # scene_folder = f"../scenes/scene_{scene_id}"
-    # rend_folder = scene_folder + '/rend'
-    # animation_folder = rend_folder + '/spectral'
     if os.path.exists(PH.path_forest_template()):
         if not os.path.exists(PH.path_directory_forest_scene(scene_id)):
             os.makedirs(PH.path_directory_forest_scene(scene_id))
-        # p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
         shutil.copy2(PH.path_forest_template(), PH.path_file_forest_scene(scene_id))
         if not os.path.exists(PH.path_directory_forest_rend(scene_id)):
             os.makedirs(PH.path_directory_forest_rend(scene_id))
         if not os.path.exists(PH.path_directory_forest_rend_spectral(scene_id)):
             os.makedirs(PH.path_directory_forest_rend_spectral(scene_id))
+        if not os.path.exists(PH.path_directory_forest_rend_abundances(scene_id)):
+            os.makedirs(PH.path_directory_forest_rend_abundances(scene_id))
     else:
-        raise RuntimeError(f"Forest template scene not found for duplication.")
+        raise RuntimeError(f"Forest template scene not found for duplication from '{PH.path_forest_template()}'. "
+                           f"This is a fatal "
+                           f"error and makes forest simulations impossible. Check git repository "
+                           f"to restore the forest scene template to root directory.")
 
     return scene_id
 
