@@ -12,9 +12,6 @@ import logging
 from src import constants as C
 from src.data import path_handling as PH
 
-# TODO move to path handling
-path_folder_scripts = C.path_project_root + '/src/blender_scripts/'
-
 
 def _get_blender_executable_path():
     """Returns path to Blender executable file.
@@ -58,7 +55,7 @@ def _get_base_blender_args(script_name: str, scene_path: str):
     if not script_name.endswith('.py'):
         script_name = script_name + '.py'
 
-    script_path = os.path.normpath(path_folder_scripts + script_name)
+    script_path = PH.join(PH.path_directory_blender_scripts(), script_name)
     if not os.path.exists(script_path):
         raise RuntimeError(f"Cannot find script '{script_path}'.")
 
@@ -115,7 +112,7 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                                     f"running in separate batches.") from e
 
     seconds = time.perf_counter() - start
-    print(f"Render loop run for {seconds:.1f} seconds")
+    logging.info(f"Render loop run for {seconds:.1f} seconds")
 
 
 def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
@@ -244,6 +241,10 @@ if __name__ == '__main__':
     This is testing ground for Blender commands.
     """
     logging.basicConfig(level='INFO')
+    from src.data import file_handling as FH
+    # scene_id = FH.duplicate_forest_scene_from_template()
+    scene_id = '0102231033'
     print("Hello, you have reached HyperBlend's Blender control unit!")
-    test_scene_id = "0123456789"
-    render_forest(test_scene_id, render_mode='abundances')
+    # test_scene_id = "0123456789"
+    # setup_forest(scene_id)
+    render_forest(scene_id, render_mode='abundances')
