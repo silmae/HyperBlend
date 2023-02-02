@@ -45,59 +45,16 @@ markers = b_data.collections[FC.key_collection_markers].all_objects
 ground = b_data.collections[FC.key_collection_ground].all_objects
 
 
-def assign_material_indices():
-    """Assign pass indices to materials for abundance masking.
+def get_material_names_and_indices():
+    # for material in bpy.data.materials:
+    #     material_indices.append(material.pass_index)
+    #     material_names.append(material.name)
 
-    This must be run before using composite_material_mask() to set certain material
-    index to be rendered.
-
-    Adapted from
-    https://blenderartists.org/t/simple-script-to-create-a-unique-material-index-for-all-cycles-materials-in-the-scene/581087
-
-    :returns
-        List of material names that have indices assigned to. List index is used as material index for each material.
-    """
-
-    n = 0
-    material_names = []
-    for material in bpy.data.materials:
-        material.pass_index = n
-        material_names.append(material.name)
-        n += 1
-    return material_names
-
-
-def composite_material_mask(idx):
-    """Set up render output (compositing) to produce abundance mask for given material pass index."""
-
-    scene = bpy.context.scene
-    node_tree = scene.node_tree
-    src = node_tree.nodes["Render Layers"]
-    dst = node_tree.nodes["Composite"]
-    node_id_mask = node_tree.nodes.get('ID Mask', None)
-
-    if node_id_mask is None:
-        print("Did not find, adding new")
-        node_id_mask = node_tree.nodes.new('CompositorNodeIDMask')
-    else:
-        print("Found existing id mask")
-
-    node_id_mask.index = idx
-    x, y = src.location
-    node_id_mask.location = (x + 500, y)
-    node_id_mask.label = node_id_mask.name
-    node_tree.links.new(src.outputs['IndexMA'], node_id_mask.inputs[0])
-    node_tree.links.new(node_id_mask.outputs[0], dst.inputs['Image'])
-
-
-def composite_raw():
-    """Set up render output (compositing) to produce raw render result."""
-
-    scene = bpy.context.scene
-    node_tree = scene.node_tree
-    src = node_tree.nodes["Render Layers"]
-    dst = node_tree.nodes["Composite"]
-    node_tree.links.new(src.outputs['Image'], dst.inputs['Image'])
+    materials = bpy.data.materials
+    material_names = list(m.name for m in materials)
+    material_indices = list(m.pass_index for m in materials)
+    res_dict = dict(zip(material_indices, material_names))
+    return res_dict
 
 
 def set_materials_use_spectral(use_spectral):
@@ -122,7 +79,7 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
     """Jau
 
     :param render_mode:
-        Either 'spectral' or 'rgb'.
+        Either 'spectral' 'abundances' or 'rgb'.
     :param res_x:
     :param res_y:
     :param res_percent:
@@ -135,7 +92,14 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
         scene.sequencer_colorspace_settings.name = 'Raw'
         # Video sequenser can be always set to Raw as it only affects video editing
 
-        if render_mode.lower() == 'spectral':
+        # Compositing setup
+        composite_raw()
+        if render_mode == 'abundances':
+            composite_material_mask()
+        else:
+            composite_delete_masking_setup()
+
+        if render_mode.lower() == 'spectral' or render_mode.lower() == 'abundances':
 
             scene.render.image_settings.file_format = 'TIFF'  # OK
             scene.render.image_settings.tiff_codec = 'NONE'
@@ -177,7 +141,7 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
             bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = False
 
         else:
-            raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral' or 'rgb'. Was '{render_mode}'.")
+            raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral', 'abundances' or 'rgb'. Was '{render_mode}'.")
 
         scene.render.image_settings.color_depth = '16'
 
@@ -226,12 +190,17 @@ def set_visibility(mode: str):
     if mode != FC.key_cam_sleeper_rgb and mode != FC.key_cam_walker_rgb and mode != FC.key_cam_drone_rgb and mode != 'Map' and mode != FC.key_cam_drone_hsi and mode != FC.key_cam_tree_rgb:
         raise AttributeError(f"Visibility for mode '{mode}' not recognised.")
 
+    """
+    Per documentation https://docs.blender.org/api/master/info_gotcha.html#unfortunate-corner-cases,
+    we have to make a separate copy of the iterator to change object attributes without crashing, thus the [:]
+    """
+
     # First hide everything
-    for object in markers:
+    for object in markers[:]:
         hide(object)
-    for object in trees:
+    for object in trees[:]:
         hide(object)
-    for object in ground:
+    for object in ground[:]:
         hide(object)
 
     unhide(lights.get(FC.key_obj_sun)) # always show sun
@@ -240,8 +209,111 @@ def set_visibility(mode: str):
         unhide(ground.get(FC.key_obj_ground))
     elif mode == FC.key_cam_tree_rgb:
         unhide(ground.get(FC.key_obj_ground_test))
-        for tree in trees:
+        for tree in trees[:]:
             unhide(tree)
+
+
+############## Compositing #########################################
+
+
+def composite_raw():
+    """Set up render output (compositing) to produce raw render result.
+
+    This should used for any other renders but abundance maps. If this is not called, there
+    is no connected sockets to output and the rendered image is completely black.
+    """
+
+    node_tree = b_scene.node_tree
+    src = node_tree.nodes["Render Layers"]
+    dst = node_tree.nodes["Composite"]
+    node_tree.links.new(src.outputs['Image'], dst.inputs['Image'])
+
+
+def composite_material_mask():
+    """Assign pass indices to materials for abundance maps.
+
+    Adapted from
+    https://blenderartists.org/t/simple-script-to-create-a-unique-material-index-for-all-cycles-materials-in-the-scene/581087
+
+    Deletes any existing masking setup before building a new one.
+    """
+
+    node_tree = b_scene.node_tree
+    src = node_tree.nodes["Render Layers"]
+
+    b_scene.view_layers["ViewLayer"].use_pass_material_index = True
+    # enable material pass layer in case it was off
+
+    composite_delete_masking_setup()
+    # Delete possible old setup before building it again.
+
+    f_output = node_tree.nodes.new('CompositorNodeOutputFile') # Create new File Output node
+
+    # Set saving path and image settings
+    f_output.base_path = PH.path_directory_forest_rend_abundances(SCENE_ID)
+    f_output.format.file_format = 'TIFF'
+    f_output.format.color_mode = 'BW' # no colors needed
+    f_output.format.tiff_codec = 'NONE' # no packing of images
+    f_output.format.color_depth = '16' # For some reason, 8 bit images look horrible so let's stick with 16 bits
+    f_output.width = 400 # node width in Blender Compositing view
+
+    # For positioning nodes in readable fashion in Blender Compositing view
+    x_offset = 300
+    y_offset = 100
+    x, y = src.location
+
+    f_output.location = (x + 2 * x_offset, y - y_offset)
+
+    # Loop through materials assigning material indices and creating ID Mask
+    # nodes for each.
+    for idx, material in enumerate(bpy.data.materials):
+        socet_name = f"{material.name}_"
+
+        ID = node_tree.nodes.new('CompositorNodeIDMask')
+        ID.label = f"{ID.name}_mat_{material.name}"
+        ID.index = idx
+        ID.location = (x + x_offset, y - idx * y_offset)
+
+        # Create an input socket for each material pass
+        if not material.name in (slot.path for slot in f_output.file_slots[:]):
+            f_output.file_slots.new(socet_name)
+
+        # Link ID Mask nodes to File Output node
+        node_tree.links.new(src.outputs['IndexMA'], ID.inputs[0])
+        node_tree.links.new(ID.outputs[0], f_output.inputs[socet_name])
+
+
+def composite_delete_masking_setup():
+    """Material masking setup must be deleted for any other renders than abundance rendering.
+
+    Otherwise, abundance masks are rewritten for every rendered frame. NOTE: this deletes any
+    existing ID Mask and File Output nodes from Compositing.
+    """
+
+    node_tree = b_scene.node_tree
+
+    # Cannot delete while iterating, so just collect nodes to be deleted
+    to_delete = []
+    for node in node_tree.nodes:
+        if node.bl_idname == 'CompositorNodeIDMask' or node.bl_idname == 'CompositorNodeOutputFile':
+            to_delete.append(node)
+
+    # And then delete them all from the node tree
+    for node in to_delete:
+        node_tree.nodes.remove(node)
+
+
+############## Render calls #########################################
+
+
+def call_blender_render(write_still=True, animation=False):
+    """Saves current scene before calling Blender rendering.
+
+    If the rendering crashes, one can inspect the scene file to find out what went wrong.
+    """
+
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(SCENE_ID))
+    b_ops.render.render(write_still=write_still, animation=animation)
 
 
 def render_sleeper_rgb():
@@ -250,11 +322,11 @@ def render_sleeper_rgb():
     set_visibility(mode='Sleeper RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'sleeper_rgb.png'
-    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
-    b_ops.render.render(write_still=True)
+    call_blender_render(write_still=True)
 
 
 def render_walker_rgb():
@@ -263,11 +335,11 @@ def render_walker_rgb():
     set_visibility(mode='Walker RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'walker_rgb.png'
-    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
-    b_ops.render.render(write_still=True)
+    call_blender_render(write_still=True)
 
 
 def render_drone_rgb():
@@ -276,11 +348,11 @@ def render_drone_rgb():
     set_visibility(mode='Drone RGB')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'drone_rgb.png'
-    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
-    b_ops.render.render(write_still=True)
+    call_blender_render(write_still=True)
 
 
 def render_tree_rgb():
@@ -289,11 +361,11 @@ def render_tree_rgb():
     set_visibility(mode='Tree RGB')
     # FU.set_forest_parameter('Use real object', True)
     image_name = f'tree_rgb.png'
-    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
-    b_ops.render.render(write_still=True)
+    call_blender_render(write_still=True)
 
 
 def render_map_rgb():
@@ -302,25 +374,31 @@ def render_map_rgb():
     set_visibility(mode='Drone RGB')
     FU.set_forest_parameter('Use real object', False)
     image_name = f'map_rgb.png'
-    image_path = PH.join(PH.path_directory_forest_rend(scene_id), image_name)
+    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
-    b_ops.render.render(write_still=True)
+    call_blender_render(write_still=True)
 
 
 def render_drone_hsi():
     set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
     set_visibility(mode='Drone HSI')
     FU.set_forest_parameter('Use real object', True)
-    b_scene.render.filepath = PH.join(PH. path_directory_forest_rend_spectral(scene_id), "band_####.tiff")
-    b_ops.render.render(write_still=True, animation=True)
+    b_scene.render.filepath = PH.join(PH.path_directory_forest_rend_spectral(SCENE_ID), "band_####.tiff")
+    call_blender_render(scene_id=SCENE_ID, write_still=True, animation=True)
 
 
-def render_drone_abundances():
-    material_indices = assign_material_indices()
-    for i,material in enumerate(material_indices):
-        print(f"{material} - {i}")
+def render_abundances():
+
+    set_render_parameters(render_mode='abundances', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
+    set_visibility(mode='Drone HSI')
+    FU.set_forest_parameter('Use real object', True)
+    image_name = f'abundance_rgb_preview.png'
+    image_path = PH.join(PH.path_directory_forest_rend_abundances(SCENE_ID), image_name)
+    logging.info(f"Trying to render '{image_path}'.")
+    b_scene.render.filepath = image_path
+    call_blender_render(write_still=True)
 
 
 if __name__ == '__main__':
@@ -346,21 +424,21 @@ if __name__ == '__main__':
 
     args = parser.parse_args(argv)
 
-    scene_id = vars(args)[key_scene_id[1]]
+    SCENE_ID = vars(args)[key_scene_id[1]]
 
-    logging.error(f"Hello, I am forest render script in '{PH.path_directory_forest_scene(scene_id)}'")
+    logging.error(f"Hello, I am forest render script in '{PH.path_directory_forest_scene(SCENE_ID)}'")
 
-    render_mode = vars(args)[key_render_mode[1]]
+    RENDER_MODE = vars(args)[key_render_mode[1]]
 
-    if render_mode.lower() == 'preview':
-        render_sleeper_rgb()
-        render_walker_rgb()
+    if RENDER_MODE.lower() == 'preview':
+        # render_sleeper_rgb()
+        # render_walker_rgb()
         render_drone_rgb()
         # render_map_rgb()
-        render_tree_rgb()
-    elif render_mode.lower() == 'spectral':
+        # render_tree_rgb()
+    elif RENDER_MODE.lower() == 'spectral':
         render_drone_hsi()
-    elif render_mode.lower() == 'abundances':
-        render_drone_abundances()
+    elif RENDER_MODE.lower() == 'abundances':
+        render_abundances()
     else:
-        logging.error(f"Render mode '{render_mode}' not recognised.")
+        logging.error(f"Render mode '{RENDER_MODE}' not recognised.")
