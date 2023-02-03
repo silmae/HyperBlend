@@ -98,6 +98,17 @@ file_model_parameters = 'model_parameters'
 """Model parameter file name."""
 
 file_default_sun = 'default_sun.txt'
+"""Default sun spectrum file name that is included in the repository."""
+
+file_sampling_data = 'sampling'
+"""Toml formatted file storing wavelengths for resampling."""
+
+
+# Resampling keys
+
+key_sampling_wl = 'sampling_wl'
+# Dictionary key for resampling data
+
 
 # Wavelength result's dictionary keys
 
