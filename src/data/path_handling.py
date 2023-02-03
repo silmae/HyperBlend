@@ -74,7 +74,7 @@ def path_directory_set(set_name: str) -> str:
 def path_directory_target(set_name: str) -> str:
     """Path to target folder (measurements) of given set.
 
-    'project_root/optimization/<set_name>/target'
+    'project_root/leaf_measurement_sets/<set_name>/sample_targets'
     """
 
     p = os.path.abspath(path_directory_set(set_name) + '/' + C.folder_opt_sample_targets)
@@ -84,7 +84,7 @@ def path_directory_target(set_name: str) -> str:
 def path_directory_working(set_name: str, sample_id: int) -> str:
     """Path to top level working folder where rendering sub-folders reside.
 
-    'project_root/optimization/<set_name>/working_temp'
+    'project_root/leaf_measurement_sets/<set_name>/working_temp'
     """
 
     p = os.path.abspath(path_directory_sample(set_name, sample_id) + '/' + C.folder_opt_work)
@@ -221,6 +221,13 @@ def path_file_target(set_name: str, sample_id: int):
     """Path to optimization target file (measurements) of given set and sample. """
 
     p = join(path_directory_target(set_name), FN.filename_target(sample_id))
+    return p
+
+
+def path_file_sampling(set_name: str):
+    """Path to spectral resampling data of given set. """
+
+    p = join(path_directory_target(set_name), C.file_sampling_data + C.postfix_text_data_format)
     return p
 
 
