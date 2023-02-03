@@ -291,6 +291,8 @@ def read_wavelength_result(set_name: str, wl: float, sample_id: int):
 def write_target(set_name:str, data, sample_id=0) -> None:
     """Writes given list of reflectance and transmittance data to toml formatted file.
 
+    Writes also empty sampling file to the target directory.
+
     :param set_name:
         Set name.
     :param data:
@@ -309,6 +311,8 @@ def write_target(set_name:str, data, sample_id=0) -> None:
     with open(p, 'w+') as file:
         toml.dump(res, file)
 
+    write_sampling(set_name)
+
 
 def read_target(set_name: str, sample_id: int):
     """Read target values for optimization.
@@ -325,6 +329,58 @@ def read_target(set_name: str, sample_id: int):
         data = toml.load(file)
         data = data['wlrt']
         data = np.array(data)
+        return data
+
+
+def write_sampling(set_name: str, sampling: list=None):
+    """Write resampling data file for given leaf measurement set.
+
+    Preferred workflow is to NOT provide a list of wavelengths here,
+    which will result an empty file where you can copy and paste desired
+    wavelengths. Providing a wavelengths list here is good for debugging
+    or quick experiments though.
+
+    :param set_name:
+        Name of the leaf measurement set.
+    :param sampling:
+        You can give a list of wavelengths here. If none is given, an
+        empty wavelength dictionary is written to the file. You can
+        later copy paste wavelengths from an ENVI file, for example.
+    """
+
+    if sampling is None:
+        wls = []
+    else:
+        # Cast to float in case there were ints and floats mixed in given list.
+        # We cannot guard against user-defined files though.
+        wls = list(float(a) for a in sampling)
+
+    sampling_dict = {C.key_sampling_wl: wls}
+
+    p = P.path_file_sampling(set_name)
+
+    with open(p, 'w+') as file:
+        toml.dump(sampling_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+
+def read_sampling(set_name: str,):
+    """Read resampling wavelengths from a file.
+
+    :param set_name:
+        Name of the leaf measurement set.
+    :return:
+        Return resampling wavelengths as 1D numpy array.
+    :raises
+        Raises RuntimeError in case some of the entries could not be interpreted as a float.
+    """
+    p = P.path_file_sampling(set_name)
+    with open(p, 'r') as file:
+        try:
+            data = toml.load(file)
+        except toml.decoder.TomlDecodeError as e:
+            raise RuntimeError(f"Toml decode error was raised. Check that all entries in the sampling list "
+                               f"in file {p} can be interpreted as floats, i.e., '1.0' instead of '1'.") from e
+        data = np.array(data[C.key_sampling_wl])
         return data
 
 
