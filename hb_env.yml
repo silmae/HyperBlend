@@ -25,5 +25,6 @@ dependencies:
   - pytorch
   - pip
   - pip:
-      - spectral
+      - spectral # for image cube read and write
+      - spectres # for resampling spectra
       - Pillow
