@@ -288,7 +288,7 @@ def read_wavelength_result(set_name: str, wl: float, sample_id: int):
     return subres_dict
 
 
-def write_target(set_name:str, data, sample_id=0) -> None:
+def write_target(set_name: str, data, sample_id=0, resampled=False) -> None:
     """Writes given list of reflectance and transmittance data to toml formatted file.
 
     Writes also empty sampling file to the target directory.
@@ -300,11 +300,13 @@ def write_target(set_name:str, data, sample_id=0) -> None:
         Do not use numpy arrays as they may break the toml writer.
     :param sample_id:
         Sample id. Default is 0, which is used for sets with only one sample.
+    :param resampled:
+        If True, data is written to a file with 'resampled' in the name. Default is False.
     """
 
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {'wlrt': floated_list}
-    p = P.path_file_target(set_name, sample_id)
+    p = P.path_file_target(set_name, sample_id, resampled=resampled)
     if not os.path.exists(p):
         FH.create_first_level_folders(set_name)
         FH.create_opt_folder_structure_for_samples(set_name, sample_id=0)
@@ -314,18 +316,20 @@ def write_target(set_name:str, data, sample_id=0) -> None:
     write_sampling(set_name)
 
 
-def read_target(set_name: str, sample_id: int):
+def read_target(set_name: str, sample_id: int, resampled=False):
     """Read target values for optimization.
 
     :param set_name:
         Name of the set.
     :param sample_id:
         Sample id.
+    :param resampled:
+        If True, data is read from a corresponding resampled file. Default is False.
     :return:
         List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
     """
 
-    with open(P.path_file_target(set_name, sample_id), 'r') as file:
+    with open(P.path_file_target(set_name, sample_id, resampled=resampled), 'r') as file:
         data = toml.load(file)
         data = data['wlrt']
         data = np.array(data)
@@ -340,6 +344,8 @@ def write_sampling(set_name: str, sampling: list=None):
     wavelengths. Providing a wavelengths list here is good for debugging
     or quick experiments though.
 
+    If the resampling file already exits, does nothing.
+
     :param set_name:
         Name of the leaf measurement set.
     :param sampling:
@@ -347,6 +353,12 @@ def write_sampling(set_name: str, sampling: list=None):
         empty wavelength dictionary is written to the file. You can
         later copy paste wavelengths from an ENVI file, for example.
     """
+
+    p = P.path_file_sampling(set_name)
+
+    # Escape if the file exists already
+    if os.path.exists(p):
+        return
 
     if sampling is None:
         wls = []
@@ -356,8 +368,6 @@ def write_sampling(set_name: str, sampling: list=None):
         wls = list(float(a) for a in sampling)
 
     sampling_dict = {C.key_sampling_wl: wls}
-
-    p = P.path_file_sampling(set_name)
 
     with open(p, 'w+') as file:
         toml.dump(sampling_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
@@ -374,6 +384,10 @@ def read_sampling(set_name: str,):
         Raises RuntimeError in case some of the entries could not be interpreted as a float.
     """
     p = P.path_file_sampling(set_name)
+
+    if not os.path.exists(p):
+        write_sampling(set_name=set_name)
+
     with open(p, 'r') as file:
         try:
             data = toml.load(file)
