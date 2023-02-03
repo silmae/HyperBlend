@@ -76,10 +76,19 @@ def filename_wl_result_plot(wl: float) -> str:
     return filename
 
 
-def filename_target(sample_id: int) -> str:
-    """Generate filename of a toml file where target measurements are stored. """
+def filename_target(sample_id: int, resampled=False) -> str:
+    """Generate filename of a toml file where target measurements are stored.
 
-    filename = f'{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}'
+    :param sample_id:
+        Sample id.
+    :param resampled:
+         If True, file name of corresponding resampled file is returned instead. Default is False.
+    """
+
+    if resampled:
+        filename = f'{C.file_opt_target}_resampled_{sample_id}{C.postfix_text_data_format}'
+    else:
+        filename = f'{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}'
     return filename
 
 

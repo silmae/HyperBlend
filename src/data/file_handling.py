@@ -12,6 +12,7 @@ import os
 import datetime
 import shutil
 import csv
+import re # regural expressions
 
 from src import constants as C, plotter
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
@@ -87,7 +88,8 @@ def list_target_ids(set_name: str):
 
     ids = []
     for filename in os.listdir(PH.path_directory_target(set_name)):
-        ids.append(FN.parse_sample_id(filename))
+        if re.match(r"target_[0-9]+\.toml", filename):
+            ids.append(FN.parse_sample_id(filename))
     return ids
 
 

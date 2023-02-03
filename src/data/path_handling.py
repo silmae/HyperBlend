@@ -217,10 +217,14 @@ def path_file_wl_result(set_name: str, wl: float, sample_id: int) -> str:
     return p
 
 
-def path_file_target(set_name: str, sample_id: int):
-    """Path to optimization target file (measurements) of given set and sample. """
+def path_file_target(set_name: str, sample_id: int, resampled=False):
+    """Path to leaf measurement set's target file (measurements) of given set and sample.
 
-    p = join(path_directory_target(set_name), FN.filename_target(sample_id))
+    :param resampled:
+        If True, path to corresponding resampled file is returned instead. Default is False.
+    """
+
+    p = join(path_directory_target(set_name), FN.filename_target(sample_id, resampled=resampled))
     return p
 
 
