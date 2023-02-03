@@ -10,6 +10,7 @@ import time
 import logging
 
 import src.leaf_model.training_data
+import src.leaf_model.leaf_resampling as resampling
 from src.leaf_model.opt import Optimization
 from src.data import file_handling as FH, toml_handling as TH
 from src import plotter
@@ -62,6 +63,13 @@ def generate_prospect_leaf_random(set_name, count=1):
     """
 
     prospect.make_random_leaf_targets(set_name, count)
+
+
+def resample_leaves(set_name: str):
+
+    resampling.resample(set_name=set_name)
+
+
 
 
 def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', clear_old_results=False, nn_name=None,
