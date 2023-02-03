@@ -8,11 +8,44 @@ Some default targets can be created without fetching external data.
 
 import numpy as np
 
+import spectres
+# SpectRes is used for resampling spectra to lower resolution
+
 from src import plotter
 from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU
 from src import constants as C
 from src.leaf_model.opt import Optimization
+
+
+def resample(original_wl, original_val, new_wl):
+    """ Resample spectra to lower resolution.
+
+    Github page for the SpectRes package: https://github.com/ACCarnall/SpectRes
+    And documentation: https://spectres.readthedocs.io/
+
+    :param original_wl:
+        List or 1-D numpy array of wavelengths in the original spectrum.
+    :param original_val:
+        List or numpy array of intensities corresponding to `original_wl`.
+        If multidimensional numpy array is provided, the last dimension
+        must match the length of `original_wl`. Other dimensions can be used
+        to include multiple spectra at the same run.
+    :param new_wl:
+        List or 1-D numpy array of new wavelengths to be resampled to.
+    :return:
+        Returns resampled spectra as a numpy array. The first dimension is the
+        same length as `new_wl` and other dimensions the same as in `original_val`.
+    """
+
+    # Cast to numpy arrays in case they were not already
+    new_wavs = np.array(new_wl)
+    spec_wavs = np.array(original_wl)
+    spec_fluxes = np.array(original_val)
+
+    resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes)
+    return resampled
+
 
 
 def make_linear_test_target(set_name: str):
