@@ -93,7 +93,7 @@ def list_target_ids(set_name: str):
     return ids
 
 
-def list_finished_sample_ids(set_name: str) -> str:
+def list_finished_sample_ids(set_name: str) -> list[int]:
     """Lists leaf measurement samples that have their renderable leaf material parameters solved.
 
     :param set_name:
