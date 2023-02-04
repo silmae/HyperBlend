@@ -6,8 +6,7 @@ from src.data import path_handling as P, file_handling as FH, toml_handling as T
 from src import constants as C
 from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU, spectra_utils as SU
-
-# TODO plot resampling result to targets directory
+from src import plotter
 
 
 def resample(set_name):
@@ -15,7 +14,8 @@ def resample(set_name):
 
     ids = FH.list_target_ids(set_name)
     if len(ids) < 1:
-        raise RuntimeWarning(f"No targets to resample.")
+        logging.info(f"No targets to resample. Returning without doing anything.")
+        return
 
     sampling = TH.read_sampling(set_name=set_name)
 
@@ -41,3 +41,5 @@ def resample(set_name):
         resampled_target[2] = trans_new
         resampled_target = np.transpose(resampled_target)
         TH.write_target(set_name=set_name, data=resampled_target, sample_id=sample_id, resampled=True)
+
+        plotter.plot_resampling(set_name=set_name)
