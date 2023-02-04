@@ -13,7 +13,7 @@ import spectres
 
 from src import plotter
 from src.data import file_handling as FH, toml_handling as T
-from src.utils import general_utils as GU
+from src.utils import general_utils as GU, data_utils as DU
 from src import constants as C
 from src.leaf_model.opt import Optimization
 
@@ -45,7 +45,6 @@ def resample(original_wl, original_val, new_wl):
 
     resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes)
     return resampled
-
 
 
 def make_linear_test_target(set_name: str):
@@ -114,11 +113,7 @@ def _make_target(set_name: str, wls, r_m, t_m, sample_id=None):
     if sample_id is None:
         sample_id = 0
     FH.create_opt_folder_structure_for_samples(set_name, sample_id)
-    target_data = np.zeros((3, len(wls)))
-    target_data[0] = wls
-    target_data[1] = r_m
-    target_data[2] = t_m
-    target_data = np.transpose(target_data)
+    target_data = DU.pack_target(wls=wls, refls=r_m, trans=t_m)
     T.write_target(set_name, target_data, sample_id=sample_id)
 
 

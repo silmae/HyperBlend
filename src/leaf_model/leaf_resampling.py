@@ -25,7 +25,7 @@ def resample(set_name):
 
     for _, sample_id in enumerate(ids):
         target = TH.read_target(set_name=set_name, sample_id=sample_id)
-        wls, refls, trans = map(list, zip(*target)) # unpack target to lists
+        wls, refls, trans = DU.unpack_target(target=target)
         spectra = np.array((refls,trans))
 
         try:
@@ -33,13 +33,7 @@ def resample(set_name):
         except IndexError as e:
             raise IndexError(f"Index error occurred probably because of empty entry in resampling file.") from e
 
-        refls_new = resampled[0,:]
-        trans_new = resampled[1,:]
-        resampled_target = np.zeros((3, len(sampling)))
-        resampled_target[0] = sampling
-        resampled_target[1] = refls_new
-        resampled_target[2] = trans_new
-        resampled_target = np.transpose(resampled_target)
+        resampled_target = DU.pack_target(wls=sampling, refls=resampled[0,:], trans=resampled[1,:])
         TH.write_target(set_name=set_name, data=resampled_target, sample_id=sample_id, resampled=True)
 
         plotter.plot_resampling(set_name=set_name)
