@@ -92,6 +92,17 @@ def filename_target(sample_id: int, resampled=False) -> str:
     return filename
 
 
+def filename_resample_plot(sample_id: int) -> str:
+    """Generate filename resampling plot.
+
+    :param sample_id:
+        Sample id.
+    """
+
+    filename = f'target_{sample_id}_resampling{C.postfix_plot_image_format}'
+    return filename
+
+
 def filename_starting_guess() -> str:
     """Generates the name of the default starting guess file."""
 

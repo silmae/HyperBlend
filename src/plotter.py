@@ -15,8 +15,9 @@ from matplotlib import cm
 from scipy.optimize import curve_fit
 
 from src import constants as C
-from src.data import file_handling as FH, toml_handling as T, file_names as FN, path_handling as P
+from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
 from src.leaf_model import nn, surf, training_data as training, surface_functions
+from src.utils import data_utils as DU
 
 
 figsize = (12,6)
@@ -105,7 +106,7 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
     plt.legend()
 
     if scene_id and sun_filename:
-        path = P.join(P.path_directory_forest_scene(scene_id), f"{sun_filename.rstrip('.txt')}.png")
+        path = PH.join(PH.path_directory_forest_scene(scene_id), f"{sun_filename.rstrip('.txt')}.png")
         plt.savefig(path, dpi=300)
     if show:
         plt.show()
@@ -143,11 +144,11 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     ax.legend()
 
     if save_thumbnail:
-        folder = P.path_directory_surface_model()
+        folder = PH.path_directory_surface_model()
         # image_name = "nn_train_history.png"
         if not file_name.endswith(".png"):
             file_name = file_name + '.png'
-        path = P.join(folder, file_name)
+        path = PH.join(folder, file_name)
         logging.info(f"Saving NN training history to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -230,9 +231,9 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             ax.legend()
 
         if save_thumbnail:
-            folder = P.path_directory_surface_model()
+            folder = PH.path_directory_surface_model()
             image_name = f"{leaf_param_names[i]}.png"
-            path = P.join(folder, image_name)
+            path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
             plt.savefig(path, dpi=300)
 
@@ -296,9 +297,9 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     ax.legend()
 
     if save:
-        folder = P.path_directory_surface_model()
+        folder = PH.path_directory_surface_model()
         image_name = "training_data" + C.postfix_plot_image_format
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if show:
@@ -320,7 +321,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
-    subres_dict = T.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
+    subres_dict = TH.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
@@ -341,9 +342,9 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
-        folder = P.path_directory_subresult(set_name, sample_id)
+        folder = PH.path_directory_subresult(set_name, sample_id)
         image_name = FN.filename_wl_result_plot(wl)
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -369,7 +370,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     # ax[0].set_title('Variable space')
     # ax[1].set_title('Target space')
 
-    r = T.read_set_result(set_name)
+    r = TH.read_set_result(set_name)
     wls = r[C.key_set_result_wls]
     ad_mean = np.array(r[C.key_set_result_wl_ad_mean])
     sd_mean = np.array(r[C.key_set_result_wl_sd_mean])
@@ -420,9 +421,9 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.plot(wls, tm_mean + (tm_std / 2), color='gray', ls='dashed')
 
     if save_thumbnail:
-        folder = P.path_directory_set_result(set_name)
+        folder = PH.path_directory_set_result(set_name)
         image_name = FN.filename_set_result_plot()
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
@@ -443,7 +444,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     refl_errs = []
     tran_errs = []
     for _,sample_id in enumerate(ids):
-        result = T.read_sample_result(set_name, sample_id)
+        result = TH.read_sample_result(set_name, sample_id)
         wls = result[C.key_sample_result_wls]
         refl_errs.append(result[C.key_sample_result_re])
         tran_errs.append(result[C.key_sample_result_te])
@@ -466,13 +467,47 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        folder = P.path_directory_set_result(set_name)
+        folder = PH.path_directory_set_result(set_name)
         image_name = FN.filename_set_error_plot()
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
         plt.show()
+
+
+def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
+    """Plots leaf resampled spectra along with the original.
+
+    :param set_name:
+        Set name.
+    :param save_thumbnail:
+        If True, a PNG image is saved. Default is True.
+    :param dont_show:
+        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+    """
+
+    target_ids = FH.list_finished_sample_ids(set_name=set_name)
+
+    for sample_id in target_ids:
+        target_original = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=False)
+        target_resampled = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=True)
+        wls_org, refl_org, tran_org = DU.unpack_target(target_original)
+        wls_resampled, refl_resampled, tran_resampled = DU.unpack_target(target_resampled)
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+
+        fig.suptitle(f"Resampling of leaf sample {sample_id}", fontsize=fig_title_font_size)
+        _plot_refl_tran_to_axis(axis_object=ax, refl=refl_org, tran=tran_org, x_values=wls_org, x_label='Wavelength [nm]', refl_color='black', tran_color='black', invert_tran=True)
+        _plot_refl_tran_to_axis(axis_object=ax, refl=refl_resampled, tran=tran_resampled, x_values=wls_resampled, x_label='Wavelength [nm]', invert_tran=True)
+
+        if save_thumbnail:
+            folder = PH.path_directory_target(set_name=set_name)
+            image_name = FN.filename_resample_plot(sample_id=sample_id)
+            path = PH.join(folder, image_name)
+            logging.info(f"Saving resampling plot to '{path}'.")
+            plt.savefig(path, dpi=300)
+        if not dont_show:
+            plt.show()
 
 
 def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumbnail=True) -> None:
@@ -488,7 +523,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
-    result = T.read_sample_result(set_name, sample_id)
+    result = TH.read_sample_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
@@ -506,9 +541,9 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
-        folder = P.path_directory_set_result(set_name)
+        folder = PH.path_directory_set_result(set_name)
         image_name = FN.filename_sample_result_plot(sample_id=sample_id)
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=300)
     if not dont_show:
@@ -523,7 +558,7 @@ def replot_wl_results(set_name: str):
 
     sample_ids = FH.list_finished_sample_ids(set_name)
     for sample_id in sample_ids:
-        d = T.read_sample_result(set_name, sample_id=sample_id)
+        d = TH.read_sample_result(set_name, sample_id=sample_id)
         wls = d[C.key_sample_result_wls]
         for wl in wls:
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
@@ -536,8 +571,8 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     """
 
     set_name = C.starting_guess_set_name
-    result_dict = T.read_sample_result(set_name, 0)
-    coeffs = T.read_starting_guess_coeffs()
+    result_dict = TH.read_sample_result(set_name, 0)
+    coeffs = TH.read_starting_guess_coeffs()
     wls = result_dict[C.key_sample_result_wls]
     r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
     t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
@@ -562,9 +597,9 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     plt.legend()
 
     if save_thumbnail:
-        p = P.path_directory_set_result(set_name)
+        p = PH.path_directory_set_result(set_name)
         image_name = f"variable_fitting.png"
-        path = P.join(p, image_name)
+        path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
         plt.savefig(path, dpi=300)
 
