@@ -94,10 +94,10 @@ def list_target_ids(set_name: str):
 
 
 def list_finished_sample_ids(set_name: str) -> str:
-    """Lists samples that have been optimized in given set.
+    """Lists leaf measurement samples that have their renderable leaf material parameters solved.
 
     :param set_name:
-        Set name.
+        Name of the leaf measurement set.
     :return:
         List of sample ids (int) that have an existing result in sample results folder.
     """
