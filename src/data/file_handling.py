@@ -18,19 +18,45 @@ from src import constants as C, plotter
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
 
-def copy_target(from_set, to_set):
+def copy_target(from_set: str, to_set: str):
+    """Copy leaf targets and sampling data as a new measurement set.
+
+    This is mainly useful in debugging and comparing leaf simulation speed of
+    different methods.
+
+    :param from_set:
+        Set name of the measurement set to copy from.
+    :param to_set:
+        Set name of the measurement set to copy to.
+    """
+
+    # Initialize new set with proper directories
     create_first_level_folders(set_name=to_set)
 
+    # Copy all targets and resampled targets if they exist
     sample_ids = list_target_ids(from_set)
     for sample_id in sample_ids:
-        target = TH.read_target(set_name=from_set, sample_id=sample_id)
-        TH.write_target(set_name=to_set, data=target, sample_id=sample_id)
+
+        path_src_target = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=False)
+        path_dst_target = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=False)
+        if os.path.exists(path_src_target):
+            shutil.copy2(path_src_target, path_dst_target)
+
+        path_src_target = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=True)
+        path_dst_target = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=True)
+        if os.path.exists(path_src_target):
+            shutil.copy2(path_src_target, path_dst_target)
+
+    # Copy sampling
+    src_sampling = PH.path_file_sampling(from_set)
+    dst_sampling = PH.path_file_sampling(to_set)
+    shutil.copy2(src_sampling, dst_sampling)
 
 
 def create_first_level_folders(set_name: str):
     """Create first level folders for a set.
 
-    Should be called when a new optimization object is instanced.
+    Should be called when a new leaf measurement set is created.
 
     :param set_name:
         Set name.
@@ -55,8 +81,6 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
         Sample id
     """
 
-    logging.info(f"Creating optimization folder structure to  path {os.path.abspath(PH.path_directory_set(set_name))}")
-
     sample_folder_name = f'{C.folder_sample_prefix}_{sample_id}'
     sample_path = PH.join(PH.path_directory_sample_result(set_name), sample_folder_name)
 
@@ -76,7 +100,7 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
 
 
 def list_target_ids(set_name: str):
-    """Lists available targets by their id.
+    """Lists available leaf measurement targets by their id.
 
     Targets must be named 'target_X.toml' where X is a number that can be cast into int.
 
@@ -289,6 +313,8 @@ def copy_leaf_material_parameters_from(source_set_name, forest_id, leaf_id):
     :param leaf_id:
         Leaf index (1,2,3) to set the material parameters to.
     """
+
+    #TODO add possibility to define a single sample
 
     res = TH.read_set_result(source_set_name)
     wls = res[C.key_set_result_wls]
