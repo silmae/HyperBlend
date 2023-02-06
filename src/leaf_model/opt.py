@@ -82,7 +82,7 @@ class Optimization:
         self.use_hard_coded_starting_guess = use_hard_coded_starting_guess
         LC.initialize_directories(set_name=set_name, clear_old_results=clear_old_results)
 
-    def run_optimization(self, use_threads=True, use_basin_hopping=False, resolution=1):
+    def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):
         """Runs the optimization for each sample in the set.
 
         It is safe to interrupt this method at any point as intermediate results are
@@ -95,9 +95,9 @@ class Optimization:
         :param use_basin_hopping:
             If True, use basin hopping algorithm on top of the default least squares method.
             It helps in not getting stuck to local optima, but is significantly slower.
-        :param resolution:
-            Spectral resolution. Default value 1 will optimize all wavelengths. Value 10
-            would optimize every 10th spectral band.
+        :param resampled:
+            If False, ignore sampling and use maximum available spectral resolution. Default is True.
+            This is ignored in training data generation where we have fake wavelengths.
         """
 
         ids = FH.list_target_ids(self.set_name)
@@ -111,12 +111,12 @@ class Optimization:
             FH.create_opt_folder_structure_for_samples(self.set_name, sample_id)
             logging.info(f'Starting optimization of sample {sample_id}')
             total_time_start = time.perf_counter()
-            targets = TH.read_target(self.set_name, sample_id)
+            targets = TH.read_target(self.set_name, sample_id, resampled=resampled)
 
+            # Deprecated because of sampling
             # Spectral resolution
-            if resolution != 1:
-                targets = targets[::resolution]
-
+            # if ignore_sampling != 1:
+            #     targets = targets[::ignore_sampling]
 
             if use_threads:
                 param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
