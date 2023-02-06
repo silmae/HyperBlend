@@ -218,6 +218,7 @@ if __name__ == '__main__':
     key_scene_id = ['-id', '--scene_id']
     key_sun_filename = ['-sun', '--sun_filename']
     key_leaf_ids = ['-l_ids', '--leaf_ids']
+    # TODO resampling
 
     parser = argparse.ArgumentParser()
 
@@ -237,7 +238,9 @@ if __name__ == '__main__':
         leaf_ids = [int(id) for id in (leaf_ids.lstrip('[').rstrip(']')).split(', ')]
 
     try:
-        bandwidth, band_list = get_leaf_bandwith_and_bandcount()
+
+        bandwidth, band_list = get_leaf_bandwith_and_bandcount() # TODO resampling
+
         logging.error(f"Automatically detected bandwidth {bandwidth} nm and band count {len(band_list)}.")
         set_animation_frames(len(band_list))
         wls, irradiances = sun.load_sun(file_name=sun_filename, bandwith=bandwidth)
