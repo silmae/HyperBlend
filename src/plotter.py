@@ -477,7 +477,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
 
 def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
-    """Plots leaf resampled spectra along with the original.
+    """Plots leaf resampled spectra along with the original for all leaf samples in given set.
 
     :param set_name:
         Set name.
