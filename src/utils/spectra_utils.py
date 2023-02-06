@@ -132,7 +132,7 @@ def generate_starting_guess():
     FH.create_first_level_folders(set_name)
     o = Optimization(set_name=set_name, use_hard_coded_starting_guess=True)
     make_linear_test_target(set_name)
-    o.run_optimization(resolution=10, use_basin_hopping=False, use_threads=True)
+    o.run_optimization(use_threads=True, use_basin_hopping=False, resampled=False)
     fit_starting_guess_coefficients()
     plotter._plot_starting_guess_coeffs_fitting()
 
