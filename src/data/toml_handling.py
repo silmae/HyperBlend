@@ -327,6 +327,8 @@ def read_target(set_name: str, sample_id: int, resampled=False):
         If True, data is read from a corresponding resampled file. Default is False.
     :return:
         List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
+    :raises
+        OSError if file could not be opened.
     """
 
     with open(P.path_file_target(set_name, sample_id, resampled=resampled), 'r') as file:
@@ -336,7 +338,7 @@ def read_target(set_name: str, sample_id: int, resampled=False):
         return data
 
 
-def write_sampling(set_name: str, sampling: list=None):
+def write_sampling(set_name: str, sampling: list = None, override=False):
     """Write resampling data file for given leaf measurement set.
 
     Preferred workflow is to NOT provide a list of wavelengths here,
@@ -352,12 +354,14 @@ def write_sampling(set_name: str, sampling: list=None):
         You can give a list of wavelengths here. If none is given, an
         empty wavelength dictionary is written to the file. You can
         later copy paste wavelengths from an ENVI file, for example.
+    :param override:
+        If True, override existing sampling with the new one. Default is False.
     """
 
     p = P.path_file_sampling(set_name)
 
     # Escape if the file exists already
-    if os.path.exists(p):
+    if os.path.exists(p) and not override:
         return
 
     if sampling is None:
