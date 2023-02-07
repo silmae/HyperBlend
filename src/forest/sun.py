@@ -31,8 +31,9 @@ import os
 import logging
 import math
 
-from src.data import path_handling as PH
 from src import constants as C
+from src.data import path_handling as PH
+from src.utils import spectra_utils as SU
 
 
 def is_resolution_1nm(wls):
@@ -56,54 +57,56 @@ def is_resolution_1nm(wls):
         return True
 
 
-def integrate(wls, irradiances, bandwith):
-    """Integrate irradiances to given bandwith.
-
-    If given bandwith is 10, the first 10 irradiances (in 1 nm resolution file) is
-    summed to 400 nm band. Then the next 10 are summed to 410 nm band, and so on.
-
-    Hard-coded to start from 400 nm.
-
-    :param wls:
-        Original wavelengths.
-    :param irradiances:
-        Irradiances corresponding to wls.
-    :param bandwith:
-        Bandwith of integration.
-    :returns:
-        (wls, irradiances) tuple where wls is a list of new integrated wavelengths and
-        irradiances is a list of corresponding irradiances.
-    """
-
-    wls_binned = [wls[0]]
-    irradiances_binned = []
-
-    start_wl = 400
-    stop_wl = start_wl + bandwith
-    sum = 0
-
-    i_bin = 0
-    for i, wl in enumerate(wls):
-        if wl >= start_wl and wl < stop_wl:
-            sum += irradiances[i]
-        else:
-            start_wl = stop_wl
-            stop_wl = stop_wl + bandwith
-            irradiances_binned.append(sum)
-            sum = irradiances[i]
-            wls_binned.append(wls_binned[i_bin]+bandwith)
-            i_bin += 1
-        if i == len(wls)-1:
-            # wls_binned.append(wls[-1])
-            irradiances_binned.append(sum)
-            # The lists have been exhausted. Add what is remaining in the last bin
-            # Note that the first and last bin does not necessarily have the same amount of summed elements
-
-    return wls_binned, irradiances_binned
+# Remove and use spectres instead for resampling
+# def integrate(wls, irradiances, bandwith):
+#     """Integrate irradiances to given bandwith.
+#
+#     If given bandwith is 10, the first 10 irradiances (in 1 nm resolution file) is
+#     summed to 400 nm band. Then the next 10 are summed to 410 nm band, and so on.
+#
+#     Hard-coded to start from 400 nm.
+#
+#     :param wls:
+#         Original wavelengths.
+#     :param irradiances:
+#         Irradiances corresponding to wls.
+#     :param bandwith:
+#         Bandwith of integration.
+#     :returns:
+#         (wls, irradiances) tuple where wls is a list of new integrated wavelengths and
+#         irradiances is a list of corresponding irradiances.
+#     """
+#
+#     wls_binned = [wls[0]]
+#     irradiances_binned = []
+#
+#     start_wl = 400
+#     stop_wl = start_wl + bandwith
+#     sum = 0
+#
+#     i_bin = 0
+#     for i, wl in enumerate(wls):
+#         if wl >= start_wl and wl < stop_wl:
+#             sum += irradiances[i]
+#         else:
+#             start_wl = stop_wl
+#             stop_wl = stop_wl + bandwith
+#             irradiances_binned.append(sum)
+#             sum = irradiances[i]
+#             wls_binned.append(wls_binned[i_bin]+bandwith)
+#             i_bin += 1
+#         if i == len(wls)-1:
+#             # wls_binned.append(wls[-1])
+#             irradiances_binned.append(sum)
+#             # The lists have been exhausted. Add what is remaining in the last bin
+#             # Note that the first and last bin does not necessarily have the same amount of summed elements
+#
+#     return wls_binned, irradiances_binned
 
 
 def read_sun_data(path):
     """Read sun data and return wavelengths, irradiances and comments.
+
     :returns:
         (wls, irradiances, comments) tuple where wls and irradiances are numpy arrays.
         comments is a list of comment rows needed in file fixing.
@@ -131,21 +134,7 @@ def read_sun_data(path):
     return np.array(wls), np.array(irradiances), comments
 
 
-def fix_double_space(path: str):
-    """Replace double spaces with a single space."""
-
-    with open(path, 'r') as file:
-        filedata = file.read()
-
-    # Replace the target string
-    filedata = filedata.replace('  ', ' ')
-
-    # Write the file out again
-    with open(path, 'w') as file:
-        file.write(filedata)
-
-
-def fix_nasa_sun(path:str):
+def _fix_nasa_sun(path:str):
     """ Fix double spaces and irradiance units provided by NASA.
 
     Rewrites the file (several times) if needed. Adds a tag to the fixed file that
@@ -160,7 +149,7 @@ def fix_nasa_sun(path:str):
         else:
             logging.info(f"Trying to convert given sun file to HyperBlend compilable.")
 
-    fix_double_space(path)
+    _fix_double_space(path)
 
     wls_i, irradiances_i, comments = read_sun_data(p)
     unit_row_idx = 0
@@ -193,6 +182,20 @@ def fix_nasa_sun(path:str):
         writer = csv.writer(f, delimiter=' ')
         writer.writerows(comments)
         writer.writerows(list(zip(wls_i, irradiances_i)))
+
+
+def _fix_double_space(path: str):
+    """Replace double spaces with a single space."""
+
+    with open(path, 'r') as file:
+        filedata = file.read()
+
+    # Replace the target string
+    filedata = filedata.replace('  ', ' ')
+
+    # Write the file out again
+    with open(path, 'w') as file:
+        file.write(filedata)
 
 
 def find_file(file_name: str, scene_id=None) -> str:
@@ -228,7 +231,7 @@ def find_file(file_name: str, scene_id=None) -> str:
     raise FileNotFoundError(f"File with name '{file_name}' was not found.")
 
 
-def load_sun(file_name: str = None, scene_id=None, bandwith=1):
+def load_sun(file_name: str = None, forest_id=None, sampling=None):
     """ Loads a sun file and returns wavelengths and corresponding irradiances.
 
     If given file is not compatible with HyperBlend, an attempt is made to fix it.
@@ -240,14 +243,13 @@ def load_sun(file_name: str = None, scene_id=None, bandwith=1):
         also scene_id is given, the search is extended to scene directory. Precedence
         is then for the file in the scene directory. If not given, the default sun file
         from the repository is used.
-    :param scene_id:
-        If scene_id is given, the search is extended to scene directory so that the scene
+    :param forest_id:
+        If forest_id is given, the search is extended to scene directory so that the scene
         directory is searched first and if found, it is returned. If not found, the sun_data
         directory is then searched.
-    :param bandwith:
-        Optional. Bandwith of integration, i.e., if given bandwith is 10, the first 10 irradiances (in 1 nm
-        resolution file) is summed to 400 nm band. Then the next 10 are summed to 410 nm band, and so on.
-        Default is 1.
+    :param sampling:
+        List of floats. If given, sun data is resampled to wavelengths specified in the list.
+        If sampling is None (default), the data is returned as raw.
     :return:
         (wls, irradiances) tuple where wls is a list of wavelengths (bands) and irradiances are
         corresponding list of irradiances. The length of the lists vary depending on given bandwith.
@@ -255,11 +257,15 @@ def load_sun(file_name: str = None, scene_id=None, bandwith=1):
 
     if not file_name:
         file_name = C.file_default_sun
-    path = find_file(file_name, scene_id)
-    fix_nasa_sun(path)
+    path = find_file(file_name, forest_id)
+    _fix_nasa_sun(path)
     wls, irradiances, _ = read_sun_data(path)
-    if bandwith != 1:
-        wls, irradiances = integrate(wls, irradiances, bandwith)
+
+    if sampling is not None:
+        new_irradiances = SU.resample(original_wl=wls, original_val=irradiances, new_wl=sampling)
+        wls = sampling
+        irradiances = new_irradiances
+
     return np.array(wls), np.array(irradiances)
 
 
@@ -286,9 +292,9 @@ if __name__ == '__main__':
     bandwith = 100
     sunfile = 'default_sun.txt'
     # wls, irradiances = load_sun(sunfile)
-    wls_b, irradiances_b = load_sun(file_name=sunfile, bandwith=bandwith)
+    wls_b, irradiances_b = load_sun()
     last = irradiances_b[-1]
-    plotter.plot_sun_data(wls_b, irradiances_b, scene_id="0123456789", sun_filename='default_sun')
+    plotter.plot_sun_data(wls_b, irradiances_b, forest_id="0102231033", sun_plot_name='default_sun')
     # plotter.plot_sun_data(wls, irradiances, scene_id="0123456789", sun_filename=sunfile, show=True)
     print('m')
 
