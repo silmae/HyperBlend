@@ -286,6 +286,16 @@ def path_file_forest_leaf_csv(scene_id, leaf_index):
     return p
 
 
+def path_file_forest_sun_csv(scene_id):
+    p = join(path_directory_forest_scene(scene_id), 'blender_sun.csv')
+    return p
+
+
+def path_file_forest_sky_csv(scene_id):
+    p = join(path_directory_forest_scene(scene_id), 'blender_sky.csv')
+    return p
+
+
 def join(*args) -> str:
     """Custom join function to avoid problems using os.path.join. """
 

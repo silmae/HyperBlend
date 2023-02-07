@@ -300,6 +300,9 @@ def duplicate_forest_scene_from_template():
     return scene_id
 
 
+csv_newline = ''
+csv_delimiter = ' '
+
 def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None):
     """Reads spectral leaf simulation result and copies it as a leaf material parameter file
     to be consumed by forest setup.
@@ -336,9 +339,9 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         ai = result_dict[C.key_sample_result_ai]
         mf = result_dict[C.key_sample_result_mf]
 
-    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline='') as csvfile:
+    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline=csv_newline) as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=' ', )
+        writer = csv.writer(csvfile, delimiter=csv_delimiter, )
 
         header = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
         writer.writerow(header)
@@ -346,3 +349,51 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         for i, wl in enumerate(wls):
             row = [i + 1, wl, ad[i], sd[i], ai[i], mf[i]]
             writer.writerow(row)
+
+
+def write_blender_sun_spectra(forest_id: str, wls, irradiances):
+    """Write sun spectra to a csv file that can be read by Blender script.
+
+    :param forest_id:
+        Id of the forest scene to write to.
+    :param wls:
+        List of wavelengths to be written.
+    :param irradiances:
+        List of sun irradiances to be written.
+    """
+
+    with open(PH.path_file_forest_sun_csv(forest_id), 'w+', newline=csv_newline) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=csv_delimiter, )
+
+        header = ["band", "wavelength", "irradiance"]
+        writer.writerow(header)
+
+        for i, wl in enumerate(wls):
+            row = [i + 1, wl, irradiances[i]]
+            writer.writerow(row)
+
+
+def read_blender_sun_spectra(forest_id: str):
+    """Read sun spectra csv from a Blender script.
+
+    :param forest_id:
+        Id of the forest scene to read from.
+    :return:
+        bands, wls, irradiances - each is a list of floats.
+    """
+
+    with open(PH.path_file_forest_sun_csv(forest_id), 'r', newline=csv_newline) as csvfile:
+
+        reader = csv.reader(csvfile, delimiter=csv_delimiter, quoting=csv.QUOTE_NONNUMERIC)
+        next(reader, None)  # skip the headers
+
+        bands = []
+        wls = []
+        irradiances = []
+        for row in reader:
+            bands.append(row[0])
+            wls.append(row[1])
+            irradiances.append(row[2])
+
+        return bands, wls, irradiances
