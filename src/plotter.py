@@ -52,11 +52,10 @@ max_ticks = 8
 image_type = 'png'
 
 
-def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, scene_id=None, sun_filename=None, show=False):
+def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, forest_id=None, sun_plot_name=None, show=False):
     """Plot used sun data for a scene.
 
-    Plot can either be shown or saved. Plot is saved if both scene_id and sun_filename
-    are given. 
+    Plot can either be shown or saved. Plot is saved if scene_id is given.
 
     Three main uses:
         1. just original spectrum
@@ -68,21 +67,21 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
     :param irradiances:
         Irradiances corresponding to wls in [W/m2/nm].
     :param wls_binned:
-        Optional. Binned (integrated) wavelengths over certain bandwith. Used
-        bandwith is calculated by wls_binned[1] - wls_binned[0].
+        Optional. Binned (integrated) wavelengths over certain bandwidth. Used
+        bandwidth is calculated by wls_binned[1] - wls_binned[0].
     :param irradiances_binned:
         Optional. Binned (integrated) irradiances correcponding to wls_binned.
         Both must be given so that binned irradiances can be plotted.
-    :param scene_id:
-        Optional. Scene id for saving the plot to the scene directory.
-    :param sun_filename:
+    :param forest_id:
+        Optional. Forest id for saving the plot to the scene directory.
+    :param sun_plot_name:
         Optional. Sun filename for naming the image file.
     :param show:
         If True, the plot is shown to the user. Default is False.
     """
 
     bandwith = wls[1] - wls[0]
-    if wls_binned and irradiances_binned:
+    if wls_binned is not None and irradiances_binned is not None:
         bandwith_binned = wls_binned[1] - wls_binned[0]
         fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
         fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
@@ -92,21 +91,25 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
         ax[0].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
         ax[0].set_ylabel('Irradiance [W/m2/nm]', fontsize=axis_label_font_size)
 
-        ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwith {bandwith_binned:.0f} nm', alpha=0.5)
-        ax[1].set_title('Integrated spectra')
+        ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwidth {bandwith_binned:.0f} nm', alpha=0.5)
+        ax[1].set_title('Resampled and normalized')
         ax[1].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
         ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]', fontsize=axis_label_font_size)
+        ax[1].set_xlim([wls[0],wls[-1]])
     else:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
         fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
         ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-        ax.set_ylabel(f'Irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
-        ax.plot(wls, irradiances, label=f'Bandwith {bandwith:.0f} nm')
+        ax.set_ylabel(f'Normalized irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
+        ax.plot(wls, irradiances, label=f'Bandwidth {bandwith:.0f} nm')
 
     plt.legend()
 
-    if scene_id and sun_filename:
-        path = PH.join(PH.path_directory_forest_scene(scene_id), f"{sun_filename.rstrip('.txt')}.png")
+    if sun_plot_name is None:
+        sun_plot_name = C.file_default_sun
+
+    if forest_id is not None:
+        path = PH.join(PH.path_directory_forest_scene(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")
         plt.savefig(path, dpi=300)
     if show:
         plt.show()
