@@ -300,37 +300,49 @@ def duplicate_forest_scene_from_template():
     return scene_id
 
 
-def copy_leaf_material_parameters_from(source_set_name, forest_id, leaf_id):
-    """Reads spectral set result and copies it as a leaf material parameter file
+def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None):
+    """Reads spectral leaf simulation result and copies it as a leaf material parameter file
     to be consumed by forest setup.
 
     Leaf material parameters are written as a csv file to give to specified forest scene.
+    We use csv file instead of toml files because importing external packages, such as toml,
+    into Blender's own Python environment is bit of a hassle. Csv files work just as well and
+    they can be read with tools already included by default.
 
-    :param source_set_name:
-        Source set name that must be found from HyperBlend/optimization directory.
     :param forest_id:
         Forest id to be set the leaf material parameters to.
+    :param source_set_name:
+        Source set name that must be found from HyperBlend/leaf_measurement_sets/ directory.
     :param leaf_id:
-        Leaf index (1,2,3) to set the material parameters to.
+        An id to be assigned to the leaf for later referencing. This will be put into the
+        name of the file written.
+    :param sample_id:
+        Sample id (int) of the leaf measurement set. If `None`, set's average values will be used instead
+        of a specific sample.
     """
 
-    #TODO add possibility to define a single sample
-
-    res = TH.read_set_result(source_set_name)
-    wls = res[C.key_set_result_wls]
-    ad = res[C.key_set_result_wl_ad_mean]
-    sd = res[C.key_set_result_wl_sd_mean]
-    ai = res[C.key_set_result_wl_ai_mean]
-    mf = res[C.key_set_result_wl_mf_mean]
+    if sample_id is None:
+        result_dict = TH.read_set_result(source_set_name)
+        wls = result_dict[C.key_set_result_wls]
+        ad = result_dict[C.key_set_result_wl_ad_mean]
+        sd = result_dict[C.key_set_result_wl_sd_mean]
+        ai = result_dict[C.key_set_result_wl_ai_mean]
+        mf = result_dict[C.key_set_result_wl_mf_mean]
+    else:
+        result_dict = TH.read_sample_result(set_name=source_set_name,sample_id=sample_id)
+        wls = result_dict[C.key_sample_result_wls]
+        ad = result_dict[C.key_sample_result_ad]
+        sd = result_dict[C.key_sample_result_sd]
+        ai = result_dict[C.key_sample_result_ai]
+        mf = result_dict[C.key_sample_result_mf]
 
     with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline='') as csvfile:
 
         writer = csv.writer(csvfile, delimiter=' ', )
 
-        row = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
-        #just headers for human readibility
+        header = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
+        writer.writerow(header)
 
-        writer.writerow(row)
         for i, wl in enumerate(wls):
             row = [i + 1, wl, ad[i], sd[i], ai[i], mf[i]]
             writer.writerow(row)
