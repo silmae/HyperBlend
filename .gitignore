@@ -13,8 +13,12 @@ measured_data/*
 blender_test_run/*
 scenes/*
 
+# Ignore other than default sun and sky files
 sun_data/*
 !sun_data/default_sun.txt
+sky_data/*
+!sky_data/default_clear_sky.txt
+
 log*/* 
 leaf_model/*
 !leaf_model/nn_default.pt
