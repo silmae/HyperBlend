@@ -75,6 +75,22 @@ def init(leaves, sun_file_name: str = None, sky_file_name: str = None):
         leaf_id = leaf[2]
         FH.copy_leaf_material_parameters(forest_id=forest_id, leaf_id=leaf_id, source_set_name=set_name, sample_id=sample_id)
 
+
+    rgb_dict = {}
+
+    # Define false colors
+    for i, sample in enumerate(sample_list):
+        wls = sample[C.key_sample_result_wls]
+        refl = sample[C.key_sample_result_r]
+        rgb = SU.spectra_to_rgb(wls=wls, value=refl)
+
+        leaf_id = leaves[i][2]
+        dict_key = f"leaf_{leaf_id}_rgb"
+        rgb_dict[dict_key] = rgb
+
+    # print(f"RGB dict '{rgb_dict}'.")
+    FH.write_blender_rgb_colors(forest_id=forest_id, rgb_dict=rgb_dict)
+
     logging.info(f"Normalizing, resampling and writing sun data.")
     sun_wls_org, sun_irradiance_org = lighting.load_light(file_name=sun_file_name, forest_id=forest_id, lighting_type='sun')
     logging.info(f"Reloading sun with new sampling.")

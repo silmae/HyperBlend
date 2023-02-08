@@ -303,6 +303,11 @@ def path_file_forest_sky_csv(scene_id):
     return p
 
 
+def path_file_forest_rgb_csv(scene_id):
+    p = join(path_directory_forest_scene(scene_id), 'rgb_colors.csv')
+    return p
+
+
 def join(*args) -> str:
     """Custom join function to avoid problems using os.path.join. """
 

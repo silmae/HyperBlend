@@ -17,6 +17,9 @@ import re # regural expressions
 from src import constants as C, plotter
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
+CSV_NEWLINE = ''
+CSV_DELIMITER = ' '
+
 
 def copy_target(from_set: str, to_set: str):
     """Copy leaf targets and sampling data as a new measurement set.
@@ -300,9 +303,6 @@ def duplicate_forest_scene_from_template():
     return scene_id
 
 
-csv_newline = ''
-csv_delimiter = ' '
-
 def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None):
     """Reads spectral leaf simulation result and copies it as a leaf material parameter file
     to be consumed by forest setup.
@@ -331,6 +331,11 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         sd = result_dict[C.key_set_result_wl_sd_mean]
         ai = result_dict[C.key_set_result_wl_ai_mean]
         mf = result_dict[C.key_set_result_wl_mf_mean]
+
+        folder = PH.path_directory_set_result(source_set_name)
+        image_name = FN.filename_set_result_plot()
+        plot_path = PH.join(folder, image_name)
+
     else:
         result_dict = TH.read_sample_result(set_name=source_set_name,sample_id=sample_id)
         wls = result_dict[C.key_sample_result_wls]
@@ -339,9 +344,19 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         ai = result_dict[C.key_sample_result_ai]
         mf = result_dict[C.key_sample_result_mf]
 
-    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline=csv_newline) as csvfile:
+        folder = PH.path_directory_target(set_name=source_set_name)
+        image_name = FN.filename_resample_plot(sample_id=sample_id)
+        plot_path = PH.join(folder, image_name)
 
-        writer = csv.writer(csvfile, delimiter=csv_delimiter, )
+    # Copy leaf plot to scene dir for convenience
+    folder = PH.path_directory_forest_scene(scene_id=forest_id)
+    image_name = f"leaf_{leaf_id}{C.postfix_plot_image_format}"
+    dst_plot_path = PH.join(folder, image_name)
+    shutil.copy2(plot_path, dst_plot_path)
+
+    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
 
         header = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
         writer.writerow(header)
@@ -371,9 +386,9 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
     else:
         raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
 
-    with open(p, 'w+', newline=csv_newline) as csvfile:
+    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=csv_delimiter, )
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
 
         header = ["band", "wavelength", "irradiance"]
         writer.writerow(header)
@@ -401,9 +416,9 @@ def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
     else:
         raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
 
-    with open(p, 'r', newline=csv_newline) as csvfile:
+    with open(p, 'r', newline=CSV_NEWLINE) as csvfile:
 
-        reader = csv.reader(csvfile, delimiter=csv_delimiter, quoting=csv.QUOTE_NONNUMERIC)
+        reader = csv.reader(csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC)
         next(reader, None)  # skip the headers
 
         bands = []
@@ -415,3 +430,19 @@ def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
             irradiances.append(row[2])
 
         return bands, wls, irradiances
+
+
+def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
+
+    p = PH.path_file_forest_rgb_csv(scene_id=forest_id)
+
+    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+
+        header = ["item", 'r', 'g', 'b']
+        writer.writerow(header)
+
+        for key, value in rgb_dict.items():
+            row = [key, value[0], value[1], value[2]]
+            writer.writerow(row)

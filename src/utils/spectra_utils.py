@@ -7,6 +7,7 @@ Some default targets can be created without fetching external data.
 """
 
 import numpy as np
+import logging
 
 import spectres
 # SpectRes is used for resampling spectra to lower resolution
@@ -16,6 +17,88 @@ from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU, data_utils as DU
 from src import constants as C
 from src.leaf_model.opt import Optimization
+
+
+R = 630.
+G = 532.
+B = 465.
+VIS_MIN = 380.
+VIS_MAX = 700.
+
+
+def spectra_to_rgb(wls, value):
+    """Creates at least some sort of RGB presentation of given spectrum.
+
+    :param wls:
+        Wavelengths as a list of floats.
+    :param value:
+        Reflectance values as a list of floats.
+    :return:
+         Returns an rgb value as a list of floats.
+    :raises ValueError:
+         If given lists are different in length.
+    """
+
+    n = len(wls)
+    if n != len(value):
+        raise ValueError(f"Given wavelength and value lists are different length {n} != {len(value)}.")
+
+    default_rgb = [0.7, 0.3, 0.6]
+
+    wls_a = np.array(wls)
+    value_a = np.array(value)
+    max_value = np.max(value_a)
+    value_norm = value_a / max_value
+
+    if n < 3:
+        logging.info(f"Length of provided wavelength list less than 3. Returning default color '{default_rgb}'.")
+        return default_rgb
+    elif n == 3:
+        logging.info(f"Length of provided wavelength is 3. Returning original values normalized to 1.")
+        return value_norm
+    else:
+        if is_in_visible(wls_a):
+            b = value_norm[find_nearest_idx(wls_a, B)]
+            g = value_norm[find_nearest_idx(wls_a, G)]
+            r = value_norm[find_nearest_idx(wls_a, R)]
+            res = [r,g,b]
+            logging.info(f"Values in visible range. Returning approximate false color representation '{res}'.")
+        else:
+            b = value_norm[0]
+            g = value_norm[int(n/2)]
+            r = value_norm[-1]
+            res = [r,g,b]
+            logging.info(f"Values not in visible range. Returning some sort of false color representation "
+                         f"using edges and middle values '{res}'.")
+        return res
+
+
+def is_in_visible(wls):
+    """Check if given wavelengths are on visible range.
+
+    :param wls:
+        List of wavelengths to check.
+    :return:
+        False if all wavelengths are either greater than 700 nm or lower than 380 nm.
+        Otherwise returns True, i.e., it is enough that even some part of the spectrum is
+        on the visible.
+    """
+
+    wls_a = np.array(wls)
+
+    if np.all(np.greater(wls_a, np.ones_like(wls_a)*VIS_MAX)):
+        return False
+
+    if np.all(np.less(wls_a, np.ones_like(wls_a)*VIS_MIN)):
+        return False
+
+    return True
+
+
+def find_nearest_idx(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
 
 
 def resample(original_wl, original_val, new_wl):
