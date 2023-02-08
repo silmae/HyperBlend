@@ -52,8 +52,8 @@ max_ticks = 8
 image_type = 'png'
 
 
-def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, forest_id=None, sun_plot_name=None, show=False):
-    """Plot used sun data for a scene.
+def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, forest_id=None, sun_plot_name=None, show=False, lighting_type='sun'):
+    """Plot used sun or sky data for a scene.
 
     Plot can either be shown or saved. Plot is saved if scene_id is given.
 
@@ -78,35 +78,46 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, fo
         Optional. Sun filename for naming the image file.
     :param show:
         If True, the plot is shown to the user. Default is False.
+    :param lighting_type:
+        String either 'sun' or 'sky'.
     """
 
     bandwith = wls[1] - wls[0]
     if wls_binned is not None and irradiances_binned is not None:
         bandwith_binned = wls_binned[1] - wls_binned[0]
         fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-        fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
+        fig.suptitle(f"{lighting_type} spectrum", fontsize=fig_title_font_size)
 
-        ax[0].plot(wls, irradiances, label='Sun 1 nm')
+        ax[0].plot(wls, irradiances, label=f'{lighting_type} 1 nm')
         ax[0].set_title('Spectra in file')
         ax[0].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
         ax[0].set_ylabel('Irradiance [W/m2/nm]', fontsize=axis_label_font_size)
 
+        if lighting_type == 'sun':
+            resampled_label = 'Resampled and normalized'
+        elif lighting_type == 'sky':
+            resampled_label = 'Resampled and normalized with sun'
+        else:
+            raise ValueError(f"Wrong lighting type. Expected lighting type either 'sun' or 'sky', was '{lighting_type}'.")
+
         ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwidth {bandwith_binned:.0f} nm', alpha=0.5)
-        ax[1].set_title('Resampled and normalized')
+        ax[1].set_title(resampled_label)
         ax[1].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
         ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]', fontsize=axis_label_font_size)
         ax[1].set_xlim([wls[0],wls[-1]])
     else:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
-        fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
+        fig.suptitle(f"{lighting_type} spectrum", fontsize=fig_title_font_size)
         ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-        ax.set_ylabel(f'Normalized irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
+        ax.set_ylabel(f'{lighting_type} irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
         ax.plot(wls, irradiances, label=f'Bandwidth {bandwith:.0f} nm')
 
     plt.legend()
 
-    if sun_plot_name is None:
+    if sun_plot_name is None and lighting_type == 'sun':
         sun_plot_name = C.file_default_sun
+    if sun_plot_name is None and lighting_type == 'sky':
+        sun_plot_name = C.file_default_sky
 
     if forest_id is not None:
         path = PH.join(PH.path_directory_forest_scene(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")

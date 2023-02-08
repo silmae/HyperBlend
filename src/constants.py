@@ -100,6 +100,9 @@ file_model_parameters = 'model_parameters'
 file_default_sun = 'default_sun.txt'
 """Default sun spectrum file name that is included in the repository."""
 
+file_default_sky = 'default_clear_sky.txt'
+"""Default sky spectrum file name that is included in the repository."""
+
 file_sampling_data = 'sampling'
 """Toml formatted file storing wavelengths for resampling."""
 

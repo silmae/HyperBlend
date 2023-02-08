@@ -351,8 +351,8 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
             writer.writerow(row)
 
 
-def write_blender_sun_spectra(forest_id: str, wls, irradiances):
-    """Write sun spectra to a csv file that can be read by Blender script.
+def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type='sun'):
+    """Write light spectra to a csv file that can be read by Blender script.
 
     :param forest_id:
         Id of the forest scene to write to.
@@ -360,9 +360,18 @@ def write_blender_sun_spectra(forest_id: str, wls, irradiances):
         List of wavelengths to be written.
     :param irradiances:
         List of sun irradiances to be written.
+    :param lighting_type:
+         String - either 'sun' or 'sky'.
     """
 
-    with open(PH.path_file_forest_sun_csv(forest_id), 'w+', newline=csv_newline) as csvfile:
+    if lighting_type == 'sun':
+        p = PH.path_file_forest_sun_csv(forest_id)
+    elif lighting_type == 'sky':
+        p = PH.path_file_forest_sky_csv(forest_id)
+    else:
+        raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+
+    with open(p, 'w+', newline=csv_newline) as csvfile:
 
         writer = csv.writer(csvfile, delimiter=csv_delimiter, )
 
@@ -374,16 +383,25 @@ def write_blender_sun_spectra(forest_id: str, wls, irradiances):
             writer.writerow(row)
 
 
-def read_blender_sun_spectra(forest_id: str):
-    """Read sun spectra csv from a Blender script.
+def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
+    """Read light spectra csv from a Blender script.
 
     :param forest_id:
         Id of the forest scene to read from.
+    :param lighting_type:
+         String either 'sun' or 'sky'.
     :return:
         bands, wls, irradiances - each is a list of floats.
     """
 
-    with open(PH.path_file_forest_sun_csv(forest_id), 'r', newline=csv_newline) as csvfile:
+    if lighting_type == 'sun':
+        p = PH.path_file_forest_sun_csv(forest_id)
+    elif lighting_type == 'sky':
+        p = PH.path_file_forest_sky_csv(forest_id)
+    else:
+        raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+
+    with open(p, 'r', newline=csv_newline) as csvfile:
 
         reader = csv.reader(csvfile, delimiter=csv_delimiter, quoting=csv.QUOTE_NONNUMERIC)
         next(reader, None)  # skip the headers

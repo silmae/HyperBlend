@@ -8,11 +8,11 @@ from src.leaf_model.opt import Optimization
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH, path_handling as PH, toml_handling as TH
 import src.constants as C
-from src.forest import sun
+from src.forest import lighting
 from src import plotter
 
 
-def init(leaves, sun_file_name: str = None):
+def init(leaves, sun_file_name: str = None, sky_file_name: str = None):
     """
 
     Create a new forest by copying template.
@@ -76,18 +76,27 @@ def init(leaves, sun_file_name: str = None):
         FH.copy_leaf_material_parameters(forest_id=forest_id, leaf_id=leaf_id, source_set_name=set_name, sample_id=sample_id)
 
     logging.info(f"Normalizing, resampling and writing sun data.")
-    sun_wls_org, sun_irradiance_org = sun.load_sun(file_name=sun_file_name, forest_id=forest_id)
+    sun_wls_org, sun_irradiance_org = lighting.load_light(file_name=sun_file_name, forest_id=forest_id, lighting_type='sun')
     logging.info(f"Reloading sun with new sampling.")
-    sun_wls, sun_irradiance = sun.load_sun(file_name=sun_file_name, forest_id=forest_id, sampling=sampling)
+    sun_wls, sun_irradiance = lighting.load_light(file_name=sun_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sun')
     # Normalizing sun
-    irr_max = np.max(sun_irradiance)
-    sun_irradiance = sun_irradiance / irr_max
-    FH.write_blender_sun_spectra(forest_id=forest_id, wls=sun_wls, irradiances=sun_irradiance)
+    sun_irr_max = np.max(sun_irradiance)
+    sun_irradiance = sun_irradiance / sun_irr_max
+    FH.write_blender_light_spectra(forest_id=forest_id, wls=sun_wls, irradiances=sun_irradiance, lighting_type='sun')
 
     logging.info(f"Plotting sun data.")
-    plotter.plot_sun_data(wls=sun_wls_org, irradiances=sun_irradiance_org, wls_binned=sun_wls, irradiances_binned=sun_irradiance, forest_id=forest_id)
+    plotter.plot_light_data(wls=sun_wls_org, irradiances=sun_irradiance_org, wls_binned=sun_wls, irradiances_binned=sun_irradiance,
+                            forest_id=forest_id, lighting_type='sun')
 
     # bands, wls, irradiances = FH.read_blender_sun_spectra(forest_id=forest_id)
+
+    sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, lighting_type='sky')
+    sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sky')
+    # Normalize with maximum SUN irradiance
+    sky_irradiance = sky_irradiance / sun_irr_max
+    FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')
+    plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
+                            sun_plot_name=sky_file_name, lighting_type='sky')
 
 
 

@@ -164,6 +164,13 @@ def path_directory_sun_data() -> str:
     return p
 
 
+def path_directory_sky_data() -> str:
+    """Sky data directory."""
+
+    p = join(C.path_project_root, 'sky_data')
+    return p
+
+
 def path_directory_blender_scripts() -> str:
     """Blender scripts directory."""
 
