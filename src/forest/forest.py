@@ -46,34 +46,45 @@ def init(leaves, sun_file_name: str = None):
 
     # Check that all leaves have been solved with the same sampling
     sampling = sample_list[0][C.key_sample_result_wls]
+    logging.info(f"Checking that leaves' spectral band counts and wavelengths match.")
     for i, sample in enumerate(sample_list):
+
         wls_other = sample_list[i][C.key_sample_result_wls]
+        other_set_name = leaves[i][0]
+        other_sample_id = leaves[i][1]
+        reference_set_name = leaves[0][0]
+        reference_sample_id = leaves[0][1]
+
+        # Check band count
+        if len(sampling) != len(wls_other):
+            raise ValueError(f"Band count for set '{other_set_name}' sample {other_sample_id} (len = {len(wls_other)}) does not match "
+                             f"{reference_set_name} sample {reference_sample_id} (len = {len(sampling)}).\n")
+        # Check wavelengths
         same = np.allclose(sampling, wls_other, atol=0.01)
         if not same:
-            # TODO streamline when working
-            other_set_name = leaves[i][0]
-            other_sample_id = leaves[i][1]
-            reference_set_name = leaves[0][0]
-            reference_sample_id = leaves[0][1]
             raise ValueError(f"Wavelengths for {other_set_name} sample {other_sample_id} does not match "
                              f"{reference_set_name} sample {reference_sample_id}.\n "
                              f"Expected {sampling}\n"
                              f"but got {wls_other}")
 
     # Write leaf params
+    logging.info(f"Bands and wavelengths ok. Copying leaf data.")
     for leaf in leaves:
         set_name = leaf[0]
         sample_id = leaf[1]
         leaf_id = leaf[2]
         FH.copy_leaf_material_parameters(forest_id=forest_id, leaf_id=leaf_id, source_set_name=set_name, sample_id=sample_id)
 
+    logging.info(f"Normalizing, resampling and writing sun data.")
     sun_wls_org, sun_irradiance_org = sun.load_sun(file_name=sun_file_name, forest_id=forest_id)
+    logging.info(f"Reloading sun with new sampling.")
     sun_wls, sun_irradiance = sun.load_sun(file_name=sun_file_name, forest_id=forest_id, sampling=sampling)
     # Normalizing sun
     irr_max = np.max(sun_irradiance)
     sun_irradiance = sun_irradiance / irr_max
     FH.write_blender_sun_spectra(forest_id=forest_id, wls=sun_wls, irradiances=sun_irradiance)
 
+    logging.info(f"Plotting sun data.")
     plotter.plot_sun_data(wls=sun_wls_org, irradiances=sun_irradiance_org, wls_binned=sun_wls, irradiances_binned=sun_irradiance, forest_id=forest_id)
 
     # bands, wls, irradiances = FH.read_blender_sun_spectra(forest_id=forest_id)
