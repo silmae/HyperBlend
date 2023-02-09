@@ -22,6 +22,7 @@ from src.forest import forest
 from src.data import toml_handling as TH
 from src.leaf_model import interface as LI
 from src import constants as C
+from src.reflectance_lab import diffuse_reflectance
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
@@ -43,8 +44,10 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    leaf_stuff = [('try_random_p_leaves', 0, 1), ('try_random_p_leaves', 1, 3)]
-    forest.init(copy_forest_id='0102231033')
+    diffuse_reflectance.run()
+
+    # leaf_stuff = [('try_random_p_leaves', 0, 1), ('try_random_p_leaves', 1, 3)]
+    # forest.init(copy_forest_id='0102231033')
 
     # Let's first generate some random PROSPECT leaves
     # set_name = "try_random_p_leaves"

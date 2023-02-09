@@ -22,7 +22,7 @@ from src.utils import data_utils as DU
 
 figsize = (12,6)
 """Figure size for two plot figures."""
-figsize_single = (6,6)
+figsize_single = (7,6)
 """Figure size for single plot figures."""
 fig_title_font_size = 18
 """Title font size."""
@@ -50,6 +50,44 @@ max_ticks = 8
 """Max tick count for wavelength."""
 
 image_type = 'png'
+
+
+def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=False, save=True):
+    """Plot simulation result of virtual reflectance lab.
+
+    :param HSV_value:
+        Used hue-saturation-value values as a list of floats.
+    :param reflectance:
+        List of list of reflectances. Length of the first list must match the sun powers used.
+    :param powers:
+        List of sun powers.
+    :param plot_name:
+        Name for the plot file.
+    :param show:
+        If `True`, show interactive plot. Default is False.
+    :param save:
+        If `True`, save plot to project root directory. Default is True.
+    :raises ValueError:
+        If `len(powers) != len(reflectance)`.
+    """
+
+    if len(powers) != len(reflectance):
+        raise ValueError(f"Length of sun powers {len(powers)} and measurements {len(reflectance)} must match.")
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
+
+    for i,measurement in enumerate(reflectance):
+        ax.set_xlabel('HSV value', fontsize=axis_label_font_size)
+        ax.set_ylabel(f'Reflectance', fontsize=axis_label_font_size)
+        ax.plot(HSV_value, measurement, label=f'Sun power {powers[i]} [W/m2]')
+
+    plt.legend()
+
+    if save:
+        path = PH.join(C.path_project_root, f"{plot_name}{C.postfix_plot_image_format}")
+        plt.savefig(path, dpi=300)
+    if show:
+        plt.show()
 
 
 def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, forest_id=None, sun_plot_name=None, show=False, lighting_type='sun'):

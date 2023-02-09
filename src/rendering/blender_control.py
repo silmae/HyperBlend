@@ -173,6 +173,23 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         subprocess.run(blender_args + scirpt_args, stdout=stream)
 
 
+def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
+
+    blender_args = _get_base_blender_args(script_name='bs_reflectance_lab.py', scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
+
+    scirpt_args = ['--']
+    p = os.path.abspath(rend_base_path)
+    scirpt_args += ['-p', f'{p}']
+    if dry_run:
+        scirpt_args += ['-y']  # no render
+    if sun_power is not None:
+        scirpt_args += ['-s', f'{sun_power}']  # no render
+
+    # Direct Blender logging info to null stream to avoid cluttering of console.
+    with open(os.devnull, 'wb') as stream:
+        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+
+
 def setup_forest(scene_id, leaf_id_list=None):
     """ Setup the forest for rendering.
 
@@ -234,7 +251,6 @@ def render_forest(scene_id: str, render_mode: str):
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
-
 
 if __name__ == '__main__':
     """
