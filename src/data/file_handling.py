@@ -276,31 +276,39 @@ def reduce(set_name: str) -> None:
                 # print(plot_path)
 
 
-def duplicate_forest_scene_from_template():
-    """Creates a uniquely named copy of a forest scene template and returns its id."""
+def duplicate_forest_scene_from_template(copy_forest_id=None):
+    """Creates a uniquely named copy of a forest scene and returns its id.
+
+    :param copy_forest_id:
+        If provided, a forest with this id is copied. If `None`, the default
+        template forest is copied.
+    """
 
     now = datetime.datetime.now()
-    scene_id = f"{now.day:02}{now.month:02}{now.year-2000}{now.hour:02}{now.minute:02}"
-    # Use this for debugging
-    # scene_id = "0123456789"
+    dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
 
-    if os.path.exists(PH.path_forest_template()):
-        if not os.path.exists(PH.path_directory_forest_scene(scene_id)):
-            os.makedirs(PH.path_directory_forest_scene(scene_id))
-        shutil.copy2(PH.path_forest_template(), PH.path_file_forest_scene(scene_id))
-        if not os.path.exists(PH.path_directory_forest_rend(scene_id)):
-            os.makedirs(PH.path_directory_forest_rend(scene_id))
-        if not os.path.exists(PH.path_directory_forest_rend_spectral(scene_id)):
-            os.makedirs(PH.path_directory_forest_rend_spectral(scene_id))
-        if not os.path.exists(PH.path_directory_forest_rend_abundances(scene_id)):
-            os.makedirs(PH.path_directory_forest_rend_abundances(scene_id))
+    if copy_forest_id is not None:
+        source_path = PH.path_file_forest_scene(copy_forest_id)
     else:
-        raise RuntimeError(f"Forest template scene not found for duplication from '{PH.path_forest_template()}'. "
-                           f"This is a fatal "
-                           f"error and makes forest simulations impossible. Check git repository "
-                           f"to restore the forest scene template to root directory.")
+        source_path = PH.path_forest_template()
 
-    return scene_id
+    if os.path.exists(source_path):
+        if not os.path.exists(PH.path_directory_forest_scene(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_scene(dst_forest_id))
+        shutil.copy2(source_path, PH.path_directory_forest_scene(dst_forest_id))
+        if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
+        if not os.path.exists(PH.path_directory_forest_rend_spectral(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend_spectral(dst_forest_id))
+        if not os.path.exists(PH.path_directory_forest_rend_abundances(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend_abundances(dst_forest_id))
+    else:
+        raise RuntimeError(f"Forest scene not found for duplication from '{source_path}'. "
+                           f"If you tried to duplicate from template forest, check git repository "
+                           f"to restore the template to root directory. Otherwise check that forest "
+                           f"id is correct.")
+
+    return dst_forest_id
 
 
 def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None):
@@ -349,7 +357,7 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         plot_path = PH.join(folder, image_name)
 
     # Copy leaf plot to scene dir for convenience
-    folder = PH.path_directory_forest_scene(scene_id=forest_id)
+    folder = PH.path_directory_forest_scene(forest_id=forest_id)
     image_name = f"leaf_{leaf_id}{C.postfix_plot_image_format}"
     dst_plot_path = PH.join(folder, image_name)
     shutil.copy2(plot_path, dst_plot_path)
@@ -434,7 +442,7 @@ def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
 
 def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
 
-    p = PH.path_file_forest_rgb_csv(scene_id=forest_id)
+    p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
 
     with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
 
