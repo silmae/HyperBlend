@@ -243,7 +243,8 @@ if __name__ == '__main__':
 
         logging.error(f"Automatically detected bandwidth {bandwidth} nm and band count {len(band_list)}.")
         set_animation_frames(len(band_list))
-        wls, irradiances = sun.load_sun(file_name=sun_filename, bandwith=bandwidth)
+
+        wls, irradiances = sun.load_light(file_name=sun_filename)  # TODO load Blender-ready sun csv
         logging.error(f"Spectral range from {wls[0]:.1f} nm to {wls[-1]:.1f} nm")
 
         # "Exposure": Scale values with magical constant to avoid overexposure. Tested with 10% white reflectance panel.
