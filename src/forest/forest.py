@@ -12,7 +12,7 @@ from src.forest import lighting
 from src import plotter
 
 
-def init(leaves, sun_file_name: str = None, sky_file_name: str = None):
+def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy_forest_id=None):
     """
 
     Create a new forest by copying template.
@@ -31,10 +31,19 @@ def init(leaves, sun_file_name: str = None, sky_file_name: str = None):
     # TODO Load ground reflectance spectrum.
 
     # TODO Load trunk reflectance spectrum.
+    :param copy_forest_id:
     """
 
-    # forest_id = FH.duplicate_scene_from_template()
-    forest_id = '0102231033' # for debugging and testing
+    if copy_forest_id is not None:
+        forest_id = FH.duplicate_forest_scene_from_template(copy_forest_id=copy_forest_id)
+    else:
+        forest_id = FH.duplicate_forest_scene_from_template()
+
+    # forest_id = '0102231033' # for debugging and testing
+
+    if leaves is None:
+        logging.info(f"No leaves were provided for forest initialization, so I just copied the forest scene.")
+        return
 
     # load requested leaf sample result dicts
     sample_list = []
@@ -113,7 +122,6 @@ def init(leaves, sun_file_name: str = None, sky_file_name: str = None):
     FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')
     plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
                             sun_plot_name=sky_file_name, lighting_type='sky')
-
 
 
 def leaf_csv_name(name, resolution):
