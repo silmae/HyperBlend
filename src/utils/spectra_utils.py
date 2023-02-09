@@ -29,6 +29,16 @@ VIS_MAX = 700.
 def spectra_to_rgb(wls, value):
     """Creates at least some sort of RGB presentation of given spectrum.
 
+    Expects `value`s to be reflectance no greater than 1. If greater values are found,
+    the whole `value` list is normalized to 1.
+
+    If wavelengths are completely outside of visible range the edges and the middle point of
+    the spectrum are used. If they are at least partially inside the visible spectrum, closest
+    values to red, green and blue are returned. There is no guarantee that these are different
+    values, e.g., blue and green may be the same value if not enough wavelengths exist in visible
+    range. If only 3 wavelengths are provided they are returned. For less than 3 wavelengths,
+    a default color is returned.
+
     :param wls:
         Wavelengths as a list of floats.
     :param value:
@@ -48,25 +58,28 @@ def spectra_to_rgb(wls, value):
     wls_a = np.array(wls)
     value_a = np.array(value)
     max_value = np.max(value_a)
-    value_norm = value_a / max_value
+
+    # Normalize to 1 if values greater than 1 were found because RGB in Blender ranges from 0 to 1.
+    if max_value > 1:
+        value_a = value_a / max_value
 
     if n < 3:
         logging.info(f"Length of provided wavelength list less than 3. Returning default color '{default_rgb}'.")
         return default_rgb
     elif n == 3:
         logging.info(f"Length of provided wavelength is 3. Returning original values normalized to 1.")
-        return value_norm
+        return value_a
     else:
         if is_in_visible(wls_a):
-            b = value_norm[find_nearest_idx(wls_a, B)]
-            g = value_norm[find_nearest_idx(wls_a, G)]
-            r = value_norm[find_nearest_idx(wls_a, R)]
+            b = value_a[find_nearest_idx(wls_a, B)]
+            g = value_a[find_nearest_idx(wls_a, G)]
+            r = value_a[find_nearest_idx(wls_a, R)]
             res = [r,g,b]
             logging.info(f"Values in visible range. Returning approximate false color representation '{res}'.")
         else:
-            b = value_norm[0]
-            g = value_norm[int(n/2)]
-            r = value_norm[-1]
+            b = value_a[0]
+            g = value_a[int(n/2)]
+            r = value_a[-1]
             res = [r,g,b]
             logging.info(f"Values not in visible range. Returning some sort of false color representation "
                          f"using edges and middle values '{res}'.")
@@ -96,6 +109,16 @@ def is_in_visible(wls):
 
 
 def find_nearest_idx(array, value):
+    """Find nearest index of value in array.
+
+    :param array:
+        Array to be searched for.
+    :param value:
+        Value that is searched.
+    :return:
+        Index of an element that is closest to `value`.
+    """
+
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
