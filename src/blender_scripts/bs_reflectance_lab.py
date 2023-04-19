@@ -17,7 +17,6 @@ D = bpy.data
 O = bpy.ops
 S = D.scenes['Scene']
 cameraList = D.collections['Cameras'].all_objects
-# project_path = 'C:/Users/kiauriih/Code/Python/LeafBlend'
 
 # Target names in the blender file
 target_leaf = 'Leaf plate'
