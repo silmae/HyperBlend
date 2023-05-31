@@ -167,8 +167,8 @@ def filename_forest_scene(scene_id):
     return filename
 
 
-def filename_leaf_material_csv(leaf_id) -> str:
+def filename_leaf_material_csv(leaf_material_name: str) -> str:
     """Spectral leaf material parameters csv file name."""
 
-    filename = f"leaf_material_{leaf_id}.csv"
+    filename = f"LM_{leaf_material_name}.csv"
     return filename
