@@ -307,6 +307,7 @@ def duplicate_forest_scene_from_template(copy_forest_id=None):
                            f"If you tried to duplicate from template forest, check git repository "
                            f"to restore the template to root directory. Otherwise check that forest "
                            f"id is correct.")
+    logging.info(f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_forest_scene(dst_forest_id)}'.")
 
     return dst_forest_id
 
