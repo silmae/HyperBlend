@@ -295,7 +295,9 @@ def duplicate_forest_scene_from_template(copy_forest_id=None):
     if os.path.exists(source_path):
         if not os.path.exists(PH.path_directory_forest_scene(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_scene(dst_forest_id))
-        shutil.copy2(source_path, PH.path_directory_forest_scene(dst_forest_id))
+
+        shutil.copy2(source_path, PH.path_file_forest_scene(dst_forest_id))
+
         if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
         if not os.path.exists(PH.path_directory_forest_rend_spectral(dst_forest_id)):
