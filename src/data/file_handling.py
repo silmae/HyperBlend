@@ -361,7 +361,7 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
 
     # Copy leaf plot to scene dir for convenience
     folder = PH.path_directory_forest_scene(forest_id=forest_id)
-    image_name = f"leaf_{leaf_id}{C.postfix_plot_image_format}"
+    image_name = f"leaf_spectrum_plot{leaf_id}{C.postfix_plot_image_format}"
     dst_plot_path = PH.join(folder, image_name)
     shutil.copy2(plot_path, dst_plot_path)
 
