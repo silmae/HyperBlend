@@ -45,28 +45,26 @@ def generate_prospect_leaf(set_name, sample_id=0, n=None, ab=None, ar=None, brow
         dry mater content [g / cm^2]
     :param ant:
         anthocyanin content [ug / cm^2]
-    :return:
-        Tuple (wls, r, t) and writes the target to the disk.
     """
 
     prospect.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
 
 
-def generate_prospect_leaf_random(set_name, count=1):
+def generate_prospect_leaf_random(set_name, leaf_count=1):
     """ Generate count number of random PROSPECT leaves.
 
     Calling this is the same as calling prospect.make_random_leaf_targets().
 
     :param set_name:
         Set name to be used.
-    :param count:
+    :param leaf_count:
         How many target leaves are generated to the set.
     """
 
-    prospect.make_random_leaf_targets(set_name, count)
+    prospect.make_random_leaf_targets(set_name, leaf_count)
 
 
-def resample_leaf_targets(set_name: str):
+def resample_leaf_targets(set_name: str, new_sampling=None):
     """Resamples leaf targets.
 
     After this, you must solve leaf material parameters (for rendering) again.
@@ -74,8 +72,12 @@ def resample_leaf_targets(set_name: str):
 
     :param set_name:
         Set to be resampled.
+    :param new_sampling:
+        List of new wavelenghts. Optional. If not given, an empty sampling file
+        is written that can be modified manually.
     """
 
+    TH.write_sampling(set_name=set_name, sampling=new_sampling, overwrite=True)
     sampling.resample(set_name=set_name)
 
 
@@ -122,10 +124,11 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', 
         sampling_start = max(np.min(wls), 400)
         sampling_end = min(np.max(wls) + 1, 2501)
         sampling_even = np.arange(sampling_start, sampling_end, step=step)
-        TH.write_sampling(set_name=set_name, sampling=sampling_even, override=True)
+        TH.write_sampling(set_name=set_name, sampling=sampling_even, overwrite=True)
     else:
+        # If given resolution is None, i.e., we expect proper sampling to exist but it does not
         if sampling.sampling_empty(set_name=set_name):
-            raise RuntimeError(f"Sampling has not been defined for set {set_name}. "
+            raise RuntimeError(f"Sampling has not been defined for set '{set_name}'. "
                                f"Cannot solve leaf material parameters.")
 
     sampling.resample(set_name=set_name)
