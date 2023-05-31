@@ -85,7 +85,8 @@ def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=Fa
 
     if save:
         path = PH.join(C.path_project_root, f"{plot_name}{C.postfix_plot_image_format}")
-        plt.savefig(path, dpi=300)
+        logging.info(f"Saving reflectance power plot to project root '{path}'.")
+        plt.savefig(path, dpi=600)
     if show:
         plt.show()
 
