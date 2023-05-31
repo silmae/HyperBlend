@@ -54,7 +54,10 @@ def check_sampling(set_name: str) -> bool:
 
 
 def resample(set_name: str):
-    """Resamples leaf spectra to lower resolution as defined in /sample_target/sampling.toml."""
+    """Resamples leaf spectra to lower resolution as defined in /sample_target/sampling.toml.
+
+    Only rewrites target data. You must solve renderable leaf parameters again after resampling.
+    """
 
     ids = FH.list_target_ids(set_name)
     if len(ids) < 1:
