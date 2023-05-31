@@ -9,6 +9,9 @@ from src.data import file_handling as FH, path_handling as PH
 def run(data_exits=False):
     """Run virtual reflectance lab. The result will be plotted to project's root directory.
 
+    This is only to show that if the sun power is more than 4 W/m2, a completely white
+    diffuse surface will burn to white.
+
     :param data_exits:
         If True, no new data is created. This is merely for replotting. Default is False.
     """
