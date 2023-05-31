@@ -9,6 +9,7 @@ import os
 
 import numpy as np
 import toml
+import logging
 
 from src.data import file_handling as FH
 from src.data import file_names as FN
@@ -338,7 +339,7 @@ def read_target(set_name: str, sample_id: int, resampled=False):
         return data
 
 
-def write_sampling(set_name: str, sampling: list = None, override=False):
+def write_sampling(set_name: str, sampling: list = None, overwrite=False):
     """Write resampling data file for given leaf measurement set.
 
     Preferred workflow is to NOT provide a list of wavelengths here,
@@ -354,17 +355,21 @@ def write_sampling(set_name: str, sampling: list = None, override=False):
         You can give a list of wavelengths here. If none is given, an
         empty wavelength dictionary is written to the file. You can
         later copy paste wavelengths from an ENVI file, for example.
-    :param override:
-        If True, override existing sampling with the new one. Default is False.
+    :param overwrite:
+        If True, overwrite existing sampling with the new one. Default is False.
     """
 
     p = P.path_file_sampling(set_name)
 
     # Escape if the file exists already
-    if os.path.exists(p) and not override:
+    if os.path.exists(p) and not overwrite:
+        logging.info(f"Halting write_sampling() in toml_handling.py because sampling already exits "
+                     f"in '{p}' an no overwrite was requested. Call with overwrite=True if you want to overwrite "
+                     f"existing sampling.")
         return
 
     if sampling is None:
+        logging.info(f"Writing empty sampling data to be edited manually.")
         wls = []
     else:
         # Cast to float in case there were ints and floats mixed in given list.
