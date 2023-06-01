@@ -142,7 +142,7 @@ def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, 
 def set_leaf_rgb(leaf_material_name: str):
     """Read leaf RGB values from a csv and set them to blend file."""
 
-    logging.error(f"Setting rgb color for '{leaf_material_name}'")
+    # logging.error(f"Setting rgb color for '{leaf_material_name}'")
 
     p = PH.path_file_forest_rgb_csv(forest_id=scene_id)
     if not os.path.exists(p):
@@ -254,7 +254,28 @@ def insert_leaf_data(leaf_materials):
 
 
 def insert_sun_data():
-    logging.error(f"insert_sun_data() called, but I am missing the implementation...")
+    logging.error(f"Setting sun data.")
+
+    p = PH.path_file_forest_sun_csv(forest_id=scene_id)
+    if not os.path.exists(p):
+        raise FileNotFoundError(f"Sun csv file '{p}' not found. Try rerunning forest initialization.")
+
+    bands = []
+    irradiances = []
+    with open(p) as file:
+        reader = csv.reader(file, delimiter=' ')
+        for row in reader:
+            try:
+                bands.append(int(row[0]))
+                # row[1] is wavelength which is not needed here
+                irradiances.append(float(row[2]))
+            except ValueError:
+                # this is ok
+                # print(f"Material headers: {row}")
+                pass
+
+    irradiances = np.array(irradiances) * MAX_SUN_POWER
+    set_sun_power_for_all(bands=bands, irradiances=irradiances)
 
 
 def insert_soil_data():
@@ -275,6 +296,10 @@ if __name__ == '__main__':
     If the thickness is changed, the density in leaf simulation can be changed from 
     src/leaf_model/leaf_commons.py.
     """
+
+    MAX_SUN_POWER = 4
+    """Maximum sun power set to 4 W/m2 so that white does not burn. Can be increased 
+    if there is no pure white in the scene."""
 
     # Store arguments passed from blender_control.py
     argv = sys.argv
@@ -312,7 +337,7 @@ if __name__ == '__main__':
     insert_soil_data()
     insert_trunk_data()
 
-    FU.print_materials()
+    # FU.print_materials()
 
 
     # try:
