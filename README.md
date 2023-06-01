@@ -176,7 +176,7 @@ from src.leaf_model import interface as LI
 set_name = "try_random_p_leaves"
 
 # generates three leaf targets to \HyperBlend\leaf_measurement_sets\try_random_p_leaves\sample_targets
-LI.generate_prospect_leaf_random(set_name=set_name, count=3)
+LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
 
 # Solve renderable leaf material parameters that produce target reflectance and transmittance
 LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
@@ -343,4 +343,3 @@ Descriptions of the most important files.
   - `prospect` Package handling prospect simulations. Module `prospect.py` is an interface for this package
   - `rendering` Package responsible for calling Blender.
   - `utils` Package containing miscellaneous utility modules.
-
