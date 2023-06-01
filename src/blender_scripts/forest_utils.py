@@ -32,7 +32,7 @@ b_scene = b_data.scenes[FC.key_scene_name]
 cameras = b_data.collections[FC.key_collection_cameras].all_objects
 lights = b_data.collections[FC.key_collection_lights].all_objects
 trees = b_data.collections[FC.key_collection_trees].all_objects
-markers = b_data.collections[FC.key_collection_markers].all_objects
+# markers = b_data.collections[FC.key_collection_markers].all_objects
 ground = b_data.collections[FC.key_collection_ground].all_objects
 
 forest = b_data.collections[FC.key_collection_ground].all_objects.get(FC.key_obj_ground)

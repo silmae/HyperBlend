@@ -31,7 +31,13 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
     # TODO Load ground reflectance spectrum.
 
     # TODO Load trunk reflectance spectrum.
+
+    :param leaves:
+        Leaves should be given as list of tuples [(set_name: str, sample_id: int, leaf_material_name: str), (),...].
+    :param sun_file_name:
+    :param sky_file_name:
     :param copy_forest_id:
+        If given, a forest scene with this id will be copied instead of the default forest template.
     """
 
     if copy_forest_id is not None:
@@ -94,7 +100,7 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
         rgb = SU.spectra_to_rgb(wls=wls, value=refl)
 
         leaf_id = leaves[i][2]
-        dict_key = f"leaf_{leaf_id}_rgb"
+        dict_key = f"LRGB_{leaf_id}"
         rgb_dict[dict_key] = rgb
 
     # print(f"RGB dict '{rgb_dict}'.")
@@ -123,39 +129,4 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
     plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
                             sun_plot_name=sky_file_name, lighting_type='sky')
 
-
-def leaf_csv_name(name, resolution):
-    name = f'{name}_res_{resolution:.0f}'
-    return name
-
-# TODO delete
-# def do_leaves(resolution=50):
-#
-#     logging.info(f"Generating leaf data if it does not exist yet.")
-#
-#     set_name = leaf_csv_name('normal', resolution)
-#     if not os.path.exists(PH.path_directory_set_result(set_name)):
-#         wls,r,t = prospect.get_default_prospect_leaf()
-#         SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-#         o = Optimization(set_name=set_name)
-#         o.run_optimization(resolution=resolution, prediction_method='surface')
-#
-#     set_name = leaf_csv_name('dry', resolution)
-#     if not os.path.exists(PH.path_directory_set_result(set_name)):
-#         wls, r, t = prospect.get_default_prospect_leaf_dry()
-#         SU._make_target(set_name, wls=wls, r_m=r, t_m=t)
-#         o = Optimization(set_name=set_name)
-#         o.run_optimization(resolution=resolution, prediction_method='surface')
-
-
-def generate_some_leaf_stuff(scene_id ="0123456789", resolution=50):
-
-
-    if not os.path.exists(PH.path_file_forest_scene(scene_id)):
-        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(scene_id)} does not exist. Cannot generate leafs.")
-
-    do_leaves(resolution)
-    logging.info(f"Copying leaf data to forest '{scene_id}'")
-    FH.copy_leaf_material_parameters(scene_id, 1, leaf_csv_name('normal', resolution))
-    FH.copy_leaf_material_parameters(scene_id, 2, leaf_csv_name('dry', resolution))
-    FH.copy_leaf_material_parameters(scene_id, 3, leaf_csv_name('dry', resolution))
+    return forest_id
