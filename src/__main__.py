@@ -24,6 +24,8 @@ from src.leaf_model import interface as LI
 from src import constants as C
 from src.reflectance_lab import diffuse_reflectance
 
+from src.rendering import blender_control as BC
+
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
@@ -44,7 +46,24 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    diffuse_reflectance.run()
+
+    # set_name = 'low_res'
+    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 2, 'Leaf material 3')]
+    # forest_id = forest.init(leaves=leaves)
+
+    forest_id = '0106231155'
+    BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
+
+
+    # Generating low resolution random leaves
+    # set_name = 'low_res'
+    # new_sampling = [450,500,550,600,700,800]
+    # # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
+    # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
+    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
+
+    # Sun power test
+    # diffuse_reflectance.run(data_exits=True)
 
     # leaf_stuff = [('try_random_p_leaves', 0, 1), ('try_random_p_leaves', 1, 3)]
     # forest.init(copy_forest_id='0102231033')
