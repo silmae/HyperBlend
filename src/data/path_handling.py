@@ -178,28 +178,35 @@ def path_directory_blender_scripts() -> str:
     return p
 
 
-def path_directory_forest_scene(forest_id) -> str:
+def path_directory_forest_scene(forest_id: str) -> str:
     """Specific forest scene directory."""
 
     p = join(path_directory_forest_scenes(), f"scene_{forest_id}")
     return p
 
 
-def path_directory_forest_rend(forest_id) -> str:
+def path_directory_forest_rend(forest_id: str) -> str:
     """Forest rend directory."""
 
     p = join(path_directory_forest_scene(forest_id), 'rend')
     return p
 
 
-def path_directory_forest_rend_spectral(forest_id) -> str:
+def path_directory_forest_cube(forest_id: str) -> str:
+    """Forest spectral cube directory."""
+
+    p = join(path_directory_forest_scene(forest_id), 'cube')
+    return p
+
+
+def path_directory_forest_rend_spectral(forest_id: str) -> str:
     """Forest spectral rend directory."""
 
     p = join(path_directory_forest_rend(forest_id), 'spectral')
     return p
 
 
-def path_directory_forest_rend_abundances(forest_id) -> str:
+def path_directory_forest_rend_abundances(forest_id: str) -> str:
     """Forest abundance maps rend directory."""
 
     p = join(path_directory_forest_rend(forest_id), 'abundances')
@@ -281,29 +288,39 @@ def path_forest_template():
     return p
 
 
-def path_file_forest_scene(forest_id) -> str:
+def path_file_forest_scene(forest_id: str) -> str:
     """Path to certain forest scene blend file."""
 
     p = join(path_directory_forest_scene(forest_id), FN.filename_forest_scene(forest_id))
     return p
 
 
-def path_file_forest_leaf_csv(forest_id, leaf_index):
+def path_file_forest_reflectance_cube(forest_id: str) -> str:
+    p = join(path_directory_forest_cube(forest_id), FN.filename_forest_reflectance_cube(forest_id))
+    return p
+
+
+def path_file_forest_reflectance_header(forest_id: str) -> str:
+    p = join(path_directory_forest_cube(forest_id), FN.filename_forest_reflectance_header(forest_id))
+    return p
+
+
+def path_file_forest_leaf_csv(forest_id: str, leaf_index):
     p = join(path_directory_forest_scene(forest_id), FN.filename_leaf_material_csv(leaf_index))
     return p
 
 
-def path_file_forest_sun_csv(forest_id):
+def path_file_forest_sun_csv(forest_id: str):
     p = join(path_directory_forest_scene(forest_id), 'blender_sun.csv')
     return p
 
 
-def path_file_forest_sky_csv(forest_id):
+def path_file_forest_sky_csv(forest_id: str):
     p = join(path_directory_forest_scene(forest_id), 'blender_sky.csv')
     return p
 
 
-def path_file_forest_rgb_csv(forest_id):
+def path_file_forest_rgb_csv(forest_id: str):
     p = join(path_directory_forest_scene(forest_id), 'rgb_colors.csv')
     return p
 

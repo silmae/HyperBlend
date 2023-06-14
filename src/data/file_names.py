@@ -167,6 +167,17 @@ def filename_forest_scene(scene_id):
     return filename
 
 
+def filename_forest_reflectance_cube(scene_id):
+
+    filename = f"reflectance_cube_{scene_id}.img"
+    return filename
+
+
+def filename_forest_reflectance_header(scene_id):
+
+    filename = f"reflectance_cube_{scene_id}.hdr"
+    return filename
+
 def filename_leaf_material_csv(leaf_material_name: str) -> str:
     """Spectral leaf material parameters csv file name."""
 

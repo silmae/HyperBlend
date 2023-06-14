@@ -20,6 +20,7 @@ from src.data import path_handling as PH
 from src.forest import forest
 
 from src.data import toml_handling as TH
+from src.data import cube_handling as CH
 from src.leaf_model import interface as LI
 from src import constants as C
 from src.reflectance_lab import diffuse_reflectance
@@ -46,19 +47,21 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+    forest_id = '1406231352'
 
-    set_name = 'low_res'
-    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 2, 'Leaf material 3')]
-    forest_id = forest.init(leaves=leaves)
-
-    # forest_id = '1406231258'
-    BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
-    BC.render_forest(scene_id=forest_id, render_mode='preview')
-    BC.render_forest(scene_id=forest_id, render_mode='abundances')
-    BC.render_forest(scene_id=forest_id, render_mode='spectral')
+    CH.jottai(forest_id=forest_id)
+    CH.show_cube(forest_id=forest_id)
+    # set_name = 'low_res'
+    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 2, 'Leaf material 3')]
+    # forest_id = forest.init(leaves=leaves)
+    #
+    # BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
+    # BC.render_forest(scene_id=forest_id, render_mode='preview')
+    # BC.render_forest(scene_id=forest_id, render_mode='abundances')
+    # BC.render_forest(scene_id=forest_id, render_mode='spectral')
 
     # Generating low resolution random leaves
-    set_name = 'low_res'
+    # set_name = 'low_res'
     # new_sampling = [450,500,550,600,700,800]
     # # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
