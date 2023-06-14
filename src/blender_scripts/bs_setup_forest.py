@@ -274,7 +274,7 @@ def insert_sun_data():
                 # print(f"Material headers: {row}")
                 pass
 
-    irradiances = np.array(irradiances) * MAX_SUN_POWER
+    irradiances = np.array(irradiances) * FC.max_sun_power_spectral
     set_sun_power_for_all(bands=bands, irradiances=irradiances)
 
 
@@ -297,7 +297,6 @@ if __name__ == '__main__':
     src/leaf_model/leaf_commons.py.
     """
 
-    MAX_SUN_POWER = 4
     """Maximum sun power set to 4 W/m2 so that white does not burn. Can be increased 
     if there is no pure white in the scene."""
 

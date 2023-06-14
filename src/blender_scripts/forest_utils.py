@@ -50,24 +50,47 @@ def set_input(node, input_name, value):
 
 def set_forest_parameter(parameter_name, value):
     """
-    Side length (VALUE)
-    Grid density (INT)
-    Use real object (BOOLEAN)
-    Spawn point density (INT)
-    Tree 1 density (INT)
-    Tree 2 density (INT)
-    Tree 3 density (INT)
-    Seed (INT)
-    Hill height (VALUE)
-    Hill scale (VALUE)
-    Show white reference (BOOLEAN)
+    Input Input_7 is named Seed
+    Input Input_8 is named Size X [m]
+    Input Input_9 is named Size Y [m]
+    Input Input_10 is named Simplified trees
+    Input Input_34 is named Simplified understory
+    Input Input_12 is named Minimum tree separation [m]
+    Input Input_13 is named Spawn probability [%]
+    Input Input_14 is named Tree 1 probability [%]
+    Input Input_15 is named Tree 2 probability [%]
+    Input Input_16 is named Tree 3 probability [%]
+    Input Input_25 is named Tree 1
+    Input Input_26 is named Tree 2
+    Input Input_27 is named Tree 3
+    Input Input_18 is named Reference object
+    Input Input_35 is named Reference controller
+    Input Input_19 is named Reference height [m]
+    Input Input_20 is named Reference safe distance [m]
+    Input Input_22 is named Height map strength
+    Input Input_24 is named Height point separation [m]
+    Input Input_28 is named Max tree tilt [Deg]
+    Input Input_29 is named Max tree scale [%]
+    Input Input_30 is named Understory object 1
+    Input Input_32 is named Understory 1 min separation [m]
+    Input Input_31 is named Understory object 2
+    Input Input_33 is named Understory 2 min separation [m]
+    Input Input_36 is named Ground material
 
     :param parameter_name:
     :param value:
     :return:
     """
 
-    set_input(forest_geometry_node, parameter_name, value)
+    mod = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
+
+    for input_socket in mod.node_group.inputs:
+        # print(f"Input {input_socket.identifier} is named {input_socket.name}")
+        # print(f"Input socket name: '{input_socket.name}', parameter_name: '{parameter_name}'")
+        if input_socket.name == parameter_name:
+            old_val = mod[input_socket.identifier]
+            mod[input_socket.identifier] = value
+            logging.error(f"Forest parameter {input_socket.name} value changed from {old_val} to {value}.")
 
 
 def random_ground(rand_state):
@@ -177,8 +200,9 @@ def set_tree_parameter(tree_nr, parameter_name, value):
 
 
 def list_forest_parameters():
-    for input in forest_geometry_node.inputs:
-        print(f"{input.name} ({input.type})")
+    mod = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
+    for input_socket in mod.node_group.inputs:
+        print(f"Input {input_socket.identifier} is named {input_socket.name}")
 
 
 def print_collection_items(collection_name):

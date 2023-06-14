@@ -41,8 +41,12 @@ b_scene = b_data.scenes[FC.key_scene_name]
 cameras = b_data.collections[FC.key_collection_cameras].all_objects
 lights = b_data.collections[FC.key_collection_lights].all_objects
 trees = b_data.collections[FC.key_collection_trees].all_objects
-markers = b_data.collections[FC.key_collection_markers].all_objects
+tree_collection = b_data.collections[FC.key_collection_trees]
+leaf_collection = b_data.collections[FC.key_collection_leaves]
+leaves = b_data.collections[FC.key_collection_leaves].all_objects
+# markers = b_data.collections[FC.key_collection_markers].all_objects
 ground = b_data.collections[FC.key_collection_ground].all_objects
+ground_collection = b_data.collections[FC.key_collection_ground]
 
 
 def get_material_names_and_indices():
@@ -57,22 +61,34 @@ def get_material_names_and_indices():
     return res_dict
 
 
-def set_materials_use_spectral(use_spectral):
+def set_materials_use_spectral(use_spectral: bool):
 
-    bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
-    bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
-    bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    materials = bpy.data.materials
+    materials_to_set = []
+    for material in materials:
+        name = material.name
+        if "Leaf" in name or "Trunk" in name or "Ground" in name or "World" in name:
+            materials_to_set.append(name)
 
-    bpy.data.materials["Trunk material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
-    bpy.data.materials["Trunk material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
-    bpy.data.materials["Trunk material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    for material_name in materials_to_set:
+        bpy.data.materials[material_name].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
 
-    bpy.data.materials["Ground material"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    # bpy.data.worlds["World"].node_tree.nodes["Group"].inputs[7].default_value
 
-    if use_spectral:
-        bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 0
-    else:
-        bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 2
+    # bpy.data.materials["Leaf material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    # bpy.data.materials["Leaf material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    # bpy.data.materials["Leaf material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    #
+    # bpy.data.materials["Trunk material 1"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    # bpy.data.materials["Trunk material 2"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    # bpy.data.materials["Trunk material 3"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    #
+    # bpy.data.materials["Ground material"].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+    #
+    # if use_spectral:
+    #     bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 0
+    # else:
+    #     bpy.data.worlds["World"].node_tree.nodes["Group"].inputs['Strength'].default_value = 2
 
 
 def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', res_x=512, res_y=512, res_percent=100):
@@ -85,6 +101,10 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
     :param res_percent:
     :return:
     """
+
+    # Always render with real objects
+    FU.set_forest_parameter('Simplified trees', False)
+    FU.set_forest_parameter('Simplified understory', False)
 
     # just in case we have multiple scenes at some point loop them over
     for scene in b_data.scenes:
@@ -117,7 +137,7 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
 
             # disable sky for spectral images
 
-            bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = True
+            # bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = True
 
         elif render_mode.lower() == 'rgb':
 
@@ -138,7 +158,7 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
 
             set_materials_use_spectral(False)
 
-            bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = False
+            # bpy.data.node_groups["Ground geometry"].nodes["Group.004"].inputs['Show white reference'].default_value = False
 
         else:
             raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral', 'abundances' or 'rgb'. Was '{render_mode}'.")
@@ -196,19 +216,25 @@ def set_visibility(mode: str):
     """
 
     # First hide everything
-    for object in markers[:]:
-        hide(object)
-    for object in trees[:]:
-        hide(object)
-    for object in ground[:]:
-        hide(object)
+    tree_collection.hide_render = True
+    for obj in trees[:]:
+        hide(obj)
+    leaf_collection.hide_render = True
+    for obj in leaves[:]:
+        hide(obj)
+    ground_collection.hide_render = False
+    for obj in ground[:]:
+        hide(obj)
 
     unhide(lights.get(FC.key_obj_sun)) # always show sun
+    # TODO sky?
 
     if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map' or mode == FC.key_cam_drone_hsi:
         unhide(ground.get(FC.key_obj_ground))
     elif mode == FC.key_cam_tree_rgb:
         unhide(ground.get(FC.key_obj_ground_test))
+        tree_collection.hide_render = False
+        ground_collection.hide_render = False
         for tree in trees[:]:
             unhide(tree)
 
@@ -323,7 +349,6 @@ def render_sleeper_rgb():
     FU.set_forest_parameter('Use real object', True)
     image_name = f'sleeper_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
-    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -336,7 +361,6 @@ def render_walker_rgb():
     FU.set_forest_parameter('Use real object', True)
     image_name = f'walker_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
-    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -346,10 +370,8 @@ def render_drone_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Drone RGB')
-    FU.set_forest_parameter('Use real object', True)
     image_name = f'drone_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
-    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -359,10 +381,8 @@ def render_tree_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Tree RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Tree RGB')
-    # FU.set_forest_parameter('Use real object', True)
     image_name = f'tree_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
-    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -375,7 +395,6 @@ def render_map_rgb():
     FU.set_forest_parameter('Use real object', False)
     image_name = f'map_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
-    # image_path = os.path.normpath(f'{rend_path}/{image_name}')
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -384,9 +403,8 @@ def render_map_rgb():
 def render_drone_hsi():
     set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
     set_visibility(mode='Drone HSI')
-    FU.set_forest_parameter('Use real object', True)
     b_scene.render.filepath = PH.join(PH.path_directory_forest_rend_spectral(SCENE_ID), "band_####.tiff")
-    call_blender_render(scene_id=SCENE_ID, write_still=True, animation=True)
+    call_blender_render(write_still=True, animation=True)
 
 
 def render_abundances():
@@ -430,15 +448,23 @@ if __name__ == '__main__':
 
     RENDER_MODE = vars(args)[key_render_mode[1]]
 
+    # FU.list_forest_parameters()
+
+    # TODO set sun power for rgb and spectra separately. Must set
+    #  the active frame also for rgb renders. Or just set sun
+    #  power the same for all frames.
+
     if RENDER_MODE.lower() == 'preview':
-        # render_sleeper_rgb()
-        # render_walker_rgb()
+        render_sleeper_rgb()
+        render_walker_rgb()
         render_drone_rgb()
-        # render_map_rgb()
-        # render_tree_rgb()
+        render_map_rgb()
+        render_tree_rgb()
     elif RENDER_MODE.lower() == 'spectral':
         render_drone_hsi()
     elif RENDER_MODE.lower() == 'abundances':
         render_abundances()
     else:
         logging.error(f"Render mode '{RENDER_MODE}' not recognised.")
+
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(SCENE_ID))

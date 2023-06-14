@@ -47,16 +47,18 @@ if __name__ == '__main__':
                         ])
 
 
-    # set_name = 'low_res'
-    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 2, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves)
+    set_name = 'low_res'
+    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 2, 'Leaf material 3')]
+    forest_id = forest.init(leaves=leaves)
 
-    forest_id = '0106231155'
+    # forest_id = '1406231258'
     BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
-
+    BC.render_forest(scene_id=forest_id, render_mode='preview')
+    BC.render_forest(scene_id=forest_id, render_mode='abundances')
+    BC.render_forest(scene_id=forest_id, render_mode='spectral')
 
     # Generating low resolution random leaves
-    # set_name = 'low_res'
+    set_name = 'low_res'
     # new_sampling = [450,500,550,600,700,800]
     # # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
