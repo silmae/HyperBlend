@@ -10,6 +10,7 @@ key_scene_name = 'Forest'
 key_collection_cameras = 'Cameras'
 key_collection_lights = 'Lighting'
 key_collection_trees = 'Trees'
+key_collection_leaves = 'Leaves'
 key_collection_markers = 'Marker objects'
 key_collection_ground = 'Ground'
 
@@ -36,3 +37,7 @@ key_cam_sleeper_rgb = 'Sleeper RGB'
 key_cam_tree_rgb = 'Tree RGB'
 
 ########################################
+
+
+max_sun_power_spectral = 400
+max_sun_power_rgb = 40
