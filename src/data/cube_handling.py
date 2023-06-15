@@ -8,7 +8,7 @@ from src.data import path_handling as PH
 from src.data import file_handling as FH
 
 
-def jottai(forest_id: str):
+def rended_to_envi_cube(forest_id: str):
 
     p = PH.path_directory_forest_rend_spectral(forest_id=forest_id)
     if not os.path.exists(p):
