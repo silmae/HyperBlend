@@ -285,28 +285,44 @@ def composite_material_mask():
 
     # For positioning nodes in readable fashion in Blender Compositing view
     x_offset = 300
-    y_offset = 100
+    y_offset = 150
     x, y = src.location
 
     f_output.location = (x + 2 * x_offset, y - y_offset)
 
+    abundance_material_names = FU.get_abundance_material_names()
+
+    processed_materials = []
+    pass_index = 0
+
     # Loop through materials assigning material indices and creating ID Mask
     # nodes for each.
-    for idx, material in enumerate(bpy.data.materials):
-        socet_name = f"{material.name}_"
+    for material in bpy.data.materials:
 
-        ID = node_tree.nodes.new('CompositorNodeIDMask')
-        ID.label = f"{ID.name}_mat_{material.name}"
-        ID.index = idx
-        ID.location = (x + x_offset, y - idx * y_offset)
+        # Avoid duplicates as the same material can appear multiple times in bpy.data.materials
+        if material.name in processed_materials:
+            continue
 
-        # Create an input socket for each material pass
-        if not material.name in (slot.path for slot in f_output.file_slots[:]):
-            f_output.file_slots.new(socet_name)
+        if material.name in abundance_material_names:
+            processed_materials.append(material.name)
+            socet_name = f"{material.name}"
 
-        # Link ID Mask nodes to File Output node
-        node_tree.links.new(src.outputs['IndexMA'], ID.inputs[0])
-        node_tree.links.new(ID.outputs[0], f_output.inputs[socet_name])
+            ID = node_tree.nodes.new('CompositorNodeIDMask')
+            ID.label = f"{ID.name}_mat_{material.name}"
+            ID.index = pass_index
+            material.pass_index = pass_index # set the same pass index for material as in compositing ID mask
+            ID.location = (x + x_offset, y - pass_index * y_offset)
+            ID.width = 400
+
+            # Create an input socket for each material pass
+            if not material.name in (slot.path for slot in f_output.file_slots[:]):
+                f_output.file_slots.new(socet_name)
+
+            # Link ID Mask nodes to File Output node
+            node_tree.links.new(src.outputs['IndexMA'], ID.inputs[0])
+            node_tree.links.new(ID.outputs[0], f_output.inputs[socet_name])
+
+            pass_index += 1
 
 
 def composite_delete_masking_setup():
@@ -464,6 +480,8 @@ if __name__ == '__main__':
         render_drone_hsi()
     elif RENDER_MODE.lower() == 'abundances':
         render_abundances()
+
+        composite_material_mask()
     else:
         logging.error(f"Render mode '{RENDER_MODE}' not recognised.")
 

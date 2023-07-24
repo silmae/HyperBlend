@@ -85,12 +85,47 @@ def set_forest_parameter(parameter_name, value):
     mod = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
 
     for input_socket in mod.node_group.inputs:
+
+        # Uncomment to print input socets names.
         # print(f"Input {input_socket.identifier} is named {input_socket.name}")
         # print(f"Input socket name: '{input_socket.name}', parameter_name: '{parameter_name}'")
+
         if input_socket.name == parameter_name:
             old_val = mod[input_socket.identifier]
             mod[input_socket.identifier] = value
             logging.error(f"Forest parameter {input_socket.name} value changed from {old_val} to {value}.")
+
+
+def get_abundance_material_names():
+    """Return the names of materials that should be made into an abundance map."""
+
+    ground_gn = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
+    tree_like_objects = ["Tree 1", "Tree 2", "Tree 3", "Understory object 1", "Understory object 2"]
+    material_socket_names = ["Trunk material", "Leaf material"]
+    res = ["Ground material"]
+
+    for ground_socket in ground_gn.node_group.inputs:
+
+        obj = ground_gn[ground_socket.identifier]
+            # print(f"Object: {obj.name}")
+
+        if ground_socket.name == "Reference object":
+            for material in obj.data.materials:
+                if material.name not in res:
+                    res.append(material.name)
+                # print(f"Reference material: {material.name}")
+
+        if ground_socket.name in tree_like_objects:
+            tree_gn = obj.modifiers["GeometryNodes"]
+            for tree_socket in tree_gn.node_group.inputs:
+                if tree_socket.name in material_socket_names:
+                    material = tree_gn[tree_socket.identifier]
+                    if material.name not in res:
+                        res.append(material.name)
+                    # print(f"Tree like material: {material.name}")
+
+    # print(f"Unique active materials: {res}")
+    return res
 
 
 def random_ground(rand_state):
