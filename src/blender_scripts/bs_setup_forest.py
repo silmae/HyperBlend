@@ -245,7 +245,11 @@ def insert_leaf_data(leaf_materials):
         for i, leaf_csv_name in enumerate(leaf_materials):
 
             leaf_csv_name = leaf_csv_name.strip('\'')
-            band_list, wl_list, ad_list, sd_list, ai_list, mf_list = read_leaf_material_csv(leaf_csv_name)
+            try:
+                band_list, wl_list, ad_list, sd_list, ai_list, mf_list = read_leaf_material_csv(leaf_csv_name)
+            except FileNotFoundError as e:
+                logging.fatal(f"Could not find file '{leaf_csv_name}'. Blend file will not be setup properly.")
+                raise
 
             # We would only need to do this once, but it's ok if we do it again every round.
             set_animation_frames(len(band_list))
