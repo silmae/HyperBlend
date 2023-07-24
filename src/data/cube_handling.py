@@ -37,9 +37,12 @@ def rended_to_envi_cube(forest_id: str):
         "lines": reflectance_cube.shape[1],
         "samples": reflectance_cube.shape[2],
         "data_type": 4,
-        "test value": 4,
         # TODO read wavelengths to metadata
     }
+
+    cube_dir_path = PH.path_directory_forest_cube(forest_id)
+    if not os.path.exists(cube_dir_path):
+        os.makedirs(cube_dir_path)
 
     p_hdr = PH.path_file_forest_reflectance_header(forest_id=forest_id)
     # SPy wants to know only the path to the header. It will find the image file automatically from the same dir.
