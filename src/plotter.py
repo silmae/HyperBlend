@@ -540,7 +540,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
-    target_ids = FH.list_finished_sample_ids(set_name=set_name)
+    target_ids = FH.list_target_ids(set_name=set_name)
 
     for sample_id in target_ids:
         target_original = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=False)
