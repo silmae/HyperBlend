@@ -305,7 +305,7 @@ def composite_material_mask():
 
         if material.name in abundance_material_names:
             processed_materials.append(material.name)
-            socet_name = f"{material.name}"
+            socet_name = f"{material.name}_"
 
             ID = node_tree.nodes.new('CompositorNodeIDMask')
             ID.label = f"{ID.name}_mat_{material.name}"
@@ -480,7 +480,6 @@ if __name__ == '__main__':
         render_drone_hsi()
     elif RENDER_MODE.lower() == 'abundances':
         render_abundances()
-
         composite_material_mask()
     else:
         logging.error(f"Render mode '{RENDER_MODE}' not recognised.")
