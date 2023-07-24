@@ -65,6 +65,8 @@ def _get_base_blender_args(script_name: str, scene_path: str):
     blender_args = [
         _get_blender_executable_path(),
         "--background",  # Run Blender in the background.
+        "--python-exit-code", # Tell Blender to set exit code
+        "1",                  # to 1 if the script does not execute properly.
         scene_path,  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         script_path,  # Python script file to be run.
@@ -218,7 +220,10 @@ def setup_forest(scene_id, leaf_id_list=None):
         scirpt_args += ['-l_ids', f'{list(leaf_id_list)}']  # available leaf indexes
 
     with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        if status.returncode != 0:
+            logging.fatal(f"Failed to setup forest scene file.")
+            exit(1)
 
 
 def render_forest(scene_id: str, render_mode: str):
