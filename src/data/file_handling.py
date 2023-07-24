@@ -363,7 +363,10 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
     folder = PH.path_directory_forest_scene(forest_id=forest_id)
     image_name = f"leaf_spectrum_plot{leaf_id}{C.postfix_plot_image_format}"
     dst_plot_path = PH.join(folder, image_name)
-    shutil.copy2(plot_path, dst_plot_path)
+    try:
+        shutil.copy2(plot_path, dst_plot_path)
+    except FileNotFoundError:
+        logging.warning(f"Could not find resampled target plot for copying from '{plot_path}'.")
 
     with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline=CSV_NEWLINE) as csvfile:
 
