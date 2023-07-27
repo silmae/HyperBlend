@@ -276,7 +276,7 @@ def composite_material_mask():
     f_output = node_tree.nodes.new('CompositorNodeOutputFile') # Create new File Output node
 
     # Set saving path and image settings
-    f_output.base_path = PH.path_directory_forest_rend_abundances(SCENE_ID)
+    f_output.base_path = PH.path_directory_forest_rend_visibility_maps(SCENE_ID)
     f_output.format.file_format = 'TIFF'
     f_output.format.color_mode = 'BW' # no colors needed
     f_output.format.tiff_codec = 'NONE' # no packing of images
@@ -290,7 +290,7 @@ def composite_material_mask():
 
     f_output.location = (x + 2 * x_offset, y - y_offset)
 
-    abundance_material_names = FU.get_abundance_material_names()
+    abundance_material_names = FU.get_visibility_mapping_material_names()
 
     processed_materials = []
     pass_index = 0
@@ -429,7 +429,7 @@ def render_abundances():
     set_visibility(mode='Drone HSI')
     FU.set_forest_parameter('Use real object', True)
     image_name = f'abundance_rgb_preview.png'
-    image_path = PH.join(PH.path_directory_forest_rend_abundances(SCENE_ID), image_name)
+    image_path = PH.join(PH.path_directory_forest_rend_visibility_maps(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     b_scene.render.filepath = image_path
     call_blender_render(write_still=True)
