@@ -302,8 +302,8 @@ def duplicate_forest_scene_from_template(copy_forest_id=None):
             os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
         if not os.path.exists(PH.path_directory_forest_rend_spectral(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_rend_spectral(dst_forest_id))
-        if not os.path.exists(PH.path_directory_forest_rend_abundances(dst_forest_id)):
-            os.makedirs(PH.path_directory_forest_rend_abundances(dst_forest_id))
+        if not os.path.exists(PH.path_directory_forest_rend_visibility_maps(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend_visibility_maps(dst_forest_id))
     else:
         raise RuntimeError(f"Forest scene not found for duplication from '{source_path}'. "
                            f"If you tried to duplicate from template forest, check git repository "

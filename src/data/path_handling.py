@@ -206,10 +206,10 @@ def path_directory_forest_rend_spectral(forest_id: str) -> str:
     return p
 
 
-def path_directory_forest_rend_abundances(forest_id: str) -> str:
-    """Forest abundance maps rend directory."""
+def path_directory_forest_rend_visibility_maps(forest_id: str) -> str:
+    """Rend directory for visibility maps of materials."""
 
-    p = join(path_directory_forest_rend(forest_id), 'abundances')
+    p = join(path_directory_forest_rend(forest_id), 'visibility_maps')
     return p
 
 ##########################################################################
@@ -323,6 +323,86 @@ def path_file_forest_sky_csv(forest_id: str):
 def path_file_forest_rgb_csv(forest_id: str):
     p = join(path_directory_forest_scene(forest_id), 'rgb_colors.csv')
     return p
+
+
+def path_file_visibility_map(forest_id: str, file_name: str):
+    p = join(path_directory_forest_rend_visibility_maps(forest_id=forest_id), file_name)
+    return p
+
+
+def find_visibility_map(forest_id: str, search_term: str):
+    """Find a visibility map matching given search term.
+
+    Search term should be something like "Leaf material 1" or "Trunk material 2".
+    For white reference paths, one can use convenience method find_reference_visibility_map()
+    that only needs reflectance as an identifier.
+
+    :param forest_id:
+        Forest scene identifier.
+    :param search_term:
+        Search term that is included in a file name. Does not have to be a full match
+        to the filename. We cannot fully control the filenames coming out of Blender,
+        so we only check if the filename includes the search term instead of a full
+        match.
+    :return:
+        Returns a path to the file.
+    :raises
+        KeyError if more than one file match the search term.
+    :raises
+        FileNotFoundError if no file match the search term.
+    """
+
+    file_names = []
+    p = path_directory_forest_rend_visibility_maps(forest_id=forest_id)
+
+    for filename in os.listdir(p):
+        if search_term in filename:
+            file_names.append(filename)
+
+    n = len(file_names)
+
+    if n > 1:
+        raise KeyError(f"Found more than one ({n}) file containing the search term '{search_term}' "
+                       f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}")
+    if n < 1:
+        raise FileNotFoundError(f"Could not find a visibility map file containing the search term '{search_term}' "
+                       f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}")
+
+    res = join(p, file_names[0])
+    return res
+
+
+def find_reference_visibility_map(forest_id: str, reflectivity: float):
+    """Convenience method for finding reference visibility map file.
+
+    Calls find_visibility_map().
+
+    :param forest_id:
+        Forest scene identifier.
+    :param reflectivity:
+        Reflectivity desired between 0.0 and 1.0. Must be one of the available ones in
+        visibility maps directory of the scene.
+    :return:
+        Returns a path to the file.
+    """
+
+    search_term = f"Reference {reflectivity:.2f} material"
+    return find_visibility_map(forest_id=forest_id, search_term=search_term)
+
+
+def list_visibility_maps(forest_id: str):
+    """Lists all available visibility maps for given forest scene."""
+
+    p = path_directory_forest_rend_visibility_maps(forest_id=forest_id)
+    return os.listdir(p)
+
+
+def list_reference_visibility_maps(forest_id: str):
+    """Lists all available reference visibility maps for given forest scene."""
+
+    p = path_directory_forest_rend_visibility_maps(forest_id=forest_id)
+    res = [filename for filename in os.listdir(p) if "Reference" in filename]
+    return res
 
 
 def join(*args) -> str:
