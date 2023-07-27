@@ -31,24 +31,25 @@ from src.rendering import blender_control as BC
 def forest_pipe_test():
 
     # Generating low resolution random leaves
-    set_name = 'low_res'
+    set_name = 'low_res_w_dry'
     # new_sampling = [450,500,550,600,700,800]
-    # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
+    # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=2)
     # LI.generate_prospect_leaf(set_name=set_name, sample_id=3, w=0.001) # add one dry default leaf
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
 
-    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 2, 'Leaf material 3'), (set_name, 3, 'Leaf material 4')]
+    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
     # forest_id = forest.init(leaves=leaves)
 
-    forest_id = 1506231303
-    # BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3', 'Leaf material 4'])
+    forest_id = 2507230938
+
+    # BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
     # BC.render_forest(scene_id=forest_id, render_mode='preview')
     # BC.render_forest(scene_id=forest_id, render_mode='abundances')
-    BC.render_forest(scene_id=forest_id, render_mode='spectral')
-
-    # CH.rended_to_envi_cube(forest_id=forest_id)
-    # CH.show_cube(forest_id=forest_id)
+    # BC.render_forest(scene_id=forest_id, render_mode='spectral')
+    #
+    # CH.construct_envi_cube(forest_id=forest_id)
+    CH.show_cube(forest_id=forest_id)
 
 
 if __name__ == '__main__':
