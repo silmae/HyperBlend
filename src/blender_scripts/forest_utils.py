@@ -96,7 +96,7 @@ def set_forest_parameter(parameter_name, value):
             logging.error(f"Forest parameter {input_socket.name} value changed from {old_val} to {value}.")
 
 
-def get_abundance_material_names():
+def get_visibility_mapping_material_names():
     """Return the names of materials that should be made into an abundance map."""
 
     ground_gn = bpy.data.objects["Ground"].modifiers["GeometryNodes"]

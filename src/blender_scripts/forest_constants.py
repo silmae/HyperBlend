@@ -39,5 +39,5 @@ key_cam_tree_rgb = 'Tree RGB'
 ########################################
 
 
-max_sun_power_spectral = 400
-max_sun_power_rgb = 40
+max_sun_power_spectral = 40
+max_sun_power_rgb = 400
