@@ -19,9 +19,6 @@ from src import constants as C
 from src.leaf_model.opt import Optimization
 
 
-R = 630.
-G = 532.
-B = 465.
 VIS_MIN = 380.
 VIS_MAX = 700.
 
@@ -71,9 +68,9 @@ def spectra_to_rgb(wls, value):
         return value_a
     else:
         if is_in_visible(wls_a):
-            b = value_a[find_nearest_idx(wls_a, B)]
-            g = value_a[find_nearest_idx(wls_a, G)]
-            r = value_a[find_nearest_idx(wls_a, R)]
+            b = value_a[find_nearest_idx(wls_a, C.default_B_wl)]
+            g = value_a[find_nearest_idx(wls_a, C.default_G_wl)]
+            r = value_a[find_nearest_idx(wls_a, C.default_R_wl)]
             res = [r,g,b]
             logging.info(f"Values in visible range. Returning approximate false color representation '{res}'.")
         else:

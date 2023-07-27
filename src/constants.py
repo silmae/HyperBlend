@@ -364,3 +364,12 @@ mf_coeffs = 'mf_coeffs' # mixing factor
 # Default starting guess
 starting_guess_set_name = 'linear_starting_guess'
 """Name of the starting guess file."""
+
+
+# Default RGB wavelengths for false color images
+default_R_wl = 630.
+"""Default Red wavelength for false color images."""
+default_G_wl = 532.
+"""Default Green wavelength for false color images."""
+default_B_wl = 465.
+"""Default Blue wavelength for false color images."""
