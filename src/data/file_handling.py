@@ -276,16 +276,23 @@ def reduce(set_name: str) -> None:
                 # print(plot_path)
 
 
-def duplicate_forest_scene_from_template(copy_forest_id=None):
+def duplicate_forest_scene_from_template(copy_forest_id=None, custom_forest_id: str = None) -> str:
     """Creates a uniquely named copy of a forest scene and returns its id.
 
     :param copy_forest_id:
         If provided, a forest with this id is copied. If `None`, the default
         template forest is copied.
+    :param custom_forest_id:
+        If given, this will be the identifier for the new forest instead of the standard generated id.
+    :return
+        Returns custom_forest_id if it was given. Otherwise, an id will be generated for the scene.
     """
 
     now = datetime.datetime.now()
-    dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
+    if custom_forest_id is not None:
+        dst_forest_id = custom_forest_id
+    else:
+        dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
 
     if copy_forest_id is not None:
         source_path = PH.path_file_forest_scene(copy_forest_id)

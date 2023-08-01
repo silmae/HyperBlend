@@ -12,7 +12,7 @@ from src.forest import lighting
 from src import plotter
 
 
-def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy_forest_id=None):
+def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy_forest_id: str = None, custom_forest_id: str = None):
     """
 
     Create a new forest by copying template.
@@ -38,12 +38,17 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
     :param sky_file_name:
     :param copy_forest_id:
         If given, a forest scene with this id will be copied instead of the default forest template.
+    :param custom_forest_id:
+        If given, this will be the identifier for the new forest instead of the standard generated id.
+    :return
+        Forest id that is generated if custom_forest_id is not given.
     """
 
     if copy_forest_id is not None:
-        forest_id = FH.duplicate_forest_scene_from_template(copy_forest_id=copy_forest_id)
+        forest_id = FH.duplicate_forest_scene_from_template(copy_forest_id=copy_forest_id, custom_forest_id=custom_forest_id)
     else:
-        forest_id = FH.duplicate_forest_scene_from_template()
+        forest_id = FH.duplicate_forest_scene_from_template(custom_forest_id=custom_forest_id)
+
 
     # forest_id = '0102231033' # for debugging and testing
 
