@@ -48,6 +48,116 @@ def set_input(node, input_name, value):
     print(f"{node.name}: parameter {input.name} value changed from {old_val} to {value}.")
 
 
+def get_scene_parameters() -> dict:
+    """
+    TODO clean this up!!
+
+     get forest parameters
+          - get active trees and understory parameters
+              - get active leaves
+     get world parameters
+    """
+
+    logging.error(f"get_scene_parameters called")
+
+    tree_objects = []
+    understory_objects = []
+    ground_gn = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
+
+    scene_dict = {"Identifier": "Scene master",
+                  "Notes": "This should be the master control file of the scene."}
+
+    ground_dict = {"Identifier": "Ground"}
+
+    def dictify_input_socket(gn, socket):
+        socket_id = socket.identifier
+        socket_id_numeric = int(socket_id.split('_')[1])
+        socket_value = gn[socket.identifier]
+        socket_type = socket.type
+
+        socket_dict = {"ID": socket_id_numeric,
+                       "Type": socket_type,
+                       "Value": socket_value}
+
+        if socket_type == "VALUE":
+            socket_dict["Standard deviation"] = socket_value / 10
+        if socket_type == "INT":
+            socket_dict["Standard deviation"] = int(socket_value / 10)
+
+        return socket_dict
+
+    for input_socket in ground_gn.node_group.inputs:
+
+        socket_id = input_socket.identifier
+        socket_id_numeric = int(socket_id.split('_')[1])
+        socket_name = input_socket.name
+        socket_value = ground_gn[input_socket.identifier]
+        # socket_type = input_socket.type
+        # print(f"Input id: {socket_id} ({socket_id_numeric}), name: '{socket_name}', value: {socket_value}, type: {socket_type}.")
+
+        # ground_dict[f"{socket_name} ({socket_id_numeric})"] = socket_value
+        ground_dict[socket_name] = dictify_input_socket(ground_gn, input_socket)
+
+        # if socket_type == 'VALUE': # Blender keyword
+        #     ground_dict[f"{socket_name} type ({socket_id_numeric})"] = "float"
+        #     ground_dict[f"{socket_name} deviation ({socket_id_numeric})"] = socket_value / 2
+        # if socket_type == 'int':  # Blender keyword
+        #     ground_dict[f"{socket_name} type ({socket_id_numeric})"] = "int"
+        #     ground_dict[f"{socket_name} deviation ({socket_id_numeric})"] = int(socket_value / 2)
+
+        if socket_id_numeric in [25, 26, 27]:
+            tree_objects.append(socket_value)
+        if socket_id_numeric in [30, 31]:
+            understory_objects.append(socket_value)
+
+    tree_dicts = []
+
+    for tree_object in tree_objects:
+
+        tree_dict = {"Identifier": tree_object.name}
+
+        # print(f"Tree in tree list: {tree_object.name}")
+        tree_gn = tree_object.modifiers["GeometryNodes"]
+
+        for tree_input_socket in tree_gn.node_group.inputs:
+            tree_socket_id = tree_input_socket.identifier
+            tree_socket_id_numeric = int(tree_socket_id.split('_')[1])
+            tree_socket_name = tree_input_socket.name
+            tree_socket_value = tree_gn[tree_input_socket.identifier]
+            # print(f"TreeInput id: {tree_socket_id} ({tree_socket_id_numeric}), name: '{tree_socket_name}', value: {tree_socket_value}.")
+
+            # tree_dict[f"{tree_socket_name} ({tree_socket_id_numeric})"] = tree_socket_value
+            tree_dict[tree_socket_name] = dictify_input_socket(tree_gn, tree_input_socket)
+
+        tree_dicts.append(tree_dict)
+
+    understory_dicts = []
+
+    for understory_object in understory_objects:
+        understory_dict = {"Identifier": understory_object.name}
+
+        # print(f"Understory object in list: {understory_object.name}")
+        understory_gn = understory_object.modifiers["GeometryNodes"]
+
+        for understory_input_socket in understory_gn.node_group.inputs:
+            understory_socket_id = understory_input_socket.identifier
+            understory_socket_id_numeric = int(understory_socket_id.split('_')[1])
+            understory_socket_name = understory_input_socket.name
+            understory_socket_value = understory_gn[understory_input_socket.identifier]
+            # print(f"UnderstoryInput id: {understory_socket_id} ({understory_socket_id_numeric}), name: '{understory_socket_name}', value: {understory_socket_value}.")
+
+            # understory_dict[f"{understory_socket_name} ({understory_socket_id_numeric})"] = understory_socket_value
+            understory_dict[understory_socket_name] = dictify_input_socket(understory_gn, understory_input_socket)
+
+        understory_dicts.append(tree_dict)
+
+
+    scene_dict['Ground'] = ground_dict
+    scene_dict['Trees'] = tree_dicts
+    scene_dict['Undersory objects'] = understory_dicts
+    print(scene_dict)
+    return scene_dict
+
 def set_forest_parameter(parameter_name, value):
     """
     Input Input_7 is named Seed

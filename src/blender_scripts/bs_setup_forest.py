@@ -340,6 +340,9 @@ if __name__ == '__main__':
     insert_soil_data()
     insert_trunk_data()
 
+    # TODO test scene parameter retrieval
+    scene_dict = FU.get_scene_parameters()
+
     # FU.print_materials()
 
 
