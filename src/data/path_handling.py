@@ -171,10 +171,23 @@ def path_directory_sky_data() -> str:
     return p
 
 
+def path_directory_soil_data() -> str:
+    """Soil data directory."""
+
+    p = join(C.path_project_root, 'soil_data')
+    return p
+
+
 def path_directory_blender_scripts() -> str:
     """Blender scripts directory."""
 
     p = join(C.path_project_root, 'src', 'blender_scripts')
+    return p
+
+def path_directory_soil_code() -> str:
+    """Soil code directory that contain soil spectra vectors used for soil generation."""
+
+    p = join(C.path_project_root, 'src', 'soil')
     return p
 
 
@@ -317,6 +330,20 @@ def path_file_forest_sun_csv(forest_id: str):
 
 def path_file_forest_sky_csv(forest_id: str):
     p = join(path_directory_forest_scene(forest_id), 'blender_sky.csv')
+    return p
+
+
+def path_file_soil_dry_vector():
+    """Soil dry vector used by GSV."""
+
+    p = join(path_directory_soil_code(), 'DryVec.txt')
+    return p
+
+
+def path_file_soil_humid_vector():
+    """Soil humid vector used by GSV."""
+
+    p = join(path_directory_soil_code(), 'SMVec.txt')
     return p
 
 

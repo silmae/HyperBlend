@@ -26,6 +26,7 @@ from src import constants as C
 from src.reflectance_lab import diffuse_reflectance
 
 from src.rendering import blender_control as BC
+from src.soil import gsv
 
 
 def forest_pipe_test():
@@ -72,8 +73,10 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+    gsv.visualize_default_soils()
+
     # plotter.plot_resampling(set_name='low_res')
-    forest_pipe_test()
+    # forest_pipe_test()
     # forest_id = forest.init()
 
     # forest_id = '1406231352'

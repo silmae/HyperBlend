@@ -52,6 +52,47 @@ max_ticks = 8
 image_type = 'png'
 
 
+def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_show=True):
+
+    plt.close('all')
+    cm_clay = cm.get_cmap('Greys')
+    cm_sand = cm.get_cmap('Oranges')
+    cm_peat = cm.get_cmap('Greens')
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+    fig.suptitle(f"Default soils", fontsize=fig_title_font_size)
+
+    for i, reflectance in enumerate(reflectances):
+        # Select color map and value based on the label
+        if 'wet' in labels[i]:
+            selector = 0.7
+        if 'humid' in labels[i]:
+            selector = 0.5
+        if 'dry' in labels[i]:
+            selector = 0.3
+        if 'clay' in labels[i]:
+            cm_active = cm_clay
+        if 'sand' in labels[i]:
+            cm_active = cm_sand
+        if 'peat' in labels[i]:
+            cm_active = cm_peat
+
+        ax.plot(wls, reflectance, lw=1., label=labels[i], c=cm_active(selector))
+
+    plt.legend()
+
+    if save:
+        # TODO save the image
+        # folder = PH.path_directory_target(set_name=set_name)
+        # image_name = FN.filename_resample_plot(sample_id=sample_id)
+        # path = PH.join(folder, image_name)
+        # logging.info(f"Saving resampling plot to '{path}'.")
+        # plt.savefig(path, dpi=300)
+        pass
+    if not dont_show:
+        plt.show()
+
+
 def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=False, save=True):
     """Plot simulation result of virtual reflectance lab.
 
