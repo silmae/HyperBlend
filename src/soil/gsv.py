@@ -1,40 +1,25 @@
+"""
+    General Spectral Vectors (GSV) soil model. The code in this script is
+    based on the code written by authors of
+    "GSV: a general model for hyperspectral soil reflectance simulation", 2019.
+"""
+
+
 import numpy as np
-import numpy.linalg as la
-import matplotlib.pyplot as plt
-import matplotlib.ticker as tk
 
 from src.data import path_handling as PH
-from src.utils import spectra_utils as SU
 from src import plotter
 
-'''
-    General Spectral Vectors (GSV) soil model. The code in this script is 
-    based on the code written by authors of 
-    "GSV: a general model for hyperspectral soil reflectance simulation", 2019.
-'''
-
-# The hyperspectral wavelengths
 wls = np.arange(400, 2501, 10)
+"""Native hyperspectral wavelengths of GSV ranging from 400-2500 nm with 10 nm resolution."""
 
 new_wls = np.arange(400, 2501, 1)
-# The general spectral vectors derived in the manuscript
+"""Wavelengths from 400-2500 nm with 1 nm resolution. 
+Spectral resolution in HyperBlend is assumed to be 1 nm, so we 
+linearly interpolate the native GSV resolution to 1 nm."""
+
 GSV = np.vstack([np.loadtxt(PH.path_file_soil_dry_vector()), np.loadtxt(PH.path_file_soil_humid_vector())])
-# The test hyperspectral data
-# hyper = np.loadtxt('TestSpectrum.csv',delimiter=',',skiprows=1)
-# The wavelengths of multispectral data
-wvl = np.array([450,550,650,850,1650,2150])
-# The test multispectral data sliced from hyperspectral data
-# multi = hyper[np.in1d(WVL,wvl)]
-
-'''
-    This script shows how to simulate a series of soil spectra
-    using combinations of four soil coefficients.
-'''
-
-"""
-Default c_n and c_SM values for different kinds of soils from Table 3 in 
-page 9 of the paper.
-"""
+"""The general spectral vectors derived in the manuscript"""
 
 default_soils = {
     "wet_clay":             [0.245, -0.039,  0.003, -0.145],
@@ -47,16 +32,33 @@ default_soils = {
     "median_humid_peat":    [0.581, -0.268,  0.061, -0.303],
     "dry_peat":             [0.384, -0.220,  0.044, -0.066],
 }
+"""Default c_n and c_SM values for different kinds of soils from Table 3 in 
+page 9 of the paper.
+"""
 
 
 def simulate_gsv_soil(c1: float, c2: float, c3: float, cSM: float):
     """Simulate soil spectra with GSV model.
 
+    Parameters c1,c2,c3 are tuning parameters for dry soil (in descending order
+    of importance). Parameter cSM is for wet soil. This allows arbitrary soil
+    spectra generation. If you want to use one of the pre-defined soil types,
+    use simulate_default_soil().
+
     :param c1:
+        Tuning parameter for dry soil.
     :param c2:
+        Tuning parameter for dry soil.
     :param c3:
+        Tuning parameter for dry soil.
     :param cSM:
+        Tuning parameter for wet soil. This is usually between -0.5 and 0.0.
+        Positive values often causes water absorption peaks in near infrared to flip
+        in the wrong way.
     :return:
+        Returns reflectance spectra for given soil type and moisture defined by soil name.
+        Reflectance is returned as a 1D Numpy array from 400-2500 nm with 1 nm resolution
+        that is linearly interpolated from the native GSV resolution of 10 nm.
     """
 
     gsv_spectra = c1 * GSV[0] + c2 * GSV[1] + c3 * GSV[2] + cSM * GSV[3]
@@ -79,6 +81,9 @@ def simulate_default_soil(soil_name: str):
             "median_humid_peat"
             "dry_peat"
     :return:
+        Returns reflectance spectra for given soil type and moisture defined by soil name.
+        Reflectance is returned as a 1D Numpy array from 400-2500 nm with 1 nm resolution
+        that is linearly interpolated from the native GSV resolution of 10 nm.
     """
 
     soil_coeffs = default_soils[soil_name]
@@ -86,7 +91,16 @@ def simulate_default_soil(soil_name: str):
     return spectra
 
 
-def visualize_default_soils():
+def visualize_default_soils(dont_show=True, save=True):
+    """Visualize default soils' reflectance spectra.
+
+    :param dont_show:
+        If True (default), the plot is not shown, otherwise, show the plot using
+        pyplot show(), which will halt the execution of the program until the window
+        is manually shut.
+    :param save:
+        If True (default), save the plot to disk.
+    """
 
     refls = []
     labels = []
@@ -95,4 +109,4 @@ def visualize_default_soils():
         refls.append(spec)
         labels.append(key)
 
-    plotter.plot_default_soil_visualization(new_wls, reflectances=refls, labels=labels, dont_show=False, save=False)
+    plotter.plot_default_soil_visualization(new_wls, reflectances=refls, labels=labels, dont_show=dont_show, save=save)
