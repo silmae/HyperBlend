@@ -13,6 +13,12 @@ from src.data import file_names as FN
 ##########################################################################
 
 
+def path_directory_project_root():
+    """Path to project root directory."""
+    p = os.path.abspath(C.path_project_root)
+    return p
+
+
 def path_directory_set_result(set_name: str) -> str:
     """Path to where set result is saved."""
 
