@@ -73,7 +73,8 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    gsv.visualize_default_soils()
+    gsv.visualize_default_soils(save=True)
+    # gsv._write_default_soils()
 
     # plotter.plot_resampling(set_name='low_res')
     # forest_pipe_test()
