@@ -28,6 +28,8 @@ fig_title_font_size = 18
 """Title font size."""
 axis_label_font_size = 16
 """Axis label font size"""
+save_resolution = 600
+"""Save resolution for plots in dots per inch."""
 
 variable_space_ylim = [0.0, 1.0]
 """Y-axis limit for leaf material parameter plot."""
@@ -53,6 +55,22 @@ image_type = 'png'
 
 
 def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_show=True):
+    """Plot visualization (reflectances) of the default soil types.
+
+    :param wls:
+        List of wavelengths [400,401,...2500].
+    :param reflectances:
+        2D-array of reflectances. One row for one soil type.
+    :param labels:
+        List of soil names to be used as labels. These are also used
+        to infer plot colors.
+    :param save:
+        If True (default), save image to disc.
+    :param dont_show:
+        If True (default), the plot is not shown, otherwise, show the plot using
+        pyplot show(), which will halt the execution of the program until the window
+        is manually shut.
+    """
 
     plt.close('all')
     cm_clay = cm.get_cmap('Greys')
@@ -79,16 +97,16 @@ def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_s
 
         ax.plot(wls, reflectance, lw=1., label=labels[i], c=cm_active(selector))
 
+    ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
+    ax.set_ylabel(f'Reflectance', fontsize=axis_label_font_size)
     plt.legend()
 
     if save:
-        # TODO save the image
-        # folder = PH.path_directory_target(set_name=set_name)
-        # image_name = FN.filename_resample_plot(sample_id=sample_id)
-        # path = PH.join(folder, image_name)
-        # logging.info(f"Saving resampling plot to '{path}'.")
-        # plt.savefig(path, dpi=300)
-        pass
+        folder = PH.path_directory_project_root()
+        image_name = "default_soils." + image_type
+        path = PH.join(folder, image_name)
+        logging.info(f"Saving default soil reflectance plot to '{path}'.")
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
@@ -127,7 +145,7 @@ def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=Fa
     if save:
         path = PH.join(C.path_project_root, f"{plot_name}{C.postfix_plot_image_format}")
         logging.info(f"Saving reflectance power plot to project root '{path}'.")
-        plt.savefig(path, dpi=600)
+        plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
 
@@ -201,7 +219,7 @@ def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, 
 
     if forest_id is not None:
         path = PH.join(PH.path_directory_forest_scene(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
 
@@ -244,7 +262,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
             file_name = file_name + '.png'
         path = PH.join(folder, file_name)
         logging.info(f"Saving NN training history to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
@@ -329,7 +347,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             image_name = f"{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
-            plt.savefig(path, dpi=300)
+            plt.savefig(path, dpi=save_resolution)
 
         if show_plot:
             plt.show()
@@ -395,7 +413,7 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         image_name = "training_data" + C.postfix_plot_image_format
         path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
 
@@ -440,7 +458,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
         image_name = FN.filename_wl_result_plot(wl)
         path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=300) # keep this plot at low resolution as there may be quite a lot of these
     if not dont_show:
         plt.show()
 
@@ -519,7 +537,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         image_name = FN.filename_set_result_plot()
         path = PH.join(folder, image_name)
         logging.info(f"Saving the set result plot to '{path}'.")
-        plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
+        plt.savefig(path, dpi=save_resolution, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
 
@@ -565,7 +583,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
         image_name = FN.filename_set_error_plot()
         path = PH.join(folder, image_name)
         logging.info(f"Saving the set error plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
@@ -599,7 +617,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
             image_name = FN.filename_resample_plot(sample_id=sample_id)
             path = PH.join(folder, image_name)
             logging.info(f"Saving resampling plot to '{path}'.")
-            plt.savefig(path, dpi=300)
+            plt.savefig(path, dpi=save_resolution)
         if not dont_show:
             plt.show()
 
@@ -639,7 +657,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
         image_name = FN.filename_sample_result_plot(sample_id=sample_id)
         path = PH.join(folder, image_name)
         logging.info(f"Saving the sample result plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
@@ -695,7 +713,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
         image_name = f"variable_fitting.png"
         path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
 
     if not dont_show:
         plt.show()
