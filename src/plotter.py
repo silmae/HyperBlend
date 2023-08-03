@@ -102,7 +102,7 @@ def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_s
     plt.legend()
 
     if save:
-        folder = PH.path_directory_project_root()
+        folder = PH.path_directory_soil_data()
         image_name = "default_soils." + image_type
         path = PH.join(folder, image_name)
         logging.info(f"Saving default soil reflectance plot to '{path}'.")
