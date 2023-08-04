@@ -9,10 +9,11 @@ from src.utils import spectra_utils as SU
 from src.data import file_handling as FH, path_handling as PH, toml_handling as TH
 import src.constants as C
 from src.forest import lighting
+from src.forest import soil
 from src import plotter
 
 
-def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy_forest_id: str = None, custom_forest_id: str = None):
+def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file_name: str = None, copy_forest_id: str = None, custom_forest_id: str = None):
     """
 
     Create a new forest by copying template.
@@ -32,6 +33,7 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
 
     # TODO Load trunk reflectance spectrum.
 
+    :param soil_name:
     :param leaves:
         Leaves should be given as list of tuples [(set_name: str, sample_id: int, leaf_material_name: str), (),...].
     :param sun_file_name:
@@ -95,6 +97,7 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
         leaf_id = leaf[2]
         FH.copy_leaf_material_parameters(forest_id=forest_id, leaf_id=leaf_id, source_set_name=set_name, sample_id=sample_id)
 
+    ################ Leaf RGB ################
 
     rgb_dict = {}
 
@@ -111,6 +114,8 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
     # print(f"RGB dict '{rgb_dict}'.")
     FH.write_blender_rgb_colors(forest_id=forest_id, rgb_dict=rgb_dict)
 
+    ################ Sun ################
+
     logging.info(f"Normalizing, resampling and writing sun data.")
     sun_wls_org, sun_irradiance_org = lighting.load_light(file_name=sun_file_name, forest_id=forest_id, lighting_type='sun')
     logging.info(f"Reloading sun with new sampling.")
@@ -124,7 +129,7 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
     plotter.plot_light_data(wls=sun_wls_org, irradiances=sun_irradiance_org, wls_binned=sun_wls, irradiances_binned=sun_irradiance,
                             forest_id=forest_id, lighting_type='sun')
 
-    # bands, wls, irradiances = FH.read_blender_sun_spectra(forest_id=forest_id)
+    ################ Sky ################
 
     sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, lighting_type='sky')
     sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sky')
@@ -133,5 +138,17 @@ def init(leaves=None, sun_file_name: str = None, sky_file_name: str = None, copy
     FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')
     plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
                             sun_plot_name=sky_file_name, lighting_type='sky')
+
+    ################ Soil ################
+
+    if soil_name is None:
+        soil_name = "median_humid_clay"
+        logging.warning(f"Soil name not provided for forest initialization. Using default soil '{soil_name}'.")
+
+    soil_wls, soil_refls = soil.load_soil(forest_id=forest_id, soil_name=soil_name)
+    soil_wls_resampled, soil_refls_resampled = soil.load_soil(forest_id=forest_id, soil_name=soil_name, sampling=sampling)
+    FH.write_blender_soil(forest_id=forest_id, wls=soil_wls_resampled, reflectances=soil_refls_resampled)
+    plotter.plot_blender_soil(wls=soil_wls, reflectances=soil_refls, soil_name=soil_name, wls_resampled=soil_wls_resampled,
+                              reflectances_resampled=soil_refls_resampled, forest_id=forest_id, dont_show=True, save=True)
 
     return forest_id

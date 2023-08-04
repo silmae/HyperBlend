@@ -111,6 +111,52 @@ def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_s
         plt.show()
 
 
+def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflectances_resampled=None, forest_id=None, dont_show=True, save=True):
+    """Plots possibly resampled soil reflectance.
+
+    :param wls:
+        Original wavelengths as a list.
+    :param reflectances:
+        Original soil reflectances.
+    :param soil_name:
+        Name of the soil used. This will be shown in the plot and in resulting file's name.
+    :param wls_resampled:
+        Optional, resampled wavelengths.
+    :param reflectances_resampled:
+        Optional, resampled reflectances corresponding to resampled wavelengths.
+    :param forest_id:
+        Forest id is needed if save=True.
+    :param dont_show:
+        If True (default), the plot is not shown, otherwise, show the plot using
+        pyplot show(), which will halt the execution of the program until the window
+        is manually shut.
+    :param save:
+         If True (default), save image to forest scene directory (forest_id must then be given too).
+
+    :raises
+        AttributeError if save=True but forest_id=None.
+    """
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+    fig.suptitle(f"Resampled soil reflectance '{soil_name}'", fontsize=fig_title_font_size)
+
+    ax.plot(wls, reflectances, lw=1., label=soil_name, c='grey')
+
+    if wls_resampled is not None and reflectances_resampled is not None:
+        ax.plot(wls_resampled, reflectances_resampled, lw=2., c='green')
+
+    if save:
+        if forest_id is None:
+            raise AttributeError(f"Saving soil reflectance requested but no forest id was given to define proper path.")
+        directory = PH.path_directory_forest_scene(forest_id=forest_id)
+        image_name = f"soil_reflectance_{soil_name}{C.postfix_plot_image_format}"
+        path = PH.join(directory, image_name)
+        logging.info(f"Saving blender soil plot to '{path}'.")
+        plt.savefig(path, dpi=save_resolution)
+    if not dont_show:
+        plt.show()
+
+
 def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=False, save=True):
     """Plot simulation result of virtual reflectance lab.
 

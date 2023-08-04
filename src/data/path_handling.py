@@ -339,6 +339,11 @@ def path_file_forest_sky_csv(forest_id: str):
     return p
 
 
+def path_file_forest_soil_csv(forest_id: str):
+    p = join(path_directory_forest_scene(forest_id), 'blender_soil.csv')
+    return p
+
+
 def path_file_soil_dry_vector():
     """Soil dry vector used by GSV."""
 

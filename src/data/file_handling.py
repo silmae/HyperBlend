@@ -467,3 +467,28 @@ def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
         for key, value in rgb_dict.items():
             row = [key, value[0], value[1], value[2]]
             writer.writerow(row)
+
+
+def write_blender_soil(forest_id: str, wls, reflectances):
+    """Write soil reflectance spectra to a csv file that can be read by Blender script.
+
+    :param forest_id:
+        Id of the forest scene to write to.
+    :param wls:
+        List of wavelengths to be written.
+    :param reflectances:
+        List of sun irradiances to be written.
+    """
+
+    p = PH.path_file_forest_soil_csv(forest_id=forest_id)
+
+    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+
+        header = ["band", "wavelength", "reflectance"]
+        writer.writerow(header)
+
+        for i, wl in enumerate(wls):
+            row = [i + 1, wl, reflectances[i]]
+            writer.writerow(row)
