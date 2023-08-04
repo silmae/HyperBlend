@@ -40,12 +40,12 @@ def forest_pipe_test():
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
-    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves, custom_forest_id='kotitesti', soil_name="dry_sand")
+    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+    # forest_id = forest.init(leaves=leaves, custom_forest_id='testi_wet_peat', soil_name="wet_peat")
 
-    forest_id = 'kotitesti'
+    forest_id = 'testi_wet_peat'
 
-    BC.setup_forest(scene_id=forest_id, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
+    BC.setup_forest(scene_id=forest_id, base_sun_power=50, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
     # BC.render_forest(scene_id=forest_id, render_mode='preview')
     # BC.render_forest(scene_id=forest_id, render_mode='abundances')
     BC.render_forest(scene_id=forest_id, render_mode='spectral')

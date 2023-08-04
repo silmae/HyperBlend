@@ -192,7 +192,7 @@ def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
 
 
-def setup_forest(scene_id, leaf_id_list=None):
+def setup_forest(scene_id, leaf_id_list=None, base_sun_power: float = None):
     """ Setup the forest for rendering.
 
     Currently does not do much.
@@ -218,6 +218,9 @@ def setup_forest(scene_id, leaf_id_list=None):
 
     if leaf_id_list is not None and len(leaf_id_list) > 0:
         scirpt_args += ['-l_ids', f'{list(leaf_id_list)}']  # available leaf indexes
+
+    if base_sun_power is not None:
+        scirpt_args += ['-sp', str(base_sun_power)]
 
     with open(os.devnull, 'wb') as stream:
         status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)

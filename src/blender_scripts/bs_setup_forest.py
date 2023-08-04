@@ -290,7 +290,11 @@ def insert_sun_data():
 
     bands, _, irradiances = read_csv(p)
 
-    irradiances = np.array(irradiances) * FC.max_sun_power_spectral
+    if base_sun_power is None:
+        irradiances = np.array(irradiances) * FC.max_sun_power_spectral
+    else:
+        irradiances = np.array(irradiances) * base_sun_power
+
     set_sun_power_for_all(bands=bands, irradiances=irradiances)
 
 
@@ -342,24 +346,23 @@ if __name__ == '__main__':
 
     # Argument names
     key_scene_id = ['-id', '--scene_id']
-    key_sun_filename = ['-sun', '--sun_filename']
+    key_sun_power = ['-sp', '--sun_power']
     key_leaf_ids = ['-l_ids', '--leaf_ids']
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
                         required=True, help="Name of the forest scene.")
-    parser.add_argument(key_sun_filename[0], key_sun_filename[1], dest=key_sun_filename[1], action="store",
-                        required=False, help="Name of the sun file to be used.")
+    parser.add_argument(key_sun_power[0], key_sun_power[1], dest=key_sun_power[1], action="store",
+                        required=False, type=float, help="Overwrites the default base sun power in constants file.")
     parser.add_argument(key_leaf_ids[0], key_leaf_ids[1], dest=key_leaf_ids[1], action="store",
                         required=False, type=str, help="List of available leaf indexes as a string.")
 
     args = parser.parse_args(argv)
 
     scene_id = vars(args)[key_scene_id[1]]
-    sun_filename = vars(args)[key_sun_filename[1]]
+    base_sun_power = vars(args)[key_sun_power[1]]
     leaf_material_names = vars(args)[key_leaf_ids[1]]
-
 
     logging.error(f"Hello, I am forest setup script in '{PH.path_directory_forest_scene(scene_id)}'")
 
