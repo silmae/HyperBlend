@@ -191,9 +191,9 @@ def path_directory_blender_scripts() -> str:
     return p
 
 def path_directory_soil_code() -> str:
-    """Soil code directory that contain soil spectra vectors used for soil generation."""
+    """Soil code directory that contain gsv spectra vectors used for gsv generation."""
 
-    p = join(C.path_project_root, 'src', 'soil')
+    p = join(C.path_project_root, 'src', 'gsv')
     return p
 
 
