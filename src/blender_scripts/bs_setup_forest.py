@@ -257,6 +257,30 @@ def insert_leaf_data(leaf_materials):
             set_leaf_material(leaf_material_name=leaf_csv_name, band_list=band_list, ad_list=ad_list, sd_list=sd_list, ai_list=ai_list, mf_list=mf_list)
 
 
+def read_csv(path):
+
+    bands = []
+    wavelengths = []
+    values = []
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Cannot read csv file from '{path}'. File not found.")
+
+    with open(path) as file:
+        reader = csv.reader(file, delimiter=' ')
+        for row in reader:
+            try:
+                bands.append(int(row[0]))
+                wavelengths.append(float(row[1]))
+                values.append(float(row[2]))
+            except ValueError:
+                # this is ok
+                # print(f"Material headers: {row}")
+                pass
+
+    return bands, wavelengths, values
+
+
 def insert_sun_data():
     logging.error(f"Setting sun data.")
 
@@ -264,26 +288,30 @@ def insert_sun_data():
     if not os.path.exists(p):
         raise FileNotFoundError(f"Sun csv file '{p}' not found. Try rerunning forest initialization.")
 
-    bands = []
-    irradiances = []
-    with open(p) as file:
-        reader = csv.reader(file, delimiter=' ')
-        for row in reader:
-            try:
-                bands.append(int(row[0]))
-                # row[1] is wavelength which is not needed here
-                irradiances.append(float(row[2]))
-            except ValueError:
-                # this is ok
-                # print(f"Material headers: {row}")
-                pass
+    bands, _, irradiances = read_csv(p)
 
     irradiances = np.array(irradiances) * FC.max_sun_power_spectral
     set_sun_power_for_all(bands=bands, irradiances=irradiances)
 
 
 def insert_soil_data():
-    logging.error(f"insert_soil_data() called, but I am missing the implementation...")
+    logging.error(f"Inserting spectral soil reflectance to Blender material keyframes.")
+
+    p = PH.path_file_forest_soil_csv(forest_id=scene_id)
+    if not os.path.exists(p):
+        raise FileNotFoundError(f"Soil csv file '{p}' not found. Try rerunning forest initialization.")
+
+    # TODO Should we raise an error or just go without setting soil material??
+
+    bands, _, reflectances = read_csv(p)
+
+    for i,band in enumerate(bands):
+
+        socket_name = 'Spectral reflectivity'
+        material = bpy.data.materials["Ground material"]
+        dp = f'nodes["Group"].inputs["{socket_name}"].default_value'
+        material.node_tree.nodes["Group"].inputs[socket_name].default_value = reflectances[i]
+        material.node_tree.keyframe_insert(dp, frame=band)
 
 
 def insert_trunk_data():
