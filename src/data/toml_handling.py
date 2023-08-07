@@ -13,8 +13,8 @@ import logging
 
 from src.data import file_handling as FH
 from src.data import file_names as FN
-from src import constants as C, plotter
-from src.data import path_handling as P
+from src import constants as C
+from src.data import path_handling as PH
 
 
 def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
@@ -35,7 +35,7 @@ def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
     if not filename.endswith('.toml'):
         filename = filename + '.toml'
 
-    p = P.join(directory, filename)
+    p = PH.join(directory, filename)
     with open(p, 'w+') as file:
         toml.dump(dictionary, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -54,7 +54,7 @@ def read_toml_as_dict(directory: str, filename: str):
     if not filename.endswith('.toml'):
         filename = filename + '.toml'
 
-    p = P.join(directory, filename)
+    p = PH.join(directory, filename)
 
     if not os.path.exists(os.path.abspath(p)):
         raise RuntimeError(f"Cannot read from file '{os.path.abspath(p)}' "
@@ -68,7 +68,7 @@ def read_toml_as_dict(directory: str, filename: str):
 def read_surface_model_parameters():
     """Reads surface model parameters from a file and returns them as a dictionary. """
 
-    p = P.path_file_surface_model_parameters()
+    p = PH.path_file_surface_model_parameters()
     if not os.path.exists(p):
         raise RuntimeError(f'Surface model parameter file "{p}" not found.')
     with open(p, 'r') as file:
@@ -83,7 +83,7 @@ def write_surface_model_parameters(parameter_dict):
         Parameter dictionary to be saved.
     """
 
-    p = P.path_file_surface_model_parameters()
+    p = PH.path_file_surface_model_parameters()
     with open(p, 'w+') as file:
         toml.dump(parameter_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -164,7 +164,7 @@ def write_set_result(set_name: str):
         result_dict[C.key_set_result_wl_ai_std] = np.zeros_like(r[0][C.key_sample_result_wls])
         result_dict[C.key_set_result_wl_mf_std] = np.zeros_like(r[0][C.key_sample_result_wls])
 
-    p = P.join(P.path_directory_set_result(set_name), FN.filename_set_result())
+    p = PH.join(PH.path_directory_set_result(set_name), FN.filename_set_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -172,7 +172,7 @@ def write_set_result(set_name: str):
 def read_set_result(set_name: str):
     """Reads the set result file. Created if does not exist."""
 
-    p = P.join(P.path_directory_set_result(set_name), FN.filename_set_result())
+    p = PH.join(PH.path_directory_set_result(set_name), FN.filename_set_result())
     if not os.path.exists(p):
         write_set_result(set_name)
     with open(p, 'r') as file:
@@ -209,7 +209,7 @@ def read_sample_result(set_name: str, sample_id: int):
         Result file content as a dict.
     """
 
-    p = P.join(P.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = PH.join(PH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -227,7 +227,7 @@ def write_sample_result(set_name: str, res_dict: dict, sample_id: int) -> None:
         Sample id.
     """
 
-    p = P.join(P.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = PH.join(PH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -243,11 +243,11 @@ def collect_wavelength_result(set_name: str, sample_id: int):
         A list of wavelength result dictionaries.
     """
 
-    p = P.path_directory_subresult(set_name, sample_id)
+    p = PH.path_directory_subresult(set_name, sample_id)
     subres_list = []
     for filename in os.listdir(p):
         if filename.endswith(C.postfix_text_data_format):
-            subres = toml.load(P.join(p, filename))
+            subres = toml.load(PH.join(p, filename))
             subres_list.append(subres)
     return subres_list
 
@@ -264,7 +264,7 @@ def write_wavelength_result(set_name: str, res_dict: dict, sample_id: int) -> No
     """
 
     wl = res_dict[C.key_wl_result_wl]
-    p = P.path_file_wl_result(set_name, wl, sample_id)
+    p = PH.path_file_wl_result(set_name, wl, sample_id)
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -282,7 +282,7 @@ def read_wavelength_result(set_name: str, wl: float, sample_id: int):
         Subresult as a dictionary.
     """
 
-    p = P.path_file_wl_result(set_name, wl, sample_id)
+    p = PH.path_file_wl_result(set_name, wl, sample_id)
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -307,7 +307,7 @@ def write_target(set_name: str, data, sample_id=0, resampled=False) -> None:
 
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {'wlrt': floated_list}
-    p = P.path_file_target(set_name, sample_id, resampled=resampled)
+    p = PH.path_file_target(set_name, sample_id, resampled=resampled)
     if not os.path.exists(p):
         FH.create_first_level_folders(set_name)
         FH.create_opt_folder_structure_for_samples(set_name, sample_id=0)
@@ -332,7 +332,7 @@ def read_target(set_name: str, sample_id: int, resampled=False):
         OSError if file could not be opened.
     """
 
-    with open(P.path_file_target(set_name, sample_id, resampled=resampled), 'r') as file:
+    with open(PH.path_file_target(set_name, sample_id, resampled=resampled), 'r') as file:
         data = toml.load(file)
         data = data['wlrt']
         data = np.array(data)
@@ -359,7 +359,7 @@ def write_sampling(set_name: str, sampling: list = None, overwrite=False):
         If True, overwrite existing sampling with the new one. Default is False.
     """
 
-    p = P.path_file_sampling(set_name)
+    p = PH.path_file_sampling(set_name)
 
     # Escape if the file exists already
     if os.path.exists(p) and not overwrite:
@@ -392,7 +392,7 @@ def read_sampling(set_name: str,):
     :raises
         Raises RuntimeError in case some of the entries could not be interpreted as a float.
     """
-    p = P.path_file_sampling(set_name)
+    p = PH.path_file_sampling(set_name)
 
     if not os.path.exists(p):
         write_sampling(set_name=set_name)
@@ -420,7 +420,7 @@ def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs) -> N
         Coefficients for mix factor as a list of floats.
     """
 
-    path = P.path_file_default_starting_guess()
+    path = PH.path_file_default_starting_guess()
     coeff_dict = {C.ad_coeffs:ad_coeffs, C.sd_coeffs:sd_coeffs, C.ai_coeffs:ai_coeffs, C.mf_coeffs:mf_coeffs}
     with open(path, 'w+') as file:
         toml.dump(coeff_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
@@ -433,7 +433,7 @@ def read_starting_guess_coeffs():
         Starting guess coefficients in a dictionary.
     """
 
-    path = P.path_file_default_starting_guess()
+    path = PH.path_file_default_starting_guess()
     with open(path, 'r') as file:
         data = toml.load(file)
         return data
@@ -522,4 +522,3 @@ def make_sample_result(set_name:str, sample_id: int, wall_clock_time_min=0.0):
     sample_result_dict[C.key_sample_result_mf] = mf
 
     write_sample_result(set_name, sample_result_dict, sample_id)
-    plotter.plot_sample_result(set_name, sample_id, dont_show=True, save_thumbnail=True)
