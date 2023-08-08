@@ -136,6 +136,7 @@ class Optimization:
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
             TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
+            plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
 
         TH.write_set_result(self.set_name)
         plotter.plot_set_result(self.set_name, dont_show=True, save_thumbnail=True)
