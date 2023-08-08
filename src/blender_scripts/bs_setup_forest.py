@@ -71,26 +71,30 @@ def random_sun(rand_state):
     return random.getstate()
 
 
-def set_sun_angle(elevation_deg=0, azimuth=90):
+def set_sun_angle(zenith_angle_deg=0, azimuth=90):
     """Set the sun elevation and azimuth angles in degrees.
 
-    :param elevation_deg:
+    When sun azimuth angle is 0 degrees, the sun points to positive y-axis direction in Blender
+    that is thought as north in HyperBlend. 90 degrees would be pointing west, 180 to south
+    and 270 to east, respectively. Zenith angle is the Sun's angle from zenith.
+
+
+    :param zenith_angle_deg:
         Elevation angle between [0,90] degrees. Value 0 is sun zenith.
     :param azimuth:
         Azimuth angle between [0,360] degrees. With default value (90), the sun is shining directly from right.
     :return:
     """
-    if elevation_deg < 0:
-        elevation_deg = 0
-    if elevation_deg > 90:
-        elevation_deg = 90
+    if zenith_angle_deg < 0:
+        zenith_angle_deg = 0
+    if zenith_angle_deg > 90:
+        zenith_angle_deg = 90
     if azimuth < 0:
         azimuth = 0
     if azimuth > 360:
         azimuth = 360
 
-    # sun = lights.get(FC.key_obj_sun)
-    bpy.data.lights["Sun"].rotation_euler = (math.radians(elevation_deg), 0, math.radians(azimuth))
+    bpy.data.lights["Sun"].rotation_euler = (math.radians(zenith_angle_deg), 0, math.radians(azimuth))
 
 
 def set_sun_power_for_all(bands, irradiances):
@@ -322,6 +326,15 @@ def insert_trunk_data():
     logging.error(f"insert_trunk_data() called, but I am missing the implementation...")
 
 
+def init_cameras():
+
+    cameras = b_data.collections[FC.key_collection_cameras].all_objects
+
+    # All cameras will use field of view instead of focal length.
+    for camera in cameras:
+        camera.lens_unit = "FOV"
+
+
 if __name__ == '__main__':
 
     DENSITY = 3000
@@ -373,6 +386,7 @@ if __name__ == '__main__':
 
     # TODO test scene parameter retrieval
     scene_dict = FU.get_scene_parameters()
+    FU.write_forest_control(forest_id=scene_id, control_dict=scene_dict)
 
     # FU.print_materials()
 

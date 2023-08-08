@@ -4,6 +4,8 @@ import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
 import logging
 import random
+import toml
+import math
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
@@ -19,10 +21,11 @@ if script_dir not in sys.path:
     sys.path.append(script_dir)
 
 import forest_constants as FC
+from src.data import path_handling as PH
 import importlib
-importlib.reload(FC)
 
-test_val = "I am test value"
+importlib.reload(FC)
+importlib.reload(PH)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -32,11 +35,66 @@ b_scene = b_data.scenes[FC.key_scene_name]
 cameras = b_data.collections[FC.key_collection_cameras].all_objects
 lights = b_data.collections[FC.key_collection_lights].all_objects
 trees = b_data.collections[FC.key_collection_trees].all_objects
-# markers = b_data.collections[FC.key_collection_markers].all_objects
 ground = b_data.collections[FC.key_collection_ground].all_objects
 
 forest = b_data.collections[FC.key_collection_ground].all_objects.get(FC.key_obj_ground)
 forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
+
+
+def write_forest_control(forest_id: str, control_dict: dict):
+    write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
+
+
+def read_forest_control(forest_id: str) -> dict:
+    return read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
+
+
+def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
+    """General purpose dictionary saving method.
+
+    :param dictionary:
+        Dictionary to be written as toml.
+    :param directory:
+        Path to the directory where the toml should be written.
+    :param filename:
+        Name of the file to be written. Postfix '.toml' will be added if necessary.
+    """
+
+    if not os.path.exists(os.path.abspath(directory)):
+        raise RuntimeError(f"Cannot write given dictionary to path '{os.path.abspath(directory)}' "
+                           f"because it does not exist.")
+
+    if not filename.endswith('.toml'):
+        filename = filename + '.toml'
+
+    p = PH.join(directory, filename)
+    with open(p, 'w+') as file:
+        toml.dump(dictionary, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+
+def read_toml_as_dict(directory: str, filename: str):
+    """General purpose toml reading method.
+
+    :param directory:
+        Path to the directory where the toml file is.
+    :param filename:
+        Name of the file to be read. Postfix '.toml' will be added if necessary.
+    :return dictionary:
+        Returns read toml file as a dictionary.
+    """
+
+    if not filename.endswith('.toml'):
+        filename = filename + '.toml'
+
+    p = PH.join(directory, filename)
+
+    if not os.path.exists(os.path.abspath(p)):
+        raise RuntimeError(f"Cannot read from file '{os.path.abspath(p)}' "
+                           f"because it does not exist.")
+
+    with open(p, 'r') as file:
+        result = toml.load(file)
+    return result
 
 
 def set_input(node, input_name, value):
@@ -48,7 +106,61 @@ def set_input(node, input_name, value):
     print(f"{node.name}: parameter {input.name} value changed from {old_val} to {value}.")
 
 
-def get_scene_parameters() -> dict:
+def dictify_input_socket(gn, socket, is_master):
+
+    space = "    "
+    socket_id = socket.identifier
+    socket_id_numeric = int(socket_id.split('_')[1])
+    socket_value = gn[socket.identifier]
+    socket_type = socket.type
+
+    socket_dict = {f"{space}Value": socket_value,}
+
+    # Only add standard deviation to master file
+    if is_master:
+        if socket_type == "VALUE":
+            socket_dict[f"{space}Standard deviation"] = socket_value / 10
+        if socket_type == "INT":
+            socket_dict[f"{space}Standard deviation"] = int(socket_value / 10)
+
+    socket_dict[f"{space}Type"] = socket_type
+    socket_dict[f"{space}ID"] = socket_id_numeric
+
+    return socket_dict
+
+
+def get_tree_as_dict(tree_object, is_master=False):
+
+    tree_dict = {"Name": tree_object.name}
+
+    # print(f"Tree in tree list: {tree_object.name}")
+    tree_gn = tree_object.modifiers["GeometryNodes"]
+
+    for tree_input_socket in tree_gn.node_group.inputs:
+
+        tree_socket_id = tree_input_socket.identifier
+        tree_socket_id_numeric = int(tree_socket_id.split('_')[1])
+        socket_type = tree_input_socket.type
+
+        # Skip some parameters that do not need to be randomised.
+        if socket_type == "MATERIAL": # Any materials
+            continue
+        elif tree_socket_id_numeric == 34: # Splines only
+            continue
+        elif tree_socket_id_numeric == 30: # Leaf object
+            continue
+        elif tree_socket_id_numeric == 29: # Hide leafs
+            continue
+        elif tree_socket_id_numeric == 15: # Top spawn
+            continue
+        else:
+            tree_socket_name = tree_input_socket.name
+            tree_dict[tree_socket_name] = dictify_input_socket(tree_gn, tree_input_socket, is_master=is_master)
+
+    return tree_dict
+
+
+def get_scene_parameters(as_master=False) -> dict:
     """
     TODO clean this up!!
 
@@ -58,33 +170,62 @@ def get_scene_parameters() -> dict:
      get world parameters
     """
 
-    logging.error(f"get_scene_parameters called")
+    logging.error(f"Reading scene definition from Blender file.")
 
-    tree_objects = []
-    understory_objects = []
+    scene_dict = {"is_master_control": as_master,
+                  "Notes": "This file controls the setup of the Blender scene file. "}
+
+    #TODO drones and cameras
+    #       - altitude, orientation, resolution, FOV, § sample count
+
+    sun = lights[FC.key_obj_sun]
+    sun_dict = {
+        "Note": "When sun azimuth angle is 0 degrees, the sun points to positive y-axis direction in Blender "
+                "that is thought as north in HyperBlend. 90 degrees would be pointing west, 180 to south "
+                "and 270 to east, respectively. Zenith angle is the Sun's angle from zenith.",
+        FC.key_ctrl_sun_angle_zenith_deg: math.degrees(sun.rotation_euler[0]),
+        FC.key_ctrl_sun_angle_azimuth_deg: math.degrees(sun.rotation_euler[2]),
+        FC.key_ctrl_sun_base_power_hsi: FC.max_sun_power_spectral,
+        FC.key_ctrl_sun_base_power_rgb: FC.max_sun_power_rgb,
+    }
+    scene_dict['Sun'] = sun_dict
+
+    drone_dict = {
+        "Note": "Unit of drone location and altitude is meter.",
+        FC.key_ctrl_drone_location_x: bpy.data.objects[FC.key_drone].location[0],
+        FC.key_ctrl_drone_location_y: bpy.data.objects[FC.key_drone].location[1],
+        FC.key_ctrl_drone_altitude: bpy.data.objects[FC.key_drone].location[2],
+    }
+    scene_dict['Drone'] = drone_dict
+
+    camera_dict = {
+        "Note": "Camera angles are stored in degrees in this file. They must be "
+                "converted to radians before passing to Blender file.",
+        FC.key_ctrl_drone_hsi_fow: math.degrees(cameras.get(FC.key_cam_drone_hsi).data.angle),
+        FC.key_ctrl_drone_rgb_fow: math.degrees(cameras.get(FC.key_cam_drone_rgb).data.angle),
+    }
+    scene_dict['Cameras'] = camera_dict
+
+    # Blender only has one global resolution setting that is not bound to different cameras.
+    # So we take the one there is and set it as resolution for all cameras.
+    resolution_x = b_scene.render.resolution_x
+    resolution_y = b_scene.render.resolution_y
+    image_dict = {
+        FC.key_ctrl_hsi_resolution_x: resolution_x,
+        FC.key_ctrl_hsi_resolution_y: resolution_y,
+        FC.key_ctrl_rgb_resolution_x: resolution_x,
+        FC.key_ctrl_rgb_resolution_y: resolution_y,
+        FC.key_ctrl_walker_resolution_x: resolution_x,
+        FC.key_ctrl_walker_resolution_y: resolution_y,
+        FC.key_ctrl_sleeper_resolution_x: resolution_x,
+        FC.key_ctrl_sleeper_resolution_y: resolution_y,
+        FC.key_ctrl_tree_preview_resolution_x: resolution_x,
+        FC.key_ctrl_tree_preview_resolution_y: resolution_y,
+    }
+    scene_dict['Images'] = image_dict
+
+    ground_dict = {}
     ground_gn = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
-
-    scene_dict = {"Identifier": "Scene master",
-                  "Notes": "This should be the master control file of the scene."}
-
-    ground_dict = {"Identifier": "Ground"}
-
-    def dictify_input_socket(gn, socket):
-        socket_id = socket.identifier
-        socket_id_numeric = int(socket_id.split('_')[1])
-        socket_value = gn[socket.identifier]
-        socket_type = socket.type
-
-        socket_dict = {"ID": socket_id_numeric,
-                       "Type": socket_type,
-                       "Value": socket_value}
-
-        if socket_type == "VALUE":
-            socket_dict["Standard deviation"] = socket_value / 10
-        if socket_type == "INT":
-            socket_dict["Standard deviation"] = int(socket_value / 10)
-
-        return socket_dict
 
     for input_socket in ground_gn.node_group.inputs:
 
@@ -92,70 +233,26 @@ def get_scene_parameters() -> dict:
         socket_id_numeric = int(socket_id.split('_')[1])
         socket_name = input_socket.name
         socket_value = ground_gn[input_socket.identifier]
-        # socket_type = input_socket.type
-        # print(f"Input id: {socket_id} ({socket_id_numeric}), name: '{socket_name}', value: {socket_value}, type: {socket_type}.")
 
-        # ground_dict[f"{socket_name} ({socket_id_numeric})"] = socket_value
-        ground_dict[socket_name] = dictify_input_socket(ground_gn, input_socket)
+        if socket_id_numeric == 10: # Simplified trees
+            continue
+        elif socket_id_numeric == 34: # Simplified understory
+            continue
+        elif socket_id_numeric == 18: # Reference object
+            continue
+        elif socket_id_numeric == 35: # Reference controller
+            continue
+        elif socket_id_numeric == 19: # Reference height
+            continue
+        elif socket_id_numeric in [25, 26, 27]: # Trees
+            ground_dict[socket_name] = get_tree_as_dict(socket_value, is_master=as_master)
+        elif socket_id_numeric in [30, 31]: # Understory
+            ground_dict[socket_name] = get_tree_as_dict(socket_value, is_master=as_master)
+        else:
+            ground_dict[socket_name] = dictify_input_socket(ground_gn, input_socket, is_master=as_master)
 
-        # if socket_type == 'VALUE': # Blender keyword
-        #     ground_dict[f"{socket_name} type ({socket_id_numeric})"] = "float"
-        #     ground_dict[f"{socket_name} deviation ({socket_id_numeric})"] = socket_value / 2
-        # if socket_type == 'int':  # Blender keyword
-        #     ground_dict[f"{socket_name} type ({socket_id_numeric})"] = "int"
-        #     ground_dict[f"{socket_name} deviation ({socket_id_numeric})"] = int(socket_value / 2)
+    scene_dict['Forest'] = ground_dict
 
-        if socket_id_numeric in [25, 26, 27]:
-            tree_objects.append(socket_value)
-        if socket_id_numeric in [30, 31]:
-            understory_objects.append(socket_value)
-
-    tree_dicts = []
-
-    for tree_object in tree_objects:
-
-        tree_dict = {"Identifier": tree_object.name}
-
-        # print(f"Tree in tree list: {tree_object.name}")
-        tree_gn = tree_object.modifiers["GeometryNodes"]
-
-        for tree_input_socket in tree_gn.node_group.inputs:
-            tree_socket_id = tree_input_socket.identifier
-            tree_socket_id_numeric = int(tree_socket_id.split('_')[1])
-            tree_socket_name = tree_input_socket.name
-            tree_socket_value = tree_gn[tree_input_socket.identifier]
-            # print(f"TreeInput id: {tree_socket_id} ({tree_socket_id_numeric}), name: '{tree_socket_name}', value: {tree_socket_value}.")
-
-            # tree_dict[f"{tree_socket_name} ({tree_socket_id_numeric})"] = tree_socket_value
-            tree_dict[tree_socket_name] = dictify_input_socket(tree_gn, tree_input_socket)
-
-        tree_dicts.append(tree_dict)
-
-    understory_dicts = []
-
-    for understory_object in understory_objects:
-        understory_dict = {"Identifier": understory_object.name}
-
-        # print(f"Understory object in list: {understory_object.name}")
-        understory_gn = understory_object.modifiers["GeometryNodes"]
-
-        for understory_input_socket in understory_gn.node_group.inputs:
-            understory_socket_id = understory_input_socket.identifier
-            understory_socket_id_numeric = int(understory_socket_id.split('_')[1])
-            understory_socket_name = understory_input_socket.name
-            understory_socket_value = understory_gn[understory_input_socket.identifier]
-            # print(f"UnderstoryInput id: {understory_socket_id} ({understory_socket_id_numeric}), name: '{understory_socket_name}', value: {understory_socket_value}.")
-
-            # understory_dict[f"{understory_socket_name} ({understory_socket_id_numeric})"] = understory_socket_value
-            understory_dict[understory_socket_name] = dictify_input_socket(understory_gn, understory_input_socket)
-
-        understory_dicts.append(tree_dict)
-
-
-    scene_dict['Ground'] = ground_dict
-    scene_dict['Trees'] = tree_dicts
-    scene_dict['Undersory objects'] = understory_dicts
-    print(scene_dict)
     return scene_dict
 
 def set_forest_parameter(parameter_name, value):

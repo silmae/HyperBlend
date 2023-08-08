@@ -30,28 +30,41 @@ from src.gsv import gsv
 from src.forest import soil
 
 
+def write_forest_control(forest_id: str, control_dict: dict):
+    TH.write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
+
+
+def read_forest_control(forest_id: str) -> dict:
+    return TH.read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
+
+
 def forest_pipe_test():
 
     # Generating low resolution random leaves
     set_name = 'low_res_w_dry'
     new_sampling = [450,500,550,600,700,800]
     # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=2)
-    # LI.generate_prospect_leaf(set_name=set_name, sample_id=3, w=0.001) # add one dry default leaf
+    # LI.generate_prospect_leaf(set_name=set_name, sample_id=4) # add one dry default leaf
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
     # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves, custom_forest_id='testi_wet_peat', soil_name="wet_peat")
+    # forest_id = forest.init(leaves=leaves, custom_forest_id='testi_sand', soil_name="median_humid_sand")
 
-    forest_id = 'testi_wet_peat'
+    forest_id = 'testi_sand'
+    # control_dict = TH.read_forest_control(forest_id=forest_id)
+    # print(control_dict)
 
-    BC.setup_forest(scene_id=forest_id, base_sun_power=50, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
+    BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
+    # scene_dict = read_forest_control(forest_id=forest_id)
+    # print("moi")
+
     # BC.render_forest(scene_id=forest_id, render_mode='preview')
     # BC.render_forest(scene_id=forest_id, render_mode='abundances')
-    BC.render_forest(scene_id=forest_id, render_mode='spectral')
-
-    CH.construct_envi_cube(forest_id=forest_id)
-    CH.show_cube(forest_id=forest_id)
+    # BC.render_forest(scene_id=forest_id, render_mode='spectral')
+    #
+    # CH.construct_envi_cube(forest_id=forest_id)
+    # CH.show_cube(forest_id=forest_id)
 
 
 if __name__ == '__main__':
