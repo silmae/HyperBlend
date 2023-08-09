@@ -38,7 +38,6 @@ tree_preview_resolution_y = 512
 
 [Forest.Seed]
 "    Value" = 2
-"    Standard deviation" = 0
 "    Type" = "INT"
 "    ID" = 7
 
@@ -56,7 +55,7 @@ tree_preview_resolution_y = 512
 
 [Forest."Minimum tree separation [m]"]
 "    Value" = 3.0
-"    Standard deviation" = 0.3
+"    Standard deviation" = 0.30000000000000004
 "    Type" = "VALUE"
 "    ID" = 12
 
@@ -268,7 +267,6 @@ Name = "Small bush"
 
 [Forest."Tree 1".Seed]
 "    Value" = 22
-"    Standard deviation" = 2
 "    Type" = "INT"
 "    ID" = 33
 
@@ -382,7 +380,7 @@ Name = "Small bush"
 
 [Forest."Tree 2"."Leaf density"]
 "    Value" = 0.40000003576278687
-"    Standard deviation" = 0.040000003576278684
+"    Standard deviation" = 0.04000000357627869
 "    Type" = "VALUE"
 "    ID" = 31
 
@@ -394,7 +392,6 @@ Name = "Small bush"
 
 [Forest."Tree 2".Seed]
 "    Value" = 23
-"    Standard deviation" = 2
 "    Type" = "INT"
 "    ID" = 33
 
@@ -460,7 +457,7 @@ Name = "Small bush"
 
 [Forest."Tree 3"."Branch 1 align"]
 "    Value" = -0.1899999976158142
-"    Standard deviation" = -0.01899999976158142
+"    Standard deviation" = -0.018999999761581423
 "    Type" = "VALUE"
 "    ID" = 20
 
@@ -520,7 +517,6 @@ Name = "Small bush"
 
 [Forest."Tree 3".Seed]
 "    Value" = 22
-"    Standard deviation" = 2
 "    Type" = "INT"
 "    ID" = 33
 
@@ -532,13 +528,13 @@ Name = "Small bush"
 
 [Forest."Understory object 1"."Trunk length [m]"]
 "    Value" = 1.5
-"    Standard deviation" = 0.15
+"    Standard deviation" = 0.15000000000000002
 "    Type" = "VALUE"
 "    ID" = 10
 
 [Forest."Understory object 1"."Trunk diameter [m]"]
 "    Value" = 0.029999999329447746
-"    Standard deviation" = 0.0029999999329447745
+"    Standard deviation" = 0.002999999932944775
 "    Type" = "VALUE"
 "    ID" = 11
 
@@ -592,7 +588,7 @@ Name = "Small bush"
 
 [Forest."Understory object 1"."Droop angle [deg]"]
 "    Value" = -51.09000015258789
-"    Standard deviation" = -5.109000015258789
+"    Standard deviation" = -5.10900001525879
 "    Type" = "VALUE"
 "    ID" = 21
 
@@ -646,7 +642,6 @@ Name = "Small bush"
 
 [Forest."Understory object 1".Seed]
 "    Value" = 22
-"    Standard deviation" = 2
 "    Type" = "INT"
 "    ID" = 33
 
@@ -700,7 +695,7 @@ Name = "Small bush"
 
 [Forest."Understory object 2"."Branch 1 scale"]
 "    Value" = 0.7599998712539673
-"    Standard deviation" = 0.07599998712539673
+"    Standard deviation" = 0.07599998712539674
 "    Type" = "VALUE"
 "    ID" = 18
 
@@ -718,7 +713,7 @@ Name = "Small bush"
 
 [Forest."Understory object 2"."Droop angle [deg]"]
 "    Value" = -36.56999969482422
-"    Standard deviation" = -3.656999969482422
+"    Standard deviation" = -3.6569999694824222
 "    Type" = "VALUE"
 "    ID" = 21
 
@@ -760,18 +755,17 @@ Name = "Small bush"
 
 [Forest."Understory object 2"."Leaf density"]
 "    Value" = 0.2900000214576721
-"    Standard deviation" = 0.02900000214576721
+"    Standard deviation" = 0.029000002145767215
 "    Type" = "VALUE"
 "    ID" = 31
 
 [Forest."Understory object 2"."Average leaf angle [deg]"]
 "    Value" = -35.01000213623047
-"    Standard deviation" = -3.5010002136230467
+"    Standard deviation" = -3.501000213623047
 "    Type" = "VALUE"
 "    ID" = 32
 
 [Forest."Understory object 2".Seed]
 "    Value" = 22
-"    Standard deviation" = 2
 "    Type" = "INT"
 "    ID" = 33

@@ -106,6 +106,9 @@ file_default_sky = 'default_clear_sky.txt'
 file_sampling_data = 'sampling'
 """Toml formatted file storing wavelengths for resampling."""
 
+file_forest_control = 'forest_control'
+"""Toml formatted file for forest scene control parameters."""
+
 
 # Resampling keys
 

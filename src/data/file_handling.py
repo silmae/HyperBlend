@@ -276,7 +276,7 @@ def reduce(set_name: str) -> None:
                 # print(plot_path)
 
 
-def duplicate_forest_scene_from_template(copy_forest_id=None, custom_forest_id: str = None) -> str:
+def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) -> str:
     """Creates a uniquely named copy of a forest scene and returns its id.
 
     :param copy_forest_id:

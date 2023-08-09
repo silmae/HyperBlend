@@ -34,13 +34,11 @@ if forest_dir not in sys.path:
 
 import forest_constants as FC
 import forest_utils as FU
-import file_names as FN
-import path_handling as PH
+import forest_control
 
 importlib.reload(FC)
 importlib.reload(FU)
-importlib.reload(FN)
-importlib.reload(PH)
+importlib.reload(forest_control)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -78,9 +76,8 @@ if __name__ == '__main__':
     if global_master:
         logging.error(f"Generating global master scene control file.")
     else:
-        logging.error(f"Generating ordinary master scene control file to '{PH.path_directory_forest_scene(scene_id)}'.")
-
+        logging.error(f"Generating ordinary master scene control file.")
 
     scene_dict = FU.get_scene_parameters(as_master=True)
 
-    FU.write_forest_control(forest_id=scene_id, control_dict=scene_dict, global_master=global_master)
+    forest_control.write_forest_control(forest_id=scene_id, control_dict=scene_dict, global_master=global_master)

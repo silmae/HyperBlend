@@ -385,8 +385,8 @@ if __name__ == '__main__':
     insert_trunk_data()
 
     # TODO test scene parameter retrieval
-    scene_dict = FU.get_scene_parameters()
-    FU.write_forest_control(forest_id=scene_id, control_dict=scene_dict)
+    # scene_dict = FU.get_scene_parameters()
+    # FU.write_forest_control(forest_id=scene_id, control_dict=scene_dict)
 
     # FU.print_materials()
 

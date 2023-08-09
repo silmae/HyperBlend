@@ -3,6 +3,7 @@ import logging
 
 import os
 import numpy as np
+import shutil
 
 from src.leaf_model.opt import Optimization
 from src.utils import spectra_utils as SU
@@ -11,9 +12,11 @@ import src.constants as C
 from src.forest import lighting
 from src.forest import soil
 from src import plotter
+from src.blender_scripts import forest_control
 
 
-def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file_name: str = None, copy_forest_id: str = None, custom_forest_id: str = None):
+def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file_name: str = None,
+         copy_forest_id: str = None, custom_forest_id: str = None, conf_type: str = None):
     """
 
     Create a new forest by copying template.
@@ -29,8 +32,6 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
     Normalize with highest sun intensity.
     Save as local sky spectra.
 
-    # TODO Load ground reflectance spectrum.
-
     # TODO Load trunk reflectance spectrum.
 
     :param soil_name:
@@ -42,14 +43,43 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         If given, a forest scene with this id will be copied instead of the default forest template.
     :param custom_forest_id:
         If given, this will be the identifier for the new forest instead of the standard generated id.
+    :param conf_type:
+        How to produce configuration file: string from ['m2m','m2s','s2m'].
+            - m2m (from master to master) makes a pure copy of the scene configuration file from the source scene.
+              This is the default behavior.
+            - m2s (from master to slave) will generate (gaussian) random values based on standard deviations defined in
+              the source master configuration file.
+            - s2m (from slave to master) will create a new master configuration from the source scene configuration
+              with default standard deviation.
+        Note: s2s does not exist as there is no standard deviations present in slave configs.
     :return
         Forest id that is generated if custom_forest_id is not given.
     """
 
     if copy_forest_id is not None:
-        forest_id = FH.duplicate_forest_scene_from_template(copy_forest_id=copy_forest_id, custom_forest_id=custom_forest_id)
+        forest_id = FH.duplicate_forest_scene(copy_forest_id=copy_forest_id, custom_forest_id=custom_forest_id)
     else:
-        forest_id = FH.duplicate_forest_scene_from_template(custom_forest_id=custom_forest_id)
+        forest_id = FH.duplicate_forest_scene(custom_forest_id=custom_forest_id)
+
+    if copy_forest_id is not None:
+        source_path = PH.path_directory_forest_scene(forest_id=copy_forest_id)
+    else:
+        source_path = PH.path_directory_project_root()
+
+    # Config file
+    if conf_type is None or conf_type == 'm2m':
+        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+    elif conf_type == 'm2s':
+        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+        # TODO apply randomness
+        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+    elif conf_type == 's2m':
+        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+        # TODO add default standard deviation
+        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+    else:
+        raise AttributeError(f"Attribute conf_type '{conf_type}' not recognised. Use one of ['m2m','m2s','s2m'].")
 
 
     # forest_id = '0102231033' # for debugging and testing

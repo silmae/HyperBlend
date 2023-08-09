@@ -41,78 +41,6 @@ forest = b_data.collections[FC.key_collection_ground].all_objects.get(FC.key_obj
 forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
 
 
-def write_forest_control(forest_id: str, control_dict: dict, global_master: bool = False):
-    """Writes forest control file.
-
-    :param forest_id:
-        Forest id for which the control file is written to.
-    :param control_dict:
-        Dictionary to be written.
-    :param global_master:
-        If True, global master file is written to project root. Needs to be done if there are
-        changes made to the forest template file. This will be kept safe in the Git repository.
-        Default is False.
-    """
-
-    if global_master:
-        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename='forest_control')
-    else:
-        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
-
-
-
-def read_forest_control(forest_id: str) -> dict:
-    return read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
-
-
-def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
-    """General purpose dictionary saving method.
-
-    :param dictionary:
-        Dictionary to be written as toml.
-    :param directory:
-        Path to the directory where the toml should be written.
-    :param filename:
-        Name of the file to be written. Postfix '.toml' will be added if necessary.
-    """
-
-    if not os.path.exists(os.path.abspath(directory)):
-        raise RuntimeError(f"Cannot write given dictionary to path '{os.path.abspath(directory)}' "
-                           f"because it does not exist.")
-
-    if not filename.endswith('.toml'):
-        filename = filename + '.toml'
-
-    p = PH.join(directory, filename)
-    with open(p, 'w+') as file:
-        toml.dump(dictionary, file, encoder=toml.encoder.TomlNumpyEncoder())
-
-
-def read_toml_as_dict(directory: str, filename: str):
-    """General purpose toml reading method.
-
-    :param directory:
-        Path to the directory where the toml file is.
-    :param filename:
-        Name of the file to be read. Postfix '.toml' will be added if necessary.
-    :return dictionary:
-        Returns read toml file as a dictionary.
-    """
-
-    if not filename.endswith('.toml'):
-        filename = filename + '.toml'
-
-    p = PH.join(directory, filename)
-
-    if not os.path.exists(os.path.abspath(p)):
-        raise RuntimeError(f"Cannot read from file '{os.path.abspath(p)}' "
-                           f"because it does not exist.")
-
-    with open(p, 'r') as file:
-        result = toml.load(file)
-    return result
-
-
 def set_input(node, input_name, value):
     input = node.inputs.get(input_name)
     if input == None:
@@ -132,12 +60,12 @@ def dictify_input_socket(gn, socket, is_master):
 
     socket_dict = {f"{space}Value": socket_value,}
 
-    # Only add standard deviation to master file
-    if is_master:
+    # Only add standard deviation numerical parameters in master file, but ignore seeds.
+    if is_master and 'Seed' not in socket.name:
         if socket_type == "VALUE":
-            socket_dict[f"{space}Standard deviation"] = socket_value / 10
+            socket_dict[f"{space}Standard deviation"] = socket_value * FC.ctrl_default_std_of_value
         if socket_type == "INT":
-            socket_dict[f"{space}Standard deviation"] = int(socket_value / 10)
+            socket_dict[f"{space}Standard deviation"] = int(socket_value * FC.ctrl_default_std_of_value)
 
     socket_dict[f"{space}Type"] = socket_type
     socket_dict[f"{space}ID"] = socket_id_numeric
