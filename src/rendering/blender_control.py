@@ -192,6 +192,49 @@ def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
 
 
+def generate_forest_control(forest_id: str = None, global_master: bool = False):
+    """Generates a forest control file by reading parameters from a Blender file.
+
+    :param forest_id:
+        ID of the forest to create the control file for.
+    :param global_master:
+        If True, the global master control file is updated based on the parameters
+        in forest template file. The result is saved to the project root directory.
+    :raises
+        AttributeError if either:
+            1. global_master == False and scene_id == None, because there is nothing to be done.
+            2. global_master == True and scene_id is not None, because the caller might expect
+            something else to happen than rewriting of the global master control.
+    """
+
+    if not global_master and forest_id is None:
+        raise AttributeError(f"If global_master == False, a scene_id must be provided. Was None.")
+
+    if global_master and forest_id is not None:
+        raise AttributeError(f"Ignoring provided scene_id because global_master == True.")
+
+    if global_master:
+        scene_path = PH.path_forest_template()
+    else:
+        scene_path = PH.path_file_forest_scene(forest_id)
+
+    blender_args = _get_base_blender_args(script_name='bs_configuration.py', scene_path=scene_path)
+
+    scirpt_args = ['--']
+
+    if forest_id is not None and global_master is False:
+        scirpt_args += ['-id', f'{forest_id}']
+
+    if global_master:
+        scirpt_args += ['-g']
+
+    with open(os.devnull, 'wb') as stream:
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        if status.returncode != 0:
+            logging.fatal(f"Failed to generate forest control file.")
+            exit(1)
+
+
 def setup_forest(scene_id, leaf_id_list=None, base_sun_power: float = None):
     """ Setup the forest for rendering.
 

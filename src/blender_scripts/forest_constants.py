@@ -51,6 +51,9 @@ key_ctrl_drone_hsi_fow = "drone_hsi_fow"
 key_ctrl_drone_rgb_fow = "drone_rgb_fow"
 """Drone RGB camera's field of view."""
 
+key_ctrl_sample_count_rbg = "sample_count_rbg"
+key_ctrl_sample_count_hsi = "sample_count_hsi"
+
 key_ctrl_hsi_resolution_x = "hsi_resolution_x"
 key_ctrl_hsi_resolution_y = "hsi_resolution_y"
 key_ctrl_rgb_resolution_x = "rgb_resolution_x"

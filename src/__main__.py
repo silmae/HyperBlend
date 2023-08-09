@@ -48,14 +48,14 @@ def forest_pipe_test():
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
-    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves, custom_forest_id='testi_sand', soil_name="median_humid_sand")
+    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+    forest_id = forest.init(leaves=leaves, custom_forest_id='testi_wet_sand', soil_name="wet_sand")
 
-    forest_id = 'testi_sand'
+    # forest_id = 'testi_sand'
     # control_dict = TH.read_forest_control(forest_id=forest_id)
     # print(control_dict)
 
-    BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
+    # BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
     # scene_dict = read_forest_control(forest_id=forest_id)
     # print("moi")
 
@@ -65,6 +65,9 @@ def forest_pipe_test():
     #
     # CH.construct_envi_cube(forest_id=forest_id)
     # CH.show_cube(forest_id=forest_id)
+
+
+    # BC.generate_forest_control(forest_id=forest_id, global_master=False)
 
 
 if __name__ == '__main__':

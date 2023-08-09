@@ -41,8 +41,24 @@ forest = b_data.collections[FC.key_collection_ground].all_objects.get(FC.key_obj
 forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
 
 
-def write_forest_control(forest_id: str, control_dict: dict):
-    write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
+def write_forest_control(forest_id: str, control_dict: dict, global_master: bool = False):
+    """Writes forest control file.
+
+    :param forest_id:
+        Forest id for which the control file is written to.
+    :param control_dict:
+        Dictionary to be written.
+    :param global_master:
+        If True, global master file is written to project root. Needs to be done if there are
+        changes made to the forest template file. This will be kept safe in the Git repository.
+        Default is False.
+    """
+
+    if global_master:
+        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename='forest_control')
+    else:
+        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
+
 
 
 def read_forest_control(forest_id: str) -> dict:
@@ -172,9 +188,10 @@ def get_scene_parameters(as_master=False) -> dict:
 
     logging.error(f"Reading scene definition from Blender file.")
 
-    scene_dict = {"is_master_control": as_master,
-                  "Notes": "This file controls the setup of the Blender scene file. "}
 
+    scene_dict = {"Note": "This file controls the setup of the Blender scene file. ",
+                  "is_master_control": as_master,
+                  }
     #TODO drones and cameras
     #       - altitude, orientation, resolution, FOV, § sample count
 
@@ -205,6 +222,16 @@ def get_scene_parameters(as_master=False) -> dict:
         FC.key_ctrl_drone_rgb_fow: math.degrees(cameras.get(FC.key_cam_drone_rgb).data.angle),
     }
     scene_dict['Cameras'] = camera_dict
+
+    rendering_dict = {
+        "Note": "Sample count controls how many samples (light rays) are cast through each pixel."
+                "More samples result in smoother image but require more time to render. Try values "
+                "between 16 and 512, for example. The RGB sampling is for preview images so it can "
+                "be higher as not many images are rendered with that sampling.",
+        FC.key_ctrl_sample_count_rbg: b_scene.cycles.samples,
+        FC.key_ctrl_sample_count_hsi: b_scene.cycles.samples,
+    }
+    scene_dict['Rendering'] = rendering_dict
 
     # Blender only has one global resolution setting that is not bound to different cameras.
     # So we take the one there is and set it as resolution for all cameras.
