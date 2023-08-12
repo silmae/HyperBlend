@@ -52,7 +52,7 @@ def set_input(node, input_name, value):
 
 def dictify_input_socket(gn, socket, is_master):
 
-    space = "    "
+    space = ""
     socket_id = socket.identifier
     socket_id_numeric = int(socket_id.split('_')[1])
     socket_value = gn[socket.identifier]
@@ -118,7 +118,7 @@ def get_scene_parameters(as_master=False) -> dict:
 
 
     scene_dict = {"Note": "This file controls the setup of the Blender scene file. ",
-                  "is_master_control": as_master,
+                  FC.key_ctrl_is_master_control: as_master,
                   }
     #TODO drones and cameras
     #       - altitude, orientation, resolution, FOV, § sample count

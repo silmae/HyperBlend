@@ -4,6 +4,8 @@ import logging
 import os
 import numpy as np
 import shutil
+import math
+import copy
 
 from src.leaf_model.opt import Optimization
 from src.utils import spectra_utils as SU
@@ -13,10 +15,11 @@ from src.forest import lighting
 from src.forest import soil
 from src import plotter
 from src.blender_scripts import forest_control
+from src.blender_scripts import forest_constants as FC
 
 
 def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file_name: str = None,
-         copy_forest_id: str = None, custom_forest_id: str = None, conf_type: str = None):
+         copy_forest_id: str = None, custom_forest_id: str = None, conf_type: str = None, rng=None):
     """
 
     Create a new forest by copying template.
@@ -34,6 +37,8 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
 
     # TODO Load trunk reflectance spectrum.
 
+    :param rng:
+        Numpy random number generator for reproducibility.
     :param soil_name:
     :param leaves:
         Leaves should be given as list of tuples [(set_name: str, sample_id: int, leaf_material_name: str), (),...].
@@ -72,7 +77,7 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
     elif conf_type == 'm2s':
         control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
-        # TODO apply randomness
+        control_dict = apply_randomness_to_control(control_dict=control_dict, rng=rng)
         forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
     elif conf_type == 's2m':
         control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
@@ -182,3 +187,76 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
                               reflectances_resampled=soil_refls_resampled, forest_id=forest_id, dont_show=True, save=True)
 
     return forest_id
+
+
+def apply_randomness_to_control(control_dict: dict, rng):
+    """Rewrites given master control dictionary into a slave control dictionary.
+
+    New values are drawn from Gaussian distribution based on standard deviations present in
+    the control. New random seeds (for the Blender file) are drawn from uniform distribution.
+
+    :param control_dict:
+        Master control dictionary.
+    :param rng:
+        Numpy random generator object.
+    :return:
+        New slave control dictionary.
+
+    :raises
+        RuntimeError if given dict is not master control.
+    """
+
+    new_dict = {}
+
+    for key,value in control_dict.items():
+
+        if key == FC.key_ctrl_is_master_control and value is False:
+            raise RuntimeError(f"Cannot apply randomness from a slave forest control file.")
+        elif key == FC.key_ctrl_is_master_control and value is True:
+            # Change the control file type from master to slave.
+            new_value = False
+        elif isinstance(value, dict):
+            if key == 'Seed':
+                new_value = rng.integers(1000)
+            else:
+                # Recursion for sub-dictionaries.
+                new_value = apply_randomness_to_control(control_dict=value, rng=rng)
+        elif key == 'Standard deviation':
+            # If one of the keys is 'Standard deviation', we are inside a sub-dictionary that is
+            #   essentially a single value that we must randomize.
+            return _gaussian(control_dict, rng=rng)
+        else:
+            new_value = value
+
+        new_dict[key] = new_value
+
+    return new_dict
+
+
+def _gaussian(param_dict: dict, rng):
+    """Applies gaussian random value to a value that is represented as a dictionary in forest control file.
+
+    :param param_dict:
+        Dict representation of the value.
+    :param rng:
+        A Numpy random generator object to be used for randomization.
+    :return:
+        A new dict with randomized value based on standard deviation that was
+        present in given dict. The std field is removed from returned dict representation.
+    """
+
+    new_dict = copy.deepcopy(param_dict)
+
+    std = abs(param_dict['Standard deviation'])
+    value = param_dict['Value']
+    type = param_dict['Type']
+
+    if type == "INT":
+        new_val = int(rng.normal(loc=value, scale=std))
+    elif type == "VALUE":  # float
+        new_val = rng.normal(loc=value, scale=std)
+
+    del new_dict['Standard deviation']
+
+    new_dict['Value'] = new_val
+    return new_dict

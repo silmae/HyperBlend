@@ -38,7 +38,7 @@ def read_forest_control(forest_id: str) -> dict:
     return TH.read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
 
 
-def forest_pipe_test():
+def forest_pipe_test(rng):
 
     # Generating low resolution random leaves
     set_name = 'low_res_w_dry'
@@ -49,7 +49,11 @@ def forest_pipe_test():
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
     leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    forest_id = forest.init(leaves=leaves)
+    forest_id = forest.init(leaves=leaves, conf_type='m2s', rng=rng)
+
+    """
+    Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    """
 
     # forest_id = 'testi_sand'
     # control_dict = TH.read_forest_control(forest_id=forest_id)
@@ -89,11 +93,13 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+    rng = np.random.default_rng(4321)
+
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
 
     # plotter.plot_resampling(set_name='low_res')
-    forest_pipe_test()
+    forest_pipe_test(rng=rng)
     # forest_id = forest.init()
 
     # forest_id = '1406231352'

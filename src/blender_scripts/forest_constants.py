@@ -42,6 +42,8 @@ max_sun_power_rgb = 400
 
 ########### Scene control file keys ###########
 
+key_ctrl_is_master_control = "is_master_control"
+
 key_ctrl_drone_location_x = "drone_location_x"
 key_ctrl_drone_location_y = "drone_location_y"
 key_ctrl_drone_altitude = "drone_altitude"
