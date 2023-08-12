@@ -49,7 +49,7 @@ def forest_pipe_test(rng):
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
     leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    forest_id = forest.init(leaves=leaves, conf_type='m2s', rng=rng)
+    forest_id = forest.init(leaves=leaves, conf_type='s2m', rng=rng, copy_forest_id='1208231030')
 
     """
     Running forest.init only copies files. Running setup makes the Blender scene renderable.
