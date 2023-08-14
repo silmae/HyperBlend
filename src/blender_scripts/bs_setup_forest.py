@@ -33,6 +33,7 @@ if forest_dir not in sys.path:
     sys.path.append(forest_dir)
 
 import forest_constants as FC
+import forest_control as control
 import forest_utils as FU
 import file_names as FN
 import path_handling as PH
@@ -41,6 +42,7 @@ importlib.reload(FC)
 importlib.reload(FU)
 importlib.reload(FN)
 importlib.reload(PH)
+importlib.reload(control)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -148,7 +150,7 @@ def set_leaf_rgb(leaf_material_name: str):
 
     # logging.error(f"Setting rgb color for '{leaf_material_name}'")
 
-    p = PH.path_file_forest_rgb_csv(forest_id=scene_id)
+    p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(f"Leaf RGB color file '{p}' not found. Have you removed it? Try rerunning forest initialization.")
 
@@ -169,7 +171,7 @@ def read_leaf_material_csv(file_name: str):
 
     file_name = FN.filename_leaf_material_csv(file_name.rstrip('.csv'))
 
-    p = PH.join(PH.path_directory_forest_scene(scene_id), file_name)
+    p = PH.join(PH.path_directory_forest_scene(forest_id), file_name)
 
     if not os.path.exists(p):
         raise FileNotFoundError(f"Leaf csv file '{p}' not found. Check your file names given to setup script.")
@@ -288,7 +290,7 @@ def read_csv(path):
 def insert_sun_data():
     logging.error(f"Setting sun data.")
 
-    p = PH.path_file_forest_sun_csv(forest_id=scene_id)
+    p = PH.path_file_forest_sun_csv(forest_id=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(f"Sun csv file '{p}' not found. Try rerunning forest initialization.")
 
@@ -305,7 +307,7 @@ def insert_sun_data():
 def insert_soil_data():
     logging.error(f"Inserting spectral soil reflectance to Blender material keyframes.")
 
-    p = PH.path_file_forest_soil_csv(forest_id=scene_id)
+    p = PH.path_file_forest_soil_csv(forest_id=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(f"Soil csv file '{p}' not found. Try rerunning forest initialization.")
 
@@ -373,46 +375,22 @@ if __name__ == '__main__':
 
     args = parser.parse_args(argv)
 
-    scene_id = vars(args)[key_scene_id[1]]
+    forest_id = vars(args)[key_scene_id[1]]
     base_sun_power = vars(args)[key_sun_power[1]]
     leaf_material_names = vars(args)[key_leaf_ids[1]]
 
-    logging.error(f"Hello, I am forest setup script in '{PH.path_directory_forest_scene(scene_id)}'")
+    logging.error(f"Hello, I am forest setup script in '{PH.path_directory_forest_scene(forest_id)}'")
 
     insert_leaf_data(leaf_materials=leaf_material_names)
     insert_sun_data()
     insert_soil_data()
     insert_trunk_data()
 
-    # TODO test scene parameter retrieval
-    # scene_dict = FU.get_scene_parameters()
-    # FU.write_forest_control(forest_id=scene_id, control_dict=scene_dict)
+    FU.apply_forest_control(forest_id=forest_id)
 
     # FU.print_materials()
 
-
-    # try:
-    #     bandwidth, band_list = get_leaf_bandwith_and_bandcount() # TODO resampling
-    #
-    #     logging.error(f"Automatically detected bandwidth {bandwidth} nm and band count {len(band_list)}.")
-    #     set_animation_frames(len(band_list))
-    #
-    #     wls, irradiances = sun.load_light(file_name=sun_filename)  # TODO load Blender-ready sun csv
-    #     logging.error(f"Spectral range from {wls[0]:.1f} nm to {wls[-1]:.1f} nm")
-    #
-    #     # "Exposure": Scale values with magical constant to avoid overexposure. Tested with 10% white reflectance panel.
-    #     max_irr = np.max(irradiances)
-    #     factor = 35 / max_irr
-    #     irradiances = irradiances * factor
-    #
-    #     set_sun_power_for_all(band_list, irradiances)
-    # except RuntimeWarning as e:
-    #     logging.error(f"Could not automatically detect bandwidth and band count from leaf data.")
-    #     logging.error(e)
-    #
-    # bpy.data.scenes["Forest"].cycles.use_denoising = False
-
-    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(scene_id))
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(forest_id))
 
     # TODO set Cycles
     # TODO set rendering parameters (image size, sample count...)

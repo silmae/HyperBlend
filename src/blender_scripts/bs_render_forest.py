@@ -103,8 +103,8 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
     """
 
     # Always render with real objects
-    FU.set_forest_parameter('Simplified trees', False)
-    FU.set_forest_parameter('Simplified understory', False)
+    FU.set_forest_parameter(False, 'Simplified trees')
+    FU.set_forest_parameter(False, 'Simplified understory')
 
     # just in case we have multiple scenes at some point loop them over
     for scene in b_data.scenes:
@@ -179,7 +179,7 @@ def set_render_parameters(render_mode: str='spectral', camera: str='Drone RGB', 
         # Keep render data around for faster re-renders and animation renders, at the cost of increased memory usage
 
         scene.render.engine = 'CYCLES' # do not use 'BLENDER_EEVEE'  # OK
-        scene.cycles.samples = 16
+        scene.cycles.samples = 16 # FIXME sampling from control file
 
         # Set the device_type
         b_context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA" # or "OPENCL"
@@ -362,7 +362,6 @@ def render_sleeper_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Sleeper RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Sleeper RGB')
-    FU.set_forest_parameter('Use real object', True)
     image_name = f'sleeper_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
@@ -374,7 +373,6 @@ def render_walker_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Walker RGB', res_x=1028, res_y=512, res_percent=100)
     set_visibility(mode='Walker RGB')
-    FU.set_forest_parameter('Use real object', True)
     image_name = f'walker_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
@@ -408,7 +406,6 @@ def render_map_rgb():
 
     set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=512, res_y=512, res_percent=100)
     set_visibility(mode='Drone RGB')
-    FU.set_forest_parameter('Use real object', False)
     image_name = f'map_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
@@ -427,7 +424,6 @@ def render_abundances():
 
     set_render_parameters(render_mode='abundances', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
     set_visibility(mode='Drone HSI')
-    FU.set_forest_parameter('Use real object', True)
     image_name = f'abundance_rgb_preview.png'
     image_path = PH.join(PH.path_directory_forest_rend_visibility_maps(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")

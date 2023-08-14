@@ -22,10 +22,13 @@ if script_dir not in sys.path:
 
 import forest_constants as FC
 from src.data import path_handling as PH
+import forest_control as control
+
 import importlib
 
 importlib.reload(FC)
 importlib.reload(PH)
+importlib.reload(control)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -39,15 +42,6 @@ ground = b_data.collections[FC.key_collection_ground].all_objects
 
 forest = b_data.collections[FC.key_collection_ground].all_objects.get(FC.key_obj_ground)
 forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
-
-
-def set_input(node, input_name, value):
-    input = node.inputs.get(input_name)
-    if input == None:
-        raise AttributeError(f"Parameter called '{input_name}' seems not to exist. Check the name.")
-    old_val = input.default_value
-    input.default_value = value
-    print(f"{node.name}: parameter {input.name} value changed from {old_val} to {value}.")
 
 
 def dictify_input_socket(gn, socket, is_master):
@@ -105,23 +99,22 @@ def get_tree_as_dict(tree_object, is_master=False):
 
 
 def get_scene_parameters(as_master=False) -> dict:
-    """
-    TODO clean this up!!
+    """Fetches scene parameters from a Blender file and returns them
+        as a dict that can be saved as a forest control file.
 
-     get forest parameters
-          - get active trees and understory parameters
-              - get active leaves
-     get world parameters
+    :param as_master:
+        If True, returned dict will be treated as a master control meaning that there
+        will be default standard deviation added to some parameters that are to be
+        randomized.
+    :return:
+        Forest control dict.
     """
 
     logging.error(f"Reading scene definition from Blender file.")
 
-
     scene_dict = {"Note": "This file controls the setup of the Blender scene file. ",
                   FC.key_ctrl_is_master_control: as_master,
                   }
-    #TODO drones and cameras
-    #       - altitude, orientation, resolution, FOV, § sample count
 
     sun = lights[FC.key_obj_sun]
     sun_dict = {
@@ -210,7 +203,94 @@ def get_scene_parameters(as_master=False) -> dict:
 
     return scene_dict
 
-def set_forest_parameter(parameter_name, value):
+
+def apply_forest_control(forest_id):
+
+    control_dict = control.read_forest_control(forest_id=forest_id)
+
+    for key, dict_item in control_dict.items():
+
+        if key == "Sun":
+            print("Sun")
+            sun_dict = control_dict["Sun"]
+            sun = lights[FC.key_obj_sun]
+            sun.rotation_euler[0] = math.radians(sun_dict[FC.key_ctrl_sun_angle_zenith_deg])
+            sun.rotation_euler[2] = math.radians(sun_dict[FC.key_ctrl_sun_angle_azimuth_deg])
+            # TODO set sun power spectral
+            # TODO set sun power RGB
+            # TODO rendering command may change this
+        elif key == "Drone":
+            print("Drone params")
+            drone_dict = control_dict["Drone"]
+            bpy.data.objects[FC.key_drone].location[0] = drone_dict[FC.key_ctrl_drone_location_x]
+            bpy.data.objects[FC.key_drone].location[1] = drone_dict[FC.key_ctrl_drone_location_y]
+            bpy.data.objects[FC.key_drone].location[2] = drone_dict[FC.key_ctrl_drone_altitude]
+        elif key == "Cameras":
+            print("Camera params")
+            cameras_dict = control_dict["Cameras"]
+            cameras.get(FC.key_cam_drone_hsi).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_hsi_fow])
+            cameras.get(FC.key_cam_drone_rgb).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_rgb_fow])
+        elif key == "Rendering":
+            print("Rendering params")
+            rendeering_dict = control_dict["Rendering"]
+            b_scene.cycles.samples = rendeering_dict[FC.key_ctrl_sample_count_hsi]
+            # TODO rendering command must change this according to if rendering HSI or RGB
+        elif key == "Images":
+            print("Images params")
+            images_dict = control_dict["Images"]
+            b_scene.render.resolution_x = images_dict[FC.key_ctrl_hsi_resolution_x]
+            b_scene.render.resolution_y = images_dict[FC.key_ctrl_hsi_resolution_y]
+            # TODO rendering command must change this according to which camera is being rendered
+        elif key == "Forest":
+            print("Forest params")
+
+            forest_dict = control_dict[key]
+            for forest_key, forest_dict_item in forest_dict.items():
+
+                # Normal forest parameters
+                if isinstance(forest_dict_item, dict) and 'Type' in forest_dict_item:
+
+                    forst_item_type = forest_dict_item['Type']
+
+                    if forst_item_type == 'VALUE':
+                        set_forest_parameter(value=float(forest_dict_item['Value']), parameter_id=forest_dict_item['ID'])
+                    elif forst_item_type == 'INT':
+                        set_forest_parameter(value=int(forest_dict_item['Value']), parameter_id=forest_dict_item['ID'])
+                    else:
+                        logging.info(f"Non-randomizable parameter '{forest_key}' : {forest_dict_item}")
+
+                # Tree sub-dictionaries
+                elif forest_key == 'Tree 1' or forest_key == 'Tree 2' or forest_key == 'Tree 3' \
+                        or forest_key == 'Understory object 1' or forest_key == 'Understory object 2':
+
+                    tree_dict = forest_dict[forest_key]
+
+                    for tree_key, tree_dict_item in tree_dict.items():
+
+                        tree_name = tree_dict['Name']
+
+                        if isinstance(tree_dict_item, dict) and 'Type' in tree_dict_item:
+
+                            tree_item_type = tree_dict_item['Type']
+
+                            if tree_item_type == 'VALUE':
+                                set_tree_parameter(object_name=tree_name, parameter_name=tree_key, value=float(tree_dict_item['Value']))
+                            elif tree_item_type == 'INT':
+                                set_tree_parameter(object_name=tree_name, parameter_name=tree_key, value=int(tree_dict_item['Value']))
+
+                        elif tree_key == 'Seed':
+                            print(f"SEED {tree_dict_item}")
+                        elif tree_key == 'Name':
+                            print(f"Tree name '{tree_dict_item}'")
+                        else:
+                            logging.warning(f"Unhandled tree parameter '{tree_key}' : {tree_dict_item}")
+                else:
+                    logging.warning(f"Unhandled forest parameter '{forest_key}' : {forest_dict_item}")
+        else:
+            logging.warning(f"Unhandled control dictionary key '{key}' : {dict_item}.")
+
+
+def set_forest_parameter(value, parameter_name: str = None, parameter_id: int = None):
     """
     Input Input_7 is named Seed
     Input Input_8 is named Size X [m]
@@ -239,10 +319,14 @@ def set_forest_parameter(parameter_name, value):
     Input Input_33 is named Understory 2 min separation [m]
     Input Input_36 is named Ground material
 
+    :param parameter_id:
     :param parameter_name:
     :param value:
     :return:
     """
+
+    if parameter_id is None and parameter_name is None:
+        raise AttributeError(f"You must provide either parameter name or parameter id. Both were None.")
 
     mod = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
 
@@ -252,7 +336,11 @@ def set_forest_parameter(parameter_name, value):
         # print(f"Input {input_socket.identifier} is named {input_socket.name}")
         # print(f"Input socket name: '{input_socket.name}', parameter_name: '{parameter_name}'")
 
-        if input_socket.name == parameter_name:
+        if parameter_name is not None and input_socket.name == parameter_name:
+            old_val = mod[input_socket.identifier]
+            mod[input_socket.identifier] = value
+            logging.error(f"Forest parameter {input_socket.name} value changed from {old_val} to {value}.")
+        elif parameter_id is not None and f"Input_{parameter_id}" == input_socket.identifier:
             old_val = mod[input_socket.identifier]
             mod[input_socket.identifier] = value
             logging.error(f"Forest parameter {input_socket.name} value changed from {old_val} to {value}.")
@@ -290,110 +378,30 @@ def get_visibility_mapping_material_names():
     return res
 
 
-def random_ground(rand_state):
-    """Set ground parameters to random values to create unique scenes.
-
-    Parameter ranges are currently hard-coded.
-
-    TODO allow changing parameter ranges when the script is called.
+def set_tree_parameter(object_name, parameter_name, value):
     """
 
-    random.setstate(rand_state)
-
-    hill_scale = random.uniform(5,15)
-    set_forest_parameter(parameter_name='Hill height', value=hill_scale*0.2)
-    set_forest_parameter(parameter_name='Hill scale', value=hill_scale)
-    set_forest_parameter(parameter_name='Seed', value=random.randint(0,1000000))
-
-    return random.getstate()
-
-
-def random_tree(tree_number, rand_state):
-    """Set tree parameters to random values to create unique scenes.
-
-    Parameter ranges are currently hard-coded.
-
-    TODO allow changing parameter ranges when the script is called.
-    """
-
-    random.setstate(rand_state)
-
-    tree_length_rand = random.uniform(5, 15)
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Tree length', value=tree_length_rand)
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Main branch length', value=tree_length_rand/5)
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Secondary branch length', value=tree_length_rand/25)
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Twig length', value=random.uniform(0.2, 0.4))
-
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Branches per m', value=random.randint(10, 20))
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Secondary branches per m', value=random.randint(5, 10))
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Twigs per m', value=random.randint(15, 30))
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Leaves per m', value=random.randint(10, 20))
-
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Branch inclination deg', value=random.randint(0, 180))
-
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Clear start trunk percent', value=random.randint(0, 40))
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Clear start Main branch percent', value=random.randint(0, 40))
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Clear start Secondary branch percent', value=random.randint(0, 40))
-
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Trunk pruning', value=random.uniform(0, 4))
-
-    # TODO thicknesses should have meaningful units, e.g., cm
-
-    trunk_thickness_rand = random.uniform(tree_length_rand-2, tree_length_rand+2)
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Trunk thickness', value=trunk_thickness_rand)
-    # set_tree_parameter(tree_nr=1, parameter_name='Main branch thickness', value=random.uniform(trunk_thickness_rand, tree_length_rand+2))
-    # set_tree_parameter(tree_nr=1, parameter_name='Secondary branch thickness', value=random.uniform(tree_length_rand-2, tree_length_rand+2))
-
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Leaf  side length cm', value=random.uniform(2, 8))
-
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Trunk material', value=b_data.materials[f'Trunk material {tree_number}'])
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Branch material', value=b_data.materials[f'Trunk material {tree_number}'])
-    set_tree_parameter(tree_nr=tree_number, parameter_name='Leaf material', value=b_data.materials[f'Leaf material {tree_number}'])
-
-    return random.getstate()
-
-
-def set_tree_parameter(tree_nr, parameter_name, value):
-    """
-
-    Available parameters:
-        Tree length (VALUE)
-        Main branch length (VALUE)
-        Secondary branch length (VALUE)
-        Twig length (VALUE)
-        Branches per m (INT)
-        Secondary branches per m (INT)
-        Twigs per m (INT)
-        Leaves per m (INT)
-        Branch inclination deg (INT)
-        Trunk pruning (VALUE)
-        Clear start trunk percent (INT)
-        Clear start Main branch percent (INT)
-        Clear start Secondary branch percent (INT)
-        Trunk thickness (VALUE)
-        Main branch thickness (VALUE)
-        Secondary branch thickness (VALUE)
-        Branch base thickness (VALUE)
-        Main branch curvature (VALUE)
-        Secondary branch opening (VALUE)
-        Secondary branch curvature (VALUE)
-        Distortion scale (VALUE)
-        Leaf thickness cm (VALUE)
-        Leaf  side length cm (VALUE)
-        Trunk material (MATERIAL)
-        Branch material (MATERIAL)
-        Leaf material (MATERIAL)
-
-    :param tree_nr:
-        Currently 1, 2 or 3.
     :param parameter_name:
     :param value:
     :return:
     """
+    tree = trees[object_name]
+    tree_mod = tree.modifiers["GeometryNodes"]
+    inputs = tree_mod.node_group.inputs
+    socket = inputs.get(parameter_name)
+    socket_id = socket.identifier
+    old_val = tree_mod[socket.identifier]
+    tree_mod[socket.identifier] = value
+    print(f"Socket {socket.name} ({socket_id}) changed from {old_val} to {value}.")
 
-    gn = trees[tree_nr-1].modifiers['GeometryNodes'].node_group
-    tree_geometry_node = gn.nodes.get('Group')
-    set_input(tree_geometry_node, parameter_name, value)
+
+def set_input(node, input_name, value):
+    input = node.inputs.get(input_name)
+    if input == None:
+        raise AttributeError(f"Parameter called '{input_name}' seems not to exist. Check the name.")
+    old_val = input.default_value
+    input.default_value = value
+    logging.error(f"{node.name}: parameter {input.name} value changed from {old_val} to {value}.")
 
 
 def list_forest_parameters():

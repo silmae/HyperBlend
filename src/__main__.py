@@ -18,6 +18,7 @@ import src.leaf_model.nn
 from src.leaf_model import surf as SM
 from src.data import path_handling as PH
 from src.forest import forest
+from src.blender_scripts import forest_control as control
 
 from src.data import toml_handling as TH
 from src.data import cube_handling as CH
@@ -48,18 +49,17 @@ def forest_pipe_test(rng):
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
-    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    forest_id = forest.init(leaves=leaves, conf_type='s2m', rng=rng, copy_forest_id='1208231030')
+    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+    # forest_id = forest.init(leaves=leaves, conf_type='s2m', rng=rng, copy_forest_id='1208231030')
 
     """
     Running forest.init only copies files. Running setup makes the Blender scene renderable.
     """
 
-    # forest_id = 'testi_sand'
-    # control_dict = TH.read_forest_control(forest_id=forest_id)
-    # print(control_dict)
+    forest_id = '1208231030'
+    control_dict = control.read_forest_control(forest_id=forest_id)
 
-    # BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
+    BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
     # scene_dict = read_forest_control(forest_id=forest_id)
     # print("moi")
 
