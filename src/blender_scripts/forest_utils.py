@@ -241,6 +241,7 @@ def apply_forest_control(forest_id):
             b_scene.render.resolution_x = images_dict[FC.key_ctrl_hsi_resolution_x]
             b_scene.render.resolution_y = images_dict[FC.key_ctrl_hsi_resolution_y]
             # TODO rendering command must change this according to which camera is being rendered
+            # Done, but untested
         elif key == "Forest":
             print("Forest params")
 

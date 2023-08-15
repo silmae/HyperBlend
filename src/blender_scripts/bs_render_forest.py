@@ -25,11 +25,13 @@ import forest_constants as FC
 import forest_utils as FU
 import file_names as FN
 import path_handling as PH
+import forest_control as control
+
 importlib.reload(FC)
 importlib.reload(FU)
 importlib.reload(FN)
 importlib.reload(PH)
-
+importlib.reload(control)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -360,7 +362,12 @@ def call_blender_render(write_still=True, animation=False):
 
 def render_sleeper_rgb():
 
-    set_render_parameters(render_mode='rgb', camera='Sleeper RGB', res_x=1028, res_y=512, res_percent=100)
+    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    images_dict = control_dict["Images"]
+    res_x = images_dict[FC.key_ctrl_sleeper_resolution_x]
+    res_y = images_dict[FC.key_ctrl_sleeper_resolution_y]
+
+    set_render_parameters(render_mode='rgb', camera='Sleeper RGB', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Sleeper RGB')
     image_name = f'sleeper_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
@@ -371,7 +378,12 @@ def render_sleeper_rgb():
 
 def render_walker_rgb():
 
-    set_render_parameters(render_mode='rgb', camera='Walker RGB', res_x=1028, res_y=512, res_percent=100)
+    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    images_dict = control_dict["Images"]
+    res_x = images_dict[FC.key_ctrl_walker_resolution_x]
+    res_y = images_dict[FC.key_ctrl_walker_resolution_y]
+
+    set_render_parameters(render_mode='rgb', camera='Walker RGB', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Walker RGB')
     image_name = f'walker_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
@@ -382,7 +394,12 @@ def render_walker_rgb():
 
 def render_drone_rgb():
 
-    set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=1028, res_y=512, res_percent=100)
+    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    images_dict = control_dict["Images"]
+    res_x = images_dict[FC.key_ctrl_rgb_resolution_x]
+    res_y = images_dict[FC.key_ctrl_rgb_resolution_y]
+
+    set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Drone RGB')
     image_name = f'drone_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
@@ -393,7 +410,12 @@ def render_drone_rgb():
 
 def render_tree_rgb():
 
-    set_render_parameters(render_mode='rgb', camera='Tree RGB', res_x=1028, res_y=512, res_percent=100)
+    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    images_dict = control_dict["Images"]
+    res_x = images_dict[FC.key_ctrl_tree_preview_resolution_x]
+    res_y = images_dict[FC.key_ctrl_tree_preview_resolution_y]
+
+    set_render_parameters(render_mode='rgb', camera='Tree RGB', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Tree RGB')
     image_name = f'tree_rgb.png'
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
@@ -414,7 +436,13 @@ def render_map_rgb():
 
 
 def render_drone_hsi():
-    set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
+
+    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    images_dict = control_dict["Images"]
+    res_x = images_dict[FC.key_ctrl_hsi_resolution_x]
+    res_y = images_dict[FC.key_ctrl_hsi_resolution_y]
+
+    set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Drone HSI')
     b_scene.render.filepath = PH.join(PH.path_directory_forest_rend_spectral(SCENE_ID), "band_####.tiff")
     call_blender_render(write_still=True, animation=True)
