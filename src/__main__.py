@@ -50,21 +50,21 @@ def forest_pipe_test(rng):
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
     # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves, conf_type='s2m', rng=rng, copy_forest_id='1208231030')
+    # forest_id = forest.init(leaves=leaves, conf_type='m2m', rng=rng, custom_forest_id='control_test')
 
     """
     Running forest.init only copies files. Running setup makes the Blender scene renderable.
     """
 
-    forest_id = '1208231030'
-    control_dict = control.read_forest_control(forest_id=forest_id)
+    forest_id = 'control_test'
+    # control_dict = control.read_forest_control(forest_id=forest_id)
 
-    BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
+    # BC.setup_forest(scene_id=forest_id, base_sun_power=20, leaf_id_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])#, 'Leaf material 4'])
     # scene_dict = read_forest_control(forest_id=forest_id)
     # print("moi")
 
     # BC.render_forest(scene_id=forest_id, render_mode='preview')
-    # BC.render_forest(scene_id=forest_id, render_mode='abundances')
+    BC.render_forest(scene_id=forest_id, render_mode='abundances')
     # BC.render_forest(scene_id=forest_id, render_mode='spectral')
     #
     # CH.construct_envi_cube(forest_id=forest_id)

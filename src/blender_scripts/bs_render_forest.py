@@ -450,7 +450,12 @@ def render_drone_hsi():
 
 def render_abundances():
 
-    set_render_parameters(render_mode='abundances', camera='Drone HSI', res_x=512, res_y=512, res_percent=100)
+    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    images_dict = control_dict["Images"]
+    res_x = images_dict[FC.key_ctrl_hsi_resolution_x]
+    res_y = images_dict[FC.key_ctrl_hsi_resolution_y]
+
+    set_render_parameters(render_mode='abundances', camera='Drone HSI', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Drone HSI')
     image_name = f'abundance_rgb_preview.png'
     image_path = PH.join(PH.path_directory_forest_rend_visibility_maps(SCENE_ID), image_name)
