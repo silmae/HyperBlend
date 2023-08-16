@@ -7,8 +7,7 @@ import logging
 import csv
 
 from src.data import path_handling as PH
-from src.data import file_handling as FH
-from src.utils import data_utils as DU, spectra_utils as SU
+from src.utils import spectra_utils as SU
 from src import constants as C
 
 
@@ -39,7 +38,6 @@ def construct_envi_cube(forest_id: str):
         file_path = PH.join(p, thing)
         image_as_array = plt.imread(file_path)
         frame_list.append(image_as_array)
-        print(thing)
 
     raw_cube = np.array(frame_list)
 

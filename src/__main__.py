@@ -68,7 +68,7 @@ def forest_pipe_test(rng):
     CH.show_cube(forest_id=forest_id)
 
     # BC.generate_forest_control(global_master=True)
-    0
+
 
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
