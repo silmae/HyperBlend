@@ -119,8 +119,7 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
 
 def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
-    """Render an image with given values. The image is saved on disk with given wavelength in it's name.
-
+    """Renders a single image of the leaf simulation with given leaf material parameters.
 
     :param rend_base_path:
         Base path for Blender renders (set_name/working_temp/).
@@ -143,8 +142,6 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         of each wavelength optimization.
     :param dry_run:
         If True, Blender will not render anything but only print out some debugging stuff.
-    :return:
-        None
     """
 
     blender_args = _get_base_blender_args(script_name=C.blender_script_name, scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
@@ -235,35 +232,26 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
             exit(1)
 
 
-def setup_forest(scene_id, leaf_id_list=None, base_sun_power: float = None):
+def setup_forest(forest_id: str, leaf_name_list=None):
     """ Setup the forest for rendering.
 
-    Currently does not do much.
-
-    TODO setup ground
-    TODO setup trees
-    TODO setup materials for spectral and rgb rendering
-    TODO setup sun
-    TODO setup sky
-
-    :param scene_id:
-    :param leaf_id_list:
-    :return:
+    :param forest_id:
+        ID of the forest to be set up.
+    :param leaf_name_list:
+        Names of the leaf materials (must mach the ones used in the Blender file) as a
+        list of strings like: ['Leaf material 1', 'Leaf material 2',...].
     """
 
     logging.info(f"Calling forest scene setup")
 
     blender_args = _get_base_blender_args(script_name='bs_setup_forest.py',
-                                          scene_path=PH.path_file_forest_scene(scene_id))
+                                          scene_path=PH.path_file_forest_scene(forest_id))
 
     scirpt_args = ['--']
-    scirpt_args += ['-id', f'{scene_id}']
+    scirpt_args += ['-id', f'{forest_id}']
 
-    if leaf_id_list is not None and len(leaf_id_list) > 0:
-        scirpt_args += ['-l_ids', f'{list(leaf_id_list)}']  # available leaf indexes
-
-    if base_sun_power is not None:
-        scirpt_args += ['-sp', str(base_sun_power)]
+    if leaf_name_list is not None and len(leaf_name_list) > 0:
+        scirpt_args += ['-l_ids', f'{list(leaf_name_list)}']  # available leaf indexes
 
     with open(os.devnull, 'wb') as stream:
         status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
@@ -272,46 +260,28 @@ def setup_forest(scene_id, leaf_id_list=None, base_sun_power: float = None):
             exit(1)
 
 
-def render_forest(scene_id: str, render_mode: str):
-    """Render forest preview images.
+def render_forest(forest_id: str, render_mode: str):
+    """Render different presentations of the forest scene.
 
-    TODO consider folder structure.. maybe rend/spectral/ for HSI and previews directly to rend/
-    TODO set materials to RGB mode
-    TODO render map
-    TODO render Drone RGB
-    TODO render Walker RGB
-    TODO render Sleeper RGB
-
-    TODO consider just setting parameters for animation rendering and render from the blend file.
-    TODO set materials to spectral
-    TODO set camera to Drone HSI and render
-
-    :param scene_id:
+    :param forest_id:
+        ID of the forest to be rendered.
     :param render_mode:
-    :return:
+        One of the following 'preview', 'spectral' or 'visibility'.
+        'preview' renders only some preview images that can give an idea of the
+        scene geometry without having to open the Blender file itself.
+        'spectral' renders all spectral channels as a single image.
+        'visibility' renders visibility maps that show which object is visible
+        in each pixel.
     """
 
     logging.info(f"render_forest() called, I can possibly do something.")
 
-    scene_path = PH.path_file_forest_scene(scene_id)
+    scene_path = PH.path_file_forest_scene(forest_id)
     blender_args = _get_base_blender_args(script_name='bs_render_forest', scene_path=scene_path)
 
     scirpt_args = ['--']
-    scirpt_args += ['-id', f'{scene_id}']
+    scirpt_args += ['-id', f'{forest_id}']
     scirpt_args += ['-rm', render_mode]
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
-
-if __name__ == '__main__':
-    """
-    This is testing ground for Blender commands.
-    """
-    logging.basicConfig(level='INFO')
-    from src.data import file_handling as FH
-    # scene_id = FH.duplicate_forest_scene_from_template()
-    scene_id = '0102231033'
-    print("Hello, you have reached HyperBlend's Blender control unit!")
-    # test_scene_id = "0123456789"
-    # setup_forest(scene_id)
-    render_forest(scene_id, render_mode='abundances')

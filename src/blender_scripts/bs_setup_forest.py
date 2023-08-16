@@ -5,11 +5,8 @@ import os
 import sys  # to get command line args
 import argparse  # to parse options for us and print a nice help message
 import logging
-import math
 import importlib
 import csv
-import random
-import numpy as np
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
@@ -49,72 +46,6 @@ b_data = bpy.data
 b_ops = bpy.ops
 b_scene = b_data.scenes[FC.key_scene_name]
 
-# cameras = b_data.collections['Cameras'].all_objects
-# lights = b_data.collections['Lighting'].all_objects
-# trees = b_data.collections['Trees'].all_objects
-# markers = b_data.collections['Marker objects'].all_objects
-# forest = b_data.collections['Ground'].all_objects.get('Ground')
-
-# forest_geometry_node = forest.modifiers['GeometryNodes'].node_group.nodes.get('Group.004')
-
-
-def random_sun(rand_state):
-    """Set sun parameters to random values to create unique scenes.
-
-    Parameter ranges are currently hard-coded.
-
-    TODO allow changing parameter ranges when the script is called.
-    """
-
-    random.setstate(rand_state)
-
-    set_sun_angle(random.uniform(0,40), random.uniform(0,360))
-
-    return random.getstate()
-
-
-def set_sun_angle(zenith_angle_deg=0, azimuth=90):
-    """Set the sun elevation and azimuth angles in degrees.
-
-    When sun azimuth angle is 0 degrees, the sun points to positive y-axis direction in Blender
-    that is thought as north in HyperBlend. 90 degrees would be pointing west, 180 to south
-    and 270 to east, respectively. Zenith angle is the Sun's angle from zenith.
-
-
-    :param zenith_angle_deg:
-        Elevation angle between [0,90] degrees. Value 0 is sun zenith.
-    :param azimuth:
-        Azimuth angle between [0,360] degrees. With default value (90), the sun is shining directly from right.
-    :return:
-    """
-    if zenith_angle_deg < 0:
-        zenith_angle_deg = 0
-    if zenith_angle_deg > 90:
-        zenith_angle_deg = 90
-    if azimuth < 0:
-        azimuth = 0
-    if azimuth > 360:
-        azimuth = 360
-
-    bpy.data.lights["Sun"].rotation_euler = (math.radians(zenith_angle_deg), 0, math.radians(azimuth))
-
-
-def set_sun_power_for_all(bands, irradiances):
-    for i,band in enumerate(bands):
-        set_sun_power(irradiances[i], band)
-
-
-def set_sun_power(value, frame):
-    """Set sun power in W/m2/Xnm, where X is the bandwith in nanometers. """
-
-    # sun = lights.get(FC.key_obj_sun)
-    bpy.data.lights["Sun"].energy = value
-    dp = f'energy'
-    bpy.data.lights["Sun"].keyframe_insert(dp, frame=frame)
-    # dp = f'nodes["Emission"].inputs["Strength"].default_value'
-    # sun.node_tree.nodes["Emission"].inputs['Strength'].default_value = value
-    # sun.node_tree.keyframe_insert(dp, frame=frame)
-
 
 def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, mf_list):
     """Set leaf material for all frames in band list.
@@ -122,11 +53,15 @@ def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, 
     :param leaf_material_name:
         Must be a name that can be found in Blender forest scene file materials.
     :param band_list:
+        List of spectral bands (ints) that correspond to animation frames in Blender.
     :param ad_list:
+        List of absorbing particle densities (floats).
     :param sd_list:
+        List of scattering particle densities (floats).
     :param ai_list:
+        List of scatering anisotropies (floats).
     :param mf_list:
-    :return:
+        List of mixing factors (floats).
     """
 
     def set_leaf_material_parameter_per_frame(material_name, parameter, value, frame):
@@ -142,10 +77,10 @@ def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, 
         set_leaf_material_parameter_per_frame(leaf_material_name, 'Mix factor', mf_list[i], band)
         set_leaf_material_parameter_per_frame(leaf_material_name, 'Density scale', DENSITY, band)
 
-    set_leaf_rgb(leaf_material_name=leaf_material_name)
+    _set_leaf_rgb(leaf_material_name=leaf_material_name)
 
 
-def set_leaf_rgb(leaf_material_name: str):
+def _set_leaf_rgb(leaf_material_name: str):
     """Read leaf RGB values from a csv and set them to blend file."""
 
     # logging.error(f"Setting rgb color for '{leaf_material_name}'")
@@ -203,11 +138,11 @@ def read_leaf_material_csv(file_name: str):
 def set_animation_frames(band_count):
     """Sets start and end frames to blend file.
 
-    Each wavelength band need one frame.
+    Each wavelength band needs one frame.
     """
 
     for scene in b_data.scenes:
-        scene.render.fps = 5 # does not really matter
+        scene.render.fps = 5 # does not really matter as we don't do a real animation
         scene.frame_start = 1
         scene.frame_end = band_count # can be safely set to zero as Blender will fix it into one
 
@@ -240,71 +175,37 @@ def set_animation_frames(band_count):
 #         raise RuntimeError(f"Bands and wavelengths of one or more leaves do not match each other.")
 
 
-def insert_leaf_data(leaf_materials):
+def insert_leaf_data(leaf_material_names: str):
+    """Reads spectral leaf material csv file and sets proper parameters to the Blender file.
 
-    logging.error(f"Setting leaf material parameters for: '{leaf_materials}'")
+    :param leaf_material_names:
+        Names of the leaf materials (must mach the ones used in the Blender file) as a
+        single string that looks like a list of strings like so: "['Leaf material 1', 'Leaf material 2',...]".
+    """
 
-    if leaf_materials is not None:
+    logging.error(f"Setting leaf material parameters for: '{leaf_material_names}'")
 
-        leaf_materials = [id for id in (leaf_materials.lstrip('[').rstrip(']')).split(', ')]
+    lmn = [id for id in (leaf_material_names.lstrip('[').rstrip(']')).split(', ')]
 
-        for i, leaf_csv_name in enumerate(leaf_materials):
+    for i, leaf_csv_name in enumerate(lmn):
 
-            leaf_csv_name = leaf_csv_name.strip('\'')
-            try:
-                band_list, wl_list, ad_list, sd_list, ai_list, mf_list = read_leaf_material_csv(leaf_csv_name)
-            except FileNotFoundError as e:
-                logging.fatal(f"Could not find file '{leaf_csv_name}'. Blend file will not be setup properly.")
-                raise
+        leaf_csv_name = leaf_csv_name.strip('\'')
+        try:
+            band_list, wl_list, ad_list, sd_list, ai_list, mf_list = read_leaf_material_csv(leaf_csv_name)
+        except FileNotFoundError as e:
+            logging.fatal(f"Could not find file '{leaf_csv_name}'. Blend file will not be setup properly.")
+            raise
 
-            # We would only need to do this once, but it's ok if we do it again every round.
-            set_animation_frames(len(band_list))
+        # We would only need to do this once, but it's ok if we do it again every round.
+        set_animation_frames(len(band_list))
 
-            set_leaf_material(leaf_material_name=leaf_csv_name, band_list=band_list, ad_list=ad_list, sd_list=sd_list, ai_list=ai_list, mf_list=mf_list)
-
-
-def read_csv(path):
-
-    bands = []
-    wavelengths = []
-    values = []
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Cannot read csv file from '{path}'. File not found.")
-
-    with open(path) as file:
-        reader = csv.reader(file, delimiter=' ')
-        for row in reader:
-            try:
-                bands.append(int(row[0]))
-                wavelengths.append(float(row[1]))
-                values.append(float(row[2]))
-            except ValueError:
-                # this is ok
-                # print(f"Material headers: {row}")
-                pass
-
-    return bands, wavelengths, values
-
-
-def insert_sun_data():
-    logging.error(f"Setting sun data.")
-
-    p = PH.path_file_forest_sun_csv(forest_id=forest_id)
-    if not os.path.exists(p):
-        raise FileNotFoundError(f"Sun csv file '{p}' not found. Try rerunning forest initialization.")
-
-    bands, _, irradiances = read_csv(p)
-
-    if base_sun_power is None:
-        irradiances = np.array(irradiances) * FC.max_sun_power_spectral
-    else:
-        irradiances = np.array(irradiances) * base_sun_power
-
-    set_sun_power_for_all(bands=bands, irradiances=irradiances)
+        set_leaf_material(leaf_material_name=leaf_csv_name, band_list=band_list, ad_list=ad_list, sd_list=sd_list, ai_list=ai_list, mf_list=mf_list)
 
 
 def insert_soil_data():
+    """Reads soil data csv and inserts its content into the Blender file.
+    """
+
     logging.error(f"Inserting spectral soil reflectance to Blender material keyframes.")
 
     p = PH.path_file_forest_soil_csv(forest_id=forest_id)
@@ -313,7 +214,7 @@ def insert_soil_data():
 
     # TODO Should we raise an error or just go without setting soil material??
 
-    bands, _, reflectances = read_csv(p)
+    bands, _, reflectances = FU.read_csv(p)
 
     for i,band in enumerate(bands):
 
@@ -351,6 +252,7 @@ if __name__ == '__main__':
     """Maximum sun power set to 4 W/m2 so that white does not burn. Can be increased 
     if there is no pure white in the scene."""
 
+
     # Store arguments passed from blender_control.py
     argv = sys.argv
 
@@ -361,43 +263,30 @@ if __name__ == '__main__':
 
     # Argument names
     key_scene_id = ['-id', '--scene_id']
-    key_sun_power = ['-sp', '--sun_power']
     key_leaf_ids = ['-l_ids', '--leaf_ids']
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
-                        required=True, help="Name of the forest scene.")
-    parser.add_argument(key_sun_power[0], key_sun_power[1], dest=key_sun_power[1], action="store",
-                        required=False, type=float, help="Overwrites the default base sun power in constants file.")
+    parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store", required=True, help="Name of the forest scene.")
     parser.add_argument(key_leaf_ids[0], key_leaf_ids[1], dest=key_leaf_ids[1], action="store",
-                        required=False, type=str, help="List of available leaf indexes as a string.")
+                        required=False, type=str, help="List of available leaf names as a string.")
 
     args = parser.parse_args(argv)
 
     forest_id = vars(args)[key_scene_id[1]]
-    base_sun_power = vars(args)[key_sun_power[1]]
     leaf_material_names = vars(args)[key_leaf_ids[1]]
 
-    logging.error(f"Hello, I am forest setup script in '{PH.path_directory_forest_scene(forest_id)}'")
+    logging.error(f"Running scene setup for '{PH.path_directory_forest_scene(forest_id)}'")
 
-    insert_leaf_data(leaf_materials=leaf_material_names)
-    insert_sun_data()
+    insert_leaf_data(leaf_material_names=leaf_material_names)
     insert_soil_data()
     insert_trunk_data()
 
+    FU.set_sun_power_hsi(forest_id=forest_id)
     FU.apply_forest_control(forest_id=forest_id)
 
     # FU.print_materials()
 
     bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(forest_id))
 
-    # TODO set Cycles
-    # TODO set rendering parameters (image size, sample count...)
-    # TODO set GPU compute
-    # TODO set camera position and rotation
-    # TODO set sun angle
-    # TODO set material parameters
-    # TODO set tree parameters
-    # TODO set color space and screen parameters
     # TODO how to disable using User preferences?
