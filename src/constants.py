@@ -27,7 +27,7 @@ postfix_plot_image_format = '.png'
 postfix_text_data_format = '.toml'
 """Text file format with witch the results are saved."""
 
-blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 3.1/blender.exe'
+blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 3.5/blender.exe'
 """change this to where your Blender is installed."""
 
 blender_executable_path_linux = '/snap/bin/blender'
@@ -98,6 +98,23 @@ file_model_parameters = 'model_parameters'
 """Model parameter file name."""
 
 file_default_sun = 'default_sun.txt'
+"""Default sun spectrum file name that is included in the repository."""
+
+file_default_sky = 'default_clear_sky.txt'
+"""Default sky spectrum file name that is included in the repository."""
+
+file_sampling_data = 'sampling'
+"""Toml formatted file storing wavelengths for resampling."""
+
+file_forest_control = 'forest_control'
+"""Toml formatted file for forest scene control parameters."""
+
+
+# Resampling keys
+
+key_sampling_wl = 'sampling_wl'
+# Dictionary key for resampling data
+
 
 # Wavelength result's dictionary keys
 
@@ -350,3 +367,12 @@ mf_coeffs = 'mf_coeffs' # mixing factor
 # Default starting guess
 starting_guess_set_name = 'linear_starting_guess'
 """Name of the starting guess file."""
+
+
+# Default RGB wavelengths for false color images
+default_R_wl = 630.
+"""Default Red wavelength for false color images."""
+default_G_wl = 532.
+"""Default Green wavelength for false color images."""
+default_B_wl = 465.
+"""Default Blue wavelength for false color images."""

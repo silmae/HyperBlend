@@ -12,24 +12,54 @@ import os
 import datetime
 import shutil
 import csv
+import re # regural expressions
 
 from src import constants as C, plotter
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
+CSV_NEWLINE = ''
+CSV_DELIMITER = ' '
 
-def copy_target(from_set, to_set):
+
+def copy_target(from_set: str, to_set: str):
+    """Copy leaf targets and sampling data as a new measurement set.
+
+    This is mainly useful in debugging and comparing leaf simulation speed of
+    different methods.
+
+    :param from_set:
+        Set name of the measurement set to copy from.
+    :param to_set:
+        Set name of the measurement set to copy to.
+    """
+
+    # Initialize new set with proper directories
     create_first_level_folders(set_name=to_set)
 
+    # Copy all targets and resampled targets if they exist
     sample_ids = list_target_ids(from_set)
     for sample_id in sample_ids:
-        target = TH.read_target(set_name=from_set, sample_id=sample_id)
-        TH.write_target(set_name=to_set, data=target, sample_id=sample_id)
+
+        path_src_target = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=False)
+        path_dst_target = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=False)
+        if os.path.exists(path_src_target):
+            shutil.copy2(path_src_target, path_dst_target)
+
+        path_src_target = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=True)
+        path_dst_target = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=True)
+        if os.path.exists(path_src_target):
+            shutil.copy2(path_src_target, path_dst_target)
+
+    # Copy sampling
+    src_sampling = PH.path_file_sampling(from_set)
+    dst_sampling = PH.path_file_sampling(to_set)
+    shutil.copy2(src_sampling, dst_sampling)
 
 
 def create_first_level_folders(set_name: str):
     """Create first level folders for a set.
 
-    Should be called when a new optimization object is instanced.
+    Should be called when a new leaf measurement set is created.
 
     :param set_name:
         Set name.
@@ -54,8 +84,6 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
         Sample id
     """
 
-    logging.info(f"Creating optimization folder structure to  path {os.path.abspath(PH.path_directory_set(set_name))}")
-
     sample_folder_name = f'{C.folder_sample_prefix}_{sample_id}'
     sample_path = PH.join(PH.path_directory_sample_result(set_name), sample_folder_name)
 
@@ -75,7 +103,7 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
 
 
 def list_target_ids(set_name: str):
-    """Lists available targets by their id.
+    """Lists available leaf measurement targets by their id.
 
     Targets must be named 'target_X.toml' where X is a number that can be cast into int.
 
@@ -87,15 +115,16 @@ def list_target_ids(set_name: str):
 
     ids = []
     for filename in os.listdir(PH.path_directory_target(set_name)):
-        ids.append(FN.parse_sample_id(filename))
+        if re.match(r"target_[0-9]+\.toml", filename):
+            ids.append(FN.parse_sample_id(filename))
     return ids
 
 
-def list_finished_sample_ids(set_name: str) -> str:
-    """Lists samples that have been optimized in given set.
+def list_finished_sample_ids(set_name: str):
+    """Lists leaf measurement samples that have their renderable leaf material parameters solved.
 
     :param set_name:
-        Set name.
+        Name of the leaf measurement set.
     :return:
         List of sample ids (int) that have an existing result in sample results folder.
     """
@@ -246,62 +275,220 @@ def reduce(set_name: str) -> None:
                 os.unlink(plot_path)
                 # print(plot_path)
 
-def duplicate_scene_from_template():
-    """Creates a uniquely named copy of a scene and returns its id."""
+
+def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) -> str:
+    """Creates a uniquely named copy of a forest scene and returns its id.
+
+    :param copy_forest_id:
+        If provided, a forest with this id is copied. If `None`, the default
+        template forest is copied.
+    :param custom_forest_id:
+        If given, this will be the identifier for the new forest instead of the standard generated id.
+    :return
+        Returns custom_forest_id if it was given. Otherwise, an id will be generated for the scene.
+    """
 
     now = datetime.datetime.now()
-    scene_id = f"{now.day:02}{now.month:02}{now.year-2000}{now.hour:02}{now.minute:02}"
-    # Use this for debugging
-    # scene_id = "0123456789"
-
-    # p_src = f"../scene_forest_template.blend"
-    # scene_folder = f"../scenes/scene_{scene_id}"
-    # rend_folder = scene_folder + '/rend'
-    # animation_folder = rend_folder + '/spectral'
-    if os.path.exists(PH.path_forest_template()):
-        if not os.path.exists(PH.path_directory_forest_scene(scene_id)):
-            os.makedirs(PH.path_directory_forest_scene(scene_id))
-        # p_dest = f"../scenes/scene_{scene_id}/scene_forest_{scene_id}.blend"
-        shutil.copy2(PH.path_forest_template(), PH.path_file_forest_scene(scene_id))
-        if not os.path.exists(PH.path_directory_forest_rend(scene_id)):
-            os.makedirs(PH.path_directory_forest_rend(scene_id))
-        if not os.path.exists(PH.path_directory_forest_rend_spectral(scene_id)):
-            os.makedirs(PH.path_directory_forest_rend_spectral(scene_id))
+    if custom_forest_id is not None:
+        dst_forest_id = custom_forest_id
     else:
-        raise RuntimeError(f"Forest template scene not found for duplication.")
+        dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
 
-    return scene_id
+    if copy_forest_id is not None:
+        source_path = PH.path_file_forest_scene(copy_forest_id)
+    else:
+        source_path = PH.path_forest_template()
+
+    if os.path.exists(source_path):
+        if not os.path.exists(PH.path_directory_forest_scene(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_scene(dst_forest_id))
+
+        shutil.copy2(source_path, PH.path_file_forest_scene(dst_forest_id))
+
+        if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
+        if not os.path.exists(PH.path_directory_forest_rend_spectral(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend_spectral(dst_forest_id))
+        if not os.path.exists(PH.path_directory_forest_rend_visibility_maps(dst_forest_id)):
+            os.makedirs(PH.path_directory_forest_rend_visibility_maps(dst_forest_id))
+    else:
+        raise RuntimeError(f"Forest scene not found for duplication from '{source_path}'. "
+                           f"If you tried to duplicate from template forest, check git repository "
+                           f"to restore the template to root directory. Otherwise check that forest "
+                           f"id is correct.")
+    logging.info(f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_forest_scene(dst_forest_id)}'.")
+
+    return dst_forest_id
 
 
-def copy_leaf_material_parameters_from(source_set_name, forest_id, leaf_id):
-    """Reads spectral set result and copies it as a leaf material parameter file
+def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None):
+    """Reads spectral leaf simulation result and copies it as a leaf material parameter file
     to be consumed by forest setup.
 
     Leaf material parameters are written as a csv file to give to specified forest scene.
+    We use csv file instead of toml files because importing external packages, such as toml,
+    into Blender's own Python environment is bit of a hassle. Csv files work just as well and
+    they can be read with tools already included by default.
 
-    :param source_set_name:
-        Source set name that must be found from HyperBlend/optimization directory.
     :param forest_id:
         Forest id to be set the leaf material parameters to.
+    :param source_set_name:
+        Source set name that must be found from HyperBlend/leaf_measurement_sets/ directory.
     :param leaf_id:
-        Leaf index (1,2,3) to set the material parameters to.
+        An id to be assigned to the leaf for later referencing. This will be put into the
+        name of the file written.
+    :param sample_id:
+        Sample id (int) of the leaf measurement set. If `None`, set's average values will be used instead
+        of a specific sample.
     """
 
-    res = TH.read_set_result(source_set_name)
-    wls = res[C.key_set_result_wls]
-    ad = res[C.key_set_result_wl_ad_mean]
-    sd = res[C.key_set_result_wl_sd_mean]
-    ai = res[C.key_set_result_wl_ai_mean]
-    mf = res[C.key_set_result_wl_mf_mean]
+    if sample_id is None:
+        result_dict = TH.read_set_result(source_set_name)
+        wls = result_dict[C.key_set_result_wls]
+        ad = result_dict[C.key_set_result_wl_ad_mean]
+        sd = result_dict[C.key_set_result_wl_sd_mean]
+        ai = result_dict[C.key_set_result_wl_ai_mean]
+        mf = result_dict[C.key_set_result_wl_mf_mean]
 
-    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline='') as csvfile:
+        folder = PH.path_directory_set_result(source_set_name)
+        image_name = FN.filename_set_result_plot()
+        plot_path = PH.join(folder, image_name)
 
-        writer = csv.writer(csvfile, delimiter=' ', )
+    else:
+        result_dict = TH.read_sample_result(set_name=source_set_name,sample_id=sample_id)
+        wls = result_dict[C.key_sample_result_wls]
+        ad = result_dict[C.key_sample_result_ad]
+        sd = result_dict[C.key_sample_result_sd]
+        ai = result_dict[C.key_sample_result_ai]
+        mf = result_dict[C.key_sample_result_mf]
 
-        row = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
-        #just headers for human readibility
+        folder = PH.path_directory_target(set_name=source_set_name)
+        image_name = FN.filename_resample_plot(sample_id=sample_id)
+        plot_path = PH.join(folder, image_name)
 
-        writer.writerow(row)
+    # Copy leaf plot to scene dir for convenience
+    folder = PH.path_directory_forest_scene(forest_id=forest_id)
+    image_name = f"leaf_spectrum_plot{leaf_id}{C.postfix_plot_image_format}"
+    dst_plot_path = PH.join(folder, image_name)
+    try:
+        shutil.copy2(plot_path, dst_plot_path)
+    except FileNotFoundError:
+        logging.warning(f"Could not find resampled target plot for copying from '{plot_path}'.")
+
+    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+
+        header = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
+        writer.writerow(header)
+
         for i, wl in enumerate(wls):
             row = [i + 1, wl, ad[i], sd[i], ai[i], mf[i]]
+            writer.writerow(row)
+
+
+def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type='sun'):
+    """Write light spectra to a csv file that can be read by Blender script.
+
+    :param forest_id:
+        Id of the forest scene to write to.
+    :param wls:
+        List of wavelengths to be written.
+    :param irradiances:
+        List of sun irradiances to be written.
+    :param lighting_type:
+         String - either 'sun' or 'sky'.
+    """
+
+    if lighting_type == 'sun':
+        p = PH.path_file_forest_sun_csv(forest_id)
+    elif lighting_type == 'sky':
+        p = PH.path_file_forest_sky_csv(forest_id)
+    else:
+        raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+
+    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+
+        header = ["band", "wavelength", "irradiance"]
+        writer.writerow(header)
+
+        for i, wl in enumerate(wls):
+            row = [i + 1, wl, irradiances[i]]
+            writer.writerow(row)
+
+
+def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
+    """Read light spectra csv from a Blender script.
+
+    :param forest_id:
+        Id of the forest scene to read from.
+    :param lighting_type:
+         String either 'sun' or 'sky'.
+    :return:
+        bands, wls, irradiances - each is a list of floats.
+    """
+
+    if lighting_type == 'sun':
+        p = PH.path_file_forest_sun_csv(forest_id)
+    elif lighting_type == 'sky':
+        p = PH.path_file_forest_sky_csv(forest_id)
+    else:
+        raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+
+    with open(p, 'r', newline=CSV_NEWLINE) as csvfile:
+
+        reader = csv.reader(csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC)
+        next(reader, None)  # skip the headers
+
+        bands = []
+        wls = []
+        irradiances = []
+        for row in reader:
+            bands.append(row[0])
+            wls.append(row[1])
+            irradiances.append(row[2])
+
+        return bands, wls, irradiances
+
+
+def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
+
+    p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
+
+    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+
+        header = ["item", 'r', 'g', 'b']
+        writer.writerow(header)
+
+        for key, value in rgb_dict.items():
+            row = [key, value[0], value[1], value[2]]
+            writer.writerow(row)
+
+
+def write_blender_soil(forest_id: str, wls, reflectances):
+    """Write soil reflectance spectra to a csv file that can be read by Blender script.
+
+    :param forest_id:
+        Id of the forest scene to write to.
+    :param wls:
+        List of wavelengths to be written.
+    :param reflectances:
+        List of sun irradiances to be written.
+    """
+
+    p = PH.path_file_forest_soil_csv(forest_id=forest_id)
+
+    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+
+        header = ["band", "wavelength", "reflectance"]
+        writer.writerow(header)
+
+        for i, wl in enumerate(wls):
+            row = [i + 1, wl, reflectances[i]]
             writer.writerow(row)

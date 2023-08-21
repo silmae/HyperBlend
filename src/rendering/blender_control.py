@@ -12,42 +12,74 @@ import logging
 from src import constants as C
 from src.data import path_handling as PH
 
-path_folder_scripts = C.path_project_root + '/src/blender_scripts/'
 
+def _get_blender_executable_path():
+    """Returns path to Blender executable file.
 
-def check_blender_executable():
+    Checks whether running on Windows. If not, returns the default location on Linux.
+
+    :returns
+        Path to Blender executable.
+    :raises
+        FileNotFoundError if cannot find the path on Windows. This will happen if Blender
+        is not installed, or the version does not match the path given in `constants.py` file.
+        The version should not cause problems on Linux machine.
+    """
+
     bpath = C.blender_executable_path_win
     if not platform.startswith('win'):
         bpath = C.blender_executable_path_linux
+
     if not os.path.exists(bpath):
         raise FileNotFoundError(f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
                                 f"Check Blender installation and set correct path to 'constants.py'. ")
+    return bpath
+
+
+def _get_base_blender_args(script_name: str, scene_path: str):
+    """ Return basic arguments passed to Blender.
+
+    :param script_name:
+        Name of the Blender script to be run. These are found under `src/blender_scripts`.
+    :param scene_path:
+        Blend file to be run. For leaf simulations this is found from the main project folder.
+        For forest scenes it is either the template found in  main project folder or
+        a modified copy of it in scenes folder.
+    :return:
+        List of basic arguments for Blender scripts. Add additional arguments after '--' that are passed
+        to the script itself.
+    :raises
+        RuntimeError if either script or scene cannot be found.
+    """
+
+    if not script_name.endswith('.py'):
+        script_name = script_name + '.py'
+
+    script_path = PH.join(PH.path_directory_blender_scripts(), script_name)
+    if not os.path.exists(script_path):
+        raise RuntimeError(f"Cannot find script '{script_path}'.")
+
+    if not os.path.exists(scene_path):
+        raise RuntimeError(f"Cannot find scene '{scene_path}'.")
+
+    blender_args = [
+        _get_blender_executable_path(),
+        "--background",  # Run Blender in the background.
+        "--python-exit-code", # Tell Blender to set exit code
+        "1",                  # to 1 if the script does not execute properly.
+        scene_path,  # Blender file to be run.
+        "--python",  # Execute a python script with the Blender file.
+        script_path,  # Python script file to be run.
+        # "--log-level", "0",
+    ]
+    return blender_args
 
 
 def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
     """This is mainly an utility function to plot a full wavelength series once the parameters are found."""
 
-    check_blender_executable()
-
-    bpath = C.blender_executable_path_win
-    if not platform.startswith('win'):
-        bpath = C.blender_executable_path_linux
-        # logging.info("Running on linux machine.")
-    else:
-        pass
-        # logging.info("Running on windows machine.")
-
-    # Basic arguments that will always be passed on:
-    blender_args = [
-        bpath,
-        "--background",  # Run Blender in the background.
-        os.path.normpath(C.path_project_root + C.blender_scene_name),  # Blender file to be run.
-        "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(path_folder_scripts + 'bs_render_series.py'),  # Python script file to be run.
-        # "--log-level", "0",
-
-    ]
+    blender_args = _get_base_blender_args(script_name='bs_render_series.py', scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -82,13 +114,12 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                                     f"running in separate batches.") from e
 
     seconds = time.perf_counter() - start
-    print(f"Render loop run for {seconds:.1f} seconds")
+    logging.info(f"Render loop run for {seconds:.1f} seconds")
 
 
 def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
-    """Render an image with given values. The image is saved on disk with given wavelength in it's name.
-
+    """Renders a single image of the leaf simulation with given leaf material parameters.
 
     :param rend_base_path:
         Base path for Blender renders (set_name/working_temp/).
@@ -111,30 +142,9 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         of each wavelength optimization.
     :param dry_run:
         If True, Blender will not render anything but only print out some debugging stuff.
-    :return:
-        None
     """
 
-    check_blender_executable()
-
-    bpath = C.blender_executable_path_win
-    if not platform.startswith('win'):
-        bpath = C.blender_executable_path_linux
-        # logging.info("Running on linux machine.")
-    else:
-        pass
-        # logging.info("Running on windows machine.")
-
-    # Basic arguments that will always be passed on:
-    blender_args = [
-        bpath,
-        "--background",  # Run Blender in the background.
-        os.path.normpath(C.path_project_root + C.blender_scene_name),  # Blender file to be run.
-        "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(path_folder_scripts + C.blender_script_name),  # Python script file to be run.
-        # "--log-level", "0",
-
-    ]
+    blender_args = _get_base_blender_args(script_name=C.blender_script_name, scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -162,142 +172,116 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         subprocess.run(blender_args + scirpt_args, stdout=stream)
 
 
-def setup_forest(scene_id, leaf_id_list=None):
+def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
+
+    blender_args = _get_base_blender_args(script_name='bs_reflectance_lab.py', scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
+
+    scirpt_args = ['--']
+    p = os.path.abspath(rend_base_path)
+    scirpt_args += ['-p', f'{p}']
+    if dry_run:
+        scirpt_args += ['-y']  # no render
+    if sun_power is not None:
+        scirpt_args += ['-s', f'{sun_power}']  # no render
+
+    # Direct Blender logging info to null stream to avoid cluttering of console.
+    with open(os.devnull, 'wb') as stream:
+        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+
+
+def generate_forest_control(forest_id: str = None, global_master: bool = False):
+    """Generates a forest control file by reading parameters from a Blender file.
+
+    :param forest_id:
+        ID of the forest to create the control file for.
+    :param global_master:
+        If True, the global master control file is updated based on the parameters
+        in forest template file. The result is saved to the project root directory.
+    :raises
+        AttributeError if either:
+            1. global_master == False and scene_id == None, because there is nothing to be done.
+            2. global_master == True and scene_id is not None, because the caller might expect
+            something else to happen than rewriting of the global master control.
+    """
+
+    if not global_master and forest_id is None:
+        raise AttributeError(f"If global_master == False, a scene_id must be provided. Was None.")
+
+    if global_master and forest_id is not None:
+        raise AttributeError(f"Ignoring provided scene_id because global_master == True.")
+
+    if global_master:
+        scene_path = PH.path_forest_template()
+    else:
+        scene_path = PH.path_file_forest_scene(forest_id)
+
+    blender_args = _get_base_blender_args(script_name='bs_configuration.py', scene_path=scene_path)
+
+    scirpt_args = ['--']
+
+    if forest_id is not None and global_master is False:
+        scirpt_args += ['-id', f'{forest_id}']
+
+    if global_master:
+        scirpt_args += ['-g']
+
+    with open(os.devnull, 'wb') as stream:
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        if status.returncode != 0:
+            logging.fatal(f"Failed to generate forest control file.")
+            exit(1)
+
+
+def setup_forest(forest_id: str, leaf_name_list=None):
     """ Setup the forest for rendering.
 
-    Currently does not do much.
-
-    TODO setup ground
-    TODO setup trees
-    TODO setup materials for spectral and rgb rendering
-    TODO setup sun
-    TODO setup sky
-
-    :param scene_id:
-    :param leaf_id_list:
-    :return:
+    :param forest_id:
+        ID of the forest to be set up.
+    :param leaf_name_list:
+        Names of the leaf materials (must mach the ones used in the Blender file) as a
+        list of strings like: ['Leaf material 1', 'Leaf material 2',...].
     """
 
     logging.info(f"Calling forest scene setup")
 
-    if not os.path.exists(PH.path_file_forest_scene(scene_id)):
-        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(scene_id)} does not exist.")
-
-
-    bpath = C.blender_executable_path_win
-    if not platform.startswith('win'):
-        bpath = C.blender_executable_path_linux
-        # logging.info("Running on linux machine.")
-    else:
-        pass
-        # logging.info("Running on windows machine.")
-
-    # Basic arguments that will always be passed on:
-    blender_args = [
-        bpath,
-        "--background",  # Run Blender in the background.
-        PH.path_file_forest_scene(scene_id),  # Blender file to be run.
-        "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(path_folder_scripts + 'bs_setup_forest.py'),  # Python script file to be run.
-        "--log-level", "0",
-        "--factory-startup", # disable loading user preferenses
-    ]
+    blender_args = _get_base_blender_args(script_name='bs_setup_forest.py',
+                                          scene_path=PH.path_file_forest_scene(forest_id))
 
     scirpt_args = ['--']
-    scirpt_args += ['-id', f'{scene_id}']
+    scirpt_args += ['-id', f'{forest_id}']
 
-    if leaf_id_list is not None and len(leaf_id_list) > 0:
-        scirpt_args += ['-l_ids', f'{list(leaf_id_list)}']  # available leaf indexes
+    if leaf_name_list is not None and len(leaf_name_list) > 0:
+        scirpt_args += ['-l_ids', f'{list(leaf_name_list)}']  # available leaf indexes
+
+    with open(os.devnull, 'wb') as stream:
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        if status.returncode != 0:
+            logging.fatal(f"Failed to setup forest scene file.")
+            exit(1)
+
+
+def render_forest(forest_id: str, render_mode: str):
+    """Render different presentations of the forest scene.
+
+    :param forest_id:
+        ID of the forest to be rendered.
+    :param render_mode:
+        One of the following 'preview', 'spectral' or 'visibility'.
+        'preview' renders only some preview images that can give an idea of the
+        scene geometry without having to open the Blender file itself.
+        'spectral' renders all spectral channels as a single image.
+        'visibility' renders visibility maps that show which object is visible
+        in each pixel.
+    """
+
+    logging.info(f"render_forest() called, I can possibly do something.")
+
+    scene_path = PH.path_file_forest_scene(forest_id)
+    blender_args = _get_base_blender_args(script_name='bs_render_forest', scene_path=scene_path)
+
+    scirpt_args = ['--']
+    scirpt_args += ['-id', f'{forest_id}']
+    scirpt_args += ['-rm', render_mode]
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)
-
-
-def render_forest_previews(id):
-    """Render forest preview images.
-
-    TODO consider folder structure.. maybe rend/spectral/ for HSI and previews directly to rend/
-    TODO set materials to RGB mode
-    TODO render map
-    TODO render Drone RGB
-    TODO render Walker RGB
-    TODO render Sleeper RGB
-
-    :param id:
-    :return:
-    """
-
-    logging.info(f"render_forest_previews() called, I can possibly do something.")
-
-    if not os.path.exists(PH.path_file_forest_scene(id)):
-        raise RuntimeError(f"Blend file {PH.path_file_forest_scene(id)} does not exist.")
-
-    # TODO create a base argument to save some lines
-
-    bpath = C.blender_executable_path_win
-    if not platform.startswith('win'):
-        bpath = C.blender_executable_path_linux
-        # logging.info("Running on linux machine.")
-    else:
-        pass
-        # logging.info("Running on windows machine.")
-
-    # Basic arguments that will always be passed on:
-    blender_args = [
-        bpath,
-        "--background",  # Run Blender in the background.
-        PH.path_file_forest_scene(id),  # Blender file to be run.
-        "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(path_folder_scripts + 'bs_render_forest.py'),  # Python script file to be run.
-        # "--log-level", "0",
-        "--factory-startup", # disable loading user preferenses
-    ]
-
-    scirpt_args = ['--']
-    scirpt_args += ['-id', f'{id}']
-    scirpt_args += ['-rm', "preview"]
-
-    with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
-
-
-def render_forest_spectral(id):
-    """Render spectral image as an animation.
-
-    TODO consider just setting parameters for animation rendering and render from the blend file.
-    TODO set materials to spectral
-    TODO set camera to Drone HSI and render
-
-
-    :param id:
-    :return:
-    """
-
-    bpath = C.blender_executable_path_win
-    if not platform.startswith('win'):
-        bpath = C.blender_executable_path_linux
-        # logging.info("Running on linux machine.")
-    else:
-        pass
-        # logging.info("Running on windows machine.")
-
-    directory = f"{C.path_project_root}/scenes/scene_{id}/"
-    blend_file_name = f"scene_forest_{id}.blend"
-
-    # Basic arguments that will always be passed on:
-    blender_args = [
-        bpath,
-        "--background",  # Run Blender in the background.
-        os.path.normpath(directory + blend_file_name),  # Blender file to be run.
-        "--python",  # Execute a python script with the Blender file.
-        os.path.normpath(path_folder_scripts + 'bs_render_forest.py'),  # Python script file to be run.
-        # "--log-level", "0",
-        "--factory-startup",  # disable loading user preferenses
-    ]
-
-    scirpt_args = ['--']
-    scirpt_args += ['-id', f'{id}']
-    scirpt_args += ['-rm', "spectral"]
-
-    with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args, stdout=stream)

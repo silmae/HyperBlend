@@ -10,11 +10,13 @@ import time
 import logging
 
 import src.leaf_model.training_data
+import src.leaf_model.leaf_sampling as sampling
 from src.leaf_model.opt import Optimization
 from src.data import file_handling as FH, toml_handling as TH
 from src import plotter
 from src.leaf_model import nn, surf, leaf_commons as LC
 from src.prospect import prospect
+from src.utils import data_utils as DU
 
 
 def generate_prospect_leaf(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None, w=None, m=None, ant=None):
@@ -43,28 +45,43 @@ def generate_prospect_leaf(set_name, sample_id=0, n=None, ab=None, ar=None, brow
         dry mater content [g / cm^2]
     :param ant:
         anthocyanin content [ug / cm^2]
-    :return:
-        Tuple (wls, r, t) and writes the target to the disk.
     """
 
     prospect.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
 
 
-def generate_prospect_leaf_random(set_name, count=1):
+def generate_prospect_leaf_random(set_name, leaf_count=1):
     """ Generate count number of random PROSPECT leaves.
 
     Calling this is the same as calling prospect.make_random_leaf_targets().
 
     :param set_name:
         Set name to be used.
-    :param count:
+    :param leaf_count:
         How many target leaves are generated to the set.
     """
 
-    prospect.make_random_leaf_targets(set_name, count)
+    prospect.make_random_leaf_targets(set_name, leaf_count)
 
 
-def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', clear_old_results=False, nn_name=None,
+def resample_leaf_targets(set_name: str, new_sampling=None):
+    """Resamples leaf targets.
+
+    After this, you must solve leaf material parameters (for rendering) again.
+    Uses sampling information from `sampling.toml` in `targets` directory.
+
+    :param set_name:
+        Set to be resampled.
+    :param new_sampling:
+        List of new wavelenghts. Optional. If not given, an empty sampling file
+        is written that can be modified manually.
+    """
+
+    TH.write_sampling(set_name=set_name, sampling=new_sampling, overwrite=True)
+    sampling.resample(set_name=set_name)
+
+
+def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', clear_old_results=False, nn_name=None,
                                    copyof=None):
     """Solves leaf material parameters for rendering.
     
@@ -77,7 +94,9 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
     :param set_name: 
         Name of the measurement set.
     :param resolution: 
-        Spectral resolution.
+        If resolution is None (default), spectral sampling defined in `sampling.toml` will be used.
+        If resolution is provided and can be interpreted as an int, new sampling is written from 400 nm
+        to 2500 nm with given `resolution` nm intervals.
     :param solver:
         Solving method either 'opt', 'surf' or 'nn'. Opt is slowest and most accurate (the original method). Surf is 
         fast but not very accurate. NN is fast and fairly accurate. Surf and NN are roughly 200 times faster 
@@ -97,6 +116,23 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
     else:
         LC.initialize_directories(set_name=set_name, clear_old_results=clear_old_results)
 
+    if resolution is not None:
+        step = int(resolution) # let it fail if cannot be cast to int
+        target = TH.read_target(set_name=set_name, sample_id=0) # raises error if target not found
+        wls,_,_ = DU.unpack_target(target=target)
+        wls = np.array(wls)
+        sampling_start = max(np.min(wls), 400)
+        sampling_end = min(np.max(wls) + 1, 2501)
+        sampling_even = np.arange(sampling_start, sampling_end, step=step)
+        TH.write_sampling(set_name=set_name, sampling=sampling_even, overwrite=True)
+    else:
+        # If given resolution is None, i.e., we expect proper sampling to exist but it does not
+        if sampling.sampling_empty(set_name=set_name):
+            raise RuntimeError(f"Sampling has not been defined for set '{set_name}'. "
+                               f"Cannot solve leaf material parameters.")
+
+    sampling.resample(set_name=set_name)
+
     ids = FH.list_target_ids(set_name)
     ids.sort()
 
@@ -106,15 +142,16 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
     for _, sample_id in enumerate(ids):
         FH.create_opt_folder_structure_for_samples(set_name, sample_id)
         logging.info(f'Starting optimization of sample {sample_id}')
-        targets = TH.read_target(set_name, sample_id)
+        targets = TH.read_target(set_name, sample_id, resampled=True)
 
+        # Do not use this anymore
         # Spectral resolution
-        if resolution != 1:
-            targets = targets[::resolution]
+        # if resolution != 1:
+        #     targets = targets[::resolution]
 
         if solver == 'opt':
             o = Optimization(set_name=set_name)
-            o.run_optimization(resolution=resolution)
+            o.run_optimization(resampled=resolution)
         elif solver == 'surf' or solver == "nn":
             start = time.perf_counter()
 
@@ -125,9 +162,9 @@ def solve_leaf_material_parameters(set_name: str, resolution=1, solver='nn', cle
             if solver == 'surf':
                 ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(r_m=r_m, t_m=t_m)
             elif solver == "nn":
-                if nn_name:
+                if nn_name: # when using custom NN
                     ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, nn_name=nn_name)
-                else:
+                else: # when using default NN
                     ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m)
 
             ad, sd, ai, mf = LC._convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw)

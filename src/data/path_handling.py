@@ -13,6 +13,12 @@ from src.data import file_names as FN
 ##########################################################################
 
 
+def path_directory_project_root():
+    """Path to project root directory."""
+    p = os.path.abspath(C.path_project_root)
+    return p
+
+
 def path_directory_set_result(set_name: str) -> str:
     """Path to where set result is saved."""
 
@@ -74,7 +80,7 @@ def path_directory_set(set_name: str) -> str:
 def path_directory_target(set_name: str) -> str:
     """Path to target folder (measurements) of given set.
 
-    'project_root/optimization/<set_name>/target'
+    'project_root/leaf_measurement_sets/<set_name>/sample_targets'
     """
 
     p = os.path.abspath(path_directory_set(set_name) + '/' + C.folder_opt_sample_targets)
@@ -84,7 +90,7 @@ def path_directory_target(set_name: str) -> str:
 def path_directory_working(set_name: str, sample_id: int) -> str:
     """Path to top level working folder where rendering sub-folders reside.
 
-    'project_root/optimization/<set_name>/working_temp'
+    'project_root/leaf_measurement_sets/<set_name>/working_temp'
     """
 
     p = os.path.abspath(path_directory_sample(set_name, sample_id) + '/' + C.folder_opt_work)
@@ -142,9 +148,9 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
     """
 
     if imaging_type == C.imaging_type_refl:
-        p = os.path.abspath(base_path + '/' + C.folder_rend_ref_refl)
+        p = join(base_path, C.folder_rend_ref_refl)
     elif imaging_type == C.imaging_type_tran:
-        p = os.path.abspath(base_path + '/' + C.folder_rend_ref_tran)
+        p = join(base_path, C.folder_rend_ref_tran)
     else:
         raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
     return p
@@ -153,35 +159,76 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
 def path_directory_forest_scenes() -> str:
     """Top level scene directory."""
 
-    p = C.path_project_root + '/' + 'scenes'
+    p = join(C.path_project_root, 'scenes')
     return os.path.abspath(p)
 
 
 def path_directory_sun_data() -> str:
     """Sun data directory."""
 
-    p = C.path_project_root + '/' + 'sun_data'
-    return os.path.abspath(p)
+    p = join(C.path_project_root, 'sun_data')
+    return p
 
 
-def path_directory_forest_scene(scene_id) -> str:
+def path_directory_sky_data() -> str:
+    """Sky data directory."""
+
+    p = join(C.path_project_root, 'sky_data')
+    return p
+
+
+def path_directory_soil_data() -> str:
+    """Soil data directory."""
+
+    p = join(C.path_project_root, 'soil_data')
+    return p
+
+
+def path_directory_blender_scripts() -> str:
+    """Blender scripts directory."""
+
+    p = join(C.path_project_root, 'src', 'blender_scripts')
+    return p
+
+def path_directory_soil_code() -> str:
+    """Soil code directory that contain gsv spectra vectors used for gsv generation."""
+
+    p = join(C.path_project_root, 'src', 'gsv')
+    return p
+
+
+def path_directory_forest_scene(forest_id: str) -> str:
     """Specific forest scene directory."""
 
-    p = join(path_directory_forest_scenes(), f"scene_{scene_id}")
+    p = join(path_directory_forest_scenes(), f"scene_{forest_id}")
     return p
 
 
-def path_directory_forest_rend(scene_id) -> str:
+def path_directory_forest_rend(forest_id: str) -> str:
     """Forest rend directory."""
 
-    p = join(path_directory_forest_scene(scene_id), 'rend')
+    p = join(path_directory_forest_scene(forest_id), 'rend')
     return p
 
 
-def path_directory_forest_rend_spectral(scene_id) -> str:
+def path_directory_forest_cube(forest_id: str) -> str:
+    """Forest spectral cube directory."""
+
+    p = join(path_directory_forest_scene(forest_id), 'cube')
+    return p
+
+
+def path_directory_forest_rend_spectral(forest_id: str) -> str:
     """Forest spectral rend directory."""
 
-    p = join(path_directory_forest_rend(scene_id), 'spectral')
+    p = join(path_directory_forest_rend(forest_id), 'spectral')
+    return p
+
+
+def path_directory_forest_rend_visibility_maps(forest_id: str) -> str:
+    """Rend directory for visibility maps of materials."""
+
+    p = join(path_directory_forest_rend(forest_id), 'visibility_maps')
     return p
 
 ##########################################################################
@@ -203,10 +250,21 @@ def path_file_wl_result(set_name: str, wl: float, sample_id: int) -> str:
     return p
 
 
-def path_file_target(set_name: str, sample_id: int):
-    """Path to optimization target file (measurements) of given set and sample. """
+def path_file_target(set_name: str, sample_id: int, resampled=False):
+    """Path to leaf measurement set's target file (measurements) of given set and sample.
 
-    p = join(path_directory_target(set_name), FN.filename_target(sample_id))
+    :param resampled:
+        If True, path to corresponding resampled file is returned instead. Default is False.
+    """
+
+    p = join(path_directory_target(set_name), FN.filename_target(sample_id, resampled=resampled))
+    return p
+
+
+def path_file_sampling(set_name: str):
+    """Path to spectral resampling data of given set. """
+
+    p = join(path_directory_target(set_name), C.file_sampling_data + C.postfix_text_data_format)
     return p
 
 
@@ -249,16 +307,140 @@ def path_forest_template():
     return p
 
 
-def path_file_forest_scene(scene_id) -> str:
+def path_file_forest_scene(forest_id: str) -> str:
     """Path to certain forest scene blend file."""
 
-    p = join(path_directory_forest_scene(scene_id), FN.filename_forest_scene(scene_id))
+    p = join(path_directory_forest_scene(forest_id), FN.filename_forest_scene(forest_id))
     return p
 
 
-def path_file_forest_leaf_csv(scene_id, leaf_index):
-    p = join(path_directory_forest_scene(scene_id), FN.filename_leaf_material_csv(leaf_index))
+def path_file_forest_reflectance_cube(forest_id: str) -> str:
+    p = join(path_directory_forest_cube(forest_id), FN.filename_forest_reflectance_cube(forest_id))
     return p
+
+
+def path_file_forest_reflectance_header(forest_id: str) -> str:
+    p = join(path_directory_forest_cube(forest_id), FN.filename_forest_reflectance_header(forest_id))
+    return p
+
+
+def path_file_forest_leaf_csv(forest_id: str, leaf_index):
+    p = join(path_directory_forest_scene(forest_id), FN.filename_leaf_material_csv(leaf_index))
+    return p
+
+
+def path_file_forest_sun_csv(forest_id: str):
+    p = join(path_directory_forest_scene(forest_id), 'blender_sun.csv')
+    return p
+
+
+def path_file_forest_sky_csv(forest_id: str):
+    p = join(path_directory_forest_scene(forest_id), 'blender_sky.csv')
+    return p
+
+
+def path_file_forest_soil_csv(forest_id: str):
+    p = join(path_directory_forest_scene(forest_id), 'blender_soil.csv')
+    return p
+
+
+def path_file_soil_dry_vector():
+    """Soil dry vector used by GSV."""
+
+    p = join(path_directory_soil_code(), 'DryVec.txt')
+    return p
+
+
+def path_file_soil_humid_vector():
+    """Soil humid vector used by GSV."""
+
+    p = join(path_directory_soil_code(), 'SMVec.txt')
+    return p
+
+
+def path_file_forest_rgb_csv(forest_id: str):
+    p = join(path_directory_forest_scene(forest_id), 'rgb_colors.csv')
+    return p
+
+
+def path_file_visibility_map(forest_id: str, file_name: str):
+    p = join(path_directory_forest_rend_visibility_maps(forest_id=forest_id), file_name)
+    return p
+
+
+def find_visibility_map(forest_id: str, search_term: str):
+    """Find a visibility map matching given search term.
+
+    Search term should be something like "Leaf material 1" or "Trunk material 2".
+    For white reference paths, one can use convenience method find_reference_visibility_map()
+    that only needs reflectance as an identifier.
+
+    :param forest_id:
+        Forest scene identifier.
+    :param search_term:
+        Search term that is included in a file name. Does not have to be a full match
+        to the filename. We cannot fully control the filenames coming out of Blender,
+        so we only check if the filename includes the search term instead of a full
+        match.
+    :return:
+        Returns a path to the file.
+    :raises
+        KeyError if more than one file match the search term.
+    :raises
+        FileNotFoundError if no file match the search term.
+    """
+
+    file_names = []
+    p = path_directory_forest_rend_visibility_maps(forest_id=forest_id)
+
+    for filename in os.listdir(p):
+        if search_term in filename:
+            file_names.append(filename)
+
+    n = len(file_names)
+
+    if n > 1:
+        raise KeyError(f"Found more than one ({n}) file containing the search term '{search_term}' "
+                       f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}")
+    if n < 1:
+        raise FileNotFoundError(f"Could not find a visibility map file containing the search term '{search_term}' "
+                       f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}")
+
+    res = join(p, file_names[0])
+    return res
+
+
+def find_reference_visibility_map(forest_id: str, reflectivity: float):
+    """Convenience method for finding reference visibility map file.
+
+    Calls find_visibility_map().
+
+    :param forest_id:
+        Forest scene identifier.
+    :param reflectivity:
+        Reflectivity desired between 0.0 and 1.0. Must be one of the available ones in
+        visibility maps directory of the scene.
+    :return:
+        Returns a path to the file.
+    """
+
+    search_term = f"Reference {reflectivity:.2f} material"
+    return find_visibility_map(forest_id=forest_id, search_term=search_term)
+
+
+def list_visibility_maps(forest_id: str):
+    """Lists all available visibility maps for given forest scene."""
+
+    p = path_directory_forest_rend_visibility_maps(forest_id=forest_id)
+    return os.listdir(p)
+
+
+def list_reference_visibility_maps(forest_id: str):
+    """Lists all available reference visibility maps for given forest scene."""
+
+    p = path_directory_forest_rend_visibility_maps(forest_id=forest_id)
+    res = [filename for filename in os.listdir(p) if "Reference" in filename]
+    return res
 
 
 def join(*args) -> str:

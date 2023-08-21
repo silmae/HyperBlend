@@ -70,6 +70,8 @@ def make_leaf_target(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None
         ar = p_default_dict["ar"]
     if brown is None:
         brown = p_default_dict["brown"]
+    if w is None:
+        w = p_default_dict["w"]
     if m is None:
         m = p_default_dict["m"]
     if ant is None:

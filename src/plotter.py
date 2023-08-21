@@ -15,18 +15,21 @@ from matplotlib import cm
 from scipy.optimize import curve_fit
 
 from src import constants as C
-from src.data import file_handling as FH, toml_handling as T, file_names as FN, path_handling as P
+from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
 from src.leaf_model import nn, surf, training_data as training, surface_functions
+from src.utils import data_utils as DU
 
 
 figsize = (12,6)
 """Figure size for two plot figures."""
-figsize_single = (6,6)
+figsize_single = (7,6)
 """Figure size for single plot figures."""
 fig_title_font_size = 18
 """Title font size."""
 axis_label_font_size = 16
 """Axis label font size"""
+save_resolution = 600
+"""Save resolution for plots in dots per inch."""
 
 variable_space_ylim = [0.0, 1.0]
 """Y-axis limit for leaf material parameter plot."""
@@ -51,11 +54,152 @@ max_ticks = 8
 image_type = 'png'
 
 
-def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, scene_id=None, sun_filename=None, show=False):
-    """Plot used sun data for a scene.
+def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_show=True):
+    """Plot visualization (reflectances) of the default soil types.
 
-    Plot can either be shown or saved. Plot is saved if both scene_id and sun_filename
-    are given. 
+    :param wls:
+        List of wavelengths [400,401,...2500].
+    :param reflectances:
+        2D-array of reflectances. One row for one soil type.
+    :param labels:
+        List of soil names to be used as labels. These are also used
+        to infer plot colors.
+    :param save:
+        If True (default), save image to disc.
+    :param dont_show:
+        If True (default), the plot is not shown, otherwise, show the plot using
+        pyplot show(), which will halt the execution of the program until the window
+        is manually shut.
+    """
+
+    plt.close('all')
+    cm_clay = cm.get_cmap('Greys')
+    cm_sand = cm.get_cmap('Oranges')
+    cm_peat = cm.get_cmap('Greens')
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+    fig.suptitle(f"Default soils", fontsize=fig_title_font_size)
+
+    for i, reflectance in enumerate(reflectances):
+        # Select color map and value based on the label
+        if 'wet' in labels[i]:
+            selector = 0.7
+        if 'humid' in labels[i]:
+            selector = 0.5
+        if 'dry' in labels[i]:
+            selector = 0.3
+        if 'clay' in labels[i]:
+            cm_active = cm_clay
+        if 'sand' in labels[i]:
+            cm_active = cm_sand
+        if 'peat' in labels[i]:
+            cm_active = cm_peat
+
+        ax.plot(wls, reflectance, lw=1., label=labels[i], c=cm_active(selector))
+
+    ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
+    ax.set_ylabel(f'Reflectance', fontsize=axis_label_font_size)
+    plt.legend()
+
+    if save:
+        folder = PH.path_directory_soil_data()
+        image_name = "default_soils." + image_type
+        path = PH.join(folder, image_name)
+        logging.info(f"Saving default soil reflectance plot to '{path}'.")
+        plt.savefig(path, dpi=save_resolution)
+    if not dont_show:
+        plt.show()
+
+
+def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflectances_resampled=None, forest_id=None, dont_show=True, save=True):
+    """Plots possibly resampled soil reflectance.
+
+    :param wls:
+        Original wavelengths as a list.
+    :param reflectances:
+        Original soil reflectances.
+    :param soil_name:
+        Name of the soil used. This will be shown in the plot and in resulting file's name.
+    :param wls_resampled:
+        Optional, resampled wavelengths.
+    :param reflectances_resampled:
+        Optional, resampled reflectances corresponding to resampled wavelengths.
+    :param forest_id:
+        Forest id is needed if save=True.
+    :param dont_show:
+        If True (default), the plot is not shown, otherwise, show the plot using
+        pyplot show(), which will halt the execution of the program until the window
+        is manually shut.
+    :param save:
+         If True (default), save image to forest scene directory (forest_id must then be given too).
+
+    :raises
+        AttributeError if save=True but forest_id=None.
+    """
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+    fig.suptitle(f"Resampled soil reflectance '{soil_name}'", fontsize=fig_title_font_size)
+
+    ax.plot(wls, reflectances, lw=1., label=soil_name, c='grey')
+
+    if wls_resampled is not None and reflectances_resampled is not None:
+        ax.plot(wls_resampled, reflectances_resampled, lw=2., c='green')
+
+    if save:
+        if forest_id is None:
+            raise AttributeError(f"Saving soil reflectance requested but no forest id was given to define proper path.")
+        directory = PH.path_directory_forest_scene(forest_id=forest_id)
+        image_name = f"soil_reflectance_{soil_name}{C.postfix_plot_image_format}"
+        path = PH.join(directory, image_name)
+        logging.info(f"Saving blender soil plot to '{path}'.")
+        plt.savefig(path, dpi=save_resolution)
+    if not dont_show:
+        plt.show()
+
+
+def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=False, save=True):
+    """Plot simulation result of virtual reflectance lab.
+
+    :param HSV_value:
+        Used hue-saturation-value values as a list of floats.
+    :param reflectance:
+        List of list of reflectances. Length of the first list must match the sun powers used.
+    :param powers:
+        List of sun powers.
+    :param plot_name:
+        Name for the plot file.
+    :param show:
+        If `True`, show interactive plot. Default is False.
+    :param save:
+        If `True`, save plot to project root directory. Default is True.
+    :raises ValueError:
+        If `len(powers) != len(reflectance)`.
+    """
+
+    if len(powers) != len(reflectance):
+        raise ValueError(f"Length of sun powers {len(powers)} and measurements {len(reflectance)} must match.")
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
+
+    for i,measurement in enumerate(reflectance):
+        ax.set_xlabel('HSV value', fontsize=axis_label_font_size)
+        ax.set_ylabel(f'Reflectance', fontsize=axis_label_font_size)
+        ax.plot(HSV_value, measurement, label=f'Sun power {powers[i]} [W/m2]')
+
+    plt.legend()
+
+    if save:
+        path = PH.join(C.path_project_root, f"{plot_name}{C.postfix_plot_image_format}")
+        logging.info(f"Saving reflectance power plot to project root '{path}'.")
+        plt.savefig(path, dpi=save_resolution)
+    if show:
+        plt.show()
+
+
+def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, forest_id=None, sun_plot_name=None, show=False, lighting_type='sun'):
+    """Plot used sun or sky data for a scene.
+
+    Plot can either be shown or saved. Plot is saved if scene_id is given.
 
     Three main uses:
         1. just original spectrum
@@ -67,46 +211,61 @@ def plot_sun_data(wls, irradiances, wls_binned=None, irradiances_binned=None, sc
     :param irradiances:
         Irradiances corresponding to wls in [W/m2/nm].
     :param wls_binned:
-        Optional. Binned (integrated) wavelengths over certain bandwith. Used
-        bandwith is calculated by wls_binned[1] - wls_binned[0].
+        Optional. Binned (integrated) wavelengths over certain bandwidth. Used
+        bandwidth is calculated by wls_binned[1] - wls_binned[0].
     :param irradiances_binned:
         Optional. Binned (integrated) irradiances correcponding to wls_binned.
         Both must be given so that binned irradiances can be plotted.
-    :param scene_id:
-        Optional. Scene id for saving the plot to the scene directory.
-    :param sun_filename:
+    :param forest_id:
+        Optional. Forest id for saving the plot to the scene directory.
+    :param sun_plot_name:
         Optional. Sun filename for naming the image file.
     :param show:
         If True, the plot is shown to the user. Default is False.
+    :param lighting_type:
+        String either 'sun' or 'sky'.
     """
 
     bandwith = wls[1] - wls[0]
-    if wls_binned and irradiances_binned:
+    if wls_binned is not None and irradiances_binned is not None:
         bandwith_binned = wls_binned[1] - wls_binned[0]
         fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
-        fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
+        fig.suptitle(f"{lighting_type} spectrum", fontsize=fig_title_font_size)
 
-        ax[0].plot(wls, irradiances, label='Sun 1 nm')
+        ax[0].plot(wls, irradiances, label=f'{lighting_type} 1 nm')
         ax[0].set_title('Spectra in file')
         ax[0].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
         ax[0].set_ylabel('Irradiance [W/m2/nm]', fontsize=axis_label_font_size)
 
-        ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwith {bandwith_binned:.0f} nm', alpha=0.5)
-        ax[1].set_title('Integrated spectra')
+        if lighting_type == 'sun':
+            resampled_label = 'Resampled and normalized'
+        elif lighting_type == 'sky':
+            resampled_label = 'Resampled and normalized with sun'
+        else:
+            raise ValueError(f"Wrong lighting type. Expected lighting type either 'sun' or 'sky', was '{lighting_type}'.")
+
+        ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwidth {bandwith_binned:.0f} nm', alpha=0.5)
+        ax[1].set_title(resampled_label)
         ax[1].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
         ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]', fontsize=axis_label_font_size)
+        ax[1].set_xlim([wls[0],wls[-1]])
     else:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
-        fig.suptitle(f"Sun spectrum", fontsize=fig_title_font_size)
+        fig.suptitle(f"{lighting_type} spectrum", fontsize=fig_title_font_size)
         ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-        ax.set_ylabel(f'Irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
-        ax.plot(wls, irradiances, label=f'Bandwith {bandwith:.0f} nm')
+        ax.set_ylabel(f'{lighting_type} irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
+        ax.plot(wls, irradiances, label=f'Bandwidth {bandwith:.0f} nm')
 
     plt.legend()
 
-    if scene_id and sun_filename:
-        path = P.join(P.path_directory_forest_scene(scene_id), f"{sun_filename.rstrip('.txt')}.png")
-        plt.savefig(path, dpi=300)
+    if sun_plot_name is None and lighting_type == 'sun':
+        sun_plot_name = C.file_default_sun
+    if sun_plot_name is None and lighting_type == 'sky':
+        sun_plot_name = C.file_default_sky
+
+    if forest_id is not None:
+        path = PH.join(PH.path_directory_forest_scene(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")
+        plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
 
@@ -143,13 +302,13 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     ax.legend()
 
     if save_thumbnail:
-        folder = P.path_directory_surface_model()
+        folder = PH.path_directory_surface_model()
         # image_name = "nn_train_history.png"
         if not file_name.endswith(".png"):
             file_name = file_name + '.png'
-        path = P.join(folder, file_name)
+        path = PH.join(folder, file_name)
         logging.info(f"Saving NN training history to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
@@ -230,11 +389,11 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             ax.legend()
 
         if save_thumbnail:
-            folder = P.path_directory_surface_model()
+            folder = PH.path_directory_surface_model()
             image_name = f"{leaf_param_names[i]}.png"
-            path = P.join(folder, image_name)
+            path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
-            plt.savefig(path, dpi=300)
+            plt.savefig(path, dpi=save_resolution)
 
         if show_plot:
             plt.show()
@@ -296,11 +455,11 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     ax.legend()
 
     if save:
-        folder = P.path_directory_surface_model()
+        folder = PH.path_directory_surface_model()
         image_name = "training_data" + C.postfix_plot_image_format
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
 
@@ -320,7 +479,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
-    subres_dict = T.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
+    subres_dict = TH.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
@@ -341,11 +500,11 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
-        folder = P.path_directory_subresult(set_name, sample_id)
+        folder = PH.path_directory_subresult(set_name, sample_id)
         image_name = FN.filename_wl_result_plot(wl)
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=300) # keep this plot at low resolution as there may be quite a lot of these
     if not dont_show:
         plt.show()
 
@@ -369,7 +528,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     # ax[0].set_title('Variable space')
     # ax[1].set_title('Target space')
 
-    r = T.read_set_result(set_name)
+    r = TH.read_set_result(set_name)
     wls = r[C.key_set_result_wls]
     ad_mean = np.array(r[C.key_set_result_wl_ad_mean])
     sd_mean = np.array(r[C.key_set_result_wl_sd_mean])
@@ -420,11 +579,11 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.plot(wls, tm_mean + (tm_std / 2), color='gray', ls='dashed')
 
     if save_thumbnail:
-        folder = P.path_directory_set_result(set_name)
+        folder = PH.path_directory_set_result(set_name)
         image_name = FN.filename_set_result_plot()
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the set result plot to '{path}'.")
-        plt.savefig(path, dpi=300, bbox_inches='tight', pad_inches=0.1)
+        plt.savefig(path, dpi=save_resolution, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
 
@@ -443,7 +602,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     refl_errs = []
     tran_errs = []
     for _,sample_id in enumerate(ids):
-        result = T.read_sample_result(set_name, sample_id)
+        result = TH.read_sample_result(set_name, sample_id)
         wls = result[C.key_sample_result_wls]
         refl_errs.append(result[C.key_sample_result_re])
         tran_errs.append(result[C.key_sample_result_te])
@@ -466,13 +625,47 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        folder = P.path_directory_set_result(set_name)
+        folder = PH.path_directory_set_result(set_name)
         image_name = FN.filename_set_error_plot()
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the set error plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
+
+
+def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
+    """Plots leaf resampled spectra along with the original for all leaf samples in given set.
+
+    :param set_name:
+        Set name.
+    :param save_thumbnail:
+        If True, a PNG image is saved. Default is True.
+    :param dont_show:
+        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+    """
+
+    target_ids = FH.list_target_ids(set_name=set_name)
+
+    for sample_id in target_ids:
+        target_original = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=False)
+        target_resampled = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=True)
+        wls_org, refl_org, tran_org = DU.unpack_target(target_original)
+        wls_resampled, refl_resampled, tran_resampled = DU.unpack_target(target_resampled)
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
+
+        fig.suptitle(f"Resampling of leaf sample {sample_id}", fontsize=fig_title_font_size)
+        _plot_refl_tran_to_axis(axis_object=ax, refl=refl_org, tran=tran_org, x_values=wls_org, x_label='Wavelength [nm]', refl_color='black', tran_color='black', invert_tran=True)
+        _plot_refl_tran_to_axis(axis_object=ax, refl=refl_resampled, tran=tran_resampled, x_values=wls_resampled, x_label='Wavelength [nm]', invert_tran=True)
+
+        if save_thumbnail:
+            folder = PH.path_directory_target(set_name=set_name)
+            image_name = FN.filename_resample_plot(sample_id=sample_id)
+            path = PH.join(folder, image_name)
+            logging.info(f"Saving resampling plot to '{path}'.")
+            plt.savefig(path, dpi=save_resolution)
+        if not dont_show:
+            plt.show()
 
 
 def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumbnail=True) -> None:
@@ -488,7 +681,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
-    result = T.read_sample_result(set_name, sample_id)
+    result = TH.read_sample_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
@@ -506,11 +699,11 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
-        folder = P.path_directory_set_result(set_name)
+        folder = PH.path_directory_set_result(set_name)
         image_name = FN.filename_sample_result_plot(sample_id=sample_id)
-        path = P.join(folder, image_name)
+        path = PH.join(folder, image_name)
         logging.info(f"Saving the sample result plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
@@ -523,7 +716,7 @@ def replot_wl_results(set_name: str):
 
     sample_ids = FH.list_finished_sample_ids(set_name)
     for sample_id in sample_ids:
-        d = T.read_sample_result(set_name, sample_id=sample_id)
+        d = TH.read_sample_result(set_name, sample_id=sample_id)
         wls = d[C.key_sample_result_wls]
         for wl in wls:
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
@@ -536,8 +729,8 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     """
 
     set_name = C.starting_guess_set_name
-    result_dict = T.read_sample_result(set_name, 0)
-    coeffs = T.read_starting_guess_coeffs()
+    result_dict = TH.read_sample_result(set_name, 0)
+    coeffs = TH.read_starting_guess_coeffs()
     wls = result_dict[C.key_sample_result_wls]
     r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
     t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
@@ -562,11 +755,11 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> 
     plt.legend()
 
     if save_thumbnail:
-        p = P.path_directory_set_result(set_name)
+        p = PH.path_directory_set_result(set_name)
         image_name = f"variable_fitting.png"
-        path = P.join(p, image_name)
+        path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
-        plt.savefig(path, dpi=300)
+        plt.savefig(path, dpi=save_resolution)
 
     if not dont_show:
         plt.show()

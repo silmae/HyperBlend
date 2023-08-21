@@ -76,10 +76,30 @@ def filename_wl_result_plot(wl: float) -> str:
     return filename
 
 
-def filename_target(sample_id: int) -> str:
-    """Generate filename of a toml file where target measurements are stored. """
+def filename_target(sample_id: int, resampled=False) -> str:
+    """Generate filename of a toml file where target measurements are stored.
 
-    filename = f'{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}'
+    :param sample_id:
+        Sample id.
+    :param resampled:
+         If True, file name of corresponding resampled file is returned instead. Default is False.
+    """
+
+    if resampled:
+        filename = f'{C.file_opt_target}_resampled_{sample_id}{C.postfix_text_data_format}'
+    else:
+        filename = f'{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}'
+    return filename
+
+
+def filename_resample_plot(sample_id: int) -> str:
+    """Generate filename resampling plot.
+
+    :param sample_id:
+        Sample id.
+    """
+
+    filename = f'target_{sample_id}_resampling{C.postfix_plot_image_format}'
     return filename
 
 
@@ -147,8 +167,19 @@ def filename_forest_scene(scene_id):
     return filename
 
 
-def filename_leaf_material_csv(leaf_id) -> str:
+def filename_forest_reflectance_cube(scene_id):
+
+    filename = f"reflectance_cube_{scene_id}.img"
+    return filename
+
+
+def filename_forest_reflectance_header(scene_id):
+
+    filename = f"reflectance_cube_{scene_id}.hdr"
+    return filename
+
+def filename_leaf_material_csv(leaf_material_name: str) -> str:
     """Spectral leaf material parameters csv file name."""
 
-    filename = f"leaf_material_{leaf_id}.csv"
+    filename = f"LM_{leaf_material_name}.csv"
     return filename
