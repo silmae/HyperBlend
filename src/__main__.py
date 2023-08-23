@@ -90,13 +90,19 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
-    rng = np.random.default_rng(4321)
+    # Let redo starting guess
+    from src.utils import spectra_utils as SU
+    # SU.generate_starting_guess()
+    SU.fit_starting_guess_coefficients(degree=12)
+    plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
+
+    # rng = np.random.default_rng(4321)
 
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
 
     # plotter.plot_resampling(set_name='low_res')
-    forest_pipe_test(rng=rng)
+    # forest_pipe_test(rng=rng)
     # forest_id = forest.init()
 
     # forest_id = '1406231352'

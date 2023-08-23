@@ -17,7 +17,7 @@ from scipy.optimize import curve_fit
 from src import constants as C
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
 from src.leaf_model import nn, surf, training_data as training, surface_functions
-from src.utils import data_utils as DU
+from src.utils import data_utils as DU, spectra_utils as SU
 
 
 figsize = (12,6)
@@ -722,29 +722,31 @@ def replot_wl_results(set_name: str):
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
-def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> None:
+def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set_name: str = None) -> None:
     """Plot starting guess poynomial fit with data.
 
     Used only when generating the starting guess.
+
+    :param set_name:
+        Custom set name to fetch the data from. If not given, default set name variable
+        'starting_guess_set_name' stored in constants.py is used.
     """
 
-    set_name = C.starting_guess_set_name
-    result_dict = TH.read_sample_result(set_name, 0)
-    coeffs = TH.read_starting_guess_coeffs()
-    wls = result_dict[C.key_sample_result_wls]
-    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
-    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
-    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
-    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
-    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
-    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
-    a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
+    plt.close('all')
+
+    if set_name is None:
+        set_name = C.starting_guess_set_name
+
+    a_list, ad_list, sd_list, ai_list, mf_list = SU.get_starting_guess_points(set_name=set_name)
+
     ms = 10 # markersize
     ls = 2 # linesize
     plt.scatter(a_list, ad_list, label='Absorption density', color=color_ad, s=ms)
     plt.scatter(a_list, sd_list, label='Scattering density', color=color_sd, s=ms)
     plt.scatter(a_list, ai_list, label='Scattering anisotropy', color=color_ai, s=ms)
     plt.scatter(a_list, mf_list, label='Mix factor', color=color_mf, s=ms)
+
+    coeffs = TH.read_starting_guess_coeffs()
     for _,key in enumerate(coeffs):
         coeff  = coeffs[key]
         y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])
