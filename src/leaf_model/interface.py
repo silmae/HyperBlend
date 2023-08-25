@@ -81,8 +81,8 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
     sampling.resample(set_name=set_name)
 
 
-def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', clear_old_results=False, nn_name=None,
-                                   copyof=None):
+def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampling=False, solver='nn', clear_old_results=False, nn_name=None,
+                                   copyof=None, plot_resampling=True):
     """Solves leaf material parameters for rendering.
     
     The result is saved to disk: this method does not have a return value.
@@ -90,13 +90,15 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', 
     Note that solvers 'surf' and 'nn' need trained model to work. Pre-trained model are included  
     in the Git repository, but you can train your own using ``train_models()`` method. Solver 'opt' 
     does not need training.
-    
-    :param set_name: 
+
+    :param set_name:
         Name of the measurement set.
     :param resolution: 
         If resolution is None (default), spectral sampling defined in `sampling.toml` will be used.
         If resolution is provided and can be interpreted as an int, new sampling is written from 400 nm
         to 2500 nm with given `resolution` nm intervals.
+    :param disable_sampling:
+
     :param solver:
         Solving method either 'opt', 'surf' or 'nn'. Opt is slowest and most accurate (the original method). Surf is 
         fast but not very accurate. NN is fast and fairly accurate. Surf and NN are roughly 200 times faster 
@@ -131,7 +133,8 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', 
             raise RuntimeError(f"Sampling has not been defined for set '{set_name}'. "
                                f"Cannot solve leaf material parameters.")
 
-    sampling.resample(set_name=set_name)
+    if not disable_sampling:
+        sampling.resample(set_name=set_name, plot_resampling=plot_resampling)
 
     ids = FH.list_target_ids(set_name)
     ids.sort()
@@ -142,7 +145,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', 
     for _, sample_id in enumerate(ids):
         FH.create_opt_folder_structure_for_samples(set_name, sample_id)
         logging.info(f'Starting optimization of sample {sample_id}')
-        targets = TH.read_target(set_name, sample_id, resampled=True)
+        targets = TH.read_target(set_name, sample_id, resampled=not disable_sampling)
 
         # Do not use this anymore
         # Spectral resolution
@@ -150,8 +153,9 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, solver='nn', 
         #     targets = targets[::resolution]
 
         if solver == 'opt':
+            # use_resampling = not disable_sampling and resolution is not None
             o = Optimization(set_name=set_name)
-            o.run_optimization(resampled=resolution)
+            o.run_optimization(resampled=not disable_sampling)
         elif solver == 'surf' or solver == "nn":
             start = time.perf_counter()
 

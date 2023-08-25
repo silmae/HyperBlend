@@ -395,7 +395,7 @@ def read_sampling(set_name: str,):
     p = PH.path_file_sampling(set_name)
 
     if not os.path.exists(p):
-        write_sampling(set_name=set_name)
+        raise RuntimeError(f"Sampling not found from '{p}'. Write sampling before use.")
 
     with open(p, 'r') as file:
         try:

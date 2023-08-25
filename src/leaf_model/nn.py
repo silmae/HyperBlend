@@ -32,7 +32,7 @@ torch.manual_seed(666)
 class Leafnet(nn.Module):
     """Neural network implementation."""
 
-    def __init__(self, layer_count, layer_width):
+    def __init__(self, layer_count=9, layer_width=10):
         """Initialize neural network with given architecture.
 
         Number and width of hidden layers as parameters. Activation for all hidden layers is
@@ -126,6 +126,7 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 
     net = Leafnet(layer_count=layer_count, layer_width=layer_width)
+    best_model_state = net.state_dict()
 
     logging.info(f"Learning rate {learning_rate}")
     logging.info(f"Batch size {batch_size}")
@@ -179,8 +180,16 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
             best_loss = test_loss
             best_epoch_idx = epoch
             patience_trigger = 0
-            nn_path = save_name + '.pt'
-            save(net, PH.join(PH.path_directory_surface_model(), nn_path))
+            best_model_state = net.state_dict()
+            nn_filename = save_name + '.pt'
+            save_path = PH.join(PH.path_directory_surface_model(), nn_filename)
+
+            # Old save method
+            # save(net, save_path)
+
+            # Just save the state dict instead of the whole model.
+            torch.save(best_model_state, save_path)
+
             logging.info(f"Saved model with test loss {best_loss:.8f} epoch {epoch}")
         else:
             patience_trigger += 1
@@ -235,9 +244,20 @@ def _load_model(nn_name):
         of this script was something else than what it is now. Your only help
         is to train again.
     """
+
     try:
         p = _get_model_path(nn_name)
-        net = load(p)
+
+        # Old load where the whole model is used.
+        # net = load(p)
+
+        # New load where only state dict is used.
+        # NOTE that the Leafnet object must be initialized with the
+        #   same layer width and layer count as what it was trained with.
+        net = Leafnet()
+        net.load_state_dict(torch.load(p))
+        net.double()
+
         net.eval()
         logging.info(f"NN model loaded from '{p}'")
     except ModuleNotFoundError as e:

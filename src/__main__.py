@@ -93,8 +93,25 @@ if __name__ == '__main__':
     # Let redo starting guess
     from src.utils import spectra_utils as SU
     # SU.generate_starting_guess()
-    SU.fit_starting_guess_coefficients(degree=12)
-    plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
+    # SU.fit_starting_guess_coefficients(degree=12)
+    # plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
+
+    size = 10
+    set_name = "training_data-1-1"
+    LI.train_models(set_name=set_name, generate_data=True, train_points_per_dim=size)
+
+    resolution = 100
+    nn_name = "lc9_lw10_b2_lr0.001_split0.10.pt"
+    # TODO tarkista nimet ennenku laitat ajon päälle
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_nn", copyof="specchio_nn", solver="nn",
+                                      nn_name=nn_name, plot_resampling=False)
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_surf", copyof="specchio_nn", solver="surf",
+                                      plot_resampling=False)
+
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_nn", copyof="prospect_nn_without_difficult", solver="nn",
+                                      nn_name=nn_name, plot_resampling=False)
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_surf", copyof="prospect_nn_without_difficult",
+                                      solver="surf", plot_resampling=False)
 
     # rng = np.random.default_rng(4321)
 

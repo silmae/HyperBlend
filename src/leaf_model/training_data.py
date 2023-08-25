@@ -167,7 +167,7 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
         logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance targets.")
         TH.write_target(set_name, data, sample_id=0)
         o = Optimization(set_name=set_name)
-        o.run_optimization()
+        o.run_optimization(resampled=False)
     else:
         logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
                      f"but this was just a dry run..")
