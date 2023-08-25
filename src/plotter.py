@@ -137,6 +137,7 @@ def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflecta
         AttributeError if save=True but forest_id=None.
     """
 
+    plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
     fig.suptitle(f"Resampled soil reflectance '{soil_name}'", fontsize=fig_title_font_size)
 
@@ -176,6 +177,7 @@ def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=Fa
         If `len(powers) != len(reflectance)`.
     """
 
+    plt.close('all')
     if len(powers) != len(reflectance):
         raise ValueError(f"Length of sun powers {len(powers)} and measurements {len(reflectance)} must match.")
 
@@ -226,6 +228,7 @@ def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, 
         String either 'sun' or 'sky'.
     """
 
+    plt.close('all')
     bandwith = wls[1] - wls[0]
     if wls_binned is not None and irradiances_binned is not None:
         bandwith_binned = wls_binned[1] - wls_binned[0]
@@ -290,6 +293,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     :return:
     """
 
+    plt.close('all')
     if not file_name.endswith(C.postfix_plot_image_format):
         file_name = file_name + C.postfix_plot_image_format
 
@@ -333,6 +337,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
         else:
             return v
 
+    plt.close('all')
     ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(set_name=set_name)
     ad_train, sd_train, ai_train, mf_train, r_train, t_train = training.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
     train_params = [ad_train, sd_train, ai_train, mf_train]
@@ -426,6 +431,8 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         Save plot to disk. Default is ```True```.
     """
 
+    plt.close('all')
+
     color_good = 'blue'
     color_bad = 'red'
     color_cut = 'black'
@@ -479,6 +486,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
+    plt.close('all')
     subres_dict = TH.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
@@ -523,6 +531,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         If True, save plot to disk. Default is True.
     """
 
+    plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
     # ax[0].set_title('Variable space')
@@ -591,6 +600,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
 def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     """Plots averaged optimization errors of a sample. """
 
+    plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
     marker = '.'
@@ -645,6 +655,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
+    plt.close('all')
     target_ids = FH.list_target_ids(set_name=set_name)
 
     for sample_id in target_ids:
@@ -681,6 +692,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
+    plt.close('all')
     result = TH.read_sample_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
