@@ -13,6 +13,10 @@ measured_data/*
 blender_test_run/*
 scenes/*
 
+# Ignore algae data
+algae_samples/*
+
+
 # Ignore other than default sun and sky files
 sun_data/*
 !sun_data/default_sun.txt

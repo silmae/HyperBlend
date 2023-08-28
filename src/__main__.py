@@ -30,6 +30,8 @@ from src.rendering import blender_control as BC
 from src.gsv import gsv
 from src.forest import soil
 
+from src.algae import spectrometer as algae
+
 
 def write_forest_control(forest_id: str, control_dict: dict):
     TH.write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id), filename='forest_control')
@@ -92,11 +94,15 @@ if __name__ == '__main__':
 
     rng = np.random.default_rng(4321)
 
+    algae.plot_water_empty_diff()
+    algae.plot_ready_algae()
+    algae.plot_manual_algae()
+
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
 
     # plotter.plot_resampling(set_name='low_res')
-    forest_pipe_test(rng=rng)
+    # forest_pipe_test(rng=rng)
     # forest_id = forest.init()
 
     # forest_id = '1406231352'
