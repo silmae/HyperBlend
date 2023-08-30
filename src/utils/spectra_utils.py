@@ -146,7 +146,7 @@ def resample(original_wl, original_val, new_wl):
     spec_wavs = np.array(original_wl)
     spec_fluxes = np.array(original_val)
 
-    resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes)
+    resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes, fill=0.0)
     return resampled
 
 
