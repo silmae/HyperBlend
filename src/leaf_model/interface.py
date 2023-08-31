@@ -192,9 +192,9 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
     plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
 
 
-def train_models(set_name='training_data', show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size=2,
-                 learning_rate=0.001, patience=30, split=0.1, generate_data=False, train_points_per_dim=100,
-                 dry_run=False, train_surf=True, train_nn=True):
+def train_models(set_name='training_data', generate_data=False, starting_guess_type='curve', similarity_rt=0.25, train_surf=True, train_nn=True, layer_count=9,
+                 layer_width=10, epochs=300, batch_size=2, learning_rate=0.001, patience=30, split=0.1, train_points_per_dim=100,
+                 dry_run=False, show_plot=False):
     """Train surface model and neural network.
     
     If training data does not yet exist, it must be created by setting ``generate_data=True``. Note that 
@@ -209,7 +209,15 @@ def train_models(set_name='training_data', show_plot=False, layer_count=9, layer
     
     Show plot is safe to be kept at default ``False``. The plots are saved to the disk anyways. 
     
-    
+    :param starting_guess_type:
+            One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
+            Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
+            example if leaf material parameter count or bounds change in future development).
+            Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
+            only work in cases where R and T are relatively close to each other (around +- 0.2).
+            Surface fitting method 'surf' can be used after the first training iteration has been carried
+            out. It can more robustly adapt to situations where R and T are dissimilar.
+    :param similarity_rt:
     :param set_name:
         Set name of the training data. New training data is generated with this name if  ``generate_data=True``.
         Otherwise, existing data with this name is used.
@@ -250,7 +258,8 @@ def train_models(set_name='training_data', show_plot=False, layer_count=9, layer
     """
 
     if generate_data:
-        src.leaf_model.training_data.generate_train_data(set_name=set_name, cuts_per_dim=train_points_per_dim, dry_run=dry_run)
+        src.leaf_model.training_data.generate_train_data(set_name=set_name, cuts_per_dim=train_points_per_dim, dry_run=dry_run,
+                                                         similarity_rt=similarity_rt, starting_guess_type=starting_guess_type)
 
     if train_surf:
         surf.train(set_name=set_name)

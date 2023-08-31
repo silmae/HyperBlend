@@ -404,7 +404,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             plt.show()
 
 
-def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True):
+def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True, save_name='training_data'):
     """Plot training data either interactively or save to disk.
 
     Constants k1,2 and b1,2 are used to visualize cutting lines along equation k*r + b.
@@ -429,6 +429,8 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         Show interactive plot to user. Default is ```False```.
     :param save:
         Save plot to disk. Default is ```True```.
+    :param save_name:
+        Filename to be used when the image is saved. Only used if 'save' is True.
     """
 
     plt.close('all')
@@ -463,7 +465,7 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
 
     if save:
         folder = PH.path_directory_surface_model()
-        image_name = "training_data" + C.postfix_plot_image_format
+        image_name = save_name + C.postfix_plot_image_format
         path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)

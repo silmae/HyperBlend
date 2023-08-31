@@ -70,6 +70,60 @@ def forest_pipe_test(rng):
     # BC.generate_forest_control(global_master=True)
 
 
+def run_paper_tests():
+
+    #FIXME resampling in shambles!!!
+
+    nn_name = "lc9_lw10_b2_lr0.001_split0.10.pt"
+
+    resolution = 5
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_nn", copyof="specchio", solver="nn",
+                                      nn_name=nn_name, plot_resampling=False)
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_surf", copyof="specchio", solver="surf",
+                                      plot_resampling=False)
+
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_nn", copyof="prospect_randoms", solver="nn",
+                                      nn_name=nn_name, plot_resampling=False)
+    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_surf", copyof="prospect_randoms",
+                                      solver="surf", plot_resampling=False)
+
+
+def asym_test(smthng='const_r_var_t'):
+    import numpy as np
+    from src.leaf_model import leaf_commons as LC
+    from src.leaf_model.opt import Optimization
+    from src.utils import data_utils
+
+    set_name = f"{smthng}_test"
+
+    n = 10
+    const = 0.1
+    if smthng == 'const_r_var_t':
+        r_list = np.ones((n,)) * const
+        t_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
+        wls = np.arange(n)
+    elif smthng == 'const_t_var_r':
+        t_list = np.ones((n,)) * const
+        r_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
+        wls = np.arange(n)
+
+    data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
+
+    LC.initialize_directories(set_name=set_name, clear_old_results=True)
+    TH.write_target(set_name=set_name, data=data)
+    # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
+    o = Optimization(set_name=set_name, diffstep=0.01)  # FIXME tää vois olla uus defaulttin stepille että löytyy paremmin optimi
+    o.run_optimization(resampled=False, use_threads=True)
+    print(f"Done {set_name}")
+
+
+def iterative_train():
+
+    LI.train_models(set_name="train_iter_1", generate_data=True, starting_guess_type='curve', train_points_per_dim=50, similarity_rt=0.2, train_surf=True, train_nn=False)
+    LI.train_models(set_name="train_iter_2", generate_data=True, starting_guess_type='surf', train_points_per_dim=50, similarity_rt=0.3, train_surf=True, train_nn=False)
+    # TODO etc..
+    
+
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
@@ -90,28 +144,15 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+
     # Let redo starting guess
     from src.utils import spectra_utils as SU
     # SU.generate_starting_guess()
     # SU.fit_starting_guess_coefficients(degree=12)
     # plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
 
-    size = 10
-    set_name = "training_data-1-1"
-    LI.train_models(set_name=set_name, generate_data=True, train_points_per_dim=size)
-
-    resolution = 100
-    nn_name = "lc9_lw10_b2_lr0.001_split0.10.pt"
-    # TODO tarkista nimet ennenku laitat ajon päälle
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_nn", copyof="specchio_nn", solver="nn",
-                                      nn_name=nn_name, plot_resampling=False)
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_surf", copyof="specchio_nn", solver="surf",
-                                      plot_resampling=False)
-
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_nn", copyof="prospect_nn_without_difficult", solver="nn",
-                                      nn_name=nn_name, plot_resampling=False)
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_surf", copyof="prospect_nn_without_difficult",
-                                      solver="surf", plot_resampling=False)
+    # asym_test('const_r_var_t')
+    # asym_test('const_t_var_r')
 
     # rng = np.random.default_rng(4321)
 
