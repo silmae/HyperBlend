@@ -65,10 +65,19 @@ def read_toml_as_dict(directory: str, filename: str):
     return result
 
 
-def read_surface_model_parameters():
-    """Reads surface model parameters from a file and returns them as a dictionary. """
+def read_surface_model_parameters(file_name=None):
+    """Reads surface model parameters from a file and returns them as a dictionary.
 
-    p = PH.path_file_surface_model_parameters()
+    :param file_name:
+         File name to be used. If none given, the default name in constants.py
+        will be used.
+    """
+
+    if not file_name.endswith('.toml'):
+        file_name = file_name + '.toml'
+
+    p = PH.path_file_surface_model_parameters(file_name=file_name)
+
     if not os.path.exists(p):
         raise RuntimeError(f'Surface model parameter file "{p}" not found.')
     with open(p, 'r') as file:
@@ -76,14 +85,17 @@ def read_surface_model_parameters():
     return result
 
 
-def write_surface_model_parameters(parameter_dict):
+def write_surface_model_parameters(parameter_dict, file_name=None):
     """Writes surface model parameters to a file
 
     :param parameter_dict:
         Parameter dictionary to be saved.
+    :param file_name:
+        File name to be used. If none given, the default name in constants.py
+        will be used.
     """
 
-    p = PH.path_file_surface_model_parameters()
+    p = PH.path_file_surface_model_parameters(file_name=file_name)
     with open(p, 'w+') as file:
         toml.dump(parameter_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 

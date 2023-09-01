@@ -151,14 +151,7 @@ if __name__ == '__main__':
     # SU.fit_starting_guess_coefficients(degree=12)
     # plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
 
-    # size = 500
-    # set_name = "training_data-1-1"
-    # LI.train_models(set_name=set_name, generate_data=True, train_points_per_dim=size)
-    resolution = 5
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_nn", copyof="specchio", solver="nn",
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_specchio_surf", copyof="specchio", solver="surf",
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_nn", copyof="prospect_randoms", solver="nn",
-    LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="aifix_prospect_surf", copyof="prospect_randoms",
+
 
     # rng = np.random.default_rng(4321)
 

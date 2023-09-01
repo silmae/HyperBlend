@@ -134,8 +134,10 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     logging.info(f"Test split {split}")
     logging.info(f"Net has {net.layer_count} hidden layers that are {net.layer_width} wide")
 
-    save_name = FN.get_nn_save_name(layer_count=net.layer_count, layer_width=net.layer_width, batch_size=batch_size,
-                                 lr=learning_rate, split=split)
+    # save_name = FN.get_nn_save_name(layer_count=net.layer_count, layer_width=net.layer_width, batch_size=batch_size,
+    #                              lr=learning_rate, split=split)
+    # TODO changed file naming, test that it works
+    save_name = f"{set_name}_nn.pt"
 
     net = net.double()
     logging.info(net)
