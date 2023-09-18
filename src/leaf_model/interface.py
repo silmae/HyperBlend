@@ -12,7 +12,7 @@ import logging
 import src.leaf_model.training_data
 import src.leaf_model.leaf_sampling as sampling
 from src.leaf_model.opt import Optimization
-from src.data import file_handling as FH, toml_handling as TH
+from src.data import file_handling as FH, toml_handling as TH, file_names as FN
 from src import plotter
 from src.leaf_model import nn, surf, leaf_commons as LC
 from src.prospect import prospect
@@ -81,7 +81,7 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
     sampling.resample(set_name=set_name)
 
 
-def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampling=False, solver='nn', clear_old_results=False, nn_name=None,
+def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_sampling=False, solver='nn', clear_old_results=False, solver_model_name=None,
                                    copyof=None, plot_resampling=True):
     """Solves leaf material parameters for rendering.
     
@@ -97,7 +97,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
         If resolution is None (default), spectral sampling defined in `sampling.toml` will be used.
         If resolution is provided and can be interpreted as an int, new sampling is written from 400 nm
         to 2500 nm with given `resolution` nm intervals.
-    :param disable_sampling:
+    :param use_dumb_sampling:
 
     :param solver:
         Solving method either 'opt', 'surf' or 'nn'. Opt is slowest and most accurate (the original method). Surf is 
@@ -106,9 +106,9 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
     :param clear_old_results: 
         If True, clear old results of the set. This is handy for redoing the same set with different method, for 
         example. Note that existing wavelength results are not redone unless first removed.
-    :param nn_name: 
-        Name of the neural network to use. The default is 'nn_default' but if you have trained your own custom 
-        NN, use that name (or rename your NN to 'nn_default.pt'.
+    :param solver_model_name:
+        Name of the neural network or surface model to use. The default is 'nn_default' but if you have trained your own custom
+        NN, use that name (or rename your NN to 'nn_default.pt'. TODO fix docs
     :param copyof: 
         Name of the set to copy. Copies target from existing set (walengths, reflectances, and transmittances).
     """
@@ -133,7 +133,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
             raise RuntimeError(f"Sampling has not been defined for set '{set_name}'. "
                                f"Cannot solve leaf material parameters.")
 
-    if not disable_sampling:
+    if not use_dumb_sampling:
         sampling.resample(set_name=set_name, plot_resampling=plot_resampling)
 
     ids = FH.list_target_ids(set_name)
@@ -145,17 +145,18 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
     for _, sample_id in enumerate(ids):
         FH.create_opt_folder_structure_for_samples(set_name, sample_id)
         logging.info(f'Starting optimization of sample {sample_id}')
-        targets = TH.read_target(set_name, sample_id, resampled=not disable_sampling)
+        targets = TH.read_target(set_name, sample_id, resampled=not use_dumb_sampling)
 
-        # Do not use this anymore
+        # TODO the sampling is now a problem as the new sampling cannot properly handle the
+        #    5 nm resolution used in the published tests.
         # Spectral resolution
-        # if resolution != 1:
-        #     targets = targets[::resolution]
+        if resolution != 1 and use_dumb_sampling:
+            targets = targets[::resolution]
 
         if solver == 'opt':
             # use_resampling = not disable_sampling and resolution is not None
             o = Optimization(set_name=set_name)
-            o.run_optimization(resampled=not disable_sampling)
+            o.run_optimization(resampled=not use_dumb_sampling)
         elif solver == 'surf' or solver == "nn":
             start = time.perf_counter()
 
@@ -163,11 +164,11 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
             r_m = targets[:, 1]
             t_m = targets[:, 2]
 
-            if solver == 'surf':
-                ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(r_m=r_m, t_m=t_m)
+            if solver == 'surf' and solver_model_name is not None:
+                ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(r_m=r_m, t_m=t_m, surface_model_name=solver_model_name)
             elif solver == "nn":
-                if nn_name: # when using custom NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, nn_name=nn_name)
+                if solver_model_name: # when using custom NN
+                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, nn_name=solver_model_name)
                 else: # when using default NN
                     ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m)
 
@@ -192,9 +193,10 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, disable_sampl
     plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
 
 
-def train_models(set_name='training_data', generate_data=False, starting_guess_type='curve', similarity_rt=0.25, train_surf=True, train_nn=True, layer_count=9,
-                 layer_width=10, epochs=300, batch_size=2, learning_rate=0.001, patience=30, split=0.1, train_points_per_dim=100,
-                 dry_run=False, show_plot=False):
+def train_models(set_name='training_data', generate_data=False, data_generation_diff_step=0.01,
+                 starting_guess_type='curve', surface_model_name=None, similarity_rt=0.25, train_surf=True,
+                 train_nn=True, layer_count=5, layer_width=1000, epochs=300, batch_size=32, learning_rate=0.01,
+                 patience=30, split=0.1, train_points_per_dim=20, dry_run=False, show_plot=False):
     """Train surface model and neural network.
     
     If training data does not yet exist, it must be created by setting ``generate_data=True``. Note that 
@@ -209,6 +211,8 @@ def train_models(set_name='training_data', generate_data=False, starting_guess_t
     
     Show plot is safe to be kept at default ``False``. The plots are saved to the disk anyways. 
     
+    :param data_generation_diff_step:
+    :param surface_model_name:
     :param starting_guess_type:
             One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
             Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
@@ -258,8 +262,13 @@ def train_models(set_name='training_data', generate_data=False, starting_guess_t
     """
 
     if generate_data:
-        src.leaf_model.training_data.generate_train_data(set_name=set_name, cuts_per_dim=train_points_per_dim, dry_run=dry_run,
-                                                         similarity_rt=similarity_rt, starting_guess_type=starting_guess_type)
+        src.leaf_model.training_data.generate_train_data(set_name=set_name, dry_run=dry_run,
+                                                         cuts_per_dim=train_points_per_dim, similarity_rt=similarity_rt,
+                                                         starting_guess_type=starting_guess_type,
+                                                         surf_model_name=surface_model_name, data_generation_diff_step=data_generation_diff_step)
+
+    if dry_run:
+        return
 
     if train_surf:
         surf.train(set_name=set_name)
@@ -267,19 +276,21 @@ def train_models(set_name='training_data', generate_data=False, starting_guess_t
         nn.train(show_plot=show_plot, layer_count=layer_count, layer_width=layer_width, epochs=epochs,
                  batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split, set_name=set_name)
 
-    visualize_leaf_models(show_plot=False)
+    nn_name = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
+                                  lr=learning_rate, split=split, training_set=set_name)
+
+    visualize_leaf_models(show_plot=False,training_set_name=set_name, nn_name=nn_name, plot_nn=train_nn, plot_surf=train_surf)
 
 
-def visualize_leaf_models(show_plot=False, nn_name='nn_deault', plot_surf=True,
+def visualize_leaf_models(training_set_name:str, show_plot=False, nn_name='nn_default', plot_surf=True,
                           plot_nn=True, plot_points=True):
-    """Visualize trained surface and and neural network model against training data.
+    """Visualize trained surface and neural network model against training data.
 
     The plot is always saved to disk regardless of ``show_plot`` flag.
 
-    :param nn_name:
     :param show_plot:
         If True, show interactive plot. Default is false.
     """
 
     plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
-                                     plot_points=plot_points, nn_name=nn_name)
+                                     plot_points=plot_points, nn_name=nn_name, set_name=training_set_name)

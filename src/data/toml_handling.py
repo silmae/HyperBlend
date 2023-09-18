@@ -77,6 +77,7 @@ def read_surface_model_parameters(file_name=None):
         file_name = file_name + '.toml'
 
     p = PH.path_file_surface_model_parameters(file_name=file_name)
+    logging.info(f"Reading surface model parameters from '{p}'.")
 
     if not os.path.exists(p):
         raise RuntimeError(f'Surface model parameter file "{p}" not found.')

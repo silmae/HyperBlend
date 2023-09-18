@@ -83,7 +83,7 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
         Pruned ad,sd,ai,mf,r,t corresponding to arguments.
     """
 
-    max_error = 0.01 # 1%
+    max_error = 0.02 # 1%
     logging.info(f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned.")
 
     to_delete = [(a > max_error or b > max_error) for a, b in zip(re, te)]
@@ -111,7 +111,8 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
     return ad, sd, ai, mf, r, t
 
 
-def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25, starting_guess_type='curve'):
+def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25,
+                        starting_guess_type='curve', surf_model_name=None, data_generation_diff_step=0.01):
     """Generate reflectance-transmittance pairs as training data for surface fitting and neural network.
 
     Generated data will have fake wavelengths attached to them. They run from 1 to the number of
@@ -122,6 +123,7 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
 
     Data visualization is saved to disk when the data has been generated.
 
+    :param data_generation_diff_step:
     :param set_name:
         Optionally change the ``set_name`` that is used for destination directory. If other
         than default is used, it must be taken into account when training, i.e., pass the same
@@ -144,6 +146,8 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
             only work in cases where R and T are relatively close to each other (around +- 0.2).
             Surface fitting method 'surf' can be used after the first training iteration has been carried
             out. It can more robustly adapt to situations where R and T are dissimilar.
+    :param surf_model_name:
+        Must be given if starting guess type is 'surf'.
     """
 
     FH.create_first_level_folders(set_name)
@@ -175,7 +179,10 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     if not dry_run:
         logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance targets.")
         TH.write_target(set_name, data, sample_id=0)
-        o = Optimization(set_name=set_name, starting_guess_type=starting_guess_type)
+        if starting_guess_type == 'surf' and surf_model_name is None:
+            raise AttributeError(f"Solver model name must be provided if starting guess type is '{starting_guess_type}'.")
+        o = Optimization(set_name=set_name, starting_guess_type=starting_guess_type, surf_model_name=surf_model_name,
+                         diffstep=data_generation_diff_step)
         o.run_optimization(resampled=False)
     else:
         logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"

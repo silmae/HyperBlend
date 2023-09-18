@@ -26,13 +26,13 @@ from src import plotter
 
 # Set manual seed when doing hyperparameter search for comparable results
 # between training runs.
-torch.manual_seed(666)
+# torch.manual_seed(666)
 
 
 class Leafnet(nn.Module):
     """Neural network implementation."""
 
-    def __init__(self, layer_count=9, layer_width=10):
+    def __init__(self, layer_count=5, layer_width=1000):
         """Initialize neural network with given architecture.
 
         Number and width of hidden layers as parameters. Activation for all hidden layers is
@@ -85,7 +85,7 @@ class TrainingData(Dataset):
         return self.X[idx], self.Y[idx]
 
 
-def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size=2, learning_rate=0.001, patience=30,
+def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_size=2, learning_rate=0.001, patience=30,
           split=0.1, set_name='training_data'):
     """Train the neural network with given parameters.
 
@@ -134,11 +134,6 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     logging.info(f"Test split {split}")
     logging.info(f"Net has {net.layer_count} hidden layers that are {net.layer_width} wide")
 
-    # save_name = FN.get_nn_save_name(layer_count=net.layer_count, layer_width=net.layer_width, batch_size=batch_size,
-    #                              lr=learning_rate, split=split)
-    # TODO changed file naming, test that it works
-    save_name = f"{set_name}_nn.pt"
-
     net = net.double()
     logging.info(net)
 
@@ -153,6 +148,9 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     best_loss = 1e10
     best_epoch_idx = None
     patience_trigger = 0
+
+    nn_filename = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
+                                      lr=learning_rate, split=split, training_set=set_name)
 
     for epoch in range(n_epochs):
 
@@ -183,7 +181,9 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
             best_epoch_idx = epoch
             patience_trigger = 0
             best_model_state = net.state_dict()
-            nn_filename = save_name + '.pt'
+
+            # nn_filename = save_name + '.pt'
+
             save_path = PH.join(PH.path_directory_surface_model(), nn_filename)
 
             # Old save method
@@ -203,7 +203,7 @@ def train(show_plot=False, layer_count=9, layer_width=10, epochs=300, batch_size
     print(train_losses)
     logging.info(f"Neural network training finished. Final loss {best_loss}")
     plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx,
-                                  dont_show=not show_plot, save_thumbnail=True, file_name=save_name)
+                                  dont_show=not show_plot, save_thumbnail=True, file_name=nn_filename)
     return best_loss
 
 

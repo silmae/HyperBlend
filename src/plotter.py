@@ -20,6 +20,9 @@ from src.leaf_model import nn, surf, training_data as training, surface_function
 from src.utils import data_utils as DU, spectra_utils as SU
 
 
+figsize_triple_width = (22,6)
+"""Figure size for two plot figures."""
+
 figsize = (12,6)
 """Figure size for two plot figures."""
 figsize_single = (7,6)
@@ -343,8 +346,10 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
-    if plot_surf and surf.exists():
-        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train)
+    surf_model_name = FN.get_surface_model_save_name(training_set_name=set_name)
+
+    if plot_surf and surf.exists(surf_model_name):
+        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train,surface_model_name=surf_model_name)
         surf_params = [ad_surf, sd_surf, ai_surf, mf_surf]
     else:
         surf_params = None
@@ -374,20 +379,23 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             train_surf._edgecolors2d = train_surf._edgecolor3d
             train_surf._facecolors2d = train_surf._facecolor3d
 
-        if surf_params is not None:
-            # surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf', shade=True)
-            surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], label='surf')
-            surf_surf._edgecolors2d = surf_surf._edgecolor3d
-            surf_surf._facecolors2d = surf_surf._facecolor3d
-        else:
-            logging.warning(f"Cannot plot surface model plot as the model could not be used.")
-        if nn_params is not None:
-            # nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn', shade=True)
-            nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i],  label='nn')
-            nn_surf._edgecolors2d = nn_surf._edgecolor3d
-            nn_surf._facecolors2d = nn_surf._facecolor3d
-        else:
-            logging.warning(f"Cannot plot nn model plot as the model could not be used.")
+        if plot_surf:
+            if surf_params is not None:
+                # surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf', shade=True)
+                surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], label='surf')
+                surf_surf._edgecolors2d = surf_surf._edgecolor3d
+                surf_surf._facecolors2d = surf_surf._facecolor3d
+            else:
+                logging.warning(f"Cannot plot surface model plot as the model could not be used.")
+
+        if plot_nn:
+            if nn_params is not None:
+                # nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn', shade=True)
+                nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i],  label='nn')
+                nn_surf._edgecolors2d = nn_surf._edgecolor3d
+                nn_surf._facecolors2d = nn_surf._facecolor3d
+            else:
+                logging.warning(f"Cannot plot nn model plot as the model could not be used.")
 
         if surf_params is not None and nn_params is not None:
             # legend breaks if not manually set as above. This is a known bug in matplotlib.
@@ -395,7 +403,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
 
         if save_thumbnail:
             folder = PH.path_directory_surface_model()
-            image_name = f"{leaf_param_names[i]}.png"
+            image_name = f"{set_name}_{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
             plt.savefig(path, dpi=save_resolution)
@@ -442,22 +450,22 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training data", fontsize=fig_title_font_size)
 
-    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker='.', label='Good points')
-
     if r_bad is not None and t_bad is not None:
         ax.scatter(r_bad, t_bad, c=color_bad, alpha=0.5, marker='.', label='Bad points')
     else:
         logging.info("Badly fitted training data points were not given so they are not plotted.")
 
-    if k1 and b1:
-        x = np.array([-0.01,0.1])
-        y = x*k1 + b1
-        plt.plot(x, y, c=color_cut, linewidth=1)
+    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker='.', label='Good points')
 
-    if k2 and b2:
-        x = np.array([-b2,0.5])
-        y = x*k2 + b2
-        ax.plot(x, y, c=color_cut, linewidth=1)
+    # if k1 and b1:
+    #     x = np.array([-0.01,0.1])
+    #     y = x*k1 + b1
+    #     plt.plot(x, y, c=color_cut, linewidth=1)
+    #
+    # if k2 and b2:
+    #     x = np.array([-b2,0.5])
+    #     y = x*k2 + b2
+    #     ax.plot(x, y, c=color_cut, linewidth=1)
 
     ax.set_xlabel('R', fontsize=axis_label_font_size)
     ax.set_ylabel('T', fontsize=axis_label_font_size)
@@ -490,10 +498,11 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
 
     plt.close('all')
     subres_dict = TH.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=figsize_triple_width)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
+    ax[2].set_title('Loss')
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ad])), subres_dict[C.key_wl_result_history_ad], label=C.key_wl_result_history_ad, color=color_ad)
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_sd])), subres_dict[C.key_wl_result_history_sd], label=C.key_wl_result_history_sd, color=color_sd)
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ai])), subres_dict[C.key_wl_result_history_ai], label=C.key_wl_result_history_ai, color=color_ai)
@@ -502,10 +511,17 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
 
+    # Loss
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_total])), subres_dict[C.key_wl_result_history_loss_total], label=C.key_wl_result_history_loss_total)
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_r])), subres_dict[C.key_wl_result_history_loss_r], label=C.key_wl_result_history_loss_r)
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_over_one])), subres_dict[C.key_wl_result_history_loss_over_one], label=C.key_wl_result_history_loss_over_one)
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_t])), subres_dict[C.key_wl_result_history_loss_t], label=C.key_wl_result_history_loss_t)
+    ax[2].legend()
+
     # Plot horizontal line to location of measured value
     x_data = np.arange(1, len(subres_dict[C.key_wl_result_history_r]))
-    ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target)
-    ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target)
+    ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target, linewidth=2)
+    ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target, linewidth=2)
 
     _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 

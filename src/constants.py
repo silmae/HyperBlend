@@ -169,6 +169,15 @@ key_wl_result_history_ai = 'history_scattering_anisotropy'
 key_wl_result_history_mf = 'history_mix_factor'
 """History of mix factor listed for each render run."""
 
+key_wl_result_history_loss_total = 'loss'
+"""History of loss listed for each render run."""
+
+key_wl_result_history_loss_over_one = 'over_one'
+
+key_wl_result_history_loss_t = 't_loss'
+
+key_wl_result_history_loss_r = 'r_loss'
+
 key_wl_result_optimizer = 'optimizer'
 """Optimizer name used in optimization."""
 

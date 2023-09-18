@@ -13,7 +13,7 @@ import numpy as np
 from src import constants as C
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
-from src.data import file_handling as FH, toml_handling as TH, path_handling as P
+from src.data import file_handling as FH, toml_handling as TH, path_handling as P, file_names as FN
 from src import plotter
 from src.leaf_model import leaf_commons as LC
 
@@ -25,7 +25,7 @@ hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
 """This should be used only if the starting guess based on polynomial fitting is not available. 
  Will produce worse results and is slower. """
 
-LOWER_BOUND = [0.000001, 0.000001, 0.0, 0.0]
+LOWER_BOUND = [0.0, 0.0, 0.0, 0.0] # TODO check this comment! Makes sense to have bound at zero so we can clip it proper
 """Lower constraints of the minimization problem. Absorption and scattering particle density cannot be exactly 
 zero as it may cause problems in rendering. """
 
@@ -39,7 +39,8 @@ class Optimization:
         against a set of measured leaf spectra.
     """
 
-    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01, starting_guess_type='surf', clear_old_results=False):
+    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01,
+                 starting_guess_type='curve', clear_old_results=False, surf_model_name=None):
         """Initialize new optimization object.
 
         Creates necessary folder structure if needed.
@@ -71,9 +72,12 @@ class Optimization:
             Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
             only work in cases where R and T are relatively close to each other (around +- 0.2).
             Surface fitting method 'surf' can be used after the first training iteration has been carried
-            out. It can more robustly adapt to situations where R and T are dissimilar.
+            out. It can more robustly adapt to situations where R and T are dissimilar. If 'surf' is
+            used, also surf_model_name must be provided.
         :param clear_old_results:
             Wipe out old results of the same set by setting ```True```.
+        :param surf_model_name:
+            Surface model name.
         """
 
         self.bounds = (LOWER_BOUND, UPPER_BOUND)
@@ -87,6 +91,9 @@ class Optimization:
         self.xtol = xtol
         self.diffstep = diffstep
         self.starting_guess_type = starting_guess_type
+        if starting_guess_type == 'surf' and surf_model_name is None:
+            raise AttributeError(f"Surface model name must be given when using starting guess type '{starting_guess_type}'.")
+        self.surface_model_name = surf_model_name
         LC.initialize_directories(set_name=set_name, clear_old_results=clear_old_results)
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):
@@ -126,9 +133,10 @@ class Optimization:
             #     targets = targets[::ignore_sampling]
 
             if use_threads:
-                param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,
-                           self.ftol, self.xtol, self.bounds, LC.density_scale, self.optimizer_verbosity,
-                           use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type) for a in targets]
+                param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,self.ftol, self.xtol,
+                               self.bounds, LC.density_scale, self.optimizer_verbosity, use_basin_hopping,
+                               sample_id, self.ftol_abs, self.starting_guess_type, self.surface_model_name)
+                              for a in targets]
                 with Pool() as pool:
                     pool.map(optimize_single_wl_threaded, param_list)
             else:
@@ -138,7 +146,8 @@ class Optimization:
                     t_m = target[2]
                     optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
                                        self.ftol, self.xtol, self.bounds, LC.density_scale, self.optimizer_verbosity,
-                                       use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type)
+                                       use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type,
+                                       self.surface_model_name)
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
@@ -158,7 +167,7 @@ def optimize_single_wl_threaded(args):
 
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
-                       use_basin_hopping: bool, sample_id: int, ftol_abs, starting_guess_type):
+                       use_basin_hopping: bool, sample_id: int, ftol_abs, starting_guess_type, surf_model_name):
     """Optimize single wavelength to given reflectance and transmittance.
 
     Result is saved in a .toml file and plotted as an image.
@@ -241,18 +250,31 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
         r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
         t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
-        # Scale distance with the desnity scale.
-        dist = distance(r, t) * density_scale
-        history.append([*x, r, t])
 
-        # Give big penalty if r+t > 1 as it is non-physical behavior.
-        penalty = 0
-        some_big_number = 1 # double the penalty when R + T > 1
+        # Old distance
+        # Scale distance with the desnity scale.
+        # r_loss = distance(r, t) #* density_scale
+
+        # Give penalty if r+t > 1 as it is non-physical behavior.
+        over_one = 0
         if r + t > 1:
-            penalty = some_big_number
-        return dist + penalty
+            over_one = math.fabs(r + t)
+
+        # Distance changed to manhattan L1.
+        r_diff = math.fabs(r - r_m)
+        t_diff = math.fabs(t - t_m)
+
+        r_loss = r_diff * density_scale
+        over_one = over_one * 10
+        t_loss = t_diff * density_scale
+        total_loss = r_loss + over_one + t_loss
+
+        history.append([*x, r, t, total_loss, r_loss, over_one, t_loss])
+
+        return total_loss
 
     # Render references here as it only needs to be done once per wavelength
     B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
@@ -263,10 +285,18 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     elif starting_guess_type == 'curve':
         x_0 = get_starting_guess(1 - (r_m + t_m))
     elif starting_guess_type == 'surf':
-        x_0 = surf.predict(r_m=r_m, t_m=t_m)
+        x_0 = surf.predict(r_m=r_m, t_m=t_m, surface_model_name=surf_model_name)
     else:
         raise AttributeError(f"Starting guess type '{starting_guess_type}' not recogniced. "
                              f"Use on of ")
+
+    # TODO clip so that starting guess values are not exactly 0 or 1
+    x_hat_0 = np.clip(x_0[0], 0.05, 0.95)
+    x_hat_1 = np.clip(x_0[1], 0.05, 0.95)
+    x_hat_2 = np.clip(x_0[2], 0.05, 0.95)
+    x_hat_3 = np.clip(x_0[3], 0.05, 0.95)
+
+    x_0 = (x_hat_0, x_hat_1, x_hat_2, x_hat_3)
 
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
@@ -362,6 +392,10 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         C.key_wl_result_history_sd: [float(h[1]) for h in history],
         C.key_wl_result_history_ai: [float(h[2]) for h in history],
         C.key_wl_result_history_mf: [float(h[3]) for h in history],
+        C.key_wl_result_history_loss_total: [float(h[6]) for h in history], # total loss
+        C.key_wl_result_history_loss_r: [float(h[7]) for h in history],  # R loss
+        C.key_wl_result_history_loss_over_one: [float(h[8]) for h in history],  # over one
+        C.key_wl_result_history_loss_t: [float(h[9]) for h in history], # T loss
     }
     # print(res_dict)
     logging.info(f'Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk.')

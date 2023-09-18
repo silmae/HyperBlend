@@ -233,7 +233,7 @@ def generate_starting_guess():
     set_name = C.starting_guess_set_name
 
     FH.create_first_level_folders(set_name)
-    o = Optimization(set_name=set_name, starting_guess_type=True)
+    o = Optimization(set_name=set_name, starting_guess_type='hard-coded')
     make_linear_test_target(set_name)
     o.run_optimization(use_threads=True, use_basin_hopping=False, resampled=False)
     fit_starting_guess_coefficients()

@@ -236,7 +236,7 @@ def path_directory_forest_rend_visibility_maps(forest_id: str) -> str:
 ##########################################################################
 
 
-def path_file_surface_model_parameters(file_name=None) -> str:
+def path_file_surface_model_parameters(file_name:str=None) -> str:
     """Path to surface model parameter file.
 
     :param file_name:
