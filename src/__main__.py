@@ -85,33 +85,34 @@ def run_paper_tests():
                                       solver="surf", plot_resampling=False, solver_model_name=surf_model_name, use_dumb_sampling=True)
 
 
-# def asym_test(smthng='const_r_var_t'):
-#     import numpy as np
-#     from src.leaf_model import leaf_commons as LC
-#     from src.leaf_model.opt import Optimization
-#     from src.utils import data_utils
-#
-#     set_name = f"{smthng}_test"
-#
-#     n = 10
-#     const = 0.1
-#     if smthng == 'const_r_var_t':
-#         r_list = np.ones((n,)) * const
-#         t_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
-#         wls = np.arange(n)
-#     elif smthng == 'const_t_var_r':
-#         t_list = np.ones((n,)) * const
-#         r_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
-#         wls = np.arange(n)
-#
-#     data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
-#
-#     LC.initialize_directories(set_name=set_name, clear_old_results=True)
-#     TH.write_target(set_name=set_name, data=data)
-#     # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
-#     o = Optimization(set_name=set_name, diffstep=0.01)
-#     o.run_optimization(resampled=False, use_threads=True)
-#     print(f"Done {set_name}")
+def asym_test(smthng='const_r_var_t'):
+    import numpy as np
+    from src.leaf_model import leaf_commons as LC
+    from src.leaf_model.opt import Optimization
+    from src.utils import data_utils
+
+    set_name = f"{smthng}_test"
+
+    n = 10
+    const = 0.05
+    if smthng == 'const_r_var_t':
+        r_list = np.ones((n,)) * const
+        t_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
+        wls = np.arange(n)
+    elif smthng == 'const_t_var_r':
+        t_list = np.ones((n,)) * const
+        r_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
+        wls = np.arange(n)
+
+    data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
+
+    LC.initialize_directories(set_name=set_name, clear_old_results=True)
+    TH.write_target(set_name=set_name, data=data)
+    # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
+    # o = Optimization(set_name=set_name, diffstep=0.01)
+    # o.run_optimization(resampled=False, use_threads=True)
+    LI.solve_leaf_material_parameters(set_name=set_name, use_dumb_sampling=True, solver='nn', clear_old_results=True, plot_resampling=False)
+    print(f"Done {set_name}")
 
 
 def iterative_train():
@@ -161,7 +162,10 @@ if __name__ == '__main__':
 
     # LI.visualize_leaf_models(show_plot=False, training_set_name='train_iter_1',plot_nn=False, plot_surf=True)
 
-    run_paper_tests()
+    # run_paper_tests()
+
+    asym_test(smthng='const_r_var_t')
+    asym_test(smthng='const_t_var_r')
 
     # Training data visualization
     from src.leaf_model import training_data as TD

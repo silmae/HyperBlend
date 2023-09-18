@@ -129,7 +129,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
         TH.write_sampling(set_name=set_name, sampling=sampling_even, overwrite=True)
     else:
         # If given resolution is None, i.e., we expect proper sampling to exist but it does not
-        if sampling.sampling_empty(set_name=set_name):
+        if sampling.sampling_empty(set_name=set_name) and not use_dumb_sampling:
             raise RuntimeError(f"Sampling has not been defined for set '{set_name}'. "
                                f"Cannot solve leaf material parameters.")
 
