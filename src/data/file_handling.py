@@ -45,15 +45,16 @@ def copy_target(from_set: str, to_set: str):
         if os.path.exists(path_src_target):
             shutil.copy2(path_src_target, path_dst_target)
 
-        path_src_target = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=True)
-        path_dst_target = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=True)
-        if os.path.exists(path_src_target):
-            shutil.copy2(path_src_target, path_dst_target)
+        path_src_target_resampled = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=True)
+        path_dst_target_resampled = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=True)
+        if os.path.exists(path_src_target_resampled):
+            shutil.copy2(path_src_target_resampled, path_dst_target_resampled)
 
     # Copy sampling
     src_sampling = PH.path_file_sampling(from_set)
-    dst_sampling = PH.path_file_sampling(to_set)
-    shutil.copy2(src_sampling, dst_sampling)
+    if os.path.exists(src_sampling):
+        dst_sampling = PH.path_file_sampling(to_set)
+        shutil.copy2(src_sampling, dst_sampling)
 
 
 def create_first_level_folders(set_name: str):

@@ -146,7 +146,7 @@ def resample(original_wl, original_val, new_wl):
     spec_wavs = np.array(original_wl)
     spec_fluxes = np.array(original_val)
 
-    resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes)
+    resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes, fill=0.0)
     return resampled
 
 
@@ -233,14 +233,14 @@ def generate_starting_guess():
     set_name = C.starting_guess_set_name
 
     FH.create_first_level_folders(set_name)
-    o = Optimization(set_name=set_name, use_hard_coded_starting_guess=True)
+    o = Optimization(set_name=set_name, starting_guess_type='hard-coded')
     make_linear_test_target(set_name)
     o.run_optimization(use_threads=True, use_basin_hopping=False, resampled=False)
     fit_starting_guess_coefficients()
     plotter._plot_starting_guess_coeffs_fitting()
 
 
-def fit_starting_guess_coefficients(degree=4):
+def fit_starting_guess_coefficients(degree=4, set_name: str = None):
     """Fits polynomial coefficients to linear test run that are used as a starting guess for the optimization.
 
     NOTE: One run of this is already stored in the code repo, so this only needs to be done if they corrupt somehow.
@@ -249,22 +249,59 @@ def fit_starting_guess_coefficients(degree=4):
 
     :param degree:
         Degree of the polynomial to fit.
+    :param set_name:
+        Custom set name to fetch the data from. If not given, default set name variable
+        'starting_guess_set_name' stored in constants.py is used.
     :return:
         None.
     """
 
     set_name = C.starting_guess_set_name
+    a_list, ad_list, sd_list, ai_list, mf_list = get_starting_guess_points(set_name=set_name)
+
+    ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree)
+    sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree)
+    ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree)
+    mf_coeffs = GU.fit_poly(a_list, mf_list, degree=degree)
+    T.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs)
+
+
+def get_starting_guess_points(set_name: str = None):
+    """Get starting guess points.
+
+    NOTE: Points where reflectance or transmittance error exceeds 0.002 are deleted.
+
+    :param set_name:
+        Custom set name to fetch the data from. If not given, default set name variable
+        'starting_guess_set_name' stored in constants.py is used.
+    :return:
+        a_list, ad_list, sd_list, ai_list, mf_list
+    """
+
+    if set_name is None:
+        set_name = C.starting_guess_set_name
+
     result_dict = T.read_sample_result(set_name, 0)
     wls = result_dict[C.key_sample_result_wls]
+
+    re_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_re]))])
+    te_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_te]))])
+    eps = 0.002
+
     r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
     t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
     ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
     sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
     ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
     mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
+
+    r_list  = r_list[(re_list < eps) & (te_list < eps)]
+    t_list  = t_list[(re_list < eps) & (te_list < eps)]
+    ad_list = ad_list[(re_list < eps) & (te_list < eps)]
+    sd_list = sd_list[(re_list < eps) & (te_list < eps)]
+    ai_list = ai_list[(re_list < eps) & (te_list < eps)]
+    mf_list = mf_list[(re_list < eps) & (te_list < eps)]
+
     a_list = np.ones_like(r_list) - (r_list + t_list)  # modeled absorptions 1 - (r+t)
-    ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree)
-    sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree)
-    ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree)
-    mf_coeffs = GU.fit_poly(a_list, mf_list, degree=degree)
-    T.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs)
+
+    return a_list, ad_list, sd_list, ai_list, mf_list

@@ -9,12 +9,12 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 import src.leaf_model.training_data as training
-from src.data import toml_handling as TH, path_handling as PH
+from src.data import toml_handling as TH, path_handling as PH, file_names as FN
 from src.leaf_model import surface_functions as FF
 
 
-def predict(r_m, t_m):
-    param_dict = TH.read_surface_model_parameters()
+def predict(r_m, t_m, surface_model_name:str):
+    param_dict = TH.read_surface_model_parameters(surface_model_name)
     ad_p = param_dict['ad']
     sd_p = param_dict['sd']
     ai_p = param_dict['ai']
@@ -43,16 +43,19 @@ def train(set_name='training_data'):
         'ai': curve_fit(FF.function_polynomial, [r, t], ai, p0=FF.get_x0())[0],
         'mf': curve_fit(FF.function_exp, [r, t], mf, p0=FF.get_x0())[0],
     }
-    TH.write_surface_model_parameters(surface_param_dict)
+
+    file_name = FN.get_surface_model_save_name(training_set_name=set_name)
+    TH.write_surface_model_parameters(surface_param_dict, file_name=file_name)
     logging.info(f"Surface model training done.")
 
 
-def exists():
+def exists(file_name=None):
     """Checks whether surface model parameters exist.
 
+    :param file_name:
     :return:
         Returns True if surface model parameters exist, False otherwise.
     """
 
-    p = PH.path_file_surface_model_parameters()
+    p = PH.path_file_surface_model_parameters(file_name=file_name)
     return os.path.exists(p)

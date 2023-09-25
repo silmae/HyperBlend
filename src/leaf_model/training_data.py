@@ -52,7 +52,7 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
     _, _, _, _, r_bad, t_bad = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=True)
     _, _, _, _, r_good, t_good = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
     plotter.plot_training_data_set(r_good=r_good, r_bad=r_bad, t_good=t_good, t_bad=t_bad,
-                                   k1=k1, b1=b1, k2=k2, b2=b2, show=show, save=save)
+                                   k1=k1, b1=b1, k2=k2, b2=b2, show=show, save=save, save_name=set_name)
 
 
 def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
@@ -83,7 +83,7 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
         Pruned ad,sd,ai,mf,r,t corresponding to arguments.
     """
 
-    max_error = 0.01 # 1%
+    max_error = 0.02 # 1%
     logging.info(f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned.")
 
     to_delete = [(a > max_error or b > max_error) for a, b in zip(re, te)]
@@ -111,7 +111,8 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
     return ad, sd, ai, mf, r, t
 
 
-def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, maxdiff_rt=0.25):
+def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25,
+                        starting_guess_type='curve', surf_model_name=None, data_generation_diff_step=0.01):
     """Generate reflectance-transmittance pairs as training data for surface fitting and neural network.
 
     Generated data will have fake wavelengths attached to them. They run from 1 to the number of
@@ -122,6 +123,7 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
 
     Data visualization is saved to disk when the data has been generated.
 
+    :param data_generation_diff_step:
     :param set_name:
         Optionally change the ``set_name`` that is used for destination directory. If other
         than default is used, it must be taken into account when training, i.e., pass the same
@@ -132,10 +134,20 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
         usable and will be cut out.
     :param cuts_per_dim:
         Into how many parts each dimension (R,T) are cut in interval [0,1].
-    :param maxdiff_rt:
+    :param similarity_rt:
         Controls the symmetry of generated pairs, i.e., how much each R value can differ from
         respective T value. Using greater than 0.25 will cause generating a lot of points
         that will fail to be optimized properly (and will be pruned before training).
+    :param starting_guess_type:
+            One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
+            Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
+            example if leaf material parameter count or bounds change in future development).
+            Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
+            only work in cases where R and T are relatively close to each other (around +- 0.2).
+            Surface fitting method 'surf' can be used after the first training iteration has been carried
+            out. It can more robustly adapt to situations where R and T are dissimilar.
+    :param surf_model_name:
+        Must be given if starting guess type is 'surf'.
     """
 
     FH.create_first_level_folders(set_name)
@@ -150,14 +162,15 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
             if not r + t < 1.0:
                 continue
             # ensure some amount of symmetry
-            if math.fabs(r - t) > maxdiff_rt:
+            if math.fabs(r - t) > similarity_rt:
                 continue
 
+            # TODO removed this for now as new training system should overcome this weakness
             # Cutoff points where R and T are low and dissimilar as they will fail anyway.
-            if t > r * k1 + b1:
-                continue
-            if t < r * k2 + b2:
-                continue
+            # if t > r * k1 + b1:
+            #     continue
+            # if t < r * k2 + b2:
+            #     continue
 
             wlrt = [fake_wl, r, t]
             data.append(wlrt)
@@ -166,8 +179,11 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     if not dry_run:
         logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance targets.")
         TH.write_target(set_name, data, sample_id=0)
-        o = Optimization(set_name=set_name)
-        o.run_optimization()
+        if starting_guess_type == 'surf' and surf_model_name is None:
+            raise AttributeError(f"Solver model name must be provided if starting guess type is '{starting_guess_type}'.")
+        o = Optimization(set_name=set_name, starting_guess_type=starting_guess_type, surf_model_name=surf_model_name,
+                         diffstep=data_generation_diff_step)
+        o.run_optimization(resampled=False)
     else:
         logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
                      f"but this was just a dry run..")

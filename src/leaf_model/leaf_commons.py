@@ -36,7 +36,7 @@ def _convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw):
 
     ad = ad_raw * density_scale
     sd = sd_raw * density_scale
-    ai = np.clip((ai_raw - 0.5) * 2, 0., 1.)
+    ai = (ai_raw - 0.5) * 2
     mf = mf_raw
     return ad, sd, ai, mf
 

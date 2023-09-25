@@ -5,7 +5,7 @@ Parsing and generating file names.
 from src import constants as C
 
 
-def get_nn_save_name(layer_count, layer_width, batch_size, lr, split):
+def get_nn_save_name(layer_count: int, layer_width: int, batch_size: int, lr: float, split:float, training_set:str) -> str:
     """Generate filename for neural network.
 
     This is used for the NN models and training history plot with according postfix.
@@ -24,8 +24,14 @@ def get_nn_save_name(layer_count, layer_width, batch_size, lr, split):
         Returns generated name.
     """
 
-    name = f"lc{layer_count}_lw{layer_width}_b{batch_size}_lr{lr:.3f}_split{split:.2f}"
+    name = f"lc{layer_count}_lw{layer_width}_b{batch_size}_lr{lr:.3f}_split{split:.2f}.pt"
     return name
+
+
+def get_surface_model_save_name(training_set_name: str) -> str:
+
+    file_name = f"surface_params_{training_set_name}{C.postfix_text_data_format}"
+    return file_name
 
 
 def parse_sample_id(filename: str) -> int:

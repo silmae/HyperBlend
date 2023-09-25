@@ -53,7 +53,7 @@ def check_sampling(set_name: str) -> bool:
     return True
 
 
-def resample(set_name: str):
+def resample(set_name: str, plot_resampling=True):
     """Resamples leaf spectra to lower resolution as defined in /sample_target/sampling.toml.
 
     Only rewrites target data. You must solve renderable leaf parameters again after resampling.
@@ -84,4 +84,5 @@ def resample(set_name: str):
         resampled_target = DU.pack_target(wls=sampling, refls=resampled[0,:], trans=resampled[1,:])
         TH.write_target(set_name=set_name, data=resampled_target, sample_id=sample_id, resampled=True)
 
-    plotter.plot_resampling(set_name=set_name)
+    if plot_resampling:
+        plotter.plot_resampling(set_name=set_name)

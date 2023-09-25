@@ -236,10 +236,20 @@ def path_directory_forest_rend_visibility_maps(forest_id: str) -> str:
 ##########################################################################
 
 
-def path_file_surface_model_parameters() -> str:
-    """Path to surface model parameter file."""
+def path_file_surface_model_parameters(file_name:str=None) -> str:
+    """Path to surface model parameter file.
 
-    p = join(path_directory_surface_model(), C.file_model_parameters + C.postfix_text_data_format)
+    :param file_name:
+        File name to be used. If none given, the default name in constants.py
+        will be used.
+    """
+
+    if file_name is None:
+        file_name = C.file_model_parameters
+    if not file_name.endswith(C.postfix_text_data_format):
+        file_name = file_name + C.postfix_text_data_format
+
+    p = join(path_directory_surface_model(), file_name)
     return p
 
 

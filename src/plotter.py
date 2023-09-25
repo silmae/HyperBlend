@@ -17,8 +17,11 @@ from scipy.optimize import curve_fit
 from src import constants as C
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
 from src.leaf_model import nn, surf, training_data as training, surface_functions
-from src.utils import data_utils as DU
+from src.utils import data_utils as DU, spectra_utils as SU
 
+
+figsize_triple_width = (22,6)
+"""Figure size for two plot figures."""
 
 figsize = (12,6)
 """Figure size for two plot figures."""
@@ -137,6 +140,7 @@ def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflecta
         AttributeError if save=True but forest_id=None.
     """
 
+    plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
     fig.suptitle(f"Resampled soil reflectance '{soil_name}'", fontsize=fig_title_font_size)
 
@@ -176,6 +180,7 @@ def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=Fa
         If `len(powers) != len(reflectance)`.
     """
 
+    plt.close('all')
     if len(powers) != len(reflectance):
         raise ValueError(f"Length of sun powers {len(powers)} and measurements {len(reflectance)} must match.")
 
@@ -226,6 +231,7 @@ def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, 
         String either 'sun' or 'sky'.
     """
 
+    plt.close('all')
     bandwith = wls[1] - wls[0]
     if wls_binned is not None and irradiances_binned is not None:
         bandwith_binned = wls_binned[1] - wls_binned[0]
@@ -290,6 +296,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     :return:
     """
 
+    plt.close('all')
     if not file_name.endswith(C.postfix_plot_image_format):
         file_name = file_name + C.postfix_plot_image_format
 
@@ -333,13 +340,16 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
         else:
             return v
 
+    plt.close('all')
     ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(set_name=set_name)
     ad_train, sd_train, ai_train, mf_train, r_train, t_train = training.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
-    if plot_surf and surf.exists():
-        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train)
+    surf_model_name = FN.get_surface_model_save_name(training_set_name=set_name)
+
+    if plot_surf and surf.exists(surf_model_name):
+        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train,surface_model_name=surf_model_name)
         surf_params = [ad_surf, sd_surf, ai_surf, mf_surf]
     else:
         surf_params = None
@@ -369,20 +379,23 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             train_surf._edgecolors2d = train_surf._edgecolor3d
             train_surf._facecolors2d = train_surf._facecolor3d
 
-        if surf_params is not None:
-            # surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf', shade=True)
-            surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], label='surf')
-            surf_surf._edgecolors2d = surf_surf._edgecolor3d
-            surf_surf._facecolors2d = surf_surf._facecolor3d
-        else:
-            logging.warning(f"Cannot plot surface model plot as the model could not be used.")
-        if nn_params is not None:
-            # nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn', shade=True)
-            nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i],  label='nn')
-            nn_surf._edgecolors2d = nn_surf._edgecolor3d
-            nn_surf._facecolors2d = nn_surf._facecolor3d
-        else:
-            logging.warning(f"Cannot plot nn model plot as the model could not be used.")
+        if plot_surf:
+            if surf_params is not None:
+                # surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf', shade=True)
+                surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], label='surf')
+                surf_surf._edgecolors2d = surf_surf._edgecolor3d
+                surf_surf._facecolors2d = surf_surf._facecolor3d
+            else:
+                logging.warning(f"Cannot plot surface model plot as the model could not be used.")
+
+        if plot_nn:
+            if nn_params is not None:
+                # nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn', shade=True)
+                nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i],  label='nn')
+                nn_surf._edgecolors2d = nn_surf._edgecolor3d
+                nn_surf._facecolors2d = nn_surf._facecolor3d
+            else:
+                logging.warning(f"Cannot plot nn model plot as the model could not be used.")
 
         if surf_params is not None and nn_params is not None:
             # legend breaks if not manually set as above. This is a known bug in matplotlib.
@@ -390,7 +403,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
 
         if save_thumbnail:
             folder = PH.path_directory_surface_model()
-            image_name = f"{leaf_param_names[i]}.png"
+            image_name = f"{set_name}_{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
             plt.savefig(path, dpi=save_resolution)
@@ -399,7 +412,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             plt.show()
 
 
-def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True):
+def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True, save_name='training_data'):
     """Plot training data either interactively or save to disk.
 
     Constants k1,2 and b1,2 are used to visualize cutting lines along equation k*r + b.
@@ -424,7 +437,11 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         Show interactive plot to user. Default is ```False```.
     :param save:
         Save plot to disk. Default is ```True```.
+    :param save_name:
+        Filename to be used when the image is saved. Only used if 'save' is True.
     """
+
+    plt.close('all')
 
     color_good = 'blue'
     color_bad = 'red'
@@ -433,22 +450,22 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training data", fontsize=fig_title_font_size)
 
-    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker='.', label='Good points')
-
     if r_bad is not None and t_bad is not None:
         ax.scatter(r_bad, t_bad, c=color_bad, alpha=0.5, marker='.', label='Bad points')
     else:
         logging.info("Badly fitted training data points were not given so they are not plotted.")
 
-    if k1 and b1:
-        x = np.array([-0.01,0.1])
-        y = x*k1 + b1
-        plt.plot(x, y, c=color_cut, linewidth=1)
+    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker='.', label='Good points')
 
-    if k2 and b2:
-        x = np.array([-b2,0.5])
-        y = x*k2 + b2
-        ax.plot(x, y, c=color_cut, linewidth=1)
+    # if k1 and b1:
+    #     x = np.array([-0.01,0.1])
+    #     y = x*k1 + b1
+    #     plt.plot(x, y, c=color_cut, linewidth=1)
+    #
+    # if k2 and b2:
+    #     x = np.array([-b2,0.5])
+    #     y = x*k2 + b2
+    #     ax.plot(x, y, c=color_cut, linewidth=1)
 
     ax.set_xlabel('R', fontsize=axis_label_font_size)
     ax.set_ylabel('T', fontsize=axis_label_font_size)
@@ -456,7 +473,7 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
 
     if save:
         folder = PH.path_directory_surface_model()
-        image_name = "training_data" + C.postfix_plot_image_format
+        image_name = save_name + C.postfix_plot_image_format
         path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
@@ -479,11 +496,13 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
+    plt.close('all')
     subres_dict = TH.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=figsize_triple_width)
     fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
     ax[0].set_title('Variable space')
     ax[1].set_title('Target space')
+    ax[2].set_title('Loss')
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ad])), subres_dict[C.key_wl_result_history_ad], label=C.key_wl_result_history_ad, color=color_ad)
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_sd])), subres_dict[C.key_wl_result_history_sd], label=C.key_wl_result_history_sd, color=color_sd)
     ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ai])), subres_dict[C.key_wl_result_history_ai], label=C.key_wl_result_history_ai, color=color_ai)
@@ -492,10 +511,17 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
 
+    # Loss
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_total])), subres_dict[C.key_wl_result_history_loss_total], label=C.key_wl_result_history_loss_total)
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_r])), subres_dict[C.key_wl_result_history_loss_r], label=C.key_wl_result_history_loss_r)
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_over_one])), subres_dict[C.key_wl_result_history_loss_over_one], label=C.key_wl_result_history_loss_over_one)
+    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_t])), subres_dict[C.key_wl_result_history_loss_t], label=C.key_wl_result_history_loss_t)
+    ax[2].legend()
+
     # Plot horizontal line to location of measured value
     x_data = np.arange(1, len(subres_dict[C.key_wl_result_history_r]))
-    ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target)
-    ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target)
+    ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target, linewidth=2)
+    ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target, linewidth=2)
 
     _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
@@ -523,6 +549,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         If True, save plot to disk. Default is True.
     """
 
+    plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
     # ax[0].set_title('Variable space')
@@ -591,6 +618,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
 def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     """Plots averaged optimization errors of a sample. """
 
+    plt.close('all')
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
     marker = '.'
@@ -645,6 +673,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
+    plt.close('all')
     target_ids = FH.list_target_ids(set_name=set_name)
 
     for sample_id in target_ids:
@@ -681,6 +710,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
+    plt.close('all')
     result = TH.read_sample_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
@@ -722,29 +752,31 @@ def replot_wl_results(set_name: str):
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
-def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True) -> None:
+def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set_name: str = None) -> None:
     """Plot starting guess poynomial fit with data.
 
     Used only when generating the starting guess.
+
+    :param set_name:
+        Custom set name to fetch the data from. If not given, default set name variable
+        'starting_guess_set_name' stored in constants.py is used.
     """
 
-    set_name = C.starting_guess_set_name
-    result_dict = TH.read_sample_result(set_name, 0)
-    coeffs = TH.read_starting_guess_coeffs()
-    wls = result_dict[C.key_sample_result_wls]
-    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
-    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
-    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
-    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
-    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
-    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
-    a_list = np.ones_like(r_list) - (r_list + t_list) # modeled absorptions
+    plt.close('all')
+
+    if set_name is None:
+        set_name = C.starting_guess_set_name
+
+    a_list, ad_list, sd_list, ai_list, mf_list = SU.get_starting_guess_points(set_name=set_name)
+
     ms = 10 # markersize
     ls = 2 # linesize
     plt.scatter(a_list, ad_list, label='Absorption density', color=color_ad, s=ms)
     plt.scatter(a_list, sd_list, label='Scattering density', color=color_sd, s=ms)
     plt.scatter(a_list, ai_list, label='Scattering anisotropy', color=color_ai, s=ms)
     plt.scatter(a_list, mf_list, label='Mix factor', color=color_mf, s=ms)
+
+    coeffs = TH.read_starting_guess_coeffs()
     for _,key in enumerate(coeffs):
         coeff  = coeffs[key]
         y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])
