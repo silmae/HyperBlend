@@ -4,19 +4,19 @@ Read results of spectrofotometer measurements.
 
 """
 
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from src.algae.algae_utils import smooth_data_np_convolve, read_sample
 from src.data import path_handling as PH
-from src import constants as C
 from src import plotter
 
 dir_algae = "algae_samples"
-dir_algae_measurement_set = '24_08_2023'
+dir_algae_measurement_set = '01_09_2023'
 path_algae_measurement_set = PH.join(PH.path_directory_project_root(), dir_algae, dir_algae_measurement_set)
 
-sample_numbers = {
+
+sample_numbers_24_08_2023 = {
     4771: "Empty",
     4772: "Kyvette empty trans",
     4773: "Kyvette empty refl",
@@ -139,12 +139,12 @@ def plot_water_empty_diff(dont_show=True, save_thumbnail=True):
     percentage_t_mean = np.mean(percentage_t)
     percentage_r_mean = np.mean(percentage_r)
 
-    ax[0].plot(wls_et, val_et, label=sample_numbers[4772])
-    ax[0].plot(wls_wt, val_wt, label=sample_numbers[4774])
+    ax[0].plot(wls_et, val_et, label=sample_numbers_24_08_2023[4772])
+    ax[0].plot(wls_wt, val_wt, label=sample_numbers_24_08_2023[4774])
     ax[0].plot(wls_wt, percentage_t, label=f"Difference (mean {percentage_t_mean:.2f})")
 
-    ax[1].plot(wls_er, val_er, label=sample_numbers[4773])
-    ax[1].plot(wls_wr, val_wr, label=sample_numbers[4775])
+    ax[1].plot(wls_er, val_er, label=sample_numbers_24_08_2023[4773])
+    ax[1].plot(wls_wr, val_wr, label=sample_numbers_24_08_2023[4775])
     ax[1].plot(wls_wr, percentage_r, label=f"Difference (mean {percentage_r_mean:.2f})")
 
     x_label = 'Wavelength [nm]'
@@ -163,10 +163,6 @@ def plot_water_empty_diff(dont_show=True, save_thumbnail=True):
         plt.savefig(save_path_image, dpi=plotter.save_resolution)
     if not dont_show:
         plt.show()
-
-
-def smooth_data_np_convolve(arr, span):
-    return np.convolve(arr, np.ones(span * 2 + 1) / (span * 2 + 1), mode="same")
 
 
 def get_water_empty_diff():
@@ -194,43 +190,3 @@ def get_water_empty_diff():
     return percentage_t, percentage_r
 
 
-def read_sample(sample_nr:str):
-    filename = f"Sample{sample_nr}.Sample.asc"
-    return read(filename)
-
-
-def read(filename: str):
-
-    p_file = PH.join(path_algae_measurement_set, filename)
-
-    if not os.path.exists(path_algae_measurement_set):
-        os.makedirs(path_algae_measurement_set)
-
-    if not os.path.exists(p_file):
-        raise FileNotFoundError(f"Could not find spectral algae measurement from '{p_file}'.")
-
-    wls = []
-    values = []
-
-    with open(p_file, mode="r") as file:
-
-        in_data = False
-
-        for line in file.readlines():
-
-            if line.startswith('#DATA'):
-                in_data = True
-                continue
-            # else:
-            #     print(f"Data line: '{line}'")
-
-            if in_data:
-                line = line.rstrip('\n')
-                line = line.replace(',', '.')
-                splitted = line.split('\t')
-                wls.append(float(splitted[0]))
-                values.append(float(splitted[1]))
-                # print(splitted[0])
-
-
-    return np.array(wls), np.array(values)

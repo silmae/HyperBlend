@@ -28,7 +28,7 @@ from src.rendering import blender_control as BC
 from src.gsv import gsv
 from src.forest import soil
 
-from src.algae import spectrometer as algae
+from src.algae import measurement_spec_24_08_23 as algae
 
 
 def write_forest_control(forest_id: str, control_dict: dict):
@@ -187,9 +187,9 @@ if __name__ == '__main__':
 
     # rng = np.random.default_rng(4321)
 
-    algae.plot_water_empty_diff()
-    algae.plot_ready_algae()
-    algae.plot_manual_algae()
+    from src.algae import measurement_spec_01_09_23 as M
+    M.plot_references(save_thumbnail=True, dont_show=False)
+    M.plot_algae(save_thumbnail=True, dont_show=False)
 
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
