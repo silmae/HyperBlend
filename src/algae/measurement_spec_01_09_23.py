@@ -9,7 +9,7 @@ from src import constants as C
 from src import plotter
 from src.algae import algae_utils as utils
 
-dir_algae = "algae_samples"
+dir_algae = "algae_measurement_sets"
 dir_algae_measurement_set = '01_09_2023'
 path_algae_measurement_set = PH.join(PH.path_directory_project_root(), dir_algae, dir_algae_measurement_set)
 

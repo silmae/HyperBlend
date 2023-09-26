@@ -11,8 +11,8 @@ from src.algae.algae_utils import smooth_data_np_convolve, read_sample
 from src.data import path_handling as PH
 from src import plotter
 
-dir_algae = "algae_samples"
-dir_algae_measurement_set = '01_09_2023'
+dir_algae = "algae_measurement_sets"
+dir_algae_measurement_set = '24_08_2023'
 path_algae_measurement_set = PH.join(PH.path_directory_project_root(), dir_algae, dir_algae_measurement_set)
 
 
@@ -34,14 +34,14 @@ sample_numbers_24_08_2023 = {
 
 
 def plot_manual_algae(dont_show=True, save_thumbnail=True):
-    wls, val_a1t = read_sample('4776')
-    _, val_a1r = read_sample('4777')
-    _, val_a2t = read_sample('4778')
-    _, val_a2r = read_sample('4779')
+    wls, val_a1t = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4776')
+    _, val_a1r = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4777')
+    _, val_a2t = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4778')
+    _, val_a2r = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4779')
 
-    # Empty kyvettes
-    _, refer_t = read_sample('4772')
-    _, refer_r = read_sample('4773')
+    # Empty kyvette, measurement_set_name=dir_algae_measurement_sets
+    _, refer_t = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4772')
+    _, refer_r = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4773')
 
     # Water-filled
     # _, refer_t = read_sample('4774')
@@ -61,11 +61,11 @@ def plot_manual_algae(dont_show=True, save_thumbnail=True):
     val_a2r = val_a2r / refer_r
 
     # Smoothing
-    span = 10
-    val_a1t = smooth_data_np_convolve(val_a1t, span)
-    val_a1r = smooth_data_np_convolve(val_a1r, span)
-    val_a2t = smooth_data_np_convolve(val_a2t, span)
-    val_a2r = smooth_data_np_convolve(val_a2r, span)
+    # span = 10
+    # val_a1t = smooth_data_np_convolve(val_a1t, span)
+    # val_a1r = smooth_data_np_convolve(val_a1r, span)
+    # val_a2t = smooth_data_np_convolve(val_a2t, span)
+    # val_a2r = smooth_data_np_convolve(val_a2r, span)
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=plotter.figsize)
     fig.suptitle(f"Algae with manual corrections", fontsize=plotter.fig_title_font_size)
@@ -83,6 +83,8 @@ def plot_manual_algae(dont_show=True, save_thumbnail=True):
         plt.savefig(save_path_image, dpi=plotter.save_resolution)
     if not dont_show:
         plt.show()
+
+    return wls, val_a2r, val_a2t
 
 
 def plot_ready_algae(dont_show=True, save_thumbnail=True):
@@ -167,11 +169,11 @@ def plot_water_empty_diff(dont_show=True, save_thumbnail=True):
 
 def get_water_empty_diff():
 
-    wls_light, val_light = read_sample('4771')
-    wls_et, val_et = read_sample('4772')
-    wls_er, val_er = read_sample('4773')
-    wls_wt, val_wt = read_sample('4774')
-    wls_wr, val_wr = read_sample('4775')
+    wls_light, val_light = read_sample(measurement_set_name=path_algae_measurement_set,sample_nr='4771')
+    wls_et, val_et = read_sample(measurement_set_name=path_algae_measurement_set, sample_nr='4772')
+    wls_er, val_er = read_sample(measurement_set_name=path_algae_measurement_set, sample_nr='4773')
+    wls_wt, val_wt = read_sample(measurement_set_name=path_algae_measurement_set, sample_nr='4774')
+    wls_wr, val_wr = read_sample(measurement_set_name=path_algae_measurement_set, sample_nr='4775')
     val_et = val_et / val_light
     val_er = val_er / val_light
     val_wt = val_wt / val_light
@@ -188,5 +190,3 @@ def get_water_empty_diff():
     percentage_r = smooth_data_np_convolve(percentage_r, span)
 
     return percentage_t, percentage_r
-
-

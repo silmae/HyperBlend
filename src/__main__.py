@@ -166,8 +166,8 @@ if __name__ == '__main__':
 
     # run_paper_tests()
 
-    asym_test(smthng='const_r_var_t')
-    asym_test(smthng='const_t_var_r')
+    # asym_test(smthng='const_r_var_t')
+    # asym_test(smthng='const_t_var_r')
 
     # Training data visualization
     from src.leaf_model import training_data as TD
@@ -187,9 +187,20 @@ if __name__ == '__main__':
 
     # rng = np.random.default_rng(4321)
 
-    from src.algae import measurement_spec_01_09_23 as M
-    M.plot_references(save_thumbnail=True, dont_show=False)
-    M.plot_algae(save_thumbnail=True, dont_show=False)
+    from src.algae import measurement_spec_24_08_23 as M
+    from src.utils import data_utils as DU
+    set_name = "algae_2"
+    wls, refl, tran = M.plot_manual_algae(save_thumbnail=True, dont_show=True)
+    wls = np.flip(wls)
+    refl = np.flip(refl)
+    tran = np.flip(tran)
+    tran = np.clip(tran,0,1)
+    refl = np.clip(refl,0,1)
+    refl = refl * 0.08
+    # tran = tran * 0.6
+    data = DU.pack_target(wls=wls,refls=refl,trans=tran)
+    TH.write_target(set_name=set_name, data=data)
+    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5)
 
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
