@@ -296,15 +296,15 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
         dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
 
     if copy_forest_id is not None:
-        source_path = PH.path_file_forest_scene(copy_forest_id)
+        source_path = PH.path_file_reactor_scene(copy_forest_id)
     else:
-        source_path = PH.path_forest_template()
+        source_path = PH.path_reactor_template()
 
     if os.path.exists(source_path):
         if not os.path.exists(PH.path_directory_forest_scene(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_scene(dst_forest_id))
 
-        shutil.copy2(source_path, PH.path_file_forest_scene(dst_forest_id))
+        shutil.copy2(source_path, PH.path_file_reactor_scene(dst_forest_id))
 
         if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_rend(dst_forest_id))

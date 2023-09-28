@@ -317,10 +317,24 @@ def path_forest_template():
     return p
 
 
+def path_reactor_template():
+    """Path to reactor template blend file."""
+
+    p = join(C.path_project_root, 'bioreactor.blend')
+    return p
+
+
 def path_file_forest_scene(forest_id: str) -> str:
     """Path to certain forest scene blend file."""
 
-    p = join(path_directory_forest_scene(forest_id), FN.filename_forest_scene(forest_id))
+    p = join(path_directory_forest_scene(forest_id), FN.filename_algae_scene(forest_id))
+    return p
+
+
+def path_file_reactor_scene(forest_id: str) -> str:
+    """Path to certain reactor scene blend file."""
+
+    p = join(path_directory_forest_scene(forest_id), FN.filename_algae_scene(forest_id))
     return p
 
 

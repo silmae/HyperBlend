@@ -166,10 +166,10 @@ def filename_set_error_plot() -> str:
     return filename
 
 
-def filename_forest_scene(scene_id):
+def filename_algae_scene(scene_id):
     """Name of the blend file of specific forest scene."""
 
-    filename = f"scene_forest_{scene_id}.blend"
+    filename = f"scene_algae_{scene_id}.blend"
     return filename
 
 

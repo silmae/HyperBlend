@@ -22,6 +22,8 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
          copy_forest_id: str = None, custom_forest_id: str = None, conf_type: str = None, rng=None):
     """
 
+    FIXME In algae safe branch this method is modified for reactor scene.
+
     Create a new forest by copying template.
 
     Load leaf material parameters for each leaf. They must use same spectral sampling,
@@ -72,19 +74,19 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         source_path = PH.path_directory_project_root()
 
     # Config file
-    if conf_type is None or conf_type == 'm2m':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
-        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
-    elif conf_type == 'm2s':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
-        control_dict = m2s(control_dict=control_dict, rng=rng)
-        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
-    elif conf_type == 's2m':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
-        control_dict = s2m(control_dict=control_dict)
-        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
-    else:
-        raise AttributeError(f"Attribute conf_type '{conf_type}' not recognised. Use one of ['m2m','m2s','s2m'].")
+    # if conf_type is None or conf_type == 'm2m':
+    #     control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+    #     forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+    # elif conf_type == 'm2s':
+    #     control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+    #     control_dict = m2s(control_dict=control_dict, rng=rng)
+    #     forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+    # elif conf_type == 's2m':
+    #     control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+    #     control_dict = s2m(control_dict=control_dict)
+    #     forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+    # else:
+    #     raise AttributeError(f"Attribute conf_type '{conf_type}' not recognised. Use one of ['m2m','m2s','s2m'].")
 
 
     # forest_id = '0102231033' # for debugging and testing
@@ -162,29 +164,29 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
 
     logging.info(f"Plotting sun data.")
     plotter.plot_light_data(wls=sun_wls_org, irradiances=sun_irradiance_org, wls_binned=sun_wls, irradiances_binned=sun_irradiance,
-                            forest_id=forest_id, lighting_type='sun')
+                            forest_id=forest_id, lighting_type='sun', sun_plot_name=sun_file_name.rstrip('.txt'))
 
     ################ Sky ################
 
-    sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, lighting_type='sky')
-    sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sky')
-    # Normalize with maximum SUN irradiance
-    sky_irradiance = sky_irradiance / sun_irr_max
-    FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')
-    plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
-                            sun_plot_name=sky_file_name, lighting_type='sky')
+    # sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, lighting_type='sky')
+    # sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sky')
+    # # Normalize with maximum SUN irradiance
+    # sky_irradiance = sky_irradiance / sun_irr_max
+    # FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')
+    # plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
+    #                         sun_plot_name=sky_file_name, lighting_type='sky')
 
     ################ Soil ################
 
-    if soil_name is None:
-        soil_name = "median_humid_clay"
-        logging.warning(f"Soil name not provided for forest initialization. Using default soil '{soil_name}'.")
-
-    soil_wls, soil_refls = soil.load_soil(forest_id=forest_id, soil_name=soil_name)
-    soil_wls_resampled, soil_refls_resampled = soil.load_soil(forest_id=forest_id, soil_name=soil_name, sampling=sampling)
-    FH.write_blender_soil(forest_id=forest_id, wls=soil_wls_resampled, reflectances=soil_refls_resampled)
-    plotter.plot_blender_soil(wls=soil_wls, reflectances=soil_refls, soil_name=soil_name, wls_resampled=soil_wls_resampled,
-                              reflectances_resampled=soil_refls_resampled, forest_id=forest_id, dont_show=True, save=True)
+    # if soil_name is None:
+    #     soil_name = "median_humid_clay"
+    #     logging.warning(f"Soil name not provided for forest initialization. Using default soil '{soil_name}'.")
+    #
+    # soil_wls, soil_refls = soil.load_soil(forest_id=forest_id, soil_name=soil_name)
+    # soil_wls_resampled, soil_refls_resampled = soil.load_soil(forest_id=forest_id, soil_name=soil_name, sampling=sampling)
+    # FH.write_blender_soil(forest_id=forest_id, wls=soil_wls_resampled, reflectances=soil_refls_resampled)
+    # plotter.plot_blender_soil(wls=soil_wls, reflectances=soil_refls, soil_name=soil_name, wls_resampled=soil_wls_resampled,
+    #                           reflectances_resampled=soil_refls_resampled, forest_id=forest_id, dont_show=True, save=True)
 
     return forest_id
 

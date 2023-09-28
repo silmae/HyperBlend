@@ -29,6 +29,8 @@ from src.gsv import gsv
 from src.forest import soil
 
 from src.algae import measurement_spec_24_08_23 as algae
+from src.algae import measurement_spec_24_08_23 as M
+from src.utils import data_utils as DU
 
 
 def write_forest_control(forest_id: str, control_dict: dict):
@@ -66,6 +68,33 @@ def forest_pipe_test(rng):
 
     CH.construct_envi_cube(forest_id=forest_id)
     CH.show_cube(forest_id=forest_id)
+
+    # BC.generate_forest_control(global_master=True)
+
+
+def reactor_test(algae_leaf_set_name:str,  rng):
+
+    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True, resolution=5, use_dumb_sampling=True)
+
+    material_name = "Reactor content material"
+    algae_scene_id = "reactor_test_1"
+    algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+    forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=algae_scene_id, sun_file_name="lamp_spectra.txt")
+
+    """
+    Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    """
+
+    forest_id = 'reactor_test_1'
+
+    # BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name])
+    #
+    # BC.render_forest(forest_id=forest_id, render_mode='preview')
+    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
+    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
+    #
+    # CH.construct_envi_cube(forest_id=forest_id)
+    # CH.show_cube(forest_id=forest_id)
 
     # BC.generate_forest_control(global_master=True)
 
@@ -142,6 +171,23 @@ def iterative_train():
     # surf_model_name = FN.get_surface_model_save_name(set_name_iter_4)
 
 
+def algae_leaf(set_name):
+    """Solve algae parameters as a leaf (hack so no new code needed)."""
+
+    # set_name = "algae_2"
+    wls, refl, tran = M.plot_manual_algae(save_thumbnail=True, dont_show=True)
+    wls = np.flip(wls)
+    refl = np.flip(refl)
+    tran = np.flip(tran)
+    tran = np.clip(tran,0,1)
+    refl = np.clip(refl,0,1)
+    refl = refl * 0.08
+    # tran = tran * 0.6
+    data = DU.pack_target(wls=wls,refls=refl,trans=tran)
+    TH.write_target(set_name=set_name, data=data)
+    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5)
+
+
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
@@ -161,6 +207,25 @@ if __name__ == '__main__':
                             logging.FileHandler(log_path, mode='w'),
                             logging.StreamHandler()
                         ])
+
+
+    rng = np.random.default_rng(4321)
+
+    ##### ALGAE STUFF #######
+
+    set_name = "algae 2"
+
+    # Solve algae as a leaf
+    # algae_leaf()
+
+    reactor_test(algae_leaf_set_name=set_name, rng=rng)
+
+
+    #########################
+
+
+
+
 
     # LI.visualize_leaf_models(show_plot=False, training_set_name='train_iter_1',plot_nn=False, plot_surf=True)
 
@@ -185,22 +250,7 @@ if __name__ == '__main__':
 
 
 
-    # rng = np.random.default_rng(4321)
 
-    from src.algae import measurement_spec_24_08_23 as M
-    from src.utils import data_utils as DU
-    set_name = "algae_2"
-    wls, refl, tran = M.plot_manual_algae(save_thumbnail=True, dont_show=True)
-    wls = np.flip(wls)
-    refl = np.flip(refl)
-    tran = np.flip(tran)
-    tran = np.clip(tran,0,1)
-    refl = np.clip(refl,0,1)
-    refl = refl * 0.08
-    # tran = tran * 0.6
-    data = DU.pack_target(wls=wls,refls=refl,trans=tran)
-    TH.write_target(set_name=set_name, data=data)
-    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5)
 
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
