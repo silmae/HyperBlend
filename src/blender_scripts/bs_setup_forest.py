@@ -32,8 +32,8 @@ if forest_dir not in sys.path:
 import forest_constants as FC
 import forest_control as control
 import forest_utils as FU
-import file_names as FN
-import path_handling as PH
+from src.data import file_names as FN
+from src.data import path_handling as PH
 
 importlib.reload(FC)
 importlib.reload(FU)
@@ -44,7 +44,7 @@ importlib.reload(control)
 b_context = bpy.context
 b_data = bpy.data
 b_ops = bpy.ops
-b_scene = b_data.scenes[FC.key_scene_name]
+b_scene = b_data.scenes["Scene"]
 
 
 def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, mf_list):
@@ -66,16 +66,19 @@ def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, 
 
     def set_leaf_material_parameter_per_frame(material_name, parameter, value, frame):
         material = bpy.data.materials[material_name]
-        dp = f'nodes["Group"].inputs["{parameter}"].default_value'
-        material.node_tree.nodes["Group"].inputs[f"{parameter}"].default_value = value
+
+        # bpy.data.materials["Reactor content material"].node_tree.nodes["Group"].inputs[0].default_value
+
+        dp = f'nodes["Group"].inputs[{parameter}].default_value'
+        material.node_tree.nodes["Group"].inputs[parameter].default_value = value
         material.node_tree.keyframe_insert(dp, frame=frame)
 
     for i,band in enumerate(band_list):
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Absorption density', ad_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Scattering density', sd_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Scattering anisotropy', ai_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Mix factor', mf_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Density scale', DENSITY, band)
+        set_leaf_material_parameter_per_frame(leaf_material_name, 0, ad_list[i] * DENSITY / 5, band)
+        set_leaf_material_parameter_per_frame(leaf_material_name, 1, sd_list[i] * DENSITY / 5, band)
+        set_leaf_material_parameter_per_frame(leaf_material_name, 2, ai_list[i], band)
+        set_leaf_material_parameter_per_frame(leaf_material_name, 3, mf_list[i], band)
+        # set_leaf_material_parameter_per_frame(leaf_material_name, 'Density scale', DENSITY, band)
 
     _set_leaf_rgb(leaf_material_name=leaf_material_name)
 
@@ -229,13 +232,13 @@ def insert_trunk_data():
     logging.error(f"insert_trunk_data() called, but I am missing the implementation...")
 
 
-def init_cameras():
-
-    cameras = b_data.collections[FC.key_collection_cameras].all_objects
-
-    # All cameras will use field of view instead of focal length.
-    for camera in cameras:
-        camera.lens_unit = "FOV"
+# def init_cameras():
+#
+#     cameras = b_data.collections[FC.key_collection_cameras].all_objects
+#
+#     # All cameras will use field of view instead of focal length.
+#     for camera in cameras:
+#         camera.lens_unit = "FOV"
 
 
 if __name__ == '__main__':
@@ -279,8 +282,8 @@ if __name__ == '__main__':
     logging.error(f"Running scene setup for '{PH.path_directory_forest_scene(forest_id)}'")
 
     insert_leaf_data(leaf_material_names=leaf_material_names)
-    insert_soil_data()
-    insert_trunk_data()
+    # insert_soil_data()
+    # insert_trunk_data()
 
     FU.set_sun_power_hsi(forest_id=forest_id)
     FU.apply_forest_control(forest_id=forest_id)

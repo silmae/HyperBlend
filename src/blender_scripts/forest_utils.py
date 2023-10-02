@@ -32,11 +32,11 @@ importlib.reload(control)
 
 context = bpy.context
 data = bpy.data
-scene = data.scenes[FC.key_scene_name]
+scene = data.scenes["Scene"]
 
-cameras = data.collections[FC.key_collection_cameras].all_objects
-lights = data.collections[FC.key_collection_lights].all_objects
-trees = data.collections[FC.key_collection_trees].all_objects
+# cameras = data.collections[FC.key_collection_cameras].all_objects
+# lights = data.collections[FC.key_collection_lights].all_objects
+# trees = data.collections[FC.key_collection_trees].all_objects
 
 
 def get_scene_parameters(as_master=False) -> dict:
@@ -251,20 +251,20 @@ def apply_forest_control(forest_id):
         # First we set all top-level scene parameters
         if key == "Sun":
             sun_dict = control_dict["Sun"]
-            sun = lights[FC.key_obj_sun]
-            sun.rotation_euler[0] = math.radians(sun_dict[FC.key_ctrl_sun_angle_zenith_deg])
-            sun.rotation_euler[2] = math.radians(sun_dict[FC.key_ctrl_sun_angle_azimuth_deg])
+            # sun = lights[FC.key_obj_sun]
+            # sun.rotation_euler[0] = math.radians(sun_dict[FC.key_ctrl_sun_angle_zenith_deg])
+            # sun.rotation_euler[2] = math.radians(sun_dict[FC.key_ctrl_sun_angle_azimuth_deg])
             # Only set RGB sun at this point. Rendering calls will change this anyway.
             set_sun_power(power=sun_dict[FC.key_ctrl_sun_base_power_rgb], frame=1)
-        elif key == "Drone":
-            drone_dict = control_dict["Drone"]
-            bpy.data.objects[FC.key_drone].location[0] = drone_dict[FC.key_ctrl_drone_location_x]
-            bpy.data.objects[FC.key_drone].location[1] = drone_dict[FC.key_ctrl_drone_location_y]
-            bpy.data.objects[FC.key_drone].location[2] = drone_dict[FC.key_ctrl_drone_altitude]
-        elif key == "Cameras":
-            cameras_dict = control_dict["Cameras"]
-            cameras.get(FC.key_cam_drone_hsi).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_hsi_fow])
-            cameras.get(FC.key_cam_drone_rgb).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_rgb_fow])
+        # elif key == "Drone":
+        #     drone_dict = control_dict["Drone"]
+        #     bpy.data.objects[FC.key_drone].location[0] = drone_dict[FC.key_ctrl_drone_location_x]
+        #     bpy.data.objects[FC.key_drone].location[1] = drone_dict[FC.key_ctrl_drone_location_y]
+        #     bpy.data.objects[FC.key_drone].location[2] = drone_dict[FC.key_ctrl_drone_altitude]
+        # elif key == "Cameras":
+        #     cameras_dict = control_dict["Cameras"]
+        #     cameras.get(FC.key_cam_drone_hsi).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_hsi_fow])
+        #     cameras.get(FC.key_cam_drone_rgb).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_rgb_fow])
         elif key == "Rendering":
             rendeering_dict = control_dict["Rendering"]
             scene.cycles.samples = rendeering_dict[FC.key_ctrl_sample_count_hsi]
@@ -272,59 +272,59 @@ def apply_forest_control(forest_id):
             images_dict = control_dict["Images"]
             scene.render.resolution_x = images_dict[FC.key_ctrl_hsi_resolution_x]
             scene.render.resolution_y = images_dict[FC.key_ctrl_hsi_resolution_y]
-        elif key == "Forest":
-
-            """
-            Loop through forest (ground object) parameters. Almost all of these are dicts (even single valued 
-            parameters because we store the name and data type also. Then there are other objects (trees) that 
-            must be looped through separately.
-            """
-
-            forest_dict = control_dict[key]
-            for forest_key, forest_dict_item in forest_dict.items():
-
-                # Normal forest parameters
-                if isinstance(forest_dict_item, dict) and 'Type' in forest_dict_item:
-
-                    forst_item_type = forest_dict_item['Type']
-
-                    if forst_item_type == 'VALUE':
-                        set_forest_parameter(value=float(forest_dict_item['Value']), parameter_id=forest_dict_item['ID'])
-                    elif forst_item_type == 'INT':
-                        set_forest_parameter(value=int(forest_dict_item['Value']), parameter_id=forest_dict_item['ID'])
-                    elif forst_item_type == 'MATERIAL':
-                        pass # we do nothing for materials
-                    else:
-                        logging.warning(f"Unexpected parameter type '{forst_item_type}'. Parameter '{forest_key}' : {forest_dict_item}.")
-
-                # Tree sub-dictionaries
-                # TODO get rid of hard-coded names at some point
-                elif forest_key == 'Tree 1' or forest_key == 'Tree 2' or forest_key == 'Tree 3' \
-                        or forest_key == 'Understory object 1' or forest_key == 'Understory object 2':
-
-                    tree_dict = forest_dict[forest_key]
-
-                    for tree_key, tree_dict_item in tree_dict.items():
-
-                        tree_name = tree_dict['Name']
-
-                        if isinstance(tree_dict_item, dict) and 'Type' in tree_dict_item:
-
-                            tree_item_type = tree_dict_item['Type']
-
-                            if tree_item_type == 'VALUE':
-                                set_tree_parameter(tree_name=tree_name, parameter_name=tree_key, value=float(tree_dict_item['Value']))
-                            elif tree_item_type == 'INT':
-                                set_tree_parameter(tree_name=tree_name, parameter_name=tree_key, value=int(tree_dict_item['Value']))
-
-                        elif tree_key == 'Name':
-                            pass # The name is stored already.
-                        else:
-                            logging.warning(f"Unhandled tree parameter '{tree_key}' : {tree_dict_item}")
-                elif forest_key == 'Note':
-                    pass # just comments
-                else:
-                    logging.warning(f"Unhandled forest parameter '{forest_key}' : {forest_dict_item}")
+        # elif key == "Forest":
+        #
+        #     """
+        #     Loop through forest (ground object) parameters. Almost all of these are dicts (even single valued
+        #     parameters because we store the name and data type also. Then there are other objects (trees) that
+        #     must be looped through separately.
+        #     """
+        #
+        #     forest_dict = control_dict[key]
+        #     for forest_key, forest_dict_item in forest_dict.items():
+        #
+        #         # Normal forest parameters
+        #         if isinstance(forest_dict_item, dict) and 'Type' in forest_dict_item:
+        #
+        #             forst_item_type = forest_dict_item['Type']
+        #
+        #             if forst_item_type == 'VALUE':
+        #                 set_forest_parameter(value=float(forest_dict_item['Value']), parameter_id=forest_dict_item['ID'])
+        #             elif forst_item_type == 'INT':
+        #                 set_forest_parameter(value=int(forest_dict_item['Value']), parameter_id=forest_dict_item['ID'])
+        #             elif forst_item_type == 'MATERIAL':
+        #                 pass # we do nothing for materials
+        #             else:
+        #                 logging.warning(f"Unexpected parameter type '{forst_item_type}'. Parameter '{forest_key}' : {forest_dict_item}.")
+        #
+        #         # Tree sub-dictionaries
+        #         # TODO get rid of hard-coded names at some point
+        #         elif forest_key == 'Tree 1' or forest_key == 'Tree 2' or forest_key == 'Tree 3' \
+        #                 or forest_key == 'Understory object 1' or forest_key == 'Understory object 2':
+        #
+        #             tree_dict = forest_dict[forest_key]
+        #
+        #             for tree_key, tree_dict_item in tree_dict.items():
+        #
+        #                 tree_name = tree_dict['Name']
+        #
+        #                 if isinstance(tree_dict_item, dict) and 'Type' in tree_dict_item:
+        #
+        #                     tree_item_type = tree_dict_item['Type']
+        #
+        #                     if tree_item_type == 'VALUE':
+        #                         set_tree_parameter(tree_name=tree_name, parameter_name=tree_key, value=float(tree_dict_item['Value']))
+        #                     elif tree_item_type == 'INT':
+        #                         set_tree_parameter(tree_name=tree_name, parameter_name=tree_key, value=int(tree_dict_item['Value']))
+        #
+        #                 elif tree_key == 'Name':
+        #                     pass # The name is stored already.
+        #                 else:
+        #                     logging.warning(f"Unhandled tree parameter '{tree_key}' : {tree_dict_item}")
+        #         elif forest_key == 'Note':
+        #             pass # just comments
+        #         else:
+        #             logging.warning(f"Unhandled forest parameter '{forest_key}' : {forest_dict_item}")
         elif key == 'Note' or key == FC.key_ctrl_is_master_control:
             # No need to handle this key because we can set up a scene based on either master or slave control.
             pass
@@ -474,9 +474,16 @@ def set_sun_power(power, frame):
         Frame (spectral band for HSI images).
     """
 
-    bpy.data.lights["Sun"].energy = power
-    dp = 'energy'
-    bpy.data.lights["Sun"].keyframe_insert(dp, frame=frame)
+    # bpy.data.materials["Lamp material"].node_tree.nodes["Emission"].inputs[1].default_value = power
+
+    material = bpy.data.materials["Lamp material"]
+    dp = f'nodes["Emission"].inputs[1].default_value'
+    material.node_tree.nodes["Emission"].inputs[1].default_value = power
+    material.node_tree.keyframe_insert(dp, frame=frame)
+
+    # bpy.data.lights["Sun"].energy = power
+    # dp = 'energy'
+    # bpy.data.lights["Sun"].keyframe_insert(dp, frame=frame)
 
 
 def set_sun_power_hsi(forest_id: str):

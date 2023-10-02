@@ -204,11 +204,11 @@ def plot_algae(dont_show=True, save_thumbnail=True):
     ax[0].plot(wls, val_a4t, label='Algae 4', color=colors[3])
     ax[0].plot(wls, val_a5t, label='Algae 5', color=colors[4])
 
-    val_a1r = utils.smooth_data_np_convolve(arr=val_a1r,span=3)
-    val_a2r = utils.smooth_data_np_convolve(arr=val_a2r,span=3)
-    val_a3r = utils.smooth_data_np_convolve(arr=val_a3r,span=3)
-    val_a4r = utils.smooth_data_np_convolve(arr=val_a4r,span=3)
-    val_a5r = utils.smooth_data_np_convolve(arr=val_a5r,span=3)
+    # val_a1r = utils.smooth_data_np_convolve(arr=val_a1r,span=3)
+    # val_a2r = utils.smooth_data_np_convolve(arr=val_a2r,span=3)
+    # val_a3r = utils.smooth_data_np_convolve(arr=val_a3r,span=3)
+    # val_a4r = utils.smooth_data_np_convolve(arr=val_a4r,span=3)
+    # val_a5r = utils.smooth_data_np_convolve(arr=val_a5r,span=3)
 
     ax[1].plot(wls, val_a1r, label='Algae 1', color=colors[0])
     ax[1].plot(wls, val_a2r, label='Algae 2', color=colors[1])
@@ -244,3 +244,5 @@ def plot_algae(dont_show=True, save_thumbnail=True):
         plt.savefig(save_path_image, dpi=plotter.save_resolution)
     if not dont_show:
         plt.show()
+
+    return wls, val_a3r, val_a3t
