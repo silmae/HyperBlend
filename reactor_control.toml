@@ -1,0 +1,28 @@
+Note = "This file controls the setup of the Blender scene file. "
+is_master_control = true
+
+[Sun]
+sun_base_power_hsi = 40
+sun_base_power_rgb = 400
+
+[Cameras]
+Note = "Camera angles are stored in degrees in this file. They must be converted to radians before passing to Blender file."
+drone_hsi_fow = 27.342614992942337
+drone_rgb_fow = 27.342614992942337
+
+[Rendering]
+Note = "Sample count controls how many samples (light rays) are cast through each pixel.More samples result in smoother image but require more time to render. Try values between 16 and 512, for example. The RGB sampling is for preview images so it can be higher as not many images are rendered with that sampling."
+sample_count_rbg = 32
+sample_count_hsi = 32
+
+[Images]
+hsi_resolution_x = 1028
+hsi_resolution_y = 512
+rgb_resolution_x = 1028
+rgb_resolution_y = 512
+walker_resolution_x = 1028
+walker_resolution_y = 512
+sleeper_resolution_x = 1028
+sleeper_resolution_y = 512
+tree_preview_resolution_x = 1028
+tree_preview_resolution_y = 512
