@@ -245,4 +245,4 @@ def plot_algae(dont_show=True, save_thumbnail=True):
     if not dont_show:
         plt.show()
 
-    return wls, val_a3r, val_a3t
+    return wls, val_a2r, val_a2t

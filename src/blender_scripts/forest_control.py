@@ -28,14 +28,14 @@ def write_forest_control(forest_id: str, control_dict: dict, global_master: bool
     """
 
     if global_master:
-        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename=C.file_forest_control)
+        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename=C.file_reactor_control)
     else:
         write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_forest_scene(forest_id=forest_id),
-                           filename=C.file_forest_control)
+                           filename=C.file_reactor_control)
 
 
 def read_forest_control(forest_id: str) -> dict:
-    return read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename=C.file_forest_control)
+    return read_toml_as_dict(directory=PH.path_directory_forest_scene(forest_id=forest_id), filename=C.file_reactor_control)
 
 
 def write_dict_as_toml(dictionary: dict, directory: str, filename: str):

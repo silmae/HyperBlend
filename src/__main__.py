@@ -72,30 +72,6 @@ def forest_pipe_test(rng):
     # BC.generate_forest_control(global_master=True)
 
 
-def reactor_test(algae_leaf_set_name:str,  rng):
-
-    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True, resolution=5, use_dumb_sampling=True)
-
-    material_name = "Reactor content material"
-    algae_scene_id = "reactor_test_1"
-    algae_leaves = [(algae_leaf_set_name, 0, material_name)]
-    # forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=algae_scene_id, sun_file_name="lamp_spectra.txt")
-
-    """
-    Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    """
-
-    BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])
-
-    # BC.render_forest(forest_id=forest_id, render_mode='preview')
-    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
-    #
-    # CH.construct_envi_cube(forest_id=forest_id)
-    # CH.show_cube(forest_id=forest_id)
-
-    # BC.generate_forest_control(global_master=True)
-
 
 def run_paper_tests():
 
@@ -186,6 +162,29 @@ def algae_leaf(set_name):
     LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5, clear_old_results=True)
 
 
+def reactor_test(algae_leaf_set_name:str,  rng):
+
+    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True, resolution=5, use_dumb_sampling=True)
+
+    algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+    forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=algae_scene_id, sun_file_name="lamp_spectra.txt")
+
+    """
+    Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    """
+
+    BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])
+
+    # BC.render_forest(forest_id=forest_id, render_mode='preview')
+    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
+    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
+    #
+    # CH.construct_envi_cube(forest_id=forest_id)
+    # CH.show_cube(forest_id=forest_id)
+
+    # BC.generate_forest_control(global_master=True)
+
+
 if __name__ == '__main__':
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
@@ -212,6 +211,8 @@ if __name__ == '__main__':
     ##### ALGAE STUFF #######
 
     set_name = "algae 3"
+    algae_scene_id = "reactor_test_1"
+    material_name = "Reactor content material"
 
     # Solve algae as a leaf
     # algae_leaf(set_name=set_name)
@@ -219,6 +220,7 @@ if __name__ == '__main__':
     reactor_test(algae_leaf_set_name=set_name, rng=rng)
 
 
+    # BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])
+
+
     #########################
-
-

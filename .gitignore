@@ -14,7 +14,8 @@ blender_test_run/*
 scenes/*
 
 # Ignore algae data
-# algae_samples/*
+algae_measurement_sets/01_09_2023/algae.png
+algae_measurement_sets/01_09_2023/references.png
 
 
 # Ignore other than default sun and sky files

@@ -269,9 +269,10 @@ def apply_forest_control(forest_id):
             rendeering_dict = control_dict["Rendering"]
             scene.cycles.samples = rendeering_dict[FC.key_ctrl_sample_count_hsi]
         elif key == "Images":
-            images_dict = control_dict["Images"]
-            scene.render.resolution_x = images_dict[FC.key_ctrl_hsi_resolution_x]
-            scene.render.resolution_y = images_dict[FC.key_ctrl_hsi_resolution_y]
+            # images_dict = control_dict["Images"]
+            # scene.render.resolution_x = images_dict[FC.key_ctrl_hsi_resolution_x]
+            # scene.render.resolution_y = images_dict[FC.key_ctrl_hsi_resolution_y]
+            pass
         # elif key == "Forest":
         #
         #     """

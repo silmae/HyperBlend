@@ -74,8 +74,8 @@ def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, 
         material.node_tree.keyframe_insert(dp, frame=frame)
 
     for i,band in enumerate(band_list):
-        set_leaf_material_parameter_per_frame(leaf_material_name, 0, ad_list[i] * DENSITY / 5, band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 1, sd_list[i] * DENSITY / 5, band)
+        set_leaf_material_parameter_per_frame(leaf_material_name, 0, ad_list[i] * DENSITY, band)
+        set_leaf_material_parameter_per_frame(leaf_material_name, 1, sd_list[i] * DENSITY, band)
         set_leaf_material_parameter_per_frame(leaf_material_name, 2, ai_list[i], band)
         set_leaf_material_parameter_per_frame(leaf_material_name, 3, mf_list[i], band)
         # set_leaf_material_parameter_per_frame(leaf_material_name, 'Density scale', DENSITY, band)
@@ -97,7 +97,9 @@ def _set_leaf_rgb(leaf_material_name: str):
         for row in reader:
             if leaf_material_name in row[0]:
                 rgba = (float(row[1]), float(row[2]), float(row[3]), 1.) # must have four items so adding 1 for alpha
-                bpy.data.materials[leaf_material_name].node_tree.nodes["Group"].inputs["RGB color"].default_value = rgba
+                # bpy.data.materials[leaf_material_name].node_tree.nodes["Group"].inputs["RGB color"].default_value = rgba
+                bpy.data.materials[leaf_material_name].node_tree.nodes["Group"].inputs[4].default_value = rgba
+                print(f"Set RGB: {rgba}")
 
 
 def read_leaf_material_csv(file_name: str):
@@ -148,34 +150,6 @@ def set_animation_frames(band_count):
         scene.render.fps = 5 # does not really matter as we don't do a real animation
         scene.frame_start = 1
         scene.frame_end = band_count # can be safely set to zero as Blender will fix it into one
-
-
-# def get_leaf_bandwith_and_bandcount():
-#     # TODO Obsolete?
-#
-#     if leaf_ids is None or len(leaf_ids) < 1:
-#         raise RuntimeWarning(f"No leaf indices to check.")
-#
-#     previous_band_list, previous_wl_list, _, _, _, _ = read_leaf_material_csv(leaf_ids[0])
-#
-#     if len(leaf_ids) == 1:
-#         bandwith =  previous_wl_list[1] - previous_wl_list[0]
-#         return bandwith, previous_band_list
-#
-#     all_ok = True
-#     for i in range(1,len(leaf_ids)):
-#         band_list, wl_list, _, _, _, _ = read_leaf_material_csv(leaf_ids[i])
-#         close_enough_band = np.allclose(previous_band_list, band_list)
-#         close_enough_wl = np.allclose(previous_wl_list, wl_list)
-#         all_ok = all_ok and close_enough_band and close_enough_wl
-#         previous_band_list = band_list
-#         previous_wl_list = wl_list
-#
-#     if all_ok:
-#         bandwith = wl_list[1] - wl_list[0]
-#         return bandwith, band_list
-#     else:
-#         raise RuntimeError(f"Bands and wavelengths of one or more leaves do not match each other.")
 
 
 def insert_leaf_data(leaf_material_names: str):
@@ -243,7 +217,7 @@ def insert_trunk_data():
 
 if __name__ == '__main__':
 
-    DENSITY = 3000
+    DENSITY = 3000 / 5
     """ Nasty global that requires some explaining. This is the density of scattering and 
     absorbing particles in the leaf volume shader. It must be set to the same value that 
     was used when running the leaf simulation. It only needs to be changed if the simulated 
