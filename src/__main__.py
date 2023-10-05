@@ -211,7 +211,7 @@ if __name__ == '__main__':
     ##### ALGAE STUFF #######
 
     set_name = "algae 3"
-    algae_scene_id = "reactor_test_1"
+    algae_scene_id = "reactor_pauliina"
     material_name = "Reactor content material"
 
     # Solve algae as a leaf

@@ -48,10 +48,8 @@ key_ctrl_drone_location_x = "drone_location_x"
 key_ctrl_drone_location_y = "drone_location_y"
 key_ctrl_drone_altitude = "drone_altitude"
 
-key_ctrl_drone_hsi_fow = "drone_hsi_fow"
-"""Drone hyperspectral camera's field of view."""
-key_ctrl_drone_rgb_fow = "drone_rgb_fow"
-"""Drone RGB camera's field of view."""
+key_ctrl_submarine_height = "submarine_height_factor"
+key_ctrl_submarine_distance = "submarine_distance"
 
 key_ctrl_sample_count_rbg = "sample_count_rbg"
 key_ctrl_sample_count_hsi = "sample_count_hsi"

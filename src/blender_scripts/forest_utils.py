@@ -80,8 +80,8 @@ def get_scene_parameters(as_master=False) -> dict:
     camera_dict = {
         "Note": "Camera angles are stored in degrees in this file. They must be "
                 "converted to radians before passing to Blender file.",
-        FC.key_ctrl_drone_hsi_fow: math.degrees(cameras.get(FC.key_cam_drone_hsi).data.angle),
-        FC.key_ctrl_drone_rgb_fow: math.degrees(cameras.get(FC.key_cam_drone_rgb).data.angle),
+        FC.key_ctrl_submarine_height: math.degrees(cameras.get(FC.key_cam_drone_hsi).data.angle),
+        FC.key_ctrl_submarine_distance: math.degrees(cameras.get(FC.key_cam_drone_rgb).data.angle),
     }
     scene_dict['Cameras'] = camera_dict
 
@@ -261,10 +261,14 @@ def apply_forest_control(forest_id):
         #     bpy.data.objects[FC.key_drone].location[0] = drone_dict[FC.key_ctrl_drone_location_x]
         #     bpy.data.objects[FC.key_drone].location[1] = drone_dict[FC.key_ctrl_drone_location_y]
         #     bpy.data.objects[FC.key_drone].location[2] = drone_dict[FC.key_ctrl_drone_altitude]
-        # elif key == "Cameras":
-        #     cameras_dict = control_dict["Cameras"]
-        #     cameras.get(FC.key_cam_drone_hsi).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_hsi_fow])
-        #     cameras.get(FC.key_cam_drone_rgb).data.angle = math.radians(cameras_dict[FC.key_ctrl_drone_rgb_fow])
+        elif key == "Cameras":
+            cameras_dict = control_dict["Cameras"]
+            # cameras.get(FC.key_cam_drone_hsi).data.angle = math.radians(cameras_dict[FC.key_ctrl_submarine_height])
+            # cameras.get(FC.key_cam_drone_rgb).data.angle = math.radians(cameras_dict[FC.key_ctrl_submarine_distance])
+            angle = 1.25 * math.pi
+            bpy.data.objects["Submarine"].location[0] = math.cos(angle) * cameras_dict[FC.key_ctrl_submarine_distance] # X
+            bpy.data.objects["Submarine"].location[1] = math.sin(angle) * cameras_dict[FC.key_ctrl_submarine_distance] # X
+            bpy.data.objects["Submarine"].location[2] = cameras_dict[FC.key_ctrl_submarine_height] # X
         elif key == "Rendering":
             rendeering_dict = control_dict["Rendering"]
             scene.cycles.samples = rendeering_dict[FC.key_ctrl_sample_count_hsi]
