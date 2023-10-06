@@ -5,6 +5,7 @@ Do not change these, it may break reading of existing optimization results and r
 
 """
 
+density_scale = 600
 
 imaging_type_refl = 'refl'
 """Imaging type reflectance (for rendering). """

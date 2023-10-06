@@ -13,7 +13,7 @@ from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU
 
 
-density_scale = 3000
+# density_scale = 3000
 """Control how much density variables (absorption and scattering density) are scaled 
 for rendering. Value of 1000 cannot produce r = 0 or t = 0. Produced values do not 
 significantly change when greater than 3000."""
@@ -34,8 +34,8 @@ def _convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw):
         Returns corresponding (ad, sd, ai, mf) that can be fed to rendering script.
     """
 
-    ad = ad_raw * density_scale
-    sd = sd_raw * density_scale
+    ad = ad_raw * C.density_scale
+    sd = sd_raw * C.density_scale
     ai = (ai_raw - 0.5) * 2
     mf = mf_raw
     return ad, sd, ai, mf

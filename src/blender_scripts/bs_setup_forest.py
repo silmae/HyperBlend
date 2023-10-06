@@ -15,11 +15,13 @@ if 'scenes' in blend_dir:
     script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
     data_dir = os.path.abspath(blend_dir + '../../../src/data')
     forest_dir = os.path.abspath(blend_dir + '../../../src/forest')
+    src_dir = os.path.abspath(blend_dir + '../../../src')
 else:
     # We are in the template forest blend file
     script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
     data_dir = os.path.abspath(blend_dir + '/src/data')
     forest_dir = os.path.abspath(blend_dir + '/src/forest')
+    src_dir = os.path.abspath(blend_dir + '/src')
 
 # After this is set, any script in /blender_scripts can be imported
 if script_dir not in sys.path:
@@ -28,18 +30,22 @@ if data_dir not in sys.path:
     sys.path.append(data_dir)
 if forest_dir not in sys.path:
     sys.path.append(forest_dir)
+if src_dir not in sys.path:
+    sys.path.append(src_dir)
 
 import forest_constants as FC
 import forest_control as control
 import forest_utils as FU
 from src.data import file_names as FN
 from src.data import path_handling as PH
+from src import constants as C
 
 importlib.reload(FC)
 importlib.reload(FU)
 importlib.reload(FN)
 importlib.reload(PH)
 importlib.reload(control)
+importlib.reload(C)
 
 b_context = bpy.context
 b_data = bpy.data
@@ -217,7 +223,7 @@ def insert_trunk_data():
 
 if __name__ == '__main__':
 
-    DENSITY = 3000 / 5
+    DENSITY = C.density_scale
     """ Nasty global that requires some explaining. This is the density of scattering and 
     absorbing particles in the leaf volume shader. It must be set to the same value that 
     was used when running the leaf simulation. It only needs to be changed if the simulated 
