@@ -31,6 +31,7 @@ from src.forest import soil
 from src.algae import measurement_spec_24_08_23 as algae
 from src.algae import measurement_spec_01_09_23 as M
 from src.utils import data_utils as DU
+from src.leaf_model import training_data
 
 
 def write_forest_control(forest_id: str, control_dict: dict):
@@ -123,22 +124,22 @@ def asym_test(smthng='const_r_var_t'):
 def iterative_train():
 
     # Iterative train manually
-    set_name_iter_1 = "train_iter_1v4"
-    LI.train_models(set_name=set_name_iter_1, generate_data=True, starting_guess_type='curve',
-                    train_points_per_dim=30, similarity_rt=0.25, train_surf=True, train_nn=False, data_generation_diff_step=0.01)
-    set_name_iter_2 = "train_iter_2_v4"
-    surf_model_name = FN.get_surface_model_save_name(set_name_iter_1)
-    LI.train_models(set_name=set_name_iter_2, generate_data=True, starting_guess_type='surf',
-                    surface_model_name=surf_model_name, similarity_rt=0.5, train_surf=True, train_nn=False,
-                    train_points_per_dim=50, data_generation_diff_step=0.001)
-    set_name_iter_3 = "train_iter_3_v4"
-    surf_model_name = FN.get_surface_model_save_name(set_name_iter_2)
-    LI.train_models(set_name=set_name_iter_3, generate_data=True, starting_guess_type='surf',
-                    surface_model_name=surf_model_name, similarity_rt=0.75, train_surf=True, train_nn=False,
-                    train_points_per_dim=70, data_generation_diff_step=0.001)
-    set_name_iter_4 = "train_iter_4_v4"
+    set_name_iter_1 = "train_iter_1v4_algae"
+    # LI.train_models(set_name=set_name_iter_1, generate_data=True, starting_guess_type='curve',
+    #                 train_points_per_dim=30, similarity_rt=0.25, train_surf=True, train_nn=False, data_generation_diff_step=0.01)
+    set_name_iter_2 = "train_iter_2_v4_algae"
+    # surf_model_name = FN.get_surface_model_save_name(set_name_iter_1)
+    # LI.train_models(set_name=set_name_iter_2, generate_data=True, starting_guess_type='surf',
+    #                 surface_model_name=surf_model_name, similarity_rt=0.5, train_surf=True, train_nn=False,
+    #                 train_points_per_dim=50, data_generation_diff_step=0.001)
+    set_name_iter_3 = "train_iter_3_v4_algae"
+    # surf_model_name = FN.get_surface_model_save_name(set_name_iter_2)
+    # LI.train_models(set_name=set_name_iter_3, generate_data=True, starting_guess_type='surf',
+    #                 surface_model_name=surf_model_name, similarity_rt=0.75, train_surf=True, train_nn=False,
+    #                 train_points_per_dim=70, data_generation_diff_step=0.001)
+    set_name_iter_4 = "train_iter_4_v4_algae"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_3)
-    LI.train_models(set_name=set_name_iter_4, generate_data=False, starting_guess_type='surf',
+    LI.train_models(set_name=set_name_iter_4, generate_data=True, starting_guess_type='surf',
                     surface_model_name=surf_model_name, similarity_rt=1.0, train_surf=False, train_nn=True,
                     train_points_per_dim=200, dry_run=False, data_generation_diff_step=0.001, show_plot=True, learning_rate=0.0005)
 
@@ -147,6 +148,9 @@ def iterative_train():
 
 def algae_leaf(set_name):
     """Solve algae parameters as a leaf (hack so no new code needed)."""
+
+    set_name_iter_3 = "train_iter_3_v4_algae"
+    surf_model_name = FN.get_surface_model_save_name(set_name_iter_3)
 
     # set_name = "algae_2"
     wls, refl, tran = M.plot_algae(save_thumbnail=True, dont_show=True)
@@ -159,7 +163,8 @@ def algae_leaf(set_name):
     # tran = tran * 0.6
     data = DU.pack_target(wls=wls,refls=refl,trans=tran)
     TH.write_target(set_name=set_name, data=data)
-    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5, clear_old_results=True)
+    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5,
+                                      clear_old_results=True, solver='opt', surf_model_name=surf_model_name)
 
 
 def reactor_test(algae_leaf_set_name:str,  rng):
@@ -208,16 +213,21 @@ if __name__ == '__main__':
 
     rng = np.random.default_rng(4321)
 
+    # Retrain for algae
+    # iterative_train()
+
+    # LI.visualize_leaf_models(training_set_name=set_name_iter_1, show_plot=True, plot_surf=False, plot_nn=False)
+
     ##### ALGAE STUFF #######
 
-    set_name = "algae 3"
-    algae_scene_id = "reactor_pauliina"
-    material_name = "Reactor content material"
+    set_name = "algae_retrain_opt"
+    # algae_scene_id = "reactor_pauliina"
+    # material_name = "Reactor content material"
 
     # Solve algae as a leaf
-    # algae_leaf(set_name=set_name)
+    algae_leaf(set_name=set_name)
 
-    reactor_test(algae_leaf_set_name=set_name, rng=rng)
+    # reactor_test(algae_leaf_set_name=set_name, rng=rng)
 
 
     # BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])

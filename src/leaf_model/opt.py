@@ -134,7 +134,7 @@ class Optimization:
 
             if use_threads:
                 param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,self.ftol, self.xtol,
-                               self.bounds, LC.density_scale, self.optimizer_verbosity, use_basin_hopping,
+                               self.bounds, C.density_scale, self.optimizer_verbosity, use_basin_hopping,
                                sample_id, self.ftol_abs, self.starting_guess_type, self.surface_model_name)
                               for a in targets]
                 with Pool() as pool:
@@ -145,7 +145,7 @@ class Optimization:
                     r_m = target[1]
                     t_m = target[2]
                     optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
-                                       self.ftol, self.xtol, self.bounds, LC.density_scale, self.optimizer_verbosity,
+                                       self.ftol, self.xtol, self.bounds, C.density_scale, self.optimizer_verbosity,
                                        use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type,
                                        self.surface_model_name)
 
@@ -296,14 +296,19 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     x_hat_2 = np.clip(x_0[2], 0.05, 0.95)
     x_hat_3 = np.clip(x_0[3], 0.05, 0.95)
 
-    x_0 = (x_hat_0, x_hat_1, x_hat_2, x_hat_3)
+    x_0 = np.array([x_hat_0, x_hat_1, x_hat_2, x_hat_3])
+    x_0 = np.nan_to_num(x_0)
 
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
     opt_method = 'least_squares'
     if not use_basin_hopping:
-        res = optimize.least_squares(f, x_0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
+        try:
+            res = optimize.least_squares(f, x_0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
                                      gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
+        except ValueError as e:
+            logging.error(f"x0 infeasible? x0 = {x_0}")
+            raise
     else:
         opt_method = 'basin_hopping'
 

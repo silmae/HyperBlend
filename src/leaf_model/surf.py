@@ -40,7 +40,7 @@ def train(set_name='training_data'):
     surface_param_dict = {
         'ad': curve_fit(FF.function_exp, [r, t], ad, p0=FF.get_x0())[0],
         'sd': curve_fit(FF.function_log, [r, t], sd, p0=FF.get_x0())[0],
-        'ai': curve_fit(FF.function_polynomial, [r, t], ai, p0=FF.get_x0())[0],
+        'ai': curve_fit(FF.function_polynomial, [r, t], ai, p0=FF.get_x0(), maxfev=10000)[0],
         'mf': curve_fit(FF.function_exp, [r, t], mf, p0=FF.get_x0())[0],
     }
 

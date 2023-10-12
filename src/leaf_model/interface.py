@@ -82,7 +82,7 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
 
 
 def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_sampling=False, solver='nn', clear_old_results=False, solver_model_name=None,
-                                   copyof=None, plot_resampling=True):
+                                   copyof=None, plot_resampling=True, surf_model_name=None):
     """Solves leaf material parameters for rendering.
     
     The result is saved to disk: this method does not have a return value.
@@ -155,7 +155,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
 
         if solver == 'opt':
             # use_resampling = not disable_sampling and resolution is not None
-            o = Optimization(set_name=set_name)
+            o = Optimization(set_name=set_name, surf_model_name=surf_model_name)
             o.run_optimization(resampled=not use_dumb_sampling)
         elif solver == 'surf' or solver == "nn":
             start = time.perf_counter()
