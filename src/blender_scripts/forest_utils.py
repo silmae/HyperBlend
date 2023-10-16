@@ -504,9 +504,10 @@ def set_sun_power_hsi(forest_id: str):
 
     bands, _, irradiances = read_csv(p)
 
-    control_dict = control.read_forest_control(forest_id=forest_id)
-    sun_power = control_dict['Sun'][FC.key_ctrl_sun_base_power_hsi]
-    irradiances = np.array(irradiances) * sun_power
+    # control_dict = control.read_forest_control(forest_id=forest_id)
+    # sun_power = control_dict['Sun'][FC.key_ctrl_sun_base_power_hsi]
+    # irradiances = np.array(irradiances) * sun_power
+    irradiances = np.array(irradiances)
 
     for i,band in enumerate(bands):
         set_sun_power(irradiances[i], band)

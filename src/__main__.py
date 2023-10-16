@@ -8,6 +8,7 @@ and run in your favourite IDE.
 import logging
 import os.path
 import datetime
+import math
 
 import os
 import numpy as np
@@ -149,30 +150,25 @@ def iterative_train():
 def algae_leaf(set_name):
     """Solve algae parameters as a leaf (hack so no new code needed)."""
 
-    set_name_iter_3 = "train_iter_3_v4_algae"
-    surf_model_name = FN.get_surface_model_save_name(set_name_iter_3)
-
-    # set_name = "algae_2"
     wls, refl, tran = M.plot_algae(save_thumbnail=True, dont_show=True)
     wls = np.flip(wls)
     refl = np.flip(refl)
     tran = np.flip(tran)
     tran = np.clip(tran,0,1)
     refl = np.clip(refl,0,1)
-    # refl = refl * 0.08
-    # tran = tran * 0.6
     data = DU.pack_target(wls=wls,refls=refl,trans=tran)
     TH.write_target(set_name=set_name, data=data)
     LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5,
-                                      clear_old_results=True, solver='opt', surf_model_name=surf_model_name)
+                                      clear_old_results=True, solver='nn')
 
 
 def reactor_test(algae_leaf_set_name:str,  rng):
 
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True, resolution=5, use_dumb_sampling=True)
 
+    material_name = "Reactor content material"
     algae_leaves = [(algae_leaf_set_name, 0, material_name)]
-    forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=algae_scene_id, sun_file_name="lamp_spectra.txt")
+    # forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=algae_scene_id, sun_file_name="lamp_spectra.txt")
 
     """
     Running forest.init only copies files. Running setup makes the Blender scene renderable.
@@ -188,6 +184,120 @@ def reactor_test(algae_leaf_set_name:str,  rng):
     # CH.show_cube(forest_id=forest_id)
 
     # BC.generate_forest_control(global_master=True)
+
+
+def make_kettles():
+    """
+
+    Ensin Wolfram alphaan ratkastavaksi r_s yhtälöstä: r_g^3 - r_s^3 + (r_g^4 / (n * r_s))
+    Sitte lasketaan r_l yhtälöstä: r_g^2 / (n * r_s)
+    Lopuksi koodissa voidaan tarkistaa että:
+    Vl = 2n pi rl^2 rs
+    Vs = Vg + Vl
+    Vs = 2 pi rs^3
+    Al = 4n pi rl rs
+
+    10 l kattila: r_g = 0.1168
+    0.1168^3 - x^3 + (0.1168^4/(4x))
+    -> yksi positiivinen juuri r_s = 0.12525
+    -> r_l = 0.1168^2 / (4*0.12525) = 0.02723002
+
+    Tarkistus:
+
+    Vl = 2n pi rl^2 rs = 8 pi 0.02723002^2 * 0.12525 = 0.00233407
+    Vs = Vg + Vl = 0.010 + 0.00233407 = 0.01233407
+    Vs = 2 pi rs^3 = 2 pi 0.12525^3 = 0.0123456 OK
+    Al = 4n pi rl rs = 16 pi 0.02723002 * 0.12525 = 0.171433 OK
+
+    100 l kattila: r_g = 0.2515
+    0.2515^3 - x^3 + (0.2515^4/(4x))
+    r_s = 0.269696
+    -> r_l = 0.2515^2 / (4*0.269696) = 0.0619492
+
+    1000 l kattila: r_g = 0.5419
+    0.5419^3 - x^3 + (0.5419^4/(8x))
+    r_s = 0.562822
+    -> r_l = 0.5419^2 / (8*0.562822) = 0.0652195
+
+    :return:
+    """
+
+    def calc_V(r):
+        V = 2 * math.pi * r**3
+        return V
+
+    def calc_A(r):
+        A = 4 * math.pi * r**2
+        return A
+
+    def check_kettle(r_l, r_s, n, V_g, r_g):
+        V_l = 2 * n * math.pi * r_l**2 * r_s
+        V_s_check = V_g + V_l
+        V_s = 2 * math.pi * r_s**3
+        A_l = 4 * n * math.pi * r_l * r_s
+        A_g = calc_A(r=r_g)
+        V_diff = math.fabs(V_s - V_s_check)
+        A_diff = math.fabs(A_l - A_g)
+        return V_s, V_diff, A_l, A_diff, V_l
+
+    def calc_r_l(r_g, r_s, n):
+        r_l = r_g**2 / (n * r_s)
+        return r_l
+
+    def do_kettle_thing(target_vol, r_g, r_s, n, n_rings=1, n1=4, n2=4, n3=4):
+        V_g = calc_V(r=r_g)
+        A_g = calc_A(r=r_g)
+        r_l = calc_r_l(r_g=r_g, r_s=r_s,n=n)
+        V_s, V_diff, A_l, A_diff, V_l = check_kettle(r_l=r_l, r_s=r_s, n=n, V_g=V_g, r_g=r_g)
+        h_g = 2 * r_g
+        h_s = 2 * r_s
+
+        print(f"Target volume {target_vol} l or {target_vol / 1000} m^3: ")
+        print(f"\tRadius [m]:      glass = {r_g}, steel {r_s}")
+        print(f"\tHeight [m]:      glass = {h_g}, steel {h_s}")
+        print(f"\tVolume [m^3]:    glass = {V_g}, steel {V_s} (diff {V_diff})")
+        print(f"\tLamp area [m^2]: glass = {A_g}, steel {A_l} (diff {A_diff})")
+        print(f"\tRod lamp volume [m^3]: {V_l}")
+        print(f"\tRod lamp radius [m]: {r_l}")
+
+        material_name = "Reactor content material"
+        algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+
+        # Steel kettle
+        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_steel_{target_vol}", sun_file_name="lamp_spectra.txt")
+        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_s, kettle_type="steel", r_lamp=r_l,
+                        n1=n1, n2=n2, n3=n3, n_rings=n_rings)
+
+        # Glass kettle
+        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}", sun_file_name="lamp_spectra.txt")
+        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass")
+
+    # Equation for WA
+    # r_g^3 - x^3 + (r_g^4 / (n * x))
+
+    # 10 l kettle:
+    # 0.1168^3 - x^3 + (0.1168^4 / (6 * x))
+    target_vol = 10
+    r_g = 0.1168
+    r_s = 0.122677  # from Wolfram Alpha
+    n = 6
+    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=n, n_rings=1)
+
+    # 100 l kettle:
+    # 0.2515^3 - x^3 + (0.2515^4 / (12 * x))
+    target_vol = 100
+    r_g = 0.2515
+    r_s = 0.25813  # from Wolfram Alpha
+    n = 12
+    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n_rings=2)
+
+    # 1000 l kettle:
+    # 0.5419^3 - x^3 + (0.5419^4 / (28 * x))
+    target_vol = 1000
+    r_g = 0.5419
+    r_s = 0.548203 # from Wolfram Alpha
+    n = 28
+    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n3=16, n_rings=3)
 
 
 if __name__ == '__main__':
@@ -220,14 +330,17 @@ if __name__ == '__main__':
 
     ##### ALGAE STUFF #######
 
-    set_name = "algae_retrain_opt"
-    # algae_scene_id = "reactor_pauliina"
+    algae_leaf_set_name = "algae_sample_1"
+
+    make_kettles()
+
+    algae_scene_id = "reactor_steel_1000l"
     # material_name = "Reactor content material"
 
     # Solve algae as a leaf
-    algae_leaf(set_name=set_name)
+    # algae_leaf(set_name=set_name)
 
-    # reactor_test(algae_leaf_set_name=set_name, rng=rng)
+    # reactor_test(algae_leaf_set_name=algae_leaf_set_name, rng=rng)
 
 
     # BC.setup_forest(forest_id=algae_scene_id, leaf_name_list=[material_name])

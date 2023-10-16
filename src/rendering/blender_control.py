@@ -232,7 +232,8 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
             exit(1)
 
 
-def setup_forest(forest_id: str, leaf_name_list=None):
+def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type='steel', r_lamp=0.01,
+                 n_rings=1, n1=4, n2=4, n3=4):
     """ Setup the forest for rendering.
 
     :param forest_id:
@@ -252,6 +253,15 @@ def setup_forest(forest_id: str, leaf_name_list=None):
 
     if leaf_name_list is not None and len(leaf_name_list) > 0:
         scirpt_args += ['-l_ids', f'{list(leaf_name_list)}']  # available leaf indexes
+    print(f"Kettle radius in blender ctrl {r_kettle}")
+    scirpt_args += ['-r_k', f'{r_kettle}']
+    scirpt_args += ['-k', f'{kettle_type}']
+    scirpt_args += ['-r_l', f'{r_lamp}']
+
+    scirpt_args += ['-n_r', f'{n_rings}']
+    scirpt_args += ['-n_1', f'{n1}']
+    scirpt_args += ['-n_2', f'{n2}']
+    scirpt_args += ['-n_3', f'{n3}']
 
     with open(os.devnull, 'wb') as stream:
         status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)

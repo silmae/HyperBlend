@@ -248,16 +248,65 @@ if __name__ == '__main__':
     key_scene_id = ['-id', '--scene_id']
     key_leaf_ids = ['-l_ids', '--leaf_ids']
 
+    key_r_kettle= ['-r_k', '--r_kettle']
+    key_kettle_type = ['-k', '--kettle_type']
+    key_r_lamp = ['-r_l', '--r_lamp']
+    key_n_rings = ['-n_r', '--n_rings']
+    key_n_lamp_1 = ['-n_1', '--n_lamp_1']
+    key_n_lamp_2 = ['-n_2', '--n_lamp_2']
+    key_n_lamp_3 = ['-n_3', '--n_lamp_3']
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store", required=True, help="Name of the forest scene.")
     parser.add_argument(key_leaf_ids[0], key_leaf_ids[1], dest=key_leaf_ids[1], action="store",
                         required=False, type=str, help="List of available leaf names as a string.")
 
+    parser.add_argument(key_r_kettle[0], key_r_kettle[1], dest=key_r_kettle[1], action="store", required=True)
+    parser.add_argument(key_kettle_type[0], key_kettle_type[1], dest=key_kettle_type[1], action="store", required=True)
+    parser.add_argument(key_r_lamp[0], key_r_lamp[1], dest=key_r_lamp[1], action="store", required=True)
+    parser.add_argument(key_n_rings[0], key_n_rings[1], dest=key_n_rings[1], action="store", required=True)
+    parser.add_argument(key_n_lamp_1[0], key_n_lamp_1[1], dest=key_n_lamp_1[1], action="store", required=True)
+    parser.add_argument(key_n_lamp_2[0], key_n_lamp_2[1], dest=key_n_lamp_2[1], action="store", required=True)
+    parser.add_argument(key_n_lamp_3[0], key_n_lamp_3[1], dest=key_n_lamp_3[1], action="store", required=True)
+
     args = parser.parse_args(argv)
 
     forest_id = vars(args)[key_scene_id[1]]
     leaf_material_names = vars(args)[key_leaf_ids[1]]
+
+    r_kettle = float(vars(args)[key_r_kettle[1]])
+    kettle_type = vars(args)[key_kettle_type[1]]
+    r_lamp = float(vars(args)[key_r_lamp[1]])
+    n_rings = int(vars(args)[key_n_rings[1]])
+    n_lamp_1 = int(vars(args)[key_n_lamp_1[1]])
+    n_lamp_2 = int(vars(args)[key_n_lamp_2[1]])
+    n_lamp_3 = int(vars(args)[key_n_lamp_3[1]])
+
+    print(f"Kettle radius in setup {r_kettle} type {type(r_kettle)}")
+
+    # Set up the kettle geometry
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_20"] = 1.0 # water level %
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_4"] = r_kettle * 2 # kettle diameter
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_5"] = r_kettle * 2 # kettle height
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_6"] = 0.0 # raise lid
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_7"] = False # cutout
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_8"] = n_rings # lamp ring count
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_12"] = r_lamp * 2 # lamp diameter
+    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_13"] = n_lamp # lamps per ring
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_27"] = n_lamp_1 # n lamps in innermost ring
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_28"] = n_lamp_2 # n lamps in center ring
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_29"] = n_lamp_3 # n lamps in outermost ring
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_14"] = 1.0 # lamp reach %
+    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_26"] = False # Hide lid
+    if kettle_type == 'steel':
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = True
+    elif kettle_type == 'glass':
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = False
+    else:
+        raise AttributeError(f"Kettle type '{kettle_type}' not recognised")
+
+    bpy.data.objects["Submarine"].location[2] = r_kettle # camera height
 
     logging.error(f"Running scene setup for '{PH.path_directory_forest_scene(forest_id)}'")
 
@@ -266,7 +315,7 @@ if __name__ == '__main__':
     # insert_trunk_data()
 
     FU.set_sun_power_hsi(forest_id=forest_id)
-    FU.apply_forest_control(forest_id=forest_id)
+    # FU.apply_forest_control(forest_id=forest_id)
 
     # FU.print_materials()
 
