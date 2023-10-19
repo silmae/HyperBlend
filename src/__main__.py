@@ -186,7 +186,7 @@ def reactor_test(algae_leaf_set_name:str,  rng):
     # BC.generate_forest_control(global_master=True)
 
 
-def make_kettles():
+def make_kettles(light_max_pow=100):
     """
 
     Ensin Wolfram alphaan ratkastavaksi r_s yhtälöstä: r_g^3 - r_s^3 + (r_g^4 / (n * r_s))
@@ -244,7 +244,7 @@ def make_kettles():
         r_l = r_g**2 / (n * r_s)
         return r_l
 
-    def do_kettle_thing(target_vol, r_g, r_s, n, n_rings=1, n1=4, n2=4, n3=4):
+    def do_kettle_thing(target_vol, r_g, r_s, n, n_rings=1, n1=4, n2=4, n3=4, top_cam_height=2.69728):
         V_g = calc_V(r=r_g)
         A_g = calc_A(r=r_g)
         r_l = calc_r_l(r_g=r_g, r_s=r_s,n=n)
@@ -264,13 +264,13 @@ def make_kettles():
         algae_leaves = [(algae_leaf_set_name, 0, material_name)]
 
         # Steel kettle
-        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_steel_{target_vol}", sun_file_name="lamp_spectra.txt")
+        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_steel_{target_vol}", sun_file_name="AP67_spectra.txt")
         BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_s, kettle_type="steel", r_lamp=r_l,
-                        n1=n1, n2=n2, n3=n3, n_rings=n_rings)
+                        n1=n1, n2=n2, n3=n3, n_rings=n_rings, top_cam_height=top_cam_height, light_max_pow=light_max_pow)
 
         # Glass kettle
-        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}", sun_file_name="lamp_spectra.txt")
-        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass")
+        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}", sun_file_name="AP67_spectra.txt")
+        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass", light_max_pow=light_max_pow)
 
     # Equation for WA
     # r_g^3 - x^3 + (r_g^4 / (n * x))
@@ -281,7 +281,8 @@ def make_kettles():
     r_g = 0.1168
     r_s = 0.122677  # from Wolfram Alpha
     n = 6
-    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=n, n_rings=1)
+    top_cam_height = 0.617276
+    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=n, n_rings=1, top_cam_height=top_cam_height)
 
     # 100 l kettle:
     # 0.2515^3 - x^3 + (0.2515^4 / (12 * x))
@@ -289,7 +290,8 @@ def make_kettles():
     r_g = 0.2515
     r_s = 0.25813  # from Wolfram Alpha
     n = 12
-    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n_rings=2)
+    top_cam_height = 1.26728
+    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n_rings=2, top_cam_height=top_cam_height)
 
     # 1000 l kettle:
     # 0.5419^3 - x^3 + (0.5419^4 / (28 * x))
@@ -297,7 +299,8 @@ def make_kettles():
     r_g = 0.5419
     r_s = 0.548203 # from Wolfram Alpha
     n = 28
-    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n3=16, n_rings=3)
+    top_cam_height = 2.69728
+    do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n3=16, n_rings=3, top_cam_height=top_cam_height)
 
 
 if __name__ == '__main__':
@@ -331,10 +334,17 @@ if __name__ == '__main__':
     ##### ALGAE STUFF #######
 
     algae_leaf_set_name = "algae_sample_1"
+    algae_scene_id = "reactor_steel_10"
+    material_name = "Reactor content material"
+    light_max_pow = 100 # W / m^2
 
-    make_kettles()
+    # make_kettles()
 
-    algae_scene_id = "reactor_steel_1000l"
+    # BC.render_forest(forest_id=algae_scene_id,render_mode='top')
+
+    # CH.construct_envi_cube(forest_id=algae_scene_id, light_max_power=100)
+    CH.show_cube(forest_id=algae_scene_id)
+
     # material_name = "Reactor content material"
 
     # Solve algae as a leaf

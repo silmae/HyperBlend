@@ -491,7 +491,7 @@ def set_sun_power(power, frame):
     # bpy.data.lights["Sun"].keyframe_insert(dp, frame=frame)
 
 
-def set_sun_power_hsi(forest_id: str):
+def set_sun_power_hsi(forest_id: str, light_max_power=100):
     """Set hyperspectral sun power based on control file.
 
     Sun power is set for each "animation" frame that represent
@@ -507,7 +507,7 @@ def set_sun_power_hsi(forest_id: str):
     # control_dict = control.read_forest_control(forest_id=forest_id)
     # sun_power = control_dict['Sun'][FC.key_ctrl_sun_base_power_hsi]
     # irradiances = np.array(irradiances) * sun_power
-    irradiances = np.array(irradiances)
+    irradiances = np.array(irradiances) * light_max_power
 
     for i,band in enumerate(bands):
         set_sun_power(irradiances[i], band)

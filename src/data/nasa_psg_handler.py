@@ -39,11 +39,12 @@ def read_psg_file(path, try_to_fix=True):
                 irradiances.append(float(row[1]))
                 # skip the rest of the data fields
 
-    min_diff, max_diff = _band_separations(wls)
-    resolution_ok = abs(min_diff-1) < 0.01
-    resolution_ok = resolution_ok and abs(max_diff - 1) < 0.01
-    if not resolution_ok:
-        raise RuntimeError(f"Resolution in given file is not 1 nm. Use default sun or fix the file.")
+    # FIXME is this check even needed for anything?
+    # min_diff, max_diff = _band_separations(wls)
+    # resolution_ok = abs(min_diff-1) < 0.01
+    # resolution_ok = resolution_ok and abs(max_diff - 1) < 0.01
+    # if not resolution_ok:
+    #     raise RuntimeError(f"Resolution in given file is not 1 nm. Use default sun or fix the file.")
 
     return np.array(wls), np.array(irradiances), comments
 

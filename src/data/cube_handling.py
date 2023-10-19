@@ -11,7 +11,7 @@ from src.utils import spectra_utils as SU
 from src import constants as C
 
 
-def construct_envi_cube(forest_id: str):
+def construct_envi_cube(forest_id: str, light_max_power):
     """Constructs an ENVI style hyperspectral image cube out of rendered images.
 
     Can be used after the scene has been rendered (at least spectral and visibility maps).
@@ -44,49 +44,16 @@ def construct_envi_cube(forest_id: str):
     # Burnt areas have values around 65535
     # Loop white references until the image is not burned
     max_burn = 65000.0
-    white_mean = max_burn
-
-    # Find available reflectance plate reflectivity based on visibility map file names.
-    reflectivities = []
-    map_names = PH.list_reference_visibility_maps(forest_id=forest_id)
-    for map_name in map_names:
-        splitted = map_name.split(' ')
-        reflectivity = float(splitted[1])
-        if reflectivity > 0.0:
-            reflectivities.append(reflectivity)
-
-    reflectivities.sort(reverse=True)
-
-    logging.info(f"Searching for good white reference plate..")
-    accepted_reflectivity = None
-    for reflectivity in reflectivities:
-        accepted_reflectivity = reflectivity
-        mask_path = PH.find_reference_visibility_map(forest_id=forest_id, reflectivity=reflectivity)
-        mask = plt.imread(mask_path)
-        mask = mask > 0
-        white_cube = raw_cube[:,mask] # Flattens the reference plate area pixels..
-        white_mean = np.mean(white_cube, axis=(1)) #.. so we take the mean only on one axis.
-        white_mean_max = white_mean.max()
-        if white_mean_max < max_burn:
-            break
-
-    logging.info(f"Accepted white reference with {accepted_reflectivity:.2f} reflectivity producing maximum mean reflectance {white_mean_max:.1f}.")
-
-    white_mean = np.expand_dims(white_mean, axis=(1,2))
-    reflectance_cube = np.divide(raw_cube, white_mean, dtype=np.float32)
-    # refl_max = np.max(reflectance_cube)
-
-    # Swap axis to arrange the array as expected by spectral.envi
-    reflectance_cube = np.swapaxes(reflectance_cube, 0,2)
-    reflectance_cube = np.swapaxes(reflectance_cube, 0,1)
 
     p = PH.path_file_forest_sun_csv(forest_id=forest_id)
     if not os.path.exists(p):
-        logging.warning(f"Could not find sun data for wavelength info. The image cube will be saved without it.")
+        raise FileNotFoundError(f"Sun csv file '{p}' not found. Try rerunning forest initialization.")
+
 
     # Retrieve band and wavelength info from the sun file.
     wls = []
     bands = []
+    irradiances = []
     with open(p) as file:
         reader = csv.reader(file, delimiter=' ')
         for row in reader:
@@ -96,6 +63,55 @@ def construct_envi_cube(forest_id: str):
 
             bands.append(int(row[0]))
             wls.append(float(row[1]))
+            irradiances.append(float(row[2]))
+
+    # bands, wls, irradiances = FU.read_csv(p)
+    white = np.array(irradiances) * light_max_power
+
+    # white_mean = max_burn
+
+    # Find available reflectance plate reflectivity based on visibility map file names.
+    # reflectivities = []
+    # map_names = PH.list_reference_visibility_maps(forest_id=forest_id)
+    # for map_name in map_names:
+    #     splitted = map_name.split(' ')
+    #     reflectivity = float(splitted[1])
+    #     if reflectivity > 0.0:
+    #         reflectivities.append(reflectivity)
+    #
+    # reflectivities.sort(reverse=True)
+
+    # logging.info(f"Searching for good white reference plate..")
+    # accepted_reflectivity = None
+    # for reflectivity in reflectivities:
+    #     accepted_reflectivity = reflectivity
+    #     mask_path = PH.find_reference_visibility_map(forest_id=forest_id, reflectivity=reflectivity)
+    #     mask = plt.imread(mask_path)
+    #     mask = mask > 0
+    #     white_cube = raw_cube[:,mask] # Flattens the reference plate area pixels..
+    #     white_mean = np.mean(white_cube, axis=(1)) #.. so we take the mean only on one axis.
+    #     white_mean_max = white_mean.max()
+    #     if white_mean_max < max_burn:
+    #         break
+
+    # logging.info(f"Accepted white reference with {accepted_reflectivity:.2f} reflectivity producing maximum mean reflectance {white_mean_max:.1f}.")
+
+    # Originally loaded as z,x,y, where z is spectral dimension
+    raw_cube = np.swapaxes(raw_cube, 0,2) # swap to y,x,z
+    raw_cube = np.swapaxes(raw_cube, 0,1) # swap to x,y,z
+
+    # white_mean = np.expand_dims(white_mean, axis=(1,2))
+    reflectance_cube = np.divide(raw_cube, white, dtype=np.float32)
+    # refl_max = np.max(reflectance_cube)
+
+    # Swap axis to arrange the array as expected by spectral.envi
+    # reflectance_cube = np.swapaxes(reflectance_cube, 0,2)
+    # reflectance_cube = np.swapaxes(reflectance_cube, 0,1)
+
+    # p = PH.path_file_forest_sun_csv(forest_id=forest_id)
+    # if not os.path.exists(p):
+    #     logging.warning(f"Could not find sun data for wavelength info. The image cube will be saved without it.")
+
 
     # Define default RGB bands.
     if SU.is_in_visible(wls=wls):
@@ -111,7 +127,7 @@ def construct_envi_cube(forest_id: str):
         "lines": reflectance_cube.shape[1],
         "samples": reflectance_cube.shape[2],
         "data_type": 4,
-        "reference reflectivity": accepted_reflectivity,
+        # "reference reflectivity": accepted_reflectivity,
         "default bands": default_bands,
         "wavelength": wls,
         "wavelength units": "nm",

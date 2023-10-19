@@ -233,7 +233,7 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
 
 
 def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type='steel', r_lamp=0.01,
-                 n_rings=1, n1=4, n2=4, n3=4):
+                 n_rings=1, n1=4, n2=4, n3=4, top_cam_height=2.69728, light_max_pow=100):
     """ Setup the forest for rendering.
 
     :param forest_id:
@@ -262,6 +262,8 @@ def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type=
     scirpt_args += ['-n_1', f'{n1}']
     scirpt_args += ['-n_2', f'{n2}']
     scirpt_args += ['-n_3', f'{n3}']
+    scirpt_args += ['-tch', f'{top_cam_height}']
+    scirpt_args += ['-l', f'{light_max_pow}']
 
     with open(os.devnull, 'wb') as stream:
         status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
@@ -270,7 +272,7 @@ def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type=
             exit(1)
 
 
-def render_forest(forest_id: str, render_mode: str):
+def render_forest(forest_id: str, render_mode: str, light_max_pow=None):
     """Render different presentations of the forest scene.
 
     :param forest_id:
@@ -292,6 +294,9 @@ def render_forest(forest_id: str, render_mode: str):
     scirpt_args = ['--']
     scirpt_args += ['-id', f'{forest_id}']
     scirpt_args += ['-rm', render_mode]
+
+    if light_max_pow is not None:
+        scirpt_args += ['-l', f'{light_max_pow}']
 
     with open(os.devnull, 'wb') as stream:
         subprocess.run(blender_args + scirpt_args)#, stdout=stream)

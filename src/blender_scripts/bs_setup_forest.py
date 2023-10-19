@@ -255,6 +255,8 @@ if __name__ == '__main__':
     key_n_lamp_1 = ['-n_1', '--n_lamp_1']
     key_n_lamp_2 = ['-n_2', '--n_lamp_2']
     key_n_lamp_3 = ['-n_3', '--n_lamp_3']
+    key_top_cam_height = ['-tch', '--top_cam_height']
+    key_light_max_pow = ['-p', '--light_max_power']
 
     parser = argparse.ArgumentParser()
 
@@ -269,6 +271,8 @@ if __name__ == '__main__':
     parser.add_argument(key_n_lamp_1[0], key_n_lamp_1[1], dest=key_n_lamp_1[1], action="store", required=True)
     parser.add_argument(key_n_lamp_2[0], key_n_lamp_2[1], dest=key_n_lamp_2[1], action="store", required=True)
     parser.add_argument(key_n_lamp_3[0], key_n_lamp_3[1], dest=key_n_lamp_3[1], action="store", required=True)
+    parser.add_argument(key_top_cam_height[0], key_top_cam_height[1], dest=key_top_cam_height[1], action="store", required=True)
+    parser.add_argument(key_light_max_pow[0], key_light_max_pow[1], dest=key_light_max_pow[1], action="store", required=True)
 
     args = parser.parse_args(argv)
 
@@ -282,6 +286,8 @@ if __name__ == '__main__':
     n_lamp_1 = int(vars(args)[key_n_lamp_1[1]])
     n_lamp_2 = int(vars(args)[key_n_lamp_2[1]])
     n_lamp_3 = int(vars(args)[key_n_lamp_3[1]])
+    top_cam_height = float(vars(args)[key_top_cam_height[1]])
+    light_max_pow = float(vars(args)[key_light_max_pow[1]])
 
     print(f"Kettle radius in setup {r_kettle} type {type(r_kettle)}")
 
@@ -307,6 +313,9 @@ if __name__ == '__main__':
         raise AttributeError(f"Kettle type '{kettle_type}' not recognised")
 
     bpy.data.objects["Submarine"].location[2] = r_kettle # camera height
+    bpy.data.objects["Top camera"].location[0] = 0.0
+    bpy.data.objects["Top camera"].location[1] = 0.0
+    bpy.data.objects["Top camera"].location[2] = top_cam_height
 
     logging.error(f"Running scene setup for '{PH.path_directory_forest_scene(forest_id)}'")
 
@@ -314,7 +323,7 @@ if __name__ == '__main__':
     # insert_soil_data()
     # insert_trunk_data()
 
-    FU.set_sun_power_hsi(forest_id=forest_id)
+    FU.set_sun_power_hsi(forest_id=forest_id, light_max_power=light_max_pow)
     # FU.apply_forest_control(forest_id=forest_id)
 
     # FU.print_materials()
