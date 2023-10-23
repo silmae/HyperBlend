@@ -270,7 +270,8 @@ def make_kettles(light_max_pow=100):
 
         # Glass kettle
         forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}", sun_file_name="AP67_spectra.txt")
-        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass", light_max_pow=light_max_pow)
+        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass", top_cam_height=top_cam_height,
+                        light_max_pow=light_max_pow)
 
     # Equation for WA
     # r_g^3 - x^3 + (r_g^4 / (n * x))
@@ -301,6 +302,43 @@ def make_kettles(light_max_pow=100):
     n = 28
     top_cam_height = 2.69728
     do_kettle_thing(target_vol=target_vol, r_g=r_g, r_s=r_s, n=n, n1=4, n2=8, n3=16, n_rings=3, top_cam_height=top_cam_height)
+
+
+def render_cubes(light_max_pow):
+
+    scene_id = "reactor_steel_10"
+    BC.render_forest(forest_id=scene_id, render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+
+    scene_id = "reactor_steel_100"
+    BC.render_forest(forest_id="reactor_steel_100", render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+
+    scene_id = "reactor_steel_1000"
+    BC.render_forest(forest_id="reactor_steel_1000", render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+
+    scene_id = "reactor_glass_10"
+    BC.render_forest(forest_id="reactor_glass_10", render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+
+    scene_id = "reactor_glass_100"
+    BC.render_forest(forest_id="reactor_glass_100", render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+
+    scene_id = "reactor_glass_1000"
+    BC.render_forest(forest_id="reactor_glass_1000", render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=scene_id, light_max_power=light_max_pow)
+
+
+def show_cubes():
+
+    CH.show_cube(forest_id="reactor_steel_10")
+    CH.show_cube(forest_id="reactor_steel_100")
+    CH.show_cube(forest_id="reactor_steel_1000")
+    CH.show_cube(forest_id="reactor_glass_10")
+    CH.show_cube(forest_id="reactor_glass_100")
+    CH.show_cube(forest_id="reactor_glass_1000")
 
 
 if __name__ == '__main__':
@@ -338,17 +376,24 @@ if __name__ == '__main__':
     material_name = "Reactor content material"
     light_max_pow = 100 # W / m^2
 
-    # make_kettles()
+    # Solve algae as a leaf
+    # algae_leaf(set_name=algae_leaf_set_name)
 
-    # BC.render_forest(forest_id=algae_scene_id,render_mode='top')
+    # These 3 lines do everything at once
+    # make_kettles()
+    # render_cubes(light_max_pow=light_max_pow)
+    show_cubes()
+
+    # BC.render_forest(forest_id="reactor_glass_100",render_mode='top', light_max_pow=light_max_pow)
+    # CH.construct_envi_cube(forest_id="reactor_glass_100", light_max_power=light_max_pow)
+    # CH.show_cube(forest_id="reactor_glass_100")
+
 
     # CH.construct_envi_cube(forest_id=algae_scene_id, light_max_power=100)
-    CH.show_cube(forest_id=algae_scene_id)
+    # CH.show_cube(forest_id=algae_scene_id)
 
     # material_name = "Reactor content material"
 
-    # Solve algae as a leaf
-    # algae_leaf(set_name=set_name)
 
     # reactor_test(algae_leaf_set_name=algae_leaf_set_name, rng=rng)
 

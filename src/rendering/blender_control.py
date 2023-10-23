@@ -263,7 +263,7 @@ def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type=
     scirpt_args += ['-n_2', f'{n2}']
     scirpt_args += ['-n_3', f'{n3}']
     scirpt_args += ['-tch', f'{top_cam_height}']
-    scirpt_args += ['-l', f'{light_max_pow}']
+    scirpt_args += ['-p', f'{light_max_pow}']
 
     with open(os.devnull, 'wb') as stream:
         status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
@@ -296,7 +296,10 @@ def render_forest(forest_id: str, render_mode: str, light_max_pow=None):
     scirpt_args += ['-rm', render_mode]
 
     if light_max_pow is not None:
-        scirpt_args += ['-l', f'{light_max_pow}']
+        scirpt_args += ['-p', f'{light_max_pow}']
 
     with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        if status.returncode != 0:
+            logging.fatal(f"Failed to render forest scene file.")
+            exit(1)
