@@ -21,6 +21,7 @@ algae_measurement_sets/01_09_2023/references.png
 # Ignore other than default sun and sky files
 sun_data/*
 !sun_data/default_sun.txt
+!sun_data/AP67_spectra.txt
 sky_data/*
 !sky_data/default_clear_sky.txt
 
