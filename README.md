@@ -93,7 +93,7 @@ For more information on the working principle of HyperBlend, see the scientific 
 
 If you find our work usefull in your project, please cite us:
 
-Riihiaho, K. A., Rossi, T., and Pölönen, I.: HYPERBLEND: SIMULATING SPECTRAL REFLECTANCE AND TRANSMITTANCE OF LEAF TISSUE WITH BLENDER, ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci., V-3-2022, 471–476, https://doi.org/10.5194/isprs-annals-V-3-2022-471-2022, 2022.
+Riihiaho, K. A., Rossi, T., & Pölönen, I. (2022). HyperBlend: Simulating Spectral Reflectance and Transmittance of Leaf Tissue with Blender. In ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences. Copernicus Publications. https://doi.org/10.5194/isprs-annals-V-3-2022-471-2022.
 
 ```bibtex
 @Article{riihiaho22,
@@ -108,7 +108,21 @@ DOI = {10.5194/isprs-annals-V-3-2022-471-2022}
 }
 ```
 
-**Citation info for the v0.2.0 paper will be shown here once we get it from the publisher!**
+Riihiaho, K. A., Lind, L., & Pölönen, I. (2023). HyperBlend leaf simulator: improvements on simulation speed, generalizability, and parameterization. Journal of Applied Remote Sensing, 17(3), 038505-038505. https://doi.org/10.1117/1.JRS.17.038505.
+
+```bibtex
+@article{riihiaho2023hyperblend,
+  title={HyperBlend leaf simulator: improvements on simulation speed, generalizability, and parameterization},
+  author={Riihiaho, Kimmo A and Lind, Leevi and P{\"o}l{\"o}nen, Ilkka},
+  journal={Journal of Applied Remote Sensing},
+  volume={17},
+  number={3},
+  pages={038505--038505},
+  year={2023},
+  publisher={Society of Photo-Optical Instrumentation Engineers},
+  doi = {https://doi.org/10.1117/1.JRS.17.038505}
+}
+```
 
 ## <a name="Installing"></a> Installing
 
