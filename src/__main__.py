@@ -147,10 +147,17 @@ def iterative_train():
     # surf_model_name = FN.get_surface_model_save_name(set_name_iter_4)
 
 
-def algae_leaf(set_name):
+def solve_all_algae_leaves():
+
+    for i in range(1,6):
+        name = f"algae_sample_{i}"
+        algae_leaf(set_name=name, sample_nr=i)
+
+
+def algae_leaf(set_name, sample_nr):
     """Solve algae parameters as a leaf (hack so no new code needed)."""
 
-    wls, refl, tran = M.plot_algae(save_thumbnail=True, dont_show=True)
+    wls, refl, tran = M.plot_algae(save_thumbnail=True, dont_show=True, ret_sampl_nr=sample_nr)
     wls = np.flip(wls)
     refl = np.flip(refl)
     tran = np.flip(tran)
@@ -256,22 +263,23 @@ def make_kettles(light_max_pow=100):
         print(f"\tRadius [m]:      glass = {r_g}, steel {r_s}")
         print(f"\tHeight [m]:      glass = {h_g}, steel {h_s}")
         print(f"\tVolume [m^3]:    glass = {V_g}, steel {V_s} (diff {V_diff})")
+        print(f"\tLamp count: {n} (c1: {n1}, c2:{n2}, c3 {n3})")
         print(f"\tLamp area [m^2]: glass = {A_g}, steel {A_l} (diff {A_diff})")
         print(f"\tRod lamp volume [m^3]: {V_l}")
         print(f"\tRod lamp radius [m]: {r_l}")
 
-        material_name = "Reactor content material"
-        algae_leaves = [(algae_leaf_set_name, 0, material_name)]
-
-        # Steel kettle
-        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_steel_{target_vol}", sun_file_name="AP67_spectra.txt")
-        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_s, kettle_type="steel", r_lamp=r_l,
-                        n1=n1, n2=n2, n3=n3, n_rings=n_rings, top_cam_height=top_cam_height, light_max_pow=light_max_pow)
-
-        # Glass kettle
-        forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}", sun_file_name="AP67_spectra.txt")
-        BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass", top_cam_height=top_cam_height,
-                        light_max_pow=light_max_pow)
+        # material_name = "Reactor content material"
+        # algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+        #
+        # # Steel kettle
+        # forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_steel_{target_vol}", sun_file_name="AP67_spectra.txt")
+        # BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_s, kettle_type="steel", r_lamp=r_l,
+        #                 n1=n1, n2=n2, n3=n3, n_rings=n_rings, top_cam_height=top_cam_height, light_max_pow=light_max_pow)
+        #
+        # # Glass kettle
+        # forest_id = forest.init(leaves=algae_leaves, rng=rng, custom_forest_id=f"reactor_glass_{target_vol}", sun_file_name="AP67_spectra.txt")
+        # BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], r_kettle=r_g, kettle_type="glass", top_cam_height=top_cam_height,
+        #                 light_max_pow=light_max_pow)
 
     # Equation for WA
     # r_g^3 - x^3 + (r_g^4 / (n * x))
@@ -376,13 +384,16 @@ if __name__ == '__main__':
     material_name = "Reactor content material"
     light_max_pow = 100 # W / m^2
 
+
+    solve_all_algae_leaves()
+
     # Solve algae as a leaf
     # algae_leaf(set_name=algae_leaf_set_name)
 
     # These 3 lines do everything at once
     # make_kettles()
     # render_cubes(light_max_pow=light_max_pow)
-    show_cubes()
+    # show_cubes()
 
     # BC.render_forest(forest_id="reactor_glass_100",render_mode='top', light_max_pow=light_max_pow)
     # CH.construct_envi_cube(forest_id="reactor_glass_100", light_max_power=light_max_pow)

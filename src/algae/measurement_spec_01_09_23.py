@@ -1,4 +1,4 @@
-
+import logging
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -98,7 +98,7 @@ def plot_references(dont_show=True, save_thumbnail=True):
         plt.show()
 
 
-def plot_algae(dont_show=True, save_thumbnail=True):
+def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=plotter.figsize)
     fig.suptitle(f"Algae", fontsize=plotter.fig_title_font_size)
@@ -150,14 +150,28 @@ def plot_algae(dont_show=True, save_thumbnail=True):
 
     wls = utils.range(wls=wls, low=low, high=high, val=wls)
 
-    diff_we_t = val_dit / val_et
+    # Attempt to normilize transmittance to empty cuvette
+    # Works ok for transmittance
+    # val_dit_mean = np.mean(val_dit)
+    # val_et_mean = np.mean(val_et)
+    # diff_we_t = val_dit / val_et
+    # mean_we_t = np.mean(diff_we_t)
+    # final_ref_t = val_et * mean_we_t
+
+    # Normalize to lamp white
+    final_ref_t = val_light_before
+
+    # Attempt to normilize reflectance to empty cuvette
+    # Does not really work as we would be dividing with a small number
+    #   that explodes the final reflectance value, resulting in negative
+    #   absorption
+    # val_dir_mean = np.mean(val_dir)
+    # val_er_mean = np.mean(val_er)
     # diff_we_r = val_dir / val_er
-
-    mean_we_t = np.mean(diff_we_t)
     # mean_we_r = np.mean(diff_we_r)
-
-    final_ref_t = val_et * mean_we_t
     # final_ref_r = val_er * mean_we_r
+
+    # Normalize to lamp white
     final_ref_r = val_light_before
 
     # Reference
@@ -234,7 +248,7 @@ def plot_algae(dont_show=True, save_thumbnail=True):
 
     ylim = [0,1.0]
     ax[0].set_ylim(ylim)
-    ax[1].set_ylim([0,0.1])
+    ax[1].set_ylim([0,1.0])
 
     ax[0].legend()
     ax[1].legend()
@@ -245,4 +259,17 @@ def plot_algae(dont_show=True, save_thumbnail=True):
     if not dont_show:
         plt.show()
 
-    return wls, val_a1r, val_a1t
+    if ret_sampl_nr == 1:
+        return wls, val_a1r, val_a1t
+    elif ret_sampl_nr == 2:
+        return wls, val_a2r, val_a2t
+    elif ret_sampl_nr == 3:
+        return wls, val_a3r, val_a3t
+    elif ret_sampl_nr == 4:
+        return wls, val_a4r, val_a4t
+    elif ret_sampl_nr == 5:
+        return wls, val_a5r, val_a5t
+    else:
+        logging.warning(f"Unsupported sample number {ret_sampl_nr}")
+        pass
+
