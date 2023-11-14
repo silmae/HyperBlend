@@ -82,7 +82,7 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
 
 
 def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_sampling=False, solver='nn', clear_old_results=False, solver_model_name=None,
-                                   copyof=None, plot_resampling=True, surf_model_name=None):
+                                   copyof=None, plot_resampling=True, surf_model_name=None, old=False):
     """Solves leaf material parameters for rendering.
     
     The result is saved to disk: this method does not have a return value.
@@ -168,9 +168,9 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
                 ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(r_m=r_m, t_m=t_m, surface_model_name=solver_model_name)
             elif solver == "nn":
                 if solver_model_name: # when using custom NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, nn_name=solver_model_name)
+                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, nn_name=solver_model_name, old=old)
                 else: # when using default NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m)
+                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, old=old)
 
             ad, sd, ai, mf = LC._convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw)
             r, t = LC._material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf)

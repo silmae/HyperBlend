@@ -92,34 +92,89 @@ def run_paper_tests():
                                       solver="surf", plot_resampling=False, solver_model_name=surf_model_name, use_dumb_sampling=True)
 
 
-def asym_test(smthng='const_r_var_t'):
+def asym_test():
     import numpy as np
     from src.leaf_model import leaf_commons as LC
     from src.leaf_model.opt import Optimization
     from src.utils import data_utils
 
-    set_name = f"{smthng}_test"
 
+    results = []
     n = 10
     const = 0.05
-    if smthng == 'const_r_var_t':
-        r_list = np.ones((n,)) * const
-        t_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
-        wls = np.arange(n)
-    elif smthng == 'const_t_var_r':
-        t_list = np.ones((n,)) * const
-        r_list = np.linspace(0.1, 0.8, num=n, endpoint=True)
-        wls = np.arange(n)
+    for i in range(4):
 
-    data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
+        if i == 0:
+            smthng = 'const_r_var_t'
+            set_name = f"{smthng}_new"
+            nn_name = "nn_default"
+            old = False
+        if i == 1:
+            smthng = 'const_t_var_r'
+            set_name = f"{smthng}_new"
+            nn_name = "nn_default"
+            old = False
+        if i == 2:
+            smthng = 'const_r_var_t'
+            set_name = f"{smthng}_old"
+            nn_name = "nn_default_old"
+            old = True
+        if i == 3:
+            smthng = 'const_t_var_r'
+            set_name = f"{smthng}_old"
+            nn_name = "nn_default_old"
+            old = True
 
-    LC.initialize_directories(set_name=set_name, clear_old_results=True)
-    TH.write_target(set_name=set_name, data=data)
-    # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
-    # o = Optimization(set_name=set_name, diffstep=0.01)
-    # o.run_optimization(resampled=False, use_threads=True)
-    LI.solve_leaf_material_parameters(set_name=set_name, use_dumb_sampling=True, solver='nn', clear_old_results=True, plot_resampling=False)
+        if smthng == 'const_r_var_t':
+            r_list = np.ones((n,)) * const
+            t_list = np.linspace(const, 1-const, num=n, endpoint=True)
+            wls = np.arange(n)
+        elif smthng == 'const_t_var_r':
+            t_list = np.ones((n,)) * const
+            r_list = np.linspace(const, 1-const, num=n, endpoint=True)
+            wls = np.arange(n)
+
+        data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
+
+        LC.initialize_directories(set_name=set_name, clear_old_results=True)
+        TH.write_target(set_name=set_name, data=data)
+
+        # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
+        # o = Optimization(set_name=set_name, diffstep=0.01)
+        # o.run_optimization(resampled=False, use_threads=True)
+
+        LI.solve_leaf_material_parameters(set_name=set_name, use_dumb_sampling=True, solver='nn', clear_old_results=True,
+                                          plot_resampling=False,solver_model_name=nn_name, old=old)
+        set_result = TH.read_set_result(set_name=set_name)
+        results.append(set_result)
+
+    # plotter.plot_asym_test_result(set_results=results, dont_show=False, save_thumbnail=True)
+
     print(f"Done {set_name}")
+
+
+def plot_asym_test():
+
+    results = []
+    for i in range(4):
+
+        if i == 0:
+            smthng = 'const_r_var_t'
+            set_name = f"{smthng}_new"
+        if i == 1:
+            smthng = 'const_t_var_r'
+            set_name = f"{smthng}_new"
+        if i == 2:
+            smthng = 'const_r_var_t'
+            set_name = f"{smthng}_old"
+        if i == 3:
+            smthng = 'const_t_var_r'
+            set_name = f"{smthng}_old"
+
+        set_result = TH.read_set_result(set_name=set_name)
+        results.append(set_result)
+
+    plotter.plot_asym_test_result(set_results=results,dont_show=False, save_thumbnail=True)
 
 
 def iterative_train():
@@ -377,15 +432,18 @@ if __name__ == '__main__':
 
     # LI.visualize_leaf_models(training_set_name=set_name_iter_1, show_plot=True, plot_surf=False, plot_nn=False)
 
+    # asym_test()
+    plot_asym_test()
+
     ##### ALGAE STUFF #######
 
-    algae_leaf_set_name = "algae_sample_1"
-    algae_scene_id = "reactor_steel_10"
-    material_name = "Reactor content material"
-    light_max_pow = 100 # W / m^2
-
-
-    solve_all_algae_leaves()
+    # algae_leaf_set_name = "algae_sample_1"
+    # algae_scene_id = "reactor_steel_10"
+    # material_name = "Reactor content material"
+    # light_max_pow = 100 # W / m^2
+    #
+    #
+    # solve_all_algae_leaves()
 
     # Solve algae as a leaf
     # algae_leaf(set_name=algae_leaf_set_name)

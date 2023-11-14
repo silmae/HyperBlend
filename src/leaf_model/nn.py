@@ -207,7 +207,7 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     return best_loss
 
 
-def predict(r_m, t_m, nn_name='nn_default'):
+def predict(r_m, t_m, nn_name='nn_default', old=False):
     """Use neural network to predict HyperBlend leaf model parameters from measured reflectance and transmittance.
 
     :param r_m:
@@ -222,7 +222,7 @@ def predict(r_m, t_m, nn_name='nn_default'):
         Use ``leaf_commons._convert_raw_params_to_renderable()`` before passing them to rendering method.
     """
 
-    net = _load_model(nn_name=nn_name)
+    net = _load_model(nn_name=nn_name, old=old)
     r_m = np.array(r_m)
     t_m = np.array(t_m)
     res = net(from_numpy(np.column_stack([r_m, t_m])))
@@ -234,7 +234,7 @@ def predict(r_m, t_m, nn_name='nn_default'):
     return ad, sd, ai, mf
 
 
-def _load_model(nn_name):
+def _load_model(nn_name, old=False):
     """Loads the NN from disk.
 
     :param nn_name:
@@ -251,14 +251,15 @@ def _load_model(nn_name):
         p = _get_model_path(nn_name)
 
         # Old load where the whole model is used.
-        # net = load(p)
-
-        # New load where only state dict is used.
-        # NOTE that the Leafnet object must be initialized with the
-        #   same layer width and layer count as what it was trained with.
-        net = Leafnet()
-        net.load_state_dict(torch.load(p))
-        net.double()
+        if old:
+            net = load(p)
+        else:
+            # New load where only state dict is used.
+            # NOTE that the Leafnet object must be initialized with the
+            #   same layer width and layer count as what it was trained with.
+            net = Leafnet()
+            net.load_state_dict(torch.load(p))
+            net.double()
 
         net.eval()
         logging.info(f"NN model loaded from '{p}'")
