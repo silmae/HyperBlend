@@ -433,7 +433,11 @@ if __name__ == '__main__':
     # LI.visualize_leaf_models(training_set_name=set_name_iter_1, show_plot=True, plot_surf=False, plot_nn=False)
 
     # asym_test()
-    plot_asym_test()
+    # plot_asym_test()
+
+    # Plot algae measurement stuff
+    M.plot_references()
+    M.plot_algae()
 
     ##### ALGAE STUFF #######
 
