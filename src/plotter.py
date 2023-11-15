@@ -538,6 +538,124 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     plt.close(fig)
 
 
+def plot_asym_test_result(set_results, dont_show=True, save_thumbnail=True) -> None:
+    """Plot average of sample results as the set result.
+
+    :param set_results:
+        List of set results as read by toml_handling.read_set_result().
+    :param dont_show:
+        If False, pyplot.show() is called, otherwise nothing is shown. Default is True.
+    :param save_thumbnail:
+        If True, save plot to disk. Default is True.
+    """
+
+    def plot_twin(axis_object, refl, tran, x_values, x_label,
+                refl_color=color_reflectance, tran_color=color_transmittance, ls=None,
+                plot_label=None, set_y_label=False):
+
+        axis_object.set_xlabel(x_label, fontsize=axis_label_font_size)
+
+        if set_y_label:
+            axis_object.set_ylabel('Reflectance', color=refl_color, fontsize=axis_label_font_size)
+        axis_object.tick_params(axis='y', labelcolor=refl_color)
+
+        # Make twin axis for transmittance
+        axt = axis_object.twinx()
+
+        if set_y_label:
+            axt.set_ylabel('Transmittance', color=tran_color, fontsize=axis_label_font_size)
+        axt.tick_params(axis='y', labelcolor=tran_color)
+
+        # But use given x_values for plotting
+        marker = ''
+        axis_object.plot(x_values, refl, label=f"Reflectance {plot_label}", color=refl_color, marker=marker, ls=ls)
+        axt.plot(x_values, tran, label=f"Transmittance {plot_label}", color=tran_color, marker=marker, ls=ls)
+
+        axt.set_ylim([1, 0])
+
+    plt.close('all')
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
+    # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
+    ax[0].set_title('Varying T')
+    ax[1].set_title('Varying R')
+
+    color_new = 'red'
+    color_old = 'blue'
+    color_target = 'gray'
+
+    for i in range(2):
+
+        if i == 0:
+            result_new = set_results[0]
+            result_old = set_results[2]
+        if i == 1:
+            result_new = set_results[1]
+            result_old = set_results[3]
+
+        wls = result_new[C.key_set_result_wls]
+        rm_mean = np.array(result_new[C.key_set_result_wl_rm_mean])
+        tm_mean = np.array(result_new[C.key_set_result_wl_tm_mean])
+
+        plot_twin(ax[i],refl=rm_mean,tran=tm_mean,x_values=wls,x_label='',
+                                refl_color=color_target,tran_color=color_target,
+                                ls='dashed', plot_label="Target")
+
+        r_mean_new = np.array(result_new[C.key_set_result_wl_r_mean])
+        t_mean_new = np.array(result_new[C.key_set_result_wl_t_mean])
+        r_mean_old = np.array(result_old[C.key_set_result_wl_r_mean])
+        t_mean_old = np.array(result_old[C.key_set_result_wl_t_mean])
+
+        plot_twin(ax[i], refl=r_mean_new, tran=t_mean_new, x_values=wls, x_label='',
+                                #refl_color=color_new,tran_color=color_new,
+                                plot_label="New")
+        plot_twin(ax[i],refl=r_mean_old,tran=t_mean_old,x_values=wls,x_label='',
+                                #refl_color=color_old,tran_color=color_old,
+                                plot_label="Old",ls='dotted', set_y_label=True)
+
+        ax[i].set_ylim([0,1])
+        ax[i].set_xticks([],[])
+
+        # print(f"R measured: {rm_mean}")
+        # print(f"T measured: {tm_mean}")
+
+        # ax[i].legend()
+
+        # ax[i].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
+
+    # ax[1].plot(wls, rm_mean, color=color_reflectance_measured, ls='dotted')
+
+    # x_label = 'Wavelength [nm]'
+    # ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
+    # ax[1].set_xlabel(x_label, fontsize=axis_label_font_size)
+    # ax[1].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
+    # ax[0].set_ylabel('Material parameter', fontsize=axis_label_font_size)
+
+    # ax[1].set_ylim([0,1])
+    # ax[1].set_ylabel('Reflectance', color=color_reflectance, fontsize=axis_label_font_size)
+    # ax[1].tick_params(axis='y', labelcolor=color_reflectance)
+    # _plot_with_shadow(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
+
+    # _plot_refl_tran_to_axis(ax[0],refl=)
+
+    # ax_inverted = ax[1].twinx()
+    # ax_inverted.set_ylim([1, 0])
+    # ax_inverted.set_ylabel('Transmittance', color=color_transmittance, fontsize=axis_label_font_size)
+    # ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
+    # _plot_with_shadow(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
+    # ax_inverted.plot(wls, tm_mean, color=color_transmittance_measured, ls='dotted')
+
+    plt.tight_layout()
+
+    if save_thumbnail:
+        folder = PH.path_directory_project_root()
+        image_name = "asym_test_results.png"
+        path = PH.join(folder, image_name)
+        logging.info(f"Saving asym test result plot to '{path}'.")
+        plt.savefig(path, dpi=save_resolution, bbox_inches='tight', pad_inches=0.1)
+    if not dont_show:
+        plt.show()
+
+
 def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     """Plot average of sample results as the set result.
 
@@ -822,7 +940,9 @@ def _plot_with_shadow(ax_obj, x_data, y_data, y_data_std, color, label, ls='-') 
     ax_obj.plot(x_data, y_data, color=color, ls=ls, label=label)
 
 
-def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
+def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False,
+                            refl_color=color_reflectance, tran_color=color_transmittance, ls=None,
+                            plot_label=None):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -854,8 +974,8 @@ def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_t
     axt.tick_params(axis='y', labelcolor=tran_color)
     # But use given x_values for plotting
     marker = '.'
-    axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
-    axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
+    axis_object.plot(x_values, refl, label=f"Reflectance {plot_label}", color=refl_color, marker=marker,ls=ls)
+    axt.plot(x_values, tran, label=f"Transmittance {plot_label}", color=tran_color, marker=marker,ls=ls)
 
     axis_object.set_ylim([0, 1])
     if invert_tran:

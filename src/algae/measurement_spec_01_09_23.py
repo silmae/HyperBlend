@@ -1,4 +1,4 @@
-
+import logging
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -57,6 +57,17 @@ def plot_references(dont_show=True, save_thumbnail=True):
 
     ax[0].plot(wls, val_light_before, label=sample_numbers_01_09_2023['4791'])
     ax[0].plot(wls, val_light_after, label=sample_numbers_01_09_2023['4809'])
+    ax[0].plot(wls, val_et, label='Empty cuvette transmittance')
+    # utils._plot_refl_tran_to_axis(ax[0], refl=val_er, tran=val_et, x_values=wls, x_label="Wavelength [nm]",
+    #                               invert_tran=True, label='Empty cuvette', color='orange')
+
+    # Normalize with white plug
+    # val_et = val_et / val_light_before
+    # val_er = val_er / val_light_before
+    # val_bt = val_bt  / val_light_before
+    # val_br = val_br  / val_light_before
+    # val_dit = val_dit  / val_light_before
+    # val_dir = val_dir  / val_light_before
 
     utils._plot_refl_tran_to_axis(ax[1], refl=val_er, tran=val_et, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Empty cuvette', color='orange')
     utils._plot_refl_tran_to_axis(ax[1], refl=val_br, tran=val_bt, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Broth', color='brown')
@@ -67,6 +78,13 @@ def plot_references(dont_show=True, save_thumbnail=True):
     _, val_a3r = utils.read_sample(sample_nr='4803', measurement_set_name=path_algae_measurement_set)
     _, val_a4r = utils.read_sample(sample_nr='4805', measurement_set_name=path_algae_measurement_set)
     _, val_a5r = utils.read_sample(sample_nr='4807', measurement_set_name=path_algae_measurement_set)
+
+    # Normalize with white plug
+    # val_a1r = val_a1r / val_light_before
+    # val_a2r = val_a2r / val_light_before
+    # val_a3r = val_a3r / val_light_before
+    # val_a4r = val_a4r / val_light_before
+    # val_a5r = val_a5r / val_light_before
 
     val_a1r = utils.smooth_data_np_convolve(arr=val_a1r, span=span)
     val_a2r = utils.smooth_data_np_convolve(arr=val_a2r, span=span)
@@ -93,18 +111,17 @@ def plot_references(dont_show=True, save_thumbnail=True):
 
     if save_thumbnail:
         save_path_image = PH.join(path_algae_measurement_set, f"references.png")
-        plt.savefig(save_path_image, dpi=plotter.save_resolution)
+        plt.savefig(save_path_image, dpi=plotter.save_resolution,bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
 
 
-def plot_algae(dont_show=True, save_thumbnail=True):
+def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=plotter.figsize)
-    fig.suptitle(f"Algae", fontsize=plotter.fig_title_font_size)
+    # fig.suptitle(f"Algae", fontsize=plotter.fig_title_font_size)
     ax[0].set_title('Transmittance')
     ax[1].set_title('Reflectance')
-
 
     wls, val_light_before = utils.read_sample(sample_nr='4791', measurement_set_name=path_algae_measurement_set)
     _, val_light_after = utils.read_sample(sample_nr='4809', measurement_set_name=path_algae_measurement_set)
@@ -150,14 +167,28 @@ def plot_algae(dont_show=True, save_thumbnail=True):
 
     wls = utils.range(wls=wls, low=low, high=high, val=wls)
 
-    diff_we_t = val_dit / val_et
+    # Attempt to normilize transmittance to empty cuvette
+    # Works ok for transmittance
+    # val_dit_mean = np.mean(val_dit)
+    # val_et_mean = np.mean(val_et)
+    # diff_we_t = val_dit / val_et
+    # mean_we_t = np.mean(diff_we_t)
+    # final_ref_t = val_et * mean_we_t
+
+    # Normalize to lamp white
+    final_ref_t = val_light_before
+
+    # Attempt to normilize reflectance to empty cuvette
+    # Does not really work as we would be dividing with a small number
+    #   that explodes the final reflectance value, resulting in negative
+    #   absorption
+    # val_dir_mean = np.mean(val_dir)
+    # val_er_mean = np.mean(val_er)
     # diff_we_r = val_dir / val_er
-
-    mean_we_t = np.mean(diff_we_t)
     # mean_we_r = np.mean(diff_we_r)
-
-    final_ref_t = val_et * mean_we_t
     # final_ref_r = val_er * mean_we_r
+
+    # Normalize to lamp white
     final_ref_r = val_light_before
 
     # Reference
@@ -198,11 +229,11 @@ def plot_algae(dont_show=True, save_thumbnail=True):
     # val_a5t = utils.smooth_data_np_convolve(arr=val_a5t, span=span2)
     # val_a5r = utils.smooth_data_np_convolve(arr=val_a5r, span=span2)
 
-    ax[0].plot(wls, val_a1t, label='Algae 1', color=colors[0])
-    ax[0].plot(wls, val_a2t, label='Algae 2', color=colors[1])
-    ax[0].plot(wls, val_a3t, label='Algae 3', color=colors[2])
-    ax[0].plot(wls, val_a4t, label='Algae 4', color=colors[3])
-    ax[0].plot(wls, val_a5t, label='Algae 5', color=colors[4])
+    ax[0].plot(wls, val_a1t, label='Sample 1', color=colors[0])
+    ax[0].plot(wls, val_a2t, label='Sample 2', color=colors[1])
+    ax[0].plot(wls, val_a3t, label='Sample 3', color=colors[2])
+    ax[0].plot(wls, val_a4t, label='Sample 4', color=colors[3])
+    ax[0].plot(wls, val_a5t, label='Sample 5', color=colors[4])
 
     # val_a1r = utils.smooth_data_np_convolve(arr=val_a1r,span=3)
     # val_a2r = utils.smooth_data_np_convolve(arr=val_a2r,span=3)
@@ -210,11 +241,11 @@ def plot_algae(dont_show=True, save_thumbnail=True):
     # val_a4r = utils.smooth_data_np_convolve(arr=val_a4r,span=3)
     # val_a5r = utils.smooth_data_np_convolve(arr=val_a5r,span=3)
 
-    ax[1].plot(wls, val_a1r, label='Algae 1', color=colors[0])
-    ax[1].plot(wls, val_a2r, label='Algae 2', color=colors[1])
-    ax[1].plot(wls, val_a3r, label='Algae 3', color=colors[2])
-    ax[1].plot(wls, val_a4r, label='Algae 4', color=colors[3])
-    ax[1].plot(wls, val_a5r, label='Algae 5', color=colors[4])
+    ax[1].plot(wls, val_a1r, label='Sample 1', color=colors[0])
+    ax[1].plot(wls, val_a2r, label='Sample 2', color=colors[1])
+    ax[1].plot(wls, val_a3r, label='Sample 3', color=colors[2])
+    ax[1].plot(wls, val_a4r, label='Sample 4', color=colors[3])
+    ax[1].plot(wls, val_a5r, label='Sample 5', color=colors[4])
 
     # utils._plot_refl_tran_to_axis(ax, refl=val_a1r, tran=val_a1t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 1', color=colors[0])
     # utils._plot_refl_tran_to_axis(ax, refl=val_a2r, tran=val_a2t, x_values=wls, x_label="Wavelength [nm]", invert_tran=True, label='Algae 2', color=colors[1])
@@ -234,15 +265,28 @@ def plot_algae(dont_show=True, save_thumbnail=True):
 
     ylim = [0,1.0]
     ax[0].set_ylim(ylim)
-    ax[1].set_ylim([0,0.1])
+    ax[1].set_ylim([0,1.0])
 
     ax[0].legend()
     ax[1].legend()
 
     if save_thumbnail:
         save_path_image = PH.join(path_algae_measurement_set, f"algae.png")
-        plt.savefig(save_path_image, dpi=plotter.save_resolution)
+        plt.savefig(save_path_image, dpi=plotter.save_resolution, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:
         plt.show()
 
-    return wls, val_a1r, val_a1t
+    if ret_sampl_nr == 1:
+        return wls, val_a1r, val_a1t
+    elif ret_sampl_nr == 2:
+        return wls, val_a2r, val_a2t
+    elif ret_sampl_nr == 3:
+        return wls, val_a3r, val_a3t
+    elif ret_sampl_nr == 4:
+        return wls, val_a4r, val_a4t
+    elif ret_sampl_nr == 5:
+        return wls, val_a5r, val_a5t
+    else:
+        logging.warning(f"Unsupported sample number {ret_sampl_nr}")
+        pass
+
