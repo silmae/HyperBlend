@@ -380,9 +380,9 @@ if __name__ == '__main__':
     # algae_leaf(set_name=algae_leaf_set_name)
 
     # These 3 lines do everything at once
-    # make_kettles()
+    make_kettles()
     # render_cubes(light_max_pow=light_max_pow)
-    show_cubes()
+    # show_cubes()
 
     # BC.render_forest(forest_id="reactor_glass_100",render_mode='top', light_max_pow=light_max_pow)
     # CH.construct_envi_cube(forest_id="reactor_glass_100", light_max_power=light_max_pow)
