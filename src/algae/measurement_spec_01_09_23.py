@@ -169,7 +169,7 @@ def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
 
     # Attempt to normilize transmittance to empty cuvette
     # Works ok for transmittance
-    # val_dit_mean = np.mean(val_dit)
+    val_dit_mean = np.mean(val_dit)
     # val_et_mean = np.mean(val_et)
     # diff_we_t = val_dit / val_et
     # mean_we_t = np.mean(diff_we_t)
@@ -177,6 +177,9 @@ def plot_algae(dont_show=True, save_thumbnail=True, ret_sampl_nr=1):
 
     # Normalize to lamp white
     final_ref_t = val_light_before
+
+    # Normalize to Di water
+    # final_ref_t = val_dit
 
     # Attempt to normilize reflectance to empty cuvette
     # Does not really work as we would be dividing with a small number

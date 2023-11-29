@@ -3,6 +3,7 @@ import numpy as np
 import spectral
 import os
 import matplotlib.pyplot as plt
+from matplotlib import colors
 import logging
 import csv
 
@@ -164,11 +165,27 @@ def show_cube(forest_id: str):
     # Minus 1 because spectral is zero-based and ENVI standard one-based.. apparently.
     default_bands = [int(band) - 1 for band in data.metadata['default bands']]
 
-    rgb = data.read_bands(bands=default_bands)
-    plt.close('all') # Close all previous plots before showing this one.
-    plt.figure(figsize=(10,10))
-    plt.imshow(rgb)
-    plt.show()
+    # rgb = data.read_bands(bands=default_bands)
+    # plt.close('all') # Close all previous plots before showing this one.
+    # plt.figure(figsize=(10,10))
+    # plt.title(forest_id)
+    # plt.imshow(rgb, norm=colors.LogNorm())
+    # plt.colorbar()
+    # plt.show()
 
     # TODO Would be nice if this worked, but it just flashes on the screen
-    # view = spectral.imshow(data, bands=default_bands)
+    view = spectral.imshow(data, bands=default_bands, title=forest_id)
+
+
+
+def inspect_cube(forest_id: str):
+    p_cube = PH.path_file_forest_reflectance_header(forest_id=forest_id)
+    if not os.path.exists(p_cube):
+        raise FileNotFoundError(f"Cannot find spectral cube file from '{p_cube}'. "
+                                f"Use construct_envi_cube() to generate the cube from rendered images.")
+    data = spectral.open_image(p_cube)
+
+    # Minus 1 because spectral is zero-based and ENVI standard one-based.. apparently.
+    default_bands = [int(band) - 1 for band in data.metadata['default bands']]
+
+    view = spectral.imshow(data, bands=default_bands)
