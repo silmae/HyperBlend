@@ -232,8 +232,8 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
             exit(1)
 
 
-def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type='steel', r_lamp=0.01,
-                 n_rings=1, n1=4, n2=4, n3=4, top_cam_height=2.69728, light_max_pow=100):
+def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=None, kettle_type=None, r_lamp=None,
+                 n_rings=None, n1=None, n2=None, n3=None, top_cam_height=None, light_max_pow=None):
     """ Setup the forest for rendering.
 
     :param forest_id:
@@ -253,17 +253,24 @@ def setup_forest(forest_id: str, leaf_name_list=None, r_kettle=0.1, kettle_type=
 
     if leaf_name_list is not None and len(leaf_name_list) > 0:
         scirpt_args += ['-l_ids', f'{list(leaf_name_list)}']  # available leaf indexes
-    print(f"Kettle radius in blender ctrl {r_kettle}")
-    scirpt_args += ['-r_k', f'{r_kettle}']
-    scirpt_args += ['-k', f'{kettle_type}']
-    scirpt_args += ['-r_l', f'{r_lamp}']
-
-    scirpt_args += ['-n_r', f'{n_rings}']
-    scirpt_args += ['-n_1', f'{n1}']
-    scirpt_args += ['-n_2', f'{n2}']
-    scirpt_args += ['-n_3', f'{n3}']
-    scirpt_args += ['-tch', f'{top_cam_height}']
-    scirpt_args += ['-p', f'{light_max_pow}']
+    if r_kettle is not None:
+        scirpt_args += ['-r_k', f'{r_kettle}']
+    if kettle_type is not None:
+        scirpt_args += ['-k', f'{kettle_type}']
+    if r_lamp is not None:
+        scirpt_args += ['-r_l', f'{r_lamp}']
+    if n_rings is not None:
+        scirpt_args += ['-n_r', f'{n_rings}']
+    if n1 is not None:
+        scirpt_args += ['-n_1', f'{n1}']
+    if n2 is not None:
+        scirpt_args += ['-n_2', f'{n2}']
+    if n3 is not None:
+        scirpt_args += ['-n_3', f'{n3}']
+    if top_cam_height is not None:
+        scirpt_args += ['-tch', f'{top_cam_height}']
+    if light_max_pow is not None:
+        scirpt_args += ['-p', f'{light_max_pow}']
 
     with open(os.devnull, 'wb') as stream:
         status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
@@ -303,3 +310,5 @@ def render_forest(forest_id: str, render_mode: str, light_max_pow=None):
         if status.returncode != 0:
             logging.fatal(f"Failed to render forest scene file.")
             exit(1)
+
+    logging.info(f"Rendering completed")

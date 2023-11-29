@@ -425,6 +425,17 @@ if __name__ == '__main__':
                             logging.StreamHandler()
                         ])
 
+    source_id = 'reactor_validation'
+    target_id = 'reactor_validation_2'
+    material_name = "Reactor content material"
+    sample_id = 2
+    algae_leaf_set_name = f"algae_sample_{sample_id}"
+    # forest.init(leaves=[(algae_leaf_set_name, 0, material_name)], custom_forest_id=target_id,copy_forest_id=source_id,
+    #             conf_type='m2m', sun_file_name="AP67_spectra.txt")
+    # BC.setup_forest(forest_id=target_id, leaf_name_list=[material_name],light_max_pow=100)
+    BC.render_forest(forest_id=target_id,render_mode='top',light_max_pow=100)
+    CH.construct_envi_cube(forest_id=target_id,light_max_power=100)
+    CH.show_cube(forest_id=target_id, use_SPy=False,rgb_bands=[57,19,9])
 
     rng = np.random.default_rng(4321)
 
@@ -448,7 +459,7 @@ if __name__ == '__main__':
     light_max_pow = 100 # W / m^2
 
 
-    solve_all_algae_leaves()
+    # solve_all_algae_leaves()
 
     # Solve algae as a leaf
     # algae_leaf(set_name=algae_leaf_set_name)

@@ -143,7 +143,7 @@ def construct_envi_cube(forest_id: str, light_max_power):
     spectral.envi.save_image(hdr_file=p_hdr, image=reflectance_cube, dtype=np.float32, force=True, metadata=header_dict)
 
 
-def show_cube(forest_id: str):
+def show_cube(forest_id: str, use_SPy=False, rgb_bands=None):
     """Shows the hyperspectral image cube.
 
     Use construct_envi_cube() to generate it.
@@ -162,20 +162,23 @@ def show_cube(forest_id: str):
                                 f"Use construct_envi_cube() to generate the cube from rendered images.")
     data = spectral.open_image(p_cube)
 
-    # Minus 1 because spectral is zero-based and ENVI standard one-based.. apparently.
-    default_bands = [int(band) - 1 for band in data.metadata['default bands']]
+    if rgb_bands is None:
+        # Minus 1 because spectral is zero-based and ENVI standard one-based.. apparently.
+        bands = [int(band) - 1 for band in data.metadata['default bands']]
+    else:
+        bands = rgb_bands
 
-    # rgb = data.read_bands(bands=default_bands)
-    # plt.close('all') # Close all previous plots before showing this one.
-    # plt.figure(figsize=(10,10))
-    # plt.title(forest_id)
-    # plt.imshow(rgb, norm=colors.LogNorm())
-    # plt.colorbar()
-    # plt.show()
-
-    # TODO Would be nice if this worked, but it just flashes on the screen
-    view = spectral.imshow(data, bands=default_bands, title=forest_id)
-
+    if use_SPy:
+        # TODO Would be nice if this worked, but it just flashes on the screen
+        view = spectral.imshow(data, bands=bands, title=forest_id)
+    else:
+        rgb = data.read_bands(bands=bands)
+        plt.close('all') # Close all previous plots before showing this one.
+        plt.figure(figsize=(10,10))
+        plt.title(forest_id)
+        plt.imshow(rgb, norm=colors.LogNorm())
+        # plt.colorbar()
+        plt.show()
 
 
 def inspect_cube(forest_id: str):
