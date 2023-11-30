@@ -69,7 +69,7 @@ def forest_pipe_test(rng):
     BC.render_forest(forest_id=forest_id, render_mode='spectral')
 
     CH.construct_envi_cube(forest_id=forest_id)
-    CH.show_cube(forest_id=forest_id)
+    CH.show_simulated_cube(forest_id=forest_id)
 
     # BC.generate_forest_control(global_master=True)
 
@@ -397,12 +397,12 @@ def render_cubes(light_max_pow, algae_sample_id=1):
 
 def show_cubes(algae_sample_id=1):
 
-    CH.show_cube(forest_id=f"reactor_steel_10_s{algae_sample_id}")
-    CH.show_cube(forest_id=f"reactor_steel_100_s{algae_sample_id}")
-    CH.show_cube(forest_id=f"reactor_steel_1000_s{algae_sample_id}")
-    CH.show_cube(forest_id=f"reactor_glass_10_s{algae_sample_id}")
-    CH.show_cube(forest_id=f"reactor_glass_100_s{algae_sample_id}")
-    CH.show_cube(forest_id=f"reactor_glass_1000_s{algae_sample_id}")
+    CH.show_simulated_cube(forest_id=f"reactor_steel_10_s{algae_sample_id}")
+    CH.show_simulated_cube(forest_id=f"reactor_steel_100_s{algae_sample_id}")
+    CH.show_simulated_cube(forest_id=f"reactor_steel_1000_s{algae_sample_id}")
+    CH.show_simulated_cube(forest_id=f"reactor_glass_10_s{algae_sample_id}")
+    CH.show_simulated_cube(forest_id=f"reactor_glass_100_s{algae_sample_id}")
+    CH.show_simulated_cube(forest_id=f"reactor_glass_1000_s{algae_sample_id}")
 
 
 if __name__ == '__main__':
@@ -433,9 +433,10 @@ if __name__ == '__main__':
     # forest.init(leaves=[(algae_leaf_set_name, 0, material_name)], custom_forest_id=target_id,copy_forest_id=source_id,
     #             conf_type='m2m', sun_file_name="AP67_spectra.txt")
     # BC.setup_forest(forest_id=target_id, leaf_name_list=[material_name],light_max_pow=100)
-    BC.render_forest(forest_id=target_id,render_mode='top',light_max_pow=100)
-    CH.construct_envi_cube(forest_id=target_id,light_max_power=100)
-    CH.show_cube(forest_id=target_id, use_SPy=False,rgb_bands=[57,19,9])
+    # BC.render_forest(forest_id=target_id,render_mode='top',light_max_pow=100)
+    # CH.construct_envi_cube(forest_id=target_id,light_max_power=100)
+    # CH.show_simulated_cube(forest_id=target_id, use_SPy=False, rgb_bands=[57, 19, 9])
+    CH.show_simulated_cube(forest_id='scene_reactor_validation_measured_white', use_SPy=False, override_path='D:\Koodi\Python\HyperBlend\HyperBlend\scenes\scene_reactor_validation_measured_white\cube/reflectance_cube_scene_reactor_validation_measured_white.hdr')
 
     rng = np.random.default_rng(4321)
 

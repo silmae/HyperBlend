@@ -143,7 +143,7 @@ def construct_envi_cube(forest_id: str, light_max_power):
     spectral.envi.save_image(hdr_file=p_hdr, image=reflectance_cube, dtype=np.float32, force=True, metadata=header_dict)
 
 
-def show_cube(forest_id: str, use_SPy=False, rgb_bands=None):
+def show_simulated_cube(forest_id: str, use_SPy=False, rgb_bands=None, override_path=None):
     """Shows the hyperspectral image cube.
 
     Use construct_envi_cube() to generate it.
@@ -156,7 +156,11 @@ def show_cube(forest_id: str, use_SPy=False, rgb_bands=None):
         FileNotFoundError if the cube does not exist.
     """
 
-    p_cube = PH.path_file_forest_reflectance_header(forest_id=forest_id)
+    if override_path is not None:
+        p_cube = override_path
+    else:
+        p_cube = PH.path_file_forest_reflectance_header(forest_id=forest_id)
+
     if not os.path.exists(p_cube):
         raise FileNotFoundError(f"Cannot find spectral cube file from '{p_cube}'. "
                                 f"Use construct_envi_cube() to generate the cube from rendered images.")
@@ -173,7 +177,17 @@ def show_cube(forest_id: str, use_SPy=False, rgb_bands=None):
         view = spectral.imshow(data, bands=bands, title=forest_id)
     else:
         rgb = data.read_bands(bands=bands)
+
+        pixel = data.read_pixel(row=int(data.nrows/2), col=int(data.ncols/2))
+
+        # col_list = list(range(data.ncols))
+        # line = data.read_subimage(rows=[400], cols=col_list)
+        # line = np.squeeze(line, axis=0)
         plt.close('all') # Close all previous plots before showing this one.
+
+        plt.plot(pixel)
+        plt.show()
+
         plt.figure(figsize=(10,10))
         plt.title(forest_id)
         plt.imshow(rgb, norm=colors.LogNorm())
