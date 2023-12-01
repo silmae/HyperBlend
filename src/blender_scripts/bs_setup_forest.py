@@ -264,58 +264,67 @@ if __name__ == '__main__':
     parser.add_argument(key_leaf_ids[0], key_leaf_ids[1], dest=key_leaf_ids[1], action="store",
                         required=False, type=str, help="List of available leaf names as a string.")
 
-    parser.add_argument(key_r_kettle[0], key_r_kettle[1], dest=key_r_kettle[1], action="store", required=True)
-    parser.add_argument(key_kettle_type[0], key_kettle_type[1], dest=key_kettle_type[1], action="store", required=True)
-    parser.add_argument(key_r_lamp[0], key_r_lamp[1], dest=key_r_lamp[1], action="store", required=True)
-    parser.add_argument(key_n_rings[0], key_n_rings[1], dest=key_n_rings[1], action="store", required=True)
-    parser.add_argument(key_n_lamp_1[0], key_n_lamp_1[1], dest=key_n_lamp_1[1], action="store", required=True)
-    parser.add_argument(key_n_lamp_2[0], key_n_lamp_2[1], dest=key_n_lamp_2[1], action="store", required=True)
-    parser.add_argument(key_n_lamp_3[0], key_n_lamp_3[1], dest=key_n_lamp_3[1], action="store", required=True)
-    parser.add_argument(key_top_cam_height[0], key_top_cam_height[1], dest=key_top_cam_height[1], action="store", required=True)
-    parser.add_argument(key_light_max_pow[0], key_light_max_pow[1], dest=key_light_max_pow[1], action="store", required=True)
+    parser.add_argument(key_r_kettle[0], key_r_kettle[1], dest=key_r_kettle[1], action="store", required=False, type=float)
+    parser.add_argument(key_kettle_type[0], key_kettle_type[1], dest=key_kettle_type[1], action="store", required=False)
+    parser.add_argument(key_r_lamp[0], key_r_lamp[1], dest=key_r_lamp[1], action="store", required=False, type=float)
+    parser.add_argument(key_n_rings[0], key_n_rings[1], dest=key_n_rings[1], action="store", required=False, type=int)
+    parser.add_argument(key_n_lamp_1[0], key_n_lamp_1[1], dest=key_n_lamp_1[1], action="store", required=False, type=int)
+    parser.add_argument(key_n_lamp_2[0], key_n_lamp_2[1], dest=key_n_lamp_2[1], action="store", required=False, type=int)
+    parser.add_argument(key_n_lamp_3[0], key_n_lamp_3[1], dest=key_n_lamp_3[1], action="store", required=False, type=int)
+    parser.add_argument(key_top_cam_height[0], key_top_cam_height[1], dest=key_top_cam_height[1], action="store", required=False, type=float)
+    parser.add_argument(key_light_max_pow[0], key_light_max_pow[1], dest=key_light_max_pow[1], action="store", required=False, type=float)
 
     args = parser.parse_args(argv)
+    args_dict = vars(args)
 
-    forest_id = vars(args)[key_scene_id[1]]
-    leaf_material_names = vars(args)[key_leaf_ids[1]]
+    forest_id = args_dict[key_scene_id[1]]
+    leaf_material_names = args_dict[key_leaf_ids[1]]
 
-    r_kettle = float(vars(args)[key_r_kettle[1]])
-    kettle_type = vars(args)[key_kettle_type[1]]
-    r_lamp = float(vars(args)[key_r_lamp[1]])
-    n_rings = int(vars(args)[key_n_rings[1]])
-    n_lamp_1 = int(vars(args)[key_n_lamp_1[1]])
-    n_lamp_2 = int(vars(args)[key_n_lamp_2[1]])
-    n_lamp_3 = int(vars(args)[key_n_lamp_3[1]])
-    top_cam_height = float(vars(args)[key_top_cam_height[1]])
-    light_max_pow = float(vars(args)[key_light_max_pow[1]])
+    r_kettle = args_dict[key_r_kettle[1]]
+    kettle_type = args_dict[key_kettle_type[1]]
+    r_lamp = args_dict[key_r_lamp[1]]
+    n_rings = args_dict[key_n_rings[1]]
+    n_lamp_1 = args_dict[key_n_lamp_1[1]]
+    n_lamp_2 = args_dict[key_n_lamp_2[1]]
+    n_lamp_3 = args_dict[key_n_lamp_3[1]]
+    top_cam_height = args_dict[key_top_cam_height[1]]
+    light_max_pow = args_dict[key_light_max_pow[1]]
 
-    print(f"Kettle radius in setup {r_kettle} type {type(r_kettle)}")
 
     # Set up the kettle geometry
     bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_20"] = 1.0 # water level %
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_4"] = r_kettle * 2 # kettle diameter
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_5"] = r_kettle * 2 # kettle height
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_6"] = 0.0 # raise lid
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_7"] = False # cutout
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_8"] = n_rings # lamp ring count
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_12"] = r_lamp * 2 # lamp diameter
-    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_13"] = n_lamp # lamps per ring
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_27"] = n_lamp_1 # n lamps in innermost ring
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_28"] = n_lamp_2 # n lamps in center ring
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_29"] = n_lamp_3 # n lamps in outermost ring
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_14"] = 1.0 # lamp reach %
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_26"] = False # Hide lid
-    if kettle_type == 'steel':
-        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = True
-    elif kettle_type == 'glass':
-        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = False
-    else:
-        raise AttributeError(f"Kettle type '{kettle_type}' not recognised")
+    if r_kettle is not None:
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_4"] = r_kettle * 2 # kettle diameter
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_5"] = r_kettle * 2 # kettle height
+        bpy.data.objects["Submarine"].location[2] = r_kettle # camera height
+    if n_rings is not None:
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_8"] = n_rings # lamp ring count
+    if r_lamp is not None:
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_12"] = r_lamp * 2 # lamp diameter
+    if n_lamp_1 is not None:
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_27"] = n_lamp_1 # n lamps in innermost ring
+    if n_lamp_2 is not None:
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_28"] = n_lamp_2 # n lamps in center ring
+    if n_lamp_3 is not None:
+        bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_29"] = n_lamp_3 # n lamps in outermost ring
 
-    bpy.data.objects["Submarine"].location[2] = r_kettle # camera height
+    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_6"] = 0.0  # raise lid
+    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_7"] = False  # cutout
+    #
+    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_14"] = 1.0 # lamp reach %
+    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_26"] = False # Hide lid
+
+    # if kettle_type == 'steel':
+    #     bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = True
+    # elif kettle_type == 'glass':
+    #     bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_25"] = False
+    # else:
+    #     raise AttributeError(f"Kettle type '{kettle_type}' not recognised")
+
     bpy.data.objects["Top camera"].location[0] = 0.0
     bpy.data.objects["Top camera"].location[1] = 0.0
-    bpy.data.objects["Top camera"].location[2] = top_cam_height
+    if top_cam_height is not None:
+        bpy.data.objects["Top camera"].location[2] = top_cam_height
 
     logging.error(f"Running scene setup for '{PH.path_directory_forest_scene(forest_id)}'")
 

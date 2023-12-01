@@ -85,7 +85,7 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
     # just in case we have multiple scenes at some point loop them over
     for scene in data.scenes:
 
-        scene.sequencer_colorspace_settings.name = 'Raw'
+        # scene.sequencer_colorspace_settings.name = 'Raw'
         # Video sequenser can be always set to Raw as it only affects video editing
 
         # Compositing setup
@@ -106,7 +106,10 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
             elif render_mode.lower() == 'sphere':
                 scene.camera = collection_cameras.get('Sphere camera')
 
-            scene.display_settings.display_device = 'None'
+            # scene.display_settings.display_device = 'None' # For Blender 3.X
+
+            scene.display_settings.display_device = 'sRGB' # NOTE Blender 4.0 doesn't have None anymore.
+
             # scene.view_settings.view_transform = 'Raw' # cannot be used when display device is None as it already turns off the display color transformations
             scene.view_settings.look = 'None'
             scene.view_settings.exposure = 0
