@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
 
     # Set up the kettle geometry
-    bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_20"] = 1.0 # water level %
+    # bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_20"] = 1.0 # water level %
     if r_kettle is not None:
         bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_4"] = r_kettle * 2 # kettle diameter
         bpy.data.objects["Kettle"].modifiers["GeometryNodes"]["Input_5"] = r_kettle * 2 # kettle height

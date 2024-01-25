@@ -30,7 +30,7 @@ from src.gsv import gsv
 from src.forest import soil
 
 from src.algae import measurement_spec_24_08_23 as algae
-from src.algae import measurement_spec_01_09_23 as M
+from src.algae import measurement_spec_30_11_23 as M
 from src.utils import data_utils as DU
 from src.leaf_model import training_data
 
@@ -220,7 +220,7 @@ def algae_leaf(set_name, sample_nr):
     refl = np.clip(refl,0,1)
     data = DU.pack_target(wls=wls,refls=refl,trans=tran)
     TH.write_target(set_name=set_name, data=data)
-    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=5,
+    LI.solve_leaf_material_parameters(set_name=set_name,use_dumb_sampling=True, resolution=1,
                                       clear_old_results=True, solver='nn')
 
 
@@ -436,7 +436,7 @@ if __name__ == '__main__':
     # BC.render_forest(forest_id=target_id,render_mode='top',light_max_pow=100)
     # CH.construct_envi_cube(forest_id=target_id,light_max_power=100)
     # CH.show_simulated_cube(forest_id=target_id, use_SPy=False, rgb_bands=[57, 19, 9])
-    CH.show_simulated_cube(forest_id='scene_reactor_validation_measured_white', use_SPy=False, override_path='D:\Koodi\Python\HyperBlend\HyperBlend\scenes\scene_reactor_validation_measured_white\cube/reflectance_cube_scene_reactor_validation_measured_white.hdr')
+    # CH.show_simulated_cube(forest_id='scene_reactor_validation_measured_white', use_SPy=False, override_path='D:\Koodi\Python\HyperBlend\HyperBlend\scenes\scene_reactor_validation_measured_white\cube/reflectance_cube_scene_reactor_validation_measured_white.hdr')
 
     rng = np.random.default_rng(4321)
 
@@ -445,25 +445,44 @@ if __name__ == '__main__':
 
     # LI.visualize_leaf_models(training_set_name=set_name_iter_1, show_plot=True, plot_surf=False, plot_nn=False)
 
+
+    ## Validation stuff
+    light_max_pow = 100
+    material_name = "Reactor content material"
+    algae_leaf_set_name = f"validation_sample_1"
+    algae_leaves = [(algae_leaf_set_name, 0, material_name)]
+    #
+    # # Steel kettle
+    # forest_id = forest.init(leaves=algae_leaves, rng=rng,
+    #                         custom_forest_id=f"validation_algae_1_v_1.3L",
+    #                         copy_forest_id='reactor_validation_2',
+    #                         sun_file_name="AP67_spectra.txt")
+    forest_id = "validation_algae_1_v_1.3L"
+    BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], kettle_type="glass", light_max_pow=light_max_pow)
+    BC.render_forest(forest_id=forest_id,render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=forest_id, light_max_power=light_max_pow)
+
     # asym_test()
     # plot_asym_test()
 
     # Plot algae measurement stuff
-    # M.plot_references()
-    # M.plot_algae()
+    # M.plot_references(dont_show=False)
+    # M.plot_algae(dont_show=False)
 
     ##### ALGAE STUFF #######
 
     # algae_leaf_set_name = "algae_sample_1"
     # algae_scene_id = "reactor_steel_10"
-    material_name = "Reactor content material"
-    light_max_pow = 100 # W / m^2
+    # material_name = "Reactor content material"
+    # light_max_pow = 100 # W / m^2
 
 
     # solve_all_algae_leaves()
 
     # Solve algae as a leaf
-    # algae_leaf(set_name=algae_leaf_set_name)
+    # validation_set_name = 'validation_sample_1'
+    # algae_leaf(set_name='validation_sample_1', sample_nr=1)
+    # algae_leaf(set_name='validation_sample_2', sample_nr=2)
 
     # for i in range(5):
     # These 3 lines do everything at once

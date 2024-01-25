@@ -357,7 +357,7 @@ def call_blender_render(write_still=True, animation=False):
 
 
 def render_top_hsi():
-    res = 200
+    res = 400
     set_render_parameters(render_mode='top', camera='Top camera', res_x=res, res_y=res, res_percent=100)
     set_visibility(mode='top')
     scene.render.filepath = PH.join(PH.path_directory_forest_rend_spectral(SCENE_ID), "band_####.tiff")

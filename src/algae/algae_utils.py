@@ -1,13 +1,16 @@
 import os
 
 import numpy as np
+import scipy as sci
+import scipy.ndimage
 
 from src.data import path_handling as PH
 from src import plotter
 
 
 def smooth_data_np_convolve(arr, span):
-    return np.convolve(arr, np.ones(span * 2 + 1) / (span * 2 + 1), mode="same")
+    # return np.convolve(arr, np.ones(span * 2 + 1) / (span * 2 + 1), mode="same")
+    return scipy.ndimage.gaussian_filter1d(arr, sigma=span, mode='nearest')
 
 
 def read_sample(measurement_set_name:str, sample_nr:str):
