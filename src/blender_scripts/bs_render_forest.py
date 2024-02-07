@@ -111,6 +111,7 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
             scene.display_settings.display_device = 'sRGB' # NOTE Blender 4.0 doesn't have None anymore.
 
             # scene.view_settings.view_transform = 'Raw' # cannot be used when display device is None as it already turns off the display color transformations
+            bpy.data.scenes["Scene"].view_settings.view_transform = 'Raw'
             scene.view_settings.look = 'None'
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1

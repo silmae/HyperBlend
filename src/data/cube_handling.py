@@ -42,6 +42,11 @@ def construct_envi_cube(forest_id: str, light_max_power):
 
     raw_cube = np.array(frame_list)
 
+    # w = raw_cube.shape[1]
+    # h = raw_cube.shape[2]
+    # plt.plot(raw_cube[:,int(w/2), int(h/2)])
+    # plt.show()
+
     # Burnt areas have values around 65535
     # Loop white references until the image is not burned
     max_burn = 65000.0
@@ -102,8 +107,18 @@ def construct_envi_cube(forest_id: str, light_max_power):
     raw_cube = np.swapaxes(raw_cube, 0,1) # swap to x,y,z
 
     # white_mean = np.expand_dims(white_mean, axis=(1,2))
-    reflectance_cube = np.divide(raw_cube, white, dtype=np.float32)
+    # reflectance_cube = np.divide(raw_cube, white, dtype=np.float32) # tällee oli valkokorjaus. ei oikee hyvä
+    reflectance_cube = raw_cube
     # refl_max = np.max(reflectance_cube)
+
+    # plt.plot(white)
+    # plt.show()
+
+
+    # w = reflectance_cube.shape[0]
+    # h = reflectance_cube.shape[1]
+    # plt.plot(reflectance_cube[int(w/2), int(h/2),:])
+    # plt.show()
 
     # Swap axis to arrange the array as expected by spectral.envi
     # reflectance_cube = np.swapaxes(reflectance_cube, 0,2)

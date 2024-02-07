@@ -447,20 +447,20 @@ if __name__ == '__main__':
 
 
     ## Validation stuff
-    light_max_pow = 100
+    light_max_pow = 50
     material_name = "Reactor content material"
     algae_leaf_set_name = f"validation_sample_1"
     algae_leaves = [(algae_leaf_set_name, 0, material_name)]
     #
-    # # Steel kettle
     # forest_id = forest.init(leaves=algae_leaves, rng=rng,
-    #                         custom_forest_id=f"validation_algae_1_v_1.3L",
-    #                         copy_forest_id='reactor_validation_2',
-    #                         sun_file_name="AP67_spectra.txt")
-    forest_id = "validation_algae_1_v_1.3L"
-    BC.setup_forest(forest_id=forest_id, leaf_name_list=[material_name], kettle_type="glass", light_max_pow=light_max_pow)
-    BC.render_forest(forest_id=forest_id,render_mode='top', light_max_pow=light_max_pow)
-    CH.construct_envi_cube(forest_id=forest_id, light_max_power=light_max_pow)
+    #                         custom_forest_id=f"validation_algae_1_v_0.8L",
+    #                         copy_forest_id='validation_algae_1_v_1.3L',
+    #                         sun_file_name="AP67_spectra_real.txt")
+    forest_id_iso = "validation_algae_1_v_1.3L"
+    # forest_id_pieni = "validation_algae_1_v_0.8L"
+    BC.setup_forest(forest_id=forest_id_iso, leaf_name_list=[material_name], kettle_type="glass", light_max_pow=light_max_pow)
+    BC.render_forest(forest_id=forest_id_iso,render_mode='top', light_max_pow=light_max_pow)
+    CH.construct_envi_cube(forest_id=forest_id_iso, light_max_power=light_max_pow)
 
     # asym_test()
     # plot_asym_test()
