@@ -64,7 +64,7 @@ def load_light(file_name: str = None, forest_id=None, sampling=None, lighting_ty
         ValueError if `file_name` was not provided and `type` is not either 'sun' or 'sky'.
     """
 
-    if not file_name:
+    if file_name is None:
         if lighting_type == 'sun':
             file_name = C.file_default_sun
         elif lighting_type == 'sky':
@@ -97,7 +97,10 @@ def _find_lighting_file(file_name: str, forest_id: str = None, lighting_type: st
     :return:
         Path to found file.
     :raises FileNotFoundError:
-        if the file is not found.
+        If the file is not found.
+    :raises ValueError:
+        If the file could not be found from the scene directories and `lighting_type` was not
+        either 'sun' or 'sky'.
     """
 
     if forest_id is not None:
@@ -107,7 +110,7 @@ def _find_lighting_file(file_name: str, forest_id: str = None, lighting_type: st
             logging.info(f"Lighting data found.")
             return p
         else:
-            logging.info(f"Could not find sun data from scene directory.")
+            logging.info(f"Could not find sun data from scene directory. Now searching default directories.")
 
     if lighting_type == 'sun':
         p_dir = PH.path_directory_sun_data()
@@ -123,7 +126,38 @@ def _find_lighting_file(file_name: str, forest_id: str = None, lighting_type: st
         logging.info(f"Lighting data found.")
         return p
 
-    raise FileNotFoundError(f"File with name '{file_name}' was not found.")
+    raise FileNotFoundError(f"File from '{p}' can not been found.")
+
+
+def split_goa_output(input_path: str = None, out_sun_path: str = None, out_sky_path: str = None):
+    """Split the output file of SSolar-GOA simulator to sun ans sky spectrum.
+
+    GOA outputs the sun and sky to a single file, so we just separate that into
+    two files here.
+
+    """
+
+    if input_path is None or out_sun_path is None or out_sky_path is None:
+        raise ValueError("One of the paths provided to split_goa_output was None.")
+
+    """
+    TODO The lighting needs a little refactoring to be more versatile in usage, so
+        1. merge sun_data and and sky_data into more common light_data that makes sense 
+            even if HyperBlend is used for something other than forest simulations.
+        2. implement GOA splitter that can take the output from solar GOA and split 
+            it into sky and sun files
+        3. change the search logic for the files accordingly. Defaults can still be 
+            kept for sun and sky by their default names when loading.
+        4. This system will then treat any light and the setup script can fetch the 
+            files and set them to any kind of lamp the scene has. 
+        5. As extra stuff: plot the light spectra directly into ligth_data with the same 
+            filename body as the spectra file. This has to be a separate method because 
+            we don't want to keep the images in git.
+        This will serve future expansions of HyperBlend in any kind of scenes. 
+    
+    """
+
+
 
 
 if __name__ == '__main__':
