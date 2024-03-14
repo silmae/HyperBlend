@@ -31,7 +31,7 @@ import logging
 
 from src import constants as C
 from src.data import path_handling as PH
-from src.data.nasa_psg_handler import read_psg_file
+from src.data.nasa_psg_handler import read_light_file
 from src.utils import spectra_utils as SU
 
 
@@ -73,9 +73,9 @@ def load_light(file_name: str = None, forest_id=None, sampling=None, lighting_ty
             raise ValueError(f"Lighting file name was not provided. For loading one of the default files, "
                              f"expected file type either 'sun' or 'sky', was '{lighting_type}'.")
 
-    path = _find_lighting_file(file_name, forest_id, lighting_type=lighting_type)
+    path = _find_lighting_file(file_name, forest_id)
 
-    wls, irradiances, _ = read_psg_file(path)
+    wls, irradiances, _ = read_light_file(path)
 
     if sampling is not None:
         new_irradiances = SU.resample(original_wl=wls, original_val=irradiances, new_wl=sampling)
@@ -85,13 +85,13 @@ def load_light(file_name: str = None, forest_id=None, sampling=None, lighting_ty
     return np.array(wls), np.array(irradiances)
 
 
-def _find_lighting_file(file_name: str, forest_id: str = None, lighting_type: str = 'sun') -> str:
-    """Attempts to find a lighting file with given filename.
+def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
+    """Attempts to find a light file with given filename.
 
     :param file_name:
-        A file with this name is searched from sun_data directory. If
-        also scene_id is given, the search is extended to scene directory. Precedence
-        is then for the file in the scene directory.
+        A file with this name is searched from light_data directory. If
+        also scene_id is given, the scene directory is searched first before
+        extending the search to light_data directory.
     :param forest_id:
         Optional. If not given, forest scene directory is not searched.
     :return:
@@ -107,18 +107,12 @@ def _find_lighting_file(file_name: str, forest_id: str = None, lighting_type: st
         logging.info(f"Trying to find lighting data from forest scene directory '{PH.path_directory_forest_scene(forest_id)}'.")
         p = PH.join(PH.path_directory_forest_scene(forest_id), file_name)
         if os.path.exists(p):
-            logging.info(f"Lighting data found.")
+            logging.info(f"Light data found.")
             return p
         else:
-            logging.info(f"Could not find sun data from scene directory. Now searching default directories.")
+            logging.info(f"Could not find sun data from scene directory. Now searching default directory.")
 
-    if lighting_type == 'sun':
-        p_dir = PH.path_directory_sun_data()
-    elif lighting_type == 'sky':
-        p_dir = PH.path_directory_sky_data()
-    else:
-        raise ValueError(f"For searching from one of the default lighting directories, "
-                         f"expected type either 'sun' or 'sky', was '{lighting_type}'.")
+    p_dir = PH.path_directory_light_data()
 
     logging.info(f"Trying to find lighting data from '{p_dir}'.")
     p = PH.join(p_dir, file_name)
@@ -183,9 +177,9 @@ if __name__ == '__main__':
     bandwith = 100
     sunfile = 'default_sun.txt'
     # wls, irradiances = load_sun(sunfile)
-    wls_b, irradiances_b = load_light()
-    last = irradiances_b[-1]
-    plotter.plot_light_data(wls_b, irradiances_b, forest_id="0102231033", sun_plot_name='default_sun')
+    wls_b, irradiances_b = load_light(file_name='goa_output.txt')
+    # last = irradiances_b[-1]
+    # plotter.plot_light_data(wls_b, irradiances_b, forest_id="0102231033", sun_plot_name='default_sun')
     # plotter.plot_sun_data(wls, irradiances, scene_id="0123456789", sun_filename=sunfile, show=True)
     print('m')
 

@@ -163,17 +163,10 @@ def path_directory_forest_scenes() -> str:
     return os.path.abspath(p)
 
 
-def path_directory_sun_data() -> str:
-    """Sun data directory."""
+def path_directory_light_data() -> str:
+    """Path light data directory."""
 
-    p = join(C.path_project_root, 'sun_data')
-    return p
-
-
-def path_directory_sky_data() -> str:
-    """Sky data directory."""
-
-    p = join(C.path_project_root, 'sky_data')
+    p = join(C.path_project_root, 'light_data')
     return p
 
 
