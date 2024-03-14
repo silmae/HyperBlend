@@ -18,6 +18,7 @@ sun_data/*
 !sun_data/default_sun.txt
 sky_data/*
 !sky_data/default_clear_sky.txt
+!sky_data/goa_output.txt
 
 log*/* 
 leaf_model/*
