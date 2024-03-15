@@ -1,4 +1,8 @@
 # Output file from SSolar_GOA model
+#
+# Keep this file in git repository so that it can be used 
+# in debugging and testing.
+#
 #   Input Data
 #  Ext. Spectrum= Wehrli
 # lat=41.66 lon=-4.7 sza=29.358 jday=152

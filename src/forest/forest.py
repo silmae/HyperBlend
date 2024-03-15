@@ -152,9 +152,9 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
     ################ Sun ################
 
     logging.info(f"Normalizing, resampling and writing sun data.")
-    sun_wls_org, sun_irradiance_org = lighting.load_light(file_name=sun_file_name, forest_id=forest_id, lighting_type='sun')
+    sun_wls_org, sun_irradiance_org = lighting.load_light(file_name=sun_file_name, scene_id=forest_id, lighting_type='sun')
     logging.info(f"Reloading sun with new sampling.")
-    sun_wls, sun_irradiance = lighting.load_light(file_name=sun_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sun')
+    sun_wls, sun_irradiance = lighting.load_light(file_name=sun_file_name, scene_id=forest_id, sampling=sampling, lighting_type='sun')
     # Normalizing sun
     sun_irr_max = np.max(sun_irradiance)
     sun_irradiance = sun_irradiance / sun_irr_max
@@ -166,8 +166,8 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
 
     ################ Sky ################
 
-    sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, lighting_type='sky')
-    sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, forest_id=forest_id, sampling=sampling, lighting_type='sky')
+    sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, scene_id=forest_id, lighting_type='sky')
+    sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, scene_id=forest_id, sampling=sampling, lighting_type='sky')
     # Normalize with maximum SUN irradiance
     sky_irradiance = sky_irradiance / sun_irr_max
     FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')

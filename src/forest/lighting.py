@@ -1,28 +1,6 @@
 """
-Sun-related stuff.
-
-Simple use-case:
-    1. call load_sun with no filename and get the default sun irradiance integrated
-        to whichever bandwith given.
-Custom sun use-case:
-    1. use https://psg.gsfc.nasa.gov/ to generate desired sun spectra
-    2. download the spectra and save it to either sun_data directory (to be available
-        for all scenes, or to top level directory of a certain scene.
-    3. call load_sun with filename you saved the file in previous step. Integrated
-        to whichever bandwith given.
-
-How to generate spectra with NASA's Planetary Spectrum generator:
-    1. Select template "Sun from Earth" and click "Load Spectra".
-    2. If you want to select certain location and date on Earth, click
-        "Change Object" button. Remember to click save settings!
-    3. Click "Change Instrument"
-        1. Set "Spectral range" to 400 - 2500 nm. Remember to change units
-            from um to nm!
-        2. Set "Resolution" to 1 nm and units from "Resolving power" to nm.
-        3. Set "Spectrum intensity unit" to W/m2/um (spectral irradiance)
-    4. Change other settings as you see fit, but know what you are doing!
-    5. Click "Generate Spectra"
-    6. From the first image, click "Download Spectra"
+This script is an access point to load light spectra to be used
+in big scene simulation.
 """
 
 import numpy as np
@@ -31,39 +9,40 @@ import logging
 
 from src import constants as C
 from src.data import path_handling as PH
-from src.data.nasa_psg_handler import read_light_file
+from src.data import light_file_handling as LFH
 from src.utils import spectra_utils as SU
 
 
-def load_light(file_name: str = None, forest_id=None, sampling=None, lighting_type='sun'):
+def load_light(file_name: str = None, scene_id=None, sampling=None, lighting_type='sun'):
     """ Loads a lighting file and returns wavelengths and corresponding irradiances.
 
-    If given file is not compatible with HyperBlend, an attempt is made to fix it.
-    Given file must contain wavelengths from 400 to 2500 (both inclusive) and have spectral
-    resolution of 1 nm.
+    Files formatted so that comment lines are prefixed with '#' and rest of the lines
+    contain wavelength-irradiance pairs that can be casted to floats, they can be read
+    directly. For spectra generated with either NASA PSG or SSolar GOA, the files are
+    fixed so that they can be read directly later.
 
     :param file_name:
-        Optional. If given, this file is searched from sun_data directory. If
-        also scene_id is given, the search is extended to scene directory. Precedence
-        is then for the file in the scene directory. If not given, the default sun file
-        from the repository is used.
-    :param forest_id:
-        If forest_id is given, the search is extended to scene directory so that the scene
-        directory is searched first and if found, it is returned. If not found, the sun_data
-        directory is then searched.
+        Optional. If given, a file with this name is searched from light_data directory. If
+        also scene_id is given, the scene directory is searched first before extending the
+        search to light_data directory. If not given, lighting type must be given (either
+        'sun' or 'sky' so that default light files can be loaded.
+    :param scene_id:
+        If `scene_id` is given, the scene directory is searched first before extending the
+        search to light_data directory.
     :param sampling:
-        List of floats. If given, sun data is resampled to wavelengths specified in the list.
-        If sampling is None (default), the data is returned as raw.
+        List of wavelengths as floats. If given, sun data is resampled to wavelengths specified
+        in the list. If sampling is None (default), the data is returned as raw.
     :param lighting_type:
-        Lighting type either 'sun' or 'sky'. This is used to get the default sun or sky file if
-        `file_name` was not given.
+        Lighting type either 'sun' or 'sky', default is 'sun'. This is used to get the default
+        sun or sky file if `file_name` was not given. If both are given, the `file_name` has precedence.
     :return:
         (wls, irradiances) tuple where wls is a list of wavelengths (bands) and irradiances are
-        corresponding list of irradiances. The length of the lists vary depending on given bandwith.
-    :raises
+        corresponding list of irradiances. The length of the lists vary depending on given sampling.
+    :raises:
         ValueError if `file_name` was not provided and `type` is not either 'sun' or 'sky'.
     """
 
+    logging.info("Loading light data.")
     if file_name is None:
         if lighting_type == 'sun':
             file_name = C.file_default_sun
@@ -73,14 +52,19 @@ def load_light(file_name: str = None, forest_id=None, sampling=None, lighting_ty
             raise ValueError(f"Lighting file name was not provided. For loading one of the default files, "
                              f"expected file type either 'sun' or 'sky', was '{lighting_type}'.")
 
-    path = _find_lighting_file(file_name, forest_id)
+    if not file_name.endswith('.txt'):
+        file_name = file_name + '.txt'
 
-    wls, irradiances, _ = read_light_file(path)
+    path = _find_lighting_file(file_name, scene_id)
+
+    wls, irradiances = LFH.read_light_file(path)
 
     if sampling is not None:
         new_irradiances = SU.resample(original_wl=wls, original_val=irradiances, new_wl=sampling)
         wls = sampling
         irradiances = new_irradiances
+
+    logging.info("Light data loaded.")
 
     return np.array(wls), np.array(irradiances)
 
@@ -114,86 +98,33 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
 
     p_dir = PH.path_directory_light_data()
 
-    logging.info(f"Trying to find lighting data from '{p_dir}'.")
     p = PH.join(p_dir, file_name)
     if os.path.exists(p):
-        logging.info(f"Lighting data found.")
         return p
 
     raise FileNotFoundError(f"File from '{p}' can not been found.")
 
 
-def split_goa_output(input_path: str = None, out_sun_path: str = None, out_sky_path: str = None):
-    """Split the output file of SSolar-GOA simulator to sun ans sky spectrum.
-
-    GOA outputs the sun and sky to a single file, so we just separate that into
-    two files here.
-
-    """
-
-    if input_path is None or out_sun_path is None or out_sky_path is None:
-        raise ValueError("One of the paths provided to split_goa_output was None.")
-
-    """
-    TODO The lighting needs a little refactoring to be more versatile in usage, so
-        1. merge sun_data and and sky_data into more common light_data that makes sense 
-            even if HyperBlend is used for something other than forest simulations.
-        2. implement GOA splitter that can take the output from solar GOA and split 
-            it into sky and sun files
-        3. change the search logic for the files accordingly. Defaults can still be 
-            kept for sun and sky by their default names when loading.
-        4. This system will then treat any light and the setup script can fetch the 
-            files and set them to any kind of lamp the scene has. 
-        5. As extra stuff: plot the light spectra directly into ligth_data with the same 
-            filename body as the spectra file. This has to be a separate method because 
-            we don't want to keep the images in git.
-        This will serve future expansions of HyperBlend in any kind of scenes. 
-    
-    """
-
-
-
-
 if __name__ == '__main__':
 
     """
-    This main can be used for testing.
-    
-    Game plan:
-        1. find sun file
-        2. read file and check if ok
-        3. if not, fix spaces and save
-        4. if irradiance not in [W/m^2/nm] read, fix units and save
-        5. read file to memory
-        6. integrate over bandwith 
-        7. return bands and irradiances
+    Main for testing and debugging. 
     """
+
     import sys
-    from src import plotter
-    logging.basicConfig(stream=sys.stdout, level='INFO')
+    logging.basicConfig(stream=sys.stdout, level='DEBUG')
 
-    # load_sun('ASTM_G173-03.csv', bandwith=1, spectral_range=(400,2500))
-    # load_sun('psg_rad.txt', bandwith=1, spectral_range=(400,2500))
-    bandwith = 100
-    sunfile = 'default_sun.txt'
-    # wls, irradiances = load_sun(sunfile)
-    wls_b, irradiances_b = load_light(file_name='goa_output.txt')
-    # last = irradiances_b[-1]
-    # plotter.plot_light_data(wls_b, irradiances_b, forest_id="0102231033", sun_plot_name='default_sun')
-    # plotter.plot_sun_data(wls, irradiances, scene_id="0123456789", sun_filename=sunfile, show=True)
-    print('m')
+    # Test splitting GOA-generated file into sun and sky files
+    # This should produce an error after the split is done
+    try:
+        wls, irradiances = load_light(file_name='goa_output')
+    except RuntimeError:
+        print("Error produced as is proper.")
 
-    # TODO check and fix spectral range from 400 to 2500
+    # Test loading the new files
+    wls, irradiances = load_light(file_name='goa_output_sun')
+    wls, irradiances = load_light(file_name='goa_output_sky')
 
-    # Test binning
-    # s_range = [10,30]
-    # bandwith = 20
-    # wls = list(range(s_range[0], s_range[1], 5))
-    # wls = [1, 1.5, 2, 2.5, 3, 4, 5,6]
-    # irradiances = np.ones_like(wls) * 5
-    # irradiances = [2,1,2,5,40,3,2,3.1]
-    # wls, irradiances = check_resolution(wls, irradiances)
-
-    # wls_binned, irradiances_binned = bin(wls, irradiances, bandwith)
-    # print(wls_binned)
-    # print(irradiances_binned)
+    # Test loading the default sun and sky files
+    wls, irradiances = load_light(lighting_type='sun')
+    wls, irradiances = load_light(lighting_type='sky')
