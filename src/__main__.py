@@ -47,23 +47,23 @@ def forest_pipe_test(rng):
     # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling)
     # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True)
     #
-    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    # forest_id = forest.init(leaves=leaves, conf_type='m2m', rng=rng, custom_forest_id='control_test')
+    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+    # forest_id = forest.init(leaves=leaves, conf_type='m2m', rng=rng, custom_forest_id='sky_test')
 
     """
     Running forest.init only copies files. Running setup makes the Blender scene renderable.
     """
 
-    forest_id = 'control_test'
+    forest_id = 'sky_test'
 
     BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
 
-    BC.render_forest(forest_id=forest_id, render_mode='preview')
-    BC.render_forest(forest_id=forest_id, render_mode='visibility')
+    # BC.render_forest(forest_id=forest_id, render_mode='preview')
+    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
     BC.render_forest(forest_id=forest_id, render_mode='spectral')
 
     CH.construct_envi_cube(forest_id=forest_id)
-    CH.show_cube(forest_id=forest_id)
+    # CH.show_cube(forest_id=forest_id)
 
     # BC.generate_forest_control(global_master=True)
 
@@ -164,8 +164,8 @@ if __name__ == '__main__':
 
     # run_paper_tests()
 
-    asym_test(smthng='const_r_var_t')
-    asym_test(smthng='const_t_var_r')
+    # asym_test(smthng='const_r_var_t')
+    # asym_test(smthng='const_t_var_r')
 
     # Training data visualization
     from src.leaf_model import training_data as TD
@@ -183,13 +183,13 @@ if __name__ == '__main__':
 
 
 
-    # rng = np.random.default_rng(4321)
+    rng = np.random.default_rng(4321)
 
     # gsv.visualize_default_soils(save=False, dont_show=False)
     # gsv._write_default_soils()
 
     # plotter.plot_resampling(set_name='low_res')
-    # forest_pipe_test(rng=rng)
+    forest_pipe_test(rng=rng)
     # forest_id = forest.init()
 
     # forest_id = '1406231352'

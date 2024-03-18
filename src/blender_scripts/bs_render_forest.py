@@ -23,8 +23,8 @@ if script_dir not in sys.path:
 
 import forest_constants as FC
 import forest_utils as FU
-import file_names as FN
-import path_handling as PH
+from src.data import file_names as FN
+from src.data import path_handling as PH
 import forest_control as control
 
 importlib.reload(FC)
@@ -47,24 +47,6 @@ leaf_collection = data.collections[FC.key_collection_leaves]
 leaves = data.collections[FC.key_collection_leaves].all_objects
 ground = data.collections[FC.key_collection_ground].all_objects
 ground_collection = data.collections[FC.key_collection_ground]
-
-
-def set_materials_use_spectral(use_spectral: bool):
-    """Sets materials mode to either spectral and RGB mode.
-
-    :param use_spectral:
-        If True, materials are set to use spectral mode, if False, RGB mode.
-    """
-
-    materials = bpy.data.materials
-    materials_to_set = []
-    for material in materials:
-        name = material.name
-        if "Leaf" in name or "Trunk" in name or "Ground" in name or "World" in name:
-            materials_to_set.append(name)
-
-    for material_name in materials_to_set:
-        bpy.data.materials[material_name].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
 
 
 def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RGB', res_x=512, res_y=512, res_percent=100):
@@ -117,12 +99,13 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
 
-            set_materials_use_spectral(True)
+            FU.set_materials_use_spectral(True)
 
             # Sample count from control dict
             scene.cycles.samples = control_dict['Rendering'][FC.key_ctrl_sample_count_hsi]
 
-            FU.set_sun_power_hsi(forest_id=SCENE_ID)
+            FU.set_sun_or_sky_power_hsi(scene_id=SCENE_ID, for_sun=True)
+            FU.set_sun_or_sky_power_hsi(scene_id=SCENE_ID, for_sun=False)
 
             # disable sky for spectral images
 
@@ -143,7 +126,7 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
 
-            set_materials_use_spectral(False)
+            FU.set_materials_use_spectral(False)
 
             # For RGB images, we will always use frame one and set proper (RGB) sun power only for that frame.
             scene.frame_set(1)
@@ -220,7 +203,6 @@ def set_visibility(mode: str):
         hide(obj)
 
     unhide(lights.get(FC.key_obj_sun)) # always show sun
-    # TODO sky?
 
     if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map' or mode == FC.key_cam_drone_hsi:
         unhide(ground.get(FC.key_obj_ground))

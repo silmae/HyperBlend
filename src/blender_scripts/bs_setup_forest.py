@@ -8,6 +8,8 @@ import logging
 import importlib
 import csv
 
+from src.blender_scripts.forest_utils import set_material_parameter_per_frame
+
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
 if 'scenes' in blend_dir:
@@ -64,18 +66,12 @@ def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, 
         List of mixing factors (floats).
     """
 
-    def set_leaf_material_parameter_per_frame(material_name, parameter, value, frame):
-        material = bpy.data.materials[material_name]
-        dp = f'nodes["Group"].inputs["{parameter}"].default_value'
-        material.node_tree.nodes["Group"].inputs[f"{parameter}"].default_value = value
-        material.node_tree.keyframe_insert(dp, frame=frame)
-
     for i,band in enumerate(band_list):
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Absorption density', ad_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Scattering density', sd_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Scattering anisotropy', ai_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Mix factor', mf_list[i], band)
-        set_leaf_material_parameter_per_frame(leaf_material_name, 'Density scale', DENSITY, band)
+        FU.set_material_parameter_per_frame(leaf_material_name, 'Absorption density', ad_list[i], band)
+        FU.set_material_parameter_per_frame(leaf_material_name, 'Scattering density', sd_list[i], band)
+        FU.set_material_parameter_per_frame(leaf_material_name, 'Scattering anisotropy', ai_list[i], band)
+        FU.set_material_parameter_per_frame(leaf_material_name, 'Mix factor', mf_list[i], band)
+        FU.set_material_parameter_per_frame(leaf_material_name, 'Density scale', DENSITY, band)
 
     _set_leaf_rgb(leaf_material_name=leaf_material_name)
 
@@ -282,11 +278,13 @@ if __name__ == '__main__':
     insert_soil_data()
     insert_trunk_data()
 
-    FU.set_sun_power_hsi(forest_id=forest_id)
+    FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=True)
+    FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=False)
     FU.apply_forest_control(forest_id=forest_id)
 
     # FU.print_materials()
 
+    # Save changes to the Blender file
     bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(forest_id))
 
     # TODO how to disable using User preferences?

@@ -39,6 +39,164 @@ lights = data.collections[FC.key_collection_lights].all_objects
 trees = data.collections[FC.key_collection_trees].all_objects
 
 
+def set_materials_use_spectral(use_spectral: bool):
+    """Sets all materials mode to either spectral or RGB mode.
+
+    NOTE that this method cannot be used to set the sky material
+    (World material in Blender). For that, use set_sky_material_parameter()
+    instead.
+
+    :param use_spectral:
+        If True, materials are set to use spectral mode, if False, RGB mode.
+    """
+
+    # Sky material must be set separately
+    set_sky_material_parameter(param_name="Use spectral", value=True)
+
+    materials = bpy.data.materials
+    materials_to_set = []
+    for material in materials:
+        name = material.name
+        if "Leaf" in name or "Trunk" in name or "Ground" in name:
+            materials_to_set.append(name)
+
+    for material_name in materials_to_set:
+        # bpy.data.materials[material_name].node_tree.nodes["Group"].inputs["Use spectral"].default_value = use_spectral
+        set_material_parameter(material_name=material_name, param_name="Use spectral", value=use_spectral)
+
+
+def set_material_parameter(material_name, param_name, value):
+    """Set a parameter to any but sky material to be the same for all frames.
+
+    To set parameter value only to a specific frame, use set_material_parameter_per_frame().
+
+    :param material_name:
+        Name of the material as it shows in Blender scene. Case sensitive.
+    :param param_name:
+        Name of the parameter as it shows in Blender scene. Case sensitive.
+    :param value:
+        Value to be set.
+    """
+
+    material = bpy.data.materials[material_name]
+    material.node_tree.nodes["Group"].inputs[f"{param_name}"].default_value = value
+
+
+def set_material_parameter_per_frame(material_name, param_name, value, frame):
+    """Set a parameter to any but sky material for a certain frame.
+
+    To set parameter value for all the frames, use set_material_parameter().
+
+    :param material_name:
+        Name of the material as it shows in Blender scene. Case sensitive.
+    :param param_name:
+        Name of the parameter as it shows in Blender scene. Case sensitive.
+    :param value:
+        Value to be set.
+    :param frame:
+        Number of the frame to be keyframed.
+    """
+
+    material = bpy.data.materials[material_name]
+    dp = f'nodes["Group"].inputs["{param_name}"].default_value'
+    material.node_tree.nodes["Group"].inputs[f"{param_name}"].default_value = value
+    material.node_tree.keyframe_insert(dp, frame=frame)
+
+
+def set_sun_or_sky_power_hsi(scene_id: str, for_sun=True):
+    """Set hyperspectral sun or sky light power scaled by control file.
+
+    Powers for each light are fetched from the scene directory defined
+    by scene_id. Both sun and sky power is scaled by the value in the control
+    file, so that they are scaled equally. You can think of this as "exposure time".
+
+    :param scene_id:
+        ID of the scene file
+    :param for_sun:
+        If True (default) sun power is set. Otherwise, sky power is set.
+    """
+
+    if for_sun:
+        p = PH.path_file_forest_sun_csv(forest_id=scene_id)
+    else:
+        p = PH.path_file_forest_sky_csv(forest_id=scene_id)
+    if not os.path.exists(p):
+        raise FileNotFoundError(f"Sun or sky csv file '{p}' not found. Try rerunning forest initialization.")
+
+    bands, _, irradiances = read_csv(p)
+
+    control_dict = control.read_forest_control(forest_id=scene_id)
+    # NOTE that the multiplier is taken from "Sun" field for both sun and sky
+    #   so that they keep their relative power intact.
+    sun_power = control_dict['Sun'][FC.key_ctrl_sun_base_power_hsi]
+    irradiances = np.array(irradiances) * sun_power
+
+    if for_sun:
+        for i,band in enumerate(bands):
+            set_sun_power(irradiances[i], band)
+    else:
+        for i,band in enumerate(bands):
+            set_sky_power_per_frame(irradiances[i], band)
+
+
+def set_sun_power(power, frame):
+    """Sets sun power for a single frame.
+
+     For RGB images, frame 1 should be used. For hyperspectral
+     rendering, frames are considered to be spectral bands.
+
+     NOTE The sun lamp is not a material, so it cannot be set with set_material methods.
+
+    :param power:
+        Power in W/m2.
+    :param frame:
+        Frame (spectral band for HSI images).
+    """
+
+    bpy.data.lights["Sun"].energy = power # This is called "Strength" in Blender UI in v4.0, but "energy" in script
+    dp = "energy"
+    bpy.data.lights["Sun"].keyframe_insert(dp, frame=frame)
+
+
+def set_sky_power_per_frame(power, frame):
+    """Sets sky power for a single frame.
+
+     For RGB images, frame 1 should be used. For hyperspectral
+     rendering, frames are considered to be spectral bands.
+
+     This is currently the only sky material parameter that can
+     be keyframed. Later versions may generalize this method if
+     needed.
+
+    :param power:
+        Power in W/m2.
+    :param frame:
+        Frame (spectral band for HSI images).
+    """
+
+    material = bpy.data.worlds["World"]
+    param_name = "Strength"
+    dp = f'nodes["Group"].inputs["{param_name}"].default_value'
+    material.node_tree.nodes["Group"].inputs[f"{param_name}"].default_value = power
+    material.node_tree.keyframe_insert(dp, frame=frame)
+
+
+def set_sky_material_parameter(param_name: str, value):
+    """Set sky material (World material in Blender) parameter value.
+
+    To be used when no keyframing is needed, i.e., every frame (spectral band)
+    will use this same value.
+
+    :param param_name:
+        Parameter name in the sky material node group. Case sensitive.
+    :param value:
+        Value to be set.
+    """
+
+    material = bpy.data.worlds["World"]
+    material.node_tree.nodes["Group"].inputs[f"{param_name}"].default_value = value
+
+
 def get_scene_parameters(as_master=False) -> dict:
     """Fetches scene parameters from a Blender file and returns them
         as a dict that can be saved as a forest control file.
@@ -460,44 +618,6 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
     tree_mod[socket.identifier] = value
     if old_val != value:
         logging.error(f"Socket {socket.name} ({socket_id}) changed from {old_val} to {value}.")
-
-
-def set_sun_power(power, frame):
-    """Sets sun power for a single frame.
-
-     For RGB images, frame 1 should be used. For hyperspectral
-     rendering, frames are considered to be spectral bands.
-
-    :param power:
-        Power in W/m2.
-    :param frame:
-        Frame (spectral band for HSI images).
-    """
-
-    bpy.data.lights["Sun"].energy = power
-    dp = 'energy'
-    bpy.data.lights["Sun"].keyframe_insert(dp, frame=frame)
-
-
-def set_sun_power_hsi(forest_id: str):
-    """Set hyperspectral sun power based on control file.
-
-    Sun power is set for each "animation" frame that represent
-    different spectral bands separately
-    """
-
-    p = PH.path_file_forest_sun_csv(forest_id=forest_id)
-    if not os.path.exists(p):
-        raise FileNotFoundError(f"Sun csv file '{p}' not found. Try rerunning forest initialization.")
-
-    bands, _, irradiances = read_csv(p)
-
-    control_dict = control.read_forest_control(forest_id=forest_id)
-    sun_power = control_dict['Sun'][FC.key_ctrl_sun_base_power_hsi]
-    irradiances = np.array(irradiances) * sun_power
-
-    for i,band in enumerate(bands):
-        set_sun_power(irradiances[i], band)
 
 
 def read_csv(path):
