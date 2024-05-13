@@ -41,7 +41,7 @@ def forest_pipe_test(rng):
 
     # Generating low resolution random leaves
     set_name = "demo_leaves"
-    new_sampling = [450,500,550,600,700,800,900,1000]
+    new_sampling = [450,500,550,600,650,700,750,800,1450,1930]
     LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=2) # generate 2 random leaf spectra
     LI.generate_prospect_leaf(set_name=set_name, sample_id=3, w=0.001) # add one dry default leaf spectra
     LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling) # resample leaf spectra
@@ -49,25 +49,39 @@ def forest_pipe_test(rng):
 
     # Pack leaf data for forest scene initialization
     leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+    forest_id_master = "demo_forest_master"
     forest_id = "demo_forest"
     # Use pre-calculated soil spectra and default sun and sky spectra. They are automatically interpolated to
     #   match the leaf spectra bands.
     soil_name = "median_humid_clay_reflectance"
     sun_name = "default_sun"
     sky_name = "default_sky"
-    forest.init(leaves=leaves, conf_type='m2s', rng=rng, custom_forest_id=forest_id, soil_name=soil_name,
+
+    forest.init(leaves=leaves, conf_type='m2m', rng=rng,
+                custom_forest_id=forest_id_master, soil_name=soil_name,
                 sun_file_name=sun_name, sky_file_name=sky_name)
 
-    # Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
+    # Setup master and render preview
+    BC.setup_forest(forest_id=forest_id_master, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
+    BC.render_forest(forest_id=forest_id_master, render_mode='preview')
 
-    # Render bands for spectral cube along with additional images
-    BC.render_forest(forest_id=forest_id, render_mode='preview')
-    BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    BC.render_forest(forest_id=forest_id, render_mode='spectral')
+    ### Stop here. Check the master file and make any changes before generating new forest
+    # When you are happy with the new settings, uncomment the following
 
-    # Construct spectral cube in ENVI format
-    CH.construct_envi_cube(forest_id=forest_id)
+    # forest.init(leaves=leaves, conf_type='m2s', rng=rng,
+    #             custom_forest_id=forest_id, copy_forest_id=forest_id_master,
+    #             soil_name=soil_name, sun_file_name=sun_name, sky_file_name=sky_name)
+    #
+    # # Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    # BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
+    #
+    # # Render bands for spectral cube along with additional images
+    # BC.render_forest(forest_id=forest_id, render_mode='preview')
+    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
+    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
+    #
+    # # Construct spectral cube in ENVI format
+    # CH.construct_envi_cube(forest_id=forest_id)
 
 
 def run_paper_tests():
