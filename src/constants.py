@@ -109,6 +109,7 @@ file_sampling_data = 'sampling'
 file_forest_control = 'forest_control'
 """Toml formatted file for forest scene control parameters."""
 
+file_directory_structure = 'directory_structure'
 
 # Resampling keys
 

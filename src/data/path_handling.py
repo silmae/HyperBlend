@@ -183,6 +183,12 @@ def path_directory_blender_scripts() -> str:
     p = join(C.path_project_root, 'src', 'blender_scripts')
     return p
 
+def path_directory_definitions() -> str:
+    """Rend directory for visibility maps of materials."""
+
+    p = join(C.path_project_root, 'src', 'definitions')
+    return p
+
 def path_directory_soil_code() -> str:
     """Soil code directory that contain gsv spectra vectors used for gsv generation."""
 
@@ -223,6 +229,7 @@ def path_directory_forest_rend_visibility_maps(forest_id: str) -> str:
 
     p = join(path_directory_forest_rend(forest_id), 'visibility_maps')
     return p
+
 
 ##########################################################################
 # Paths to files

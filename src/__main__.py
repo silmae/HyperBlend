@@ -27,6 +27,10 @@ from src.reflectance_lab import diffuse_reflectance
 from src.rendering import blender_control as BC
 from src.gsv import gsv
 from src.forest import soil
+from src.setup import initialization
+
+initialization.initialize()
+exit(0)
 
 
 def write_forest_control(forest_id: str, control_dict: dict):

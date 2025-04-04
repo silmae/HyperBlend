@@ -1,0 +1,29 @@
+
+
+# This is a TOML document
+
+title = "HyperBlend directory structure definition"
+version = 0.3
+
+
+[root]
+type = "dir"
+name = "Root"
+
+[root.slab_model]
+type = "dir"
+name = "Slab model"
+expected_file_names = ["aar.txt", "aaz.csv"]
+
+	[root.slab_model.foo]
+	type = "dir"
+	name = "foo"
+	expected_file_names = ["bar.txt", "baz.csv"]
+
+
+[root.slab_simulation]
+type = "dir"
+name = "Slab simulation"
+expected_file_names = ["car.txt", "caz.csv"]
+
+
