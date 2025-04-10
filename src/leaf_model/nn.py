@@ -184,7 +184,7 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
 
             # nn_filename = save_name + '.pt'
 
-            save_path = PH.join(PH.path_directory_surface_model(), nn_filename)
+            save_path = PH.join(PH.path_directory_default_slab_model(), nn_filename)
 
             # Old save method
             # save(net, save_path)
@@ -283,7 +283,7 @@ def _get_model_path(nn_name='nn_default'):
 
     if not nn_name.endswith('.pt'):
         nn_name = nn_name + '.pt'
-    model_path = PH.join(PH.path_directory_surface_model(), nn_name)
+    model_path = PH.join(PH.path_directory_default_slab_model(), nn_name)
     if os.path.exists(model_path):
         return model_path
     else:
@@ -299,5 +299,5 @@ def exists(nn_name='nn_default.pt'):
 
     if not nn_name.endswith('.pt'):
         nn_name = nn_name + '.pt'
-    model_path = PH.join(PH.path_directory_surface_model(), nn_name)
+    model_path = PH.join(PH.path_directory_default_slab_model(), nn_name)
     return os.path.exists(model_path)

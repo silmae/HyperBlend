@@ -67,9 +67,9 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         forest_id = FH.duplicate_forest_scene(custom_forest_id=custom_forest_id)
 
     if copy_forest_id is not None:
-        source_path = PH.path_directory_forest_scene(forest_id=copy_forest_id)
+        source_path = PH.path_directory_system_simulation(forest_id=copy_forest_id)
     else:
-        source_path = PH.path_directory_project_root()
+        source_path = PH.path_directory_internal()
 
     # Config file
     if conf_type is None or conf_type == 'm2m':

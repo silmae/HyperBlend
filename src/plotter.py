@@ -105,7 +105,7 @@ def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_s
     plt.legend()
 
     if save:
-        folder = PH.path_directory_soil_data()
+        folder = PH.path_directory_reflectance_spectra()
         image_name = "default_soils." + image_type
         path = PH.join(folder, image_name)
         logging.info(f"Saving default soil reflectance plot to '{path}'.")
@@ -152,7 +152,7 @@ def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflecta
     if save:
         if forest_id is None:
             raise AttributeError(f"Saving soil reflectance requested but no forest id was given to define proper path.")
-        directory = PH.path_directory_forest_scene(forest_id=forest_id)
+        directory = PH.path_directory_system_simulation(forest_id=forest_id)
         image_name = f"soil_reflectance_{soil_name}{C.postfix_plot_image_format}"
         path = PH.join(directory, image_name)
         logging.info(f"Saving blender soil plot to '{path}'.")
@@ -270,7 +270,7 @@ def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, 
         sun_plot_name = C.file_default_sky
 
     if forest_id is not None:
-        path = PH.join(PH.path_directory_forest_scene(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")
+        path = PH.join(PH.path_directory_system_simulation(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")
         plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
@@ -309,7 +309,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     ax.legend()
 
     if save_thumbnail:
-        folder = PH.path_directory_surface_model()
+        folder = PH.path_directory_default_slab_model()
         # image_name = "nn_train_history.png"
         if not file_name.endswith(".png"):
             file_name = file_name + '.png'
@@ -402,7 +402,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             ax.legend()
 
         if save_thumbnail:
-            folder = PH.path_directory_surface_model()
+            folder = PH.path_directory_default_slab_model()
             image_name = f"{set_name}_{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
@@ -472,7 +472,7 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     ax.legend()
 
     if save:
-        folder = PH.path_directory_surface_model()
+        folder = PH.path_directory_default_slab_model()
         image_name = save_name + C.postfix_plot_image_format
         path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")

@@ -4,27 +4,32 @@ __pycache__/
 .idea/
 
 # Exclude all renders, plots and Blender backups
-scenes*/*
+System\ simulation/
 rend*/*
 plot*/*
-*.blend1
-leaf_measurement_sets/*
-measured_data/*
-blender_test_run/*
-scenes/*
+Internal/*.blend1
+Slab\ simulation/*
 
 # Ignore other than default sun and sky files
-light_data/*
-!light_data/default_sun.txt
-!light_data/default_sky.txt
-!light_data/goa_output.txt
+Light\ spectra/*
+!Light\ spectra/default_sun.txt
+!Light\ spectra/default_sky.txt
+!Light\ spectra/goa_output.txt
+
+# Ignore other than default soil reflectance files
+Reflectance\ spectra/*
+!Reflectance\ spectra/dry_clay_reflectance.csv
+!Reflectance\ spectra/dry_peat_reflectance.csv
+!Reflectance\ spectra/dry_sand_reflectance.csv
+!Reflectance\ spectra/median_humid_clay_reflectance.csv
+!Reflectance\ spectra/median_humid_peat_reflectance.csv
+!Reflectance\ spectra/median_humid_sand_reflectance.csv
+!Reflectance\ spectra/wet_clay_reflectance.csv
+!Reflectance\ spectra/wet_peat_reflectance.csv
+!Reflectance\ spectra/wet_sand_reflectance.csv
+!Reflectance\ spectra/default_soils.png
 
 log*/* 
-leaf_model/*
-!leaf_model/nn_default.pt
-!leaf_model/model_parameters.toml
 
-# Ignore generated examples, but keep the sourse 
-# spectrogram in git
-examples/*
-!examples/fluorescence_spectrogram.nc
+Slab\ models/*
+!Slab\ models/Default\ slab

@@ -7,8 +7,8 @@ import importlib
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
-if 'scenes' in blend_dir:
-    # We are in a copied blend file in HyperBlend/scenes/scene_12345
+if 'System simulation' in blend_dir:
+    # We are in a copied blend file in HyperBlend/System simulation/scene_12345
     script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
     data_dir = os.path.abspath(blend_dir + '../../../src/data')
 else:
@@ -329,7 +329,7 @@ def call_blender_render(write_still=True, animation=False):
     If the rendering crashes, one can inspect the scene file to find out what went wrong.
     """
 
-    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(SCENE_ID))
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_system_simulation_blend(SCENE_ID))
     ops.render.render(write_still=write_still, animation=animation)
 
 
@@ -451,7 +451,7 @@ if __name__ == '__main__':
 
     SCENE_ID = vars(args)[key_scene_id[1]]
 
-    logging.error(f"Hello, I am forest render script in '{PH.path_directory_forest_scene(SCENE_ID)}'")
+    logging.error(f"Hello, I am forest render script in '{PH.path_directory_system_simulation(SCENE_ID)}'")
 
     RENDER_MODE = vars(args)[key_render_mode[1]]
 
@@ -470,4 +470,4 @@ if __name__ == '__main__':
     else:
         logging.error(f"Render mode '{RENDER_MODE}' not recognised.")
 
-    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(SCENE_ID))
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_system_simulation_blend(SCENE_ID))

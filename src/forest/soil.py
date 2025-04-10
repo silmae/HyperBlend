@@ -14,7 +14,7 @@ def find_gsv_soil_path(soil_name):
     Returns the first occurrence if multiple files match the name.
     """
 
-    p_soil_dir = PH.path_directory_soil_data()
+    p_soil_dir = PH.path_directory_reflectance_spectra()
     for file_name in os.listdir(p_soil_dir):
         if soil_name in file_name:
             return PH.join(p_soil_dir, file_name)

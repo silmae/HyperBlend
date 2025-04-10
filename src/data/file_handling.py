@@ -66,8 +66,8 @@ def create_first_level_folders(set_name: str):
         Set name.
     """
 
-    if not os.path.exists(PH.path_directory_leaf_measurement_sets()):
-        os.makedirs(PH.path_directory_leaf_measurement_sets())
+    if not os.path.exists(PH.path_directory_slab_simulation_top()):
+        os.makedirs(PH.path_directory_slab_simulation_top())
     if not os.path.exists(PH.path_directory_target(set_name)):
         os.makedirs(PH.path_directory_target(set_name))
     if not os.path.exists(PH.path_directory_sample_result(set_name)):
@@ -296,15 +296,15 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
         dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
 
     if copy_forest_id is not None:
-        source_path = PH.path_file_forest_scene(copy_forest_id)
+        source_path = PH.path_file_system_simulation_blend(copy_forest_id)
     else:
-        source_path = PH.path_forest_template()
+        source_path = PH.path_system_simulation_template()
 
     if os.path.exists(source_path):
-        if not os.path.exists(PH.path_directory_forest_scene(dst_forest_id)):
-            os.makedirs(PH.path_directory_forest_scene(dst_forest_id))
+        if not os.path.exists(PH.path_directory_system_simulation(dst_forest_id)):
+            os.makedirs(PH.path_directory_system_simulation(dst_forest_id))
 
-        shutil.copy2(source_path, PH.path_file_forest_scene(dst_forest_id))
+        shutil.copy2(source_path, PH.path_file_system_simulation_blend(dst_forest_id))
 
         if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
@@ -317,7 +317,7 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
                            f"If you tried to duplicate from template forest, check git repository "
                            f"to restore the template to root directory. Otherwise check that forest "
                            f"id is correct.")
-    logging.info(f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_forest_scene(dst_forest_id)}'.")
+    logging.info(f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_system_simulation(dst_forest_id)}'.")
 
     return dst_forest_id
 
@@ -368,7 +368,7 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         plot_path = PH.join(folder, image_name)
 
     # Copy leaf plot to scene dir for convenience
-    folder = PH.path_directory_forest_scene(forest_id=forest_id)
+    folder = PH.path_directory_system_simulation(forest_id=forest_id)
     image_name = f"leaf_spectrum_plot{leaf_id}{C.postfix_plot_image_format}"
     dst_plot_path = PH.join(folder, image_name)
     try:

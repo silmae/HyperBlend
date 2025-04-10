@@ -1,7 +1,7 @@
 """
 Shared functionality that is used by the three leaf models.
 """
-
+import os.path
 from multiprocessing import Pool
 
 import numpy as np
@@ -50,7 +50,13 @@ def _render(args):
 
     set_name = args[0]
     sample_id = args[1]
-    BC.run_render_series(rend_base_path=P.path_directory_working(set_name, sample_id),
+    p = P.path_directory_working(set_name, sample_id)
+    p = os.path.abspath(p)
+
+    if not os.path.exists(p):
+        raise FileNotFoundError(f"File {p} does not exist. Cannot render.")
+
+    BC.run_render_series(rend_base_path=p,
                          wl=args[2],
                          ad=args[3],
                          sd=args[4],

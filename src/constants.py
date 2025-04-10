@@ -33,8 +33,8 @@ blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 3.6/b
 blender_executable_path_linux = '/snap/bin/blender'
 """Default location of Blender on Ubuntu."""
 
-blender_scene_name = 'scene_leaf_material.blend'
-"""Name of the Blender scene."""
+blender_scene_slab_simulation_template = 'slab_sim_template.blend'
+"""Name of the slab simulation template Blender scene."""
 
 blender_script_name = 'bs_render_single.py'
 """Name of the Blender script to be run."""
@@ -56,11 +56,17 @@ folder_rend_ref_refl = 'rend_refl_ref'
 folder_rend_ref_tran = 'rend_tran_ref'
 """Folder name for transmittancewhite reference renders."""
 
-folder_leaf_measurement_sets = 'leaf_measurement_sets'
-"""Top level leaf measurement sets folder name."""
+dirname_system_simulation = 'System simulation'
+"""Top level system simulation directory name."""
 
-folder_leaf_model = 'leaf_model'
-"""Top level surface model folder name."""
+dirname_slab_simulation = 'Slab simulation'
+"""Top level slab simulation directory name."""
+
+dirname_slab_models = 'Slab models'
+"""Top level Slab model directory name."""
+
+dirname_slab_models_default = 'Default slab'
+"""Default slab model directory name."""
 
 folder_opt_sample_targets = 'sample_targets'
 """Target files are stored to this folder."""

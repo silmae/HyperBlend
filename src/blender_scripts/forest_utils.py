@@ -9,8 +9,8 @@ import math
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
-if 'scenes' in blend_dir:
-    # We are in a copied blend file in HyperBlend/scenes/scene_12345
+if 'System simulation' in blend_dir:
+    # We are in a copied blend file in HyperBlend/System simulation/scene_12345
     script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
 else:
     # We are in the template forest blend file

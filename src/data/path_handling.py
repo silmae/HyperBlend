@@ -13,23 +13,107 @@ from src.data import file_names as FN
 ##########################################################################
 
 
+# Top level directories
+
 def path_directory_project_root():
     """Path to project root directory."""
+
     p = os.path.abspath(C.path_project_root)
     return p
 
 
+def path_directory_internal() -> str:
+    """Path to directory containing HyperBlend internal files."""
+
+    p = join(C.path_project_root, 'Internal')
+    return p
+
+def path_directory_system_simulation_top() -> str:
+    """Top level system simulation directory."""
+
+    p = join(C.path_project_root, 'System simulation')
+    return p
+
+
+def path_directory_light_spectra() -> str:
+    """Path to light spectra directory that contains all spectra for light sources."""
+
+    p = join(C.path_project_root, 'Light spectra')
+    return p
+
+
+def path_directory_reflectance_spectra() -> str:
+    """Path to reflectance spectra directory that contains all spectra for
+    materials that are only reflective - not transmittive and not light."""
+
+    p = join(C.path_project_root, 'Reflectance spectra')
+    return p
+
+
+# Code directories
+
+def path_directory_blender_scripts() -> str:
+    """Blender scripts directory."""
+
+    p = join(C.path_project_root, 'src', 'blender_scripts')
+    return p
+
+
+def path_directory_definitions() -> str:
+    """Rend directory for visibility maps of materials."""
+
+    p = join(C.path_project_root, 'src', 'definitions')
+    return p
+
+
+def path_directory_soil_code() -> str:
+    """Soil code directory that contain gsv spectra vectors used for gsv generation."""
+
+    p = join(C.path_project_root, 'src', 'gsv')
+    return p
+
+
+# Simulation directories
+
+
+def path_directory_default_slab_model() -> str:
+    """Path to the default slab model directory where the default
+    surface model parameters and the default neural network are stored.
+    """
+
+    p = join(C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default)
+    return p
+
+
+def path_directory_slab_simulation_top() -> str:
+    """Path to top level leaf measurement sets root folder. """
+
+    p = join(C.path_project_root, C.dirname_slab_simulation)
+    return p
+
+
+def path_directory_slab_simulation(slab_sim_name: str) -> str:
+    """Path to a specific slab simulation.
+
+    'root/Slab simulation/<slab_sim_name>'
+    """
+
+    p = join(path_directory_slab_simulation_top(), slab_sim_name)
+    return p
+
+
+# TODO remove and move the files one level up
 def path_directory_set_result(set_name: str) -> str:
     """Path to where set result is saved."""
 
-    p = os.path.abspath(path_directory_set(set_name) + '/' + C.folder_set_result)
+    p = os.path.abspath(path_directory_slab_simulation(set_name) + '/' + C.folder_set_result)
     return p
 
 
 def path_directory_sample_result(set_name: str) -> str:
     """Path to where sample results are saved."""
 
-    p = os.path.abspath(path_directory_set(set_name) + '/' + C.folder_opt_sample_results)
+    p = os.path.abspath(path_directory_slab_simulation(set_name) + '/' + C.folder_opt_sample_results)
     return p
 
 
@@ -40,58 +124,15 @@ def path_directory_sample(set_name: str, sample_id: int) -> str:
     return p
 
 
-def path_directory_leaf_measurement_sets() -> str:
-    """Path to top level leaf measurement sets root folder.
-
-    'project_root/leaf_measurement_sets'
-    """
-
-    p = os.path.abspath(C.path_project_root + '/' + C.folder_leaf_measurement_sets)
-    return p
-
-
-def path_directory_surface_model() -> str:
-    """Path to leaf model directory
-     where surface model parameters and neural networks is stored.
-
-    If the directory does not exist, it is created.
-
-    'project_root/leaf_model'
-    """
-
-    p = os.path.abspath(C.path_project_root + '/' + C.folder_leaf_model)
-
-    if not os.path.exists(p):
-        os.makedirs(p)
-
-    return p
-
-
-def path_directory_set(set_name: str) -> str:
-    """Path to set's folder.
-
-    'project_root/leaf_measurement_set/<set_name>'
-    """
-
-    p = os.path.abspath(path_directory_leaf_measurement_sets() + '/' + set_name)
-    return p
-
-
 def path_directory_target(set_name: str) -> str:
-    """Path to target folder (measurements) of given set.
+    """Path to target folder (measurements) of given set."""
 
-    'project_root/leaf_measurement_sets/<set_name>/sample_targets'
-    """
-
-    p = os.path.abspath(path_directory_set(set_name) + '/' + C.folder_opt_sample_targets)
+    p = os.path.abspath(path_directory_slab_simulation(set_name) + '/' + C.folder_opt_sample_targets)
     return p
 
 
 def path_directory_working(set_name: str, sample_id: int) -> str:
-    """Path to top level working folder where rendering sub-folders reside.
-
-    'project_root/leaf_measurement_sets/<set_name>/working_temp'
-    """
+    """Path to top level working folder where rendering sub-folders reside."""
 
     p = os.path.abspath(path_directory_sample(set_name, sample_id) + '/' + C.folder_opt_work)
     return p
@@ -156,64 +197,24 @@ def path_directory_rend_reference(imaging_type: str, base_path: str) -> str:
     return p
 
 
-def path_directory_forest_scenes() -> str:
-    """Top level scene directory."""
-
-    p = join(C.path_project_root, 'scenes')
-    return os.path.abspath(p)
-
-
-def path_directory_light_data() -> str:
-    """Path light data directory."""
-
-    p = join(C.path_project_root, 'light_data')
-    return p
-
-
-def path_directory_soil_data() -> str:
-    """Soil data directory."""
-
-    p = join(C.path_project_root, 'soil_data')
-    return p
-
-
-def path_directory_blender_scripts() -> str:
-    """Blender scripts directory."""
-
-    p = join(C.path_project_root, 'src', 'blender_scripts')
-    return p
-
-def path_directory_definitions() -> str:
-    """Rend directory for visibility maps of materials."""
-
-    p = join(C.path_project_root, 'src', 'definitions')
-    return p
-
-def path_directory_soil_code() -> str:
-    """Soil code directory that contain gsv spectra vectors used for gsv generation."""
-
-    p = join(C.path_project_root, 'src', 'gsv')
-    return p
-
-
-def path_directory_forest_scene(forest_id: str) -> str:
+def path_directory_system_simulation(forest_id: str) -> str:
     """Specific forest scene directory."""
 
-    p = join(path_directory_forest_scenes(), f"scene_{forest_id}")
+    p = join(path_directory_system_simulation_top(), f"scene_{forest_id}")
     return p
 
 
 def path_directory_forest_rend(forest_id: str) -> str:
     """Forest rend directory."""
 
-    p = join(path_directory_forest_scene(forest_id), 'rend')
+    p = join(path_directory_system_simulation(forest_id), 'rend')
     return p
 
 
 def path_directory_forest_cube(forest_id: str) -> str:
     """Forest spectral cube directory."""
 
-    p = join(path_directory_forest_scene(forest_id), 'cube')
+    p = join(path_directory_system_simulation(forest_id), 'cube')
     return p
 
 
@@ -249,7 +250,7 @@ def path_file_surface_model_parameters(file_name:str=None) -> str:
     if not file_name.endswith(C.postfix_text_data_format):
         file_name = file_name + C.postfix_text_data_format
 
-    p = join(path_directory_surface_model(), file_name)
+    p = join(path_directory_default_slab_model(), file_name)
     return p
 
 
@@ -281,7 +282,7 @@ def path_file_sampling(set_name: str):
 def path_file_default_starting_guess():
     """Path to the default starting guess to be used in optimization."""
 
-    p = join(C.path_project_root, FN.filename_starting_guess())
+    p = join(C.path_project_root, path_directory_internal(), FN.filename_starting_guess())
     return p
 
 
@@ -310,17 +311,52 @@ def path_file_rendered_image(target_type: str, imaging_type: str, wl: float, bas
         raise Exception(f"Target type must be either {C.target_type_leaf} or {C.target_type_leaf}. Was {target_type}.")
 
 
-def path_forest_template():
-    """Path to forest template blend file."""
+def path_system_simulation_template(template_name="system_sim_forest_template"):
+    """Path to system simulation template blend file found in directory 'Internal/'.
 
-    p = join(C.path_project_root, 'scene_forest_template.blend')
+    The .blend extension is added automatically if not given.
+
+    :param template_name: Name of the template file. Default is 'system_sim_forest_template'.
+    """
+
+    if not template_name.endswith('.blend'):
+        template_name = template_name + '.blend'
+
+    p = join(path_directory_internal(), template_name)
+    return p
+
+def path_slab_simulation_template(template_name="slab_sim_template"):
+    """Path to slab simulation template blend file found in directory 'Internal/'.
+
+    The .blend extension is added automatically if not given.
+
+    :param template_name: Name of the template file. Default is 'slab_sim_template'.
+    """
+
+    if not template_name.endswith('.blend'):
+        template_name = template_name + '.blend'
+
+    p = join(path_directory_internal(), template_name)
     return p
 
 
-def path_file_forest_scene(forest_id: str) -> str:
-    """Path to certain forest scene blend file."""
+def path_file_system_simulation_blend(simulation_name: str) -> str:
+    """Path to a certain system simulation scene Blender file.
 
-    p = join(path_directory_forest_scene(forest_id), FN.filename_forest_scene(forest_id))
+    The directory and the actual file share the same name but the file has a .blend
+    extension.
+
+    :param simulation_name: Name of the system simulation with or without .blend extension.
+    """
+
+    if not simulation_name.endswith('.blend'):
+        blend_file_name = simulation_name + '.blend'
+        simulation_directory_name = simulation_name
+    else:
+        blend_file_name = simulation_name
+        simulation_directory_name = simulation_name[:-6]
+
+    p = join(path_directory_system_simulation(simulation_directory_name), blend_file_name)
     return p
 
 
@@ -335,22 +371,22 @@ def path_file_forest_reflectance_header(forest_id: str) -> str:
 
 
 def path_file_forest_leaf_csv(forest_id: str, leaf_index):
-    p = join(path_directory_forest_scene(forest_id), FN.filename_leaf_material_csv(leaf_index))
+    p = join(path_directory_system_simulation(forest_id), FN.filename_leaf_material_csv(leaf_index))
     return p
 
 
 def path_file_forest_sun_csv(forest_id: str):
-    p = join(path_directory_forest_scene(forest_id), 'blender_sun.csv')
+    p = join(path_directory_system_simulation(forest_id), 'blender_sun.csv')
     return p
 
 
 def path_file_forest_sky_csv(forest_id: str):
-    p = join(path_directory_forest_scene(forest_id), 'blender_sky.csv')
+    p = join(path_directory_system_simulation(forest_id), 'blender_sky.csv')
     return p
 
 
 def path_file_forest_soil_csv(forest_id: str):
-    p = join(path_directory_forest_scene(forest_id), 'blender_soil.csv')
+    p = join(path_directory_system_simulation(forest_id), 'blender_soil.csv')
     return p
 
 
@@ -369,7 +405,7 @@ def path_file_soil_humid_vector():
 
 
 def path_file_forest_rgb_csv(forest_id: str):
-    p = join(path_directory_forest_scene(forest_id), 'rgb_colors.csv')
+    p = join(path_directory_system_simulation(forest_id), 'rgb_colors.csv')
     return p
 
 
@@ -463,5 +499,5 @@ def join(*args) -> str:
             s = s + arg
         else:
             s = s + arg + '/'
-    p = os.path.normpath(s)
+    p = os.path.abspath(s)
     return p

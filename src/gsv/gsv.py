@@ -136,7 +136,7 @@ def write_soil_spectra(wls, reflectance_spectra, filename):
         Filename used for saving. Directory is fixed to root/soil_data/.
     """
 
-    p = PH.join(PH.path_directory_soil_data(), filename)
+    p = PH.join(PH.path_directory_reflectance_spectra(), filename)
     stacked = np.vstack((wls, reflectance_spectra)).transpose()
     np.savetxt(p, stacked, delimiter=' ', fmt=('%.1f', '%.9f'))
 

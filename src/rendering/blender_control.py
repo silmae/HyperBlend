@@ -79,7 +79,7 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
     """This is mainly an utility function to plot a full wavelength series once the parameters are found."""
 
-    blender_args = _get_base_blender_args(script_name='bs_render_series.py', scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
+    blender_args = _get_base_blender_args(script_name='bs_render_series.py', scene_path=PH.path_slab_simulation_template())
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -144,7 +144,7 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         If True, Blender will not render anything but only print out some debugging stuff.
     """
 
-    blender_args = _get_base_blender_args(script_name=C.blender_script_name, scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
+    blender_args = _get_base_blender_args(script_name=C.blender_script_name, scene_path=PH.path_slab_simulation_template())
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -174,7 +174,7 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
 
 def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
 
-    blender_args = _get_base_blender_args(script_name='bs_reflectance_lab.py', scene_path=os.path.normpath(C.path_project_root + C.blender_scene_name))
+    blender_args = _get_base_blender_args(script_name='bs_reflectance_lab.py', scene_path=PH.path_slab_simulation_template())
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -211,9 +211,9 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
         raise AttributeError(f"Ignoring provided scene_id because global_master == True.")
 
     if global_master:
-        scene_path = PH.path_forest_template()
+        scene_path = PH.path_system_simulation_template()
     else:
-        scene_path = PH.path_file_forest_scene(forest_id)
+        scene_path = PH.path_file_system_simulation_blend(forest_id)
 
     blender_args = _get_base_blender_args(script_name='bs_configuration.py', scene_path=scene_path)
 
@@ -245,7 +245,7 @@ def setup_forest(forest_id: str, leaf_name_list=None):
     logging.info(f"Calling forest scene setup")
 
     blender_args = _get_base_blender_args(script_name='bs_setup_forest.py',
-                                          scene_path=PH.path_file_forest_scene(forest_id))
+                                          scene_path=PH.path_file_system_simulation_blend(forest_id))
 
     scirpt_args = ['--']
     scirpt_args += ['-id', f'{forest_id}']
@@ -276,7 +276,7 @@ def render_forest(forest_id: str, render_mode: str):
 
     logging.info(f"render_forest() called, I can possibly do something.")
 
-    scene_path = PH.path_file_forest_scene(forest_id)
+    scene_path = PH.path_file_system_simulation_blend(forest_id)
     blender_args = _get_base_blender_args(script_name='bs_render_forest', scene_path=scene_path)
 
     scirpt_args = ['--']

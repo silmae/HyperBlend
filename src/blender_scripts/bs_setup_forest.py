@@ -12,8 +12,8 @@ from src.blender_scripts.forest_utils import set_material_parameter_per_frame
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
-if 'scenes' in blend_dir:
-    # We are in a copied blend file in HyperBlend/scenes/scene_12345
+if 'System simulation' in blend_dir:
+    # We are in a copied blend file in HyperBlend/System simulation/scene_12345
     script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
     data_dir = os.path.abspath(blend_dir + '../../../src/data')
     forest_dir = os.path.abspath(blend_dir + '../../../src/forest')
@@ -102,7 +102,7 @@ def read_leaf_material_csv(file_name: str):
 
     file_name = FN.filename_leaf_material_csv(file_name.rstrip('.csv'))
 
-    p = PH.join(PH.path_directory_forest_scene(forest_id), file_name)
+    p = PH.join(PH.path_directory_system_simulation(forest_id), file_name)
 
     if not os.path.exists(p):
         raise FileNotFoundError(f"Leaf csv file '{p}' not found. Check your file names given to setup script.")
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     forest_id = vars(args)[key_scene_id[1]]
     leaf_material_names = vars(args)[key_leaf_ids[1]]
 
-    logging.error(f"Running scene setup for '{PH.path_directory_forest_scene(forest_id)}'")
+    logging.error(f"Running scene setup for '{PH.path_directory_system_simulation(forest_id)}'")
 
     insert_leaf_data(leaf_material_names=leaf_material_names)
     insert_soil_data()
@@ -285,6 +285,6 @@ if __name__ == '__main__':
     # FU.print_materials()
 
     # Save changes to the Blender file
-    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_forest_scene(forest_id))
+    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_system_simulation_blend(forest_id))
 
     # TODO how to disable using User preferences?

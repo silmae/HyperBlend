@@ -10,20 +10,42 @@ version = 0.3
 type = "dir"
 name = "Root"
 
-[root.slab_model]
-type = "dir"
-name = "Slab model"
-expected_file_names = ["aar.txt", "aaz.csv"]
-
-	[root.slab_model.foo]
+	[root.slab_models]
 	type = "dir"
-	name = "foo"
-	expected_file_names = ["bar.txt", "baz.csv"]
+	name = "Slab models"
+
+		[root.slab_models.default]
+		type = "dir"
+		name = "Default slab"
+		expected_file_names = ["surface_model_params.toml", "nn_default.pt"]
 
 
-[root.slab_simulation]
-type = "dir"
-name = "Slab simulation"
-expected_file_names = ["car.txt", "caz.csv"]
+	[root.slab_simulation]
+	type = "dir"
+	name = "Slab simulation"
 
+	[root.system_simulation]
+	type = "dir"
+	name = "System simulation"
+	note = "The name of this directory is very important as it is used in many rendering scripts as-is."
 
+	[root.light_spectra]
+	type = "dir"
+	name = "Light spectra"
+
+	[root.reflectance_spectra]
+	type = "dir"
+	name = "Reflectance spectra"
+
+	[root.log]
+	type = "dir"
+	name = "Log"
+
+	[root.src]
+	type = "dir"
+	name = "src"
+
+	[root.internal]
+	type = "dir"
+	name = "Internal"
+	expected_file_names = ["reflectance_lab.blend", "slab_sim_template.blend", "system_sim_forest_template.blend"]
