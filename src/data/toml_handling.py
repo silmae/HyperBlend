@@ -49,6 +49,8 @@ def read_toml_as_dict(directory: str, filename: str):
         Name of the file to be read. Postfix '.toml' will be added if necessary.
     :return dictionary:
         Returns read toml file as a dictionary.
+    :raises FileNotFoundError:
+        Raises FileNotFoundError if the file does not exist.
     """
 
     if not filename.endswith('.toml'):
@@ -57,7 +59,7 @@ def read_toml_as_dict(directory: str, filename: str):
     p = PH.join(directory, filename)
 
     if not os.path.exists(os.path.abspath(p)):
-        raise RuntimeError(f"Cannot read from file '{os.path.abspath(p)}' "
+        raise FileNotFoundError(f"Cannot read from file '{os.path.abspath(p)}' "
                            f"because it does not exist.")
 
     with open(p, 'r') as file:
