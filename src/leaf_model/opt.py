@@ -10,10 +10,10 @@ from multiprocessing import Pool
 import scipy.optimize as optimize
 import numpy as np
 
-from src import constants as C
+from src.definitions import constants as C
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
-from src.data import file_handling as FH, toml_handling as TH, path_handling as P, file_names as FN
+from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter
 from src.leaf_model import leaf_commons as LC
 

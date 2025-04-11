@@ -11,7 +11,7 @@ import os
 import toml
 
 from src.data import path_handling as PH
-from src import constants as C
+from src.definitions import constants as C
 
 
 def write_forest_control(forest_id: str, control_dict: dict, global_master: bool = False):

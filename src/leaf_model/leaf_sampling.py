@@ -2,10 +2,9 @@
 import numpy as np
 import logging
 
-from src.data import path_handling as P, file_handling as FH, toml_handling as TH
-from src import constants as C
-from src.rendering import blender_control as BC
-from src.utils import general_utils as GU, data_utils as DU, spectra_utils as SU
+from src.data import file_handling as FH, toml_handling as TH
+from src.definitions import constants as C
+from src.utils import data_utils as DU, spectra_utils as SU
 from src import plotter
 
 

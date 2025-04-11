@@ -6,17 +6,15 @@ https://towardsdatascience.com/5-powerful-tricks-to-visualize-your-data-with-mat
 
 """
 
-import os
 import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from scipy.optimize import curve_fit
 
-from src import constants as C
+from src.definitions import constants as C
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
-from src.leaf_model import nn, surf, training_data as training, surface_functions
+from src.leaf_model import nn, surf, training_data as training
 from src.utils import data_utils as DU, spectra_utils as SU
 
 

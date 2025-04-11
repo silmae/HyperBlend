@@ -2,7 +2,7 @@
 Parsing and generating file names.
 """
 
-from src import constants as C
+from src.definitions import constants as C
 
 
 def get_nn_save_name(layer_count: int, layer_width: int, batch_size: int, lr: float, split:float, training_set:str) -> str:

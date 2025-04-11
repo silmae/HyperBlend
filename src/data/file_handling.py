@@ -14,7 +14,8 @@ import shutil
 import csv
 import re # regural expressions
 
-from src import constants as C, plotter
+from src import plotter
+from src.definitions import constants as C
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
 CSV_NEWLINE = ''

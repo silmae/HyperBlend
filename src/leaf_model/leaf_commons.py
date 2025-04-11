@@ -8,7 +8,7 @@ import numpy as np
 import logging
 
 from src.data import path_handling as P, file_handling as FH
-from src import constants as C
+from src.definitions import constants as C
 from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU
 

@@ -1,16 +1,12 @@
 
 import logging
 
-import os
 import numpy as np
-import shutil
-import math
 import copy
 
-from src.leaf_model.opt import Optimization
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH, path_handling as PH, toml_handling as TH
-import src.constants as C
+import src.definitions.constants as C
 from src.forest import lighting
 from src.forest import soil
 from src import plotter

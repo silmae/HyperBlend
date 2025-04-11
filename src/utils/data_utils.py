@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.data import file_handling as FH
-from src import constants as C
+from src.definitions import constants as C
 
 
 def get_relative_refl_or_tran(imaging_type: str, wl: float, base_path: str) -> float:

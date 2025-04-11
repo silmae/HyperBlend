@@ -4,7 +4,7 @@ Paths to directories and files.
 
 import os
 
-from src import constants as C
+from src.definitions import constants as C
 from src.data import file_names as FN
 
 

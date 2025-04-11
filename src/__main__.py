@@ -6,27 +6,17 @@ and run in your favourite IDE.
 """
 
 import logging
-import os.path
 import datetime
 
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
-import plotter
-import src.leaf_model.nn
-from src.leaf_model import surf as SM
 from src.forest import forest
-from src.blender_scripts import forest_control as control
 
 from src.data import toml_handling as TH, cube_handling as CH, file_names as FN, path_handling as PH
 from src.leaf_model import interface as LI
-from src import constants as C
-from src.reflectance_lab import diffuse_reflectance
 
 from src.rendering import blender_control as BC
-from src.gsv import gsv
-from src.forest import soil
 from src.setup import initialization
 
 
@@ -122,7 +112,6 @@ def run_paper_tests():
 def asym_test(smthng='const_r_var_t'):
     import numpy as np
     from src.leaf_model import leaf_commons as LC
-    from src.leaf_model.opt import Optimization
     from src.utils import data_utils
 
     set_name = f"{smthng}_test"
@@ -204,7 +193,6 @@ if __name__ == '__main__':
     # asym_test(smthng='const_t_var_r')
 
     # Training data visualization
-    from src.leaf_model import training_data as TD
     # TD.visualize_training_data_pruning(set_name=set_name_iter_4, show=True)
     # LI.visualize_leaf_models(training_set_name=set_name_iter_4, show_plot=True, nn_name = "lc5_lw1000_b32_lr0.000_split0.10.pt")
     # LI.visualize_leaf_models(training_set_name=set_name_iter_4, show_plot=True, plot_nn=True)
@@ -212,7 +200,6 @@ if __name__ == '__main__':
 
 
     # Let redo starting guess
-    from src.utils import spectra_utils as SU
     # SU.generate_starting_guess()
     # SU.fit_starting_guess_coefficients(degree=12)
     # plotter._plot_starting_guess_coeffs_fitting(dont_show=False)

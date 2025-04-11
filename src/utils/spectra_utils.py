@@ -9,13 +9,12 @@ Some default targets can be created without fetching external data.
 import numpy as np
 import logging
 
-import spectres
 # SpectRes is used for resampling spectra to lower resolution
 
 from src import plotter
 from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU, data_utils as DU
-from src import constants as C
+from src.definitions import constants as C
 from src.leaf_model.opt import Optimization
 from scipy.interpolate import CubicSpline
 

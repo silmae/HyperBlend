@@ -1,5 +1,6 @@
 
-from src import constants as C, plotter
+from src import plotter
+from src.definitions import constants as C
 from src.rendering import blender_control as BC
 from src.leaf_model import leaf_commons as LC
 from src.utils import data_utils as DU

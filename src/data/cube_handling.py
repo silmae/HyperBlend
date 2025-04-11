@@ -8,7 +8,7 @@ import csv
 
 from src.data import path_handling as PH
 from src.utils import spectra_utils as SU
-from src import constants as C
+from src.definitions import constants as C
 
 
 def construct_envi_cube(forest_id: str):

@@ -13,7 +13,7 @@ import logging
 
 from src.data import file_handling as FH
 from src.data import file_names as FN
-from src import constants as C
+from src.definitions import constants as C
 from src.data import path_handling as PH
 
 

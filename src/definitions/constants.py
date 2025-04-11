@@ -43,7 +43,7 @@ ramdisk = '/media/ramdisk'
 """Location of the ramdisk if used."""
 
 """Project root relative to working folder that is assumed to be project_root/src/."""
-path_project_root = '../'
+path_project_root = '../../'
 
 # folder names
 # NOTE do not change render folder names as they are used by Blender script
