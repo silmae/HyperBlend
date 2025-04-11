@@ -10,6 +10,9 @@ from src.data import path_handling as PH
 from src.data import toml_handling as TH
 from src import constants as C
 
+RECOGNIZED_KEYS = ["name", "type", "extensions"]
+
+
 def initialize():
     logging.info("Initializing HyperBlend")
 
@@ -53,26 +56,24 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
     path_builder = dir_list
     entry_name = ""
     entry_type = ""
-    expected_file_names = None
+    file_extensions = []
 
     # Loop through all entries in the subdictnionary that was passed
     for key, value in sub_dict.items():
-        # print(f"Key in read: {key}, Value: {value}")
 
-        # Store the name of current entry. This is usually the name of the current directory
-        if key == "name":
-            entry_name = value
-
-        # Store the type of current entry
-        if key == "type":
-            entry_type = value
-        # If this is a directory type there might be some files that are expected to be in the directory
-        elif key == "expected_file_names":
-            # print(f"Expected file names: {value}")
-            expected_file_names = value
+        if key in RECOGNIZED_KEYS:
+            # Store the name of current entry. This is usually the name of the current directory
+            if key == "name":
+                entry_name = value
+            # Store the type of current entry
+            elif key == "type":
+                entry_type = value
+            # Store possible filename extensions
+            elif key == "extensions":
+                file_extensions = value
 
         # If the entry is a dictionary (meaning, it is a subdirectory) we need to process it recursively
-        if isinstance(value, dict) and value["type"] == "dir":
+        if isinstance(value, dict):
 
             # Take the name of the sudictionary and append it to the path builder
             sub_entry_name = value["name"]
@@ -85,25 +86,40 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
             del path_builder[-1]
 
     # Now all entries are looped through and we can process their contents
-    if entry_type == "dir":
 
-        # First, check where we are in the directory structure starting from the project root
-        current_path = PH.path_directory_project_root()
-        if entry_name != "Root":
-            # If we are not already at the root, append all entries in the path builder to the current path
+    # First, check where we are in the directory structure starting from the project root
+    # If we are not already at the root, append all entries in the path builder to the current path
+    current_path = PH.path_directory_project_root()
+    if entry_name != "Root":
+        # Ignore the last part of the path builder if we are dealing with a file
+        if entry_type == "file":
+            for dir_name in path_builder[:-1]:
+                current_path = PH.join(current_path, dir_name)
+        else:
             for dir_name in path_builder:
                 current_path = PH.join(current_path, dir_name)
 
+    if entry_type == "dir":
         if not os.path.exists(current_path):
             logging.info(f"Directory '{current_path}' does not exist. Creating directory.")
             os.makedirs(current_path, exist_ok=True)
         else:
-            logging.info(f"Directory '{current_path}' exists as it should.")
+            logging.info(f"OK - Directory '{current_path}' exists as it should.")
 
-        if expected_file_names is not None:
-            for file_name in expected_file_names:
-                file_path = PH.join(current_path, file_name)
-                if not os.path.exists(file_path):
-                    raise FileNotFoundError(f"File '{file_name}' does not exist in '{current_path}'.")
-                else:
-                    logging.info(f"\tFile '{file_name}' exists as it should.")
+    elif entry_type == "file":
+
+        file_found = False
+        with_extension = entry_name
+
+        for extension in file_extensions:
+            # Check if the file exists with the given extension
+            with_extension = entry_name + '.' + extension
+            file_path = PH.join(current_path, with_extension)
+            if os.path.exists(file_path):
+                file_found = True
+                break
+
+        if not file_found:
+            raise FileNotFoundError(f"File '{with_extension}' does not exist in '{current_path}'.")
+        else:
+            logging.info(f"OK - File '{with_extension}' exists in '{current_path}' as it should.")

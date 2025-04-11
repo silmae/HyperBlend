@@ -1,6 +1,7 @@
 
 
-# This is a TOML document
+# This document defines the static directory structure and files for HyperBlend.
+# This is checked in initialization phase of HyperBlend.
 
 title = "HyperBlend directory structure definition"
 version = 0.3
@@ -9,43 +10,136 @@ version = 0.3
 [root]
 type = "dir"
 name = "Root"
+description = "Root directory"
 
 	[root.slab_models]
 	type = "dir"
 	name = "Slab models"
+	description = "Top level directory for the slab models used to tranfer reflectance and transmittance values into renderable parameters. Although only the default model has to exist, the user can create their own models and store them here."
 
 		[root.slab_models.default]
 		type = "dir"
 		name = "Default slab"
-		expected_file_names = ["surface_model_params.toml", "nn_default.pt"]
+		description = "Default slab models that come with the distribution."
 
+			[root.slab_models.default.surface_model_params]
+			type = "file"
+			name = "surface_model_params"
+			extensions = ["toml",]
+			description = "Model parameters for the default surface fitting model."
+
+			[root.slab_models.default.nn_default]
+			type = "file"
+			name = "nn_default"
+			extensions = ["pt",]
+			description = "The default neural network."
 
 	[root.slab_simulation]
 	type = "dir"
 	name = "Slab simulation"
+	description = "Top level slab simulation directory. All slab simulation runs are stored here. As the content of the directory change as per user actions, they are not checked during the initialization but rather when the need arises. "
 
 	[root.system_simulation]
 	type = "dir"
 	name = "System simulation"
-	note = "The name of this directory is very important as it is used in many rendering scripts as-is."
+	description = "Stores system level simulations such as forest canopy simulations. The name of this directory is very important as it is used in many rendering scripts as-is. Similarly to slab simulation, the content is checked as needed."
 
 	[root.light_spectra]
 	type = "dir"
 	name = "Light spectra"
+	description = "Directory for storing all light data that can be used in simulations. The existance of the default light spectra included in the distribution is checked at initialization, but the user-created ones are not checked. "
+
+		[root.light_spectra.default_sky]
+		type = "file"
+		name = "default_sky"
+		extensions = ["txt","csv"]
+		description = "The default sky spectra."
+
+		[root.light_spectra.default_sun]
+		type = "file"
+		name = "default_sun"
+		extensions = ["txt","csv"]
+		description = "The default sun spectra."
 
 	[root.reflectance_spectra]
 	type = "dir"
 	name = "Reflectance spectra"
+	description = "This directory is used to store any spectra that is only reflective; they are not light and they do not have transmittance spectra. For example, tree trunk spectra and soil spectra belongs here. The existance of the default files is enforced."
+
+		[root.reflectance_spectra.dry_clay_reflectance]
+		type = "file"
+		name = "dry_clay_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.dry_peat_reflectance]
+		type = "file"
+		name = "dry_peat_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.dry_sand_reflectance]
+		type = "file"
+		name = "dry_sand_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.median_humid_clay_reflectance]
+		type = "file"
+		name = "median_humid_clay_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.median_humid_peat_reflectance]
+		type = "file"
+		name = "median_humid_peat_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.median_humid_sand_reflectance]
+		type = "file"
+		name = "median_humid_sand_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.wet_clay_reflectance]
+		type = "file"
+		name = "wet_clay_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.wet_peat_reflectance]
+		type = "file"
+		name = "wet_peat_reflectance"
+		extensions = ["txt","csv"]
+
+		[root.reflectance_spectra.wet_sand_reflectance]
+		type = "file"
+		name = "wet_sand_reflectance"
+		extensions = ["txt","csv"]
 
 	[root.log]
 	type = "dir"
 	name = "Log"
+	description = "Log files storage."
 
 	[root.src]
 	type = "dir"
 	name = "src"
+	description = "The source code."
 
 	[root.internal]
 	type = "dir"
 	name = "Internal"
-	expected_file_names = ["reflectance_lab.blend", "slab_sim_template.blend", "system_sim_forest_template.blend"]
+	description = "HyperBlend internal files."
+
+		[root.internal.reflectance_lab]
+		type = "file"
+		name = "reflectance_lab"
+		extensions = ["blend",]
+		description = "Blender scene for reflective materials."
+
+		[root.internal.slab_sim_template]
+		type = "file"
+		name = "slab_sim_template"
+		extensions = ["blend",]
+		description = "Blender scene for slab simulations. This is a template that is used by default, but the user can create a copy with a different name and train new slab models. This is usefull, for example when slabs of different thicknesess are needed."
+
+		[root.internal.system_sim_forest_template]
+		type = "file"
+		name = "system_sim_forest_template"
+		extensions = ["blend",]
+		description = "System level simulation template. This template is for the forest scenes, but in future, there might be other templates, for example, for fields."
