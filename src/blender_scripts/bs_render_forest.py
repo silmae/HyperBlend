@@ -251,7 +251,7 @@ def composite_material_mask():
     f_output = node_tree.nodes.new('CompositorNodeOutputFile') # Create new File Output node
 
     # Set saving path and image settings
-    f_output.base_path = PH.path_directory_forest_rend_visibility_maps(SCENE_ID)
+    f_output.base_path = PH.path_directory_system_rend_visibility_maps(SCENE_ID)
     f_output.format.file_format = 'TIFF'
     f_output.format.color_mode = 'BW' # no colors needed
     f_output.format.tiff_codec = 'NONE' # no packing of images
@@ -406,7 +406,7 @@ def render_drone_hsi():
 
     set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Drone HSI')
-    scene.render.filepath = PH.join(PH.path_directory_forest_rend_spectral(SCENE_ID), "band_####.tiff")
+    scene.render.filepath = PH.join(PH.path_directory_system_rend_spectral(SCENE_ID), "band_####.tiff")
     call_blender_render(write_still=True, animation=True)
 
 
@@ -420,7 +420,7 @@ def render_visibility_maps():
     set_render_parameters(render_mode='visibility', camera='Drone HSI', res_x=res_x, res_y=res_y, res_percent=100)
     set_visibility(mode='Drone HSI')
     image_name = f'visibility_map_rgb_preview.png'
-    image_path = PH.join(PH.path_directory_forest_rend_visibility_maps(SCENE_ID), image_name)
+    image_path = PH.join(PH.path_directory_system_rend_visibility_maps(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)

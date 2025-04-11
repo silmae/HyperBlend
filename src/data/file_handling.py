@@ -14,8 +14,7 @@ import shutil
 import csv
 import re # regural expressions
 
-from src import plotter
-from src.definitions import constants as C
+from src import plotter, constants as C
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
 CSV_NEWLINE = ''
@@ -52,9 +51,9 @@ def copy_target(from_set: str, to_set: str):
             shutil.copy2(path_src_target_resampled, path_dst_target_resampled)
 
     # Copy sampling
-    src_sampling = PH.path_file_sampling(from_set)
+    src_sampling = PH.path_file_spectral_sampling(from_set)
     if os.path.exists(src_sampling):
-        dst_sampling = PH.path_file_sampling(to_set)
+        dst_sampling = PH.path_file_spectral_sampling(to_set)
         shutil.copy2(src_sampling, dst_sampling)
 
 
@@ -71,10 +70,10 @@ def create_first_level_folders(set_name: str):
         os.makedirs(PH.path_directory_slab_simulation_top())
     if not os.path.exists(PH.path_directory_target(set_name)):
         os.makedirs(PH.path_directory_target(set_name))
-    if not os.path.exists(PH.path_directory_sample_result(set_name)):
-        os.makedirs(PH.path_directory_sample_result(set_name))
-    if not os.path.exists(PH.path_directory_set_result(set_name)):
-        os.makedirs(PH.path_directory_set_result(set_name))
+    if not os.path.exists(PH.path_directory_result_signal_top(set_name)):
+        os.makedirs(PH.path_directory_result_signal_top(set_name))
+    # if not os.path.exists(PH.path_directory_set_result(set_name)):
+    #     os.makedirs(PH.path_directory_set_result(set_name))
 
 
 def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
@@ -86,22 +85,22 @@ def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
         Sample id
     """
 
-    sample_folder_name = f'{C.folder_sample_prefix}_{sample_id}'
-    sample_path = PH.join(PH.path_directory_sample_result(set_name), sample_folder_name)
+    sample_folder_name = f'{C.signal_directory_prefix}_{sample_id}'
+    sample_path = PH.join(PH.path_directory_result_signal_top(set_name), sample_folder_name)
 
     if not os.path.exists(sample_path):
         os.makedirs(sample_path)
 
-    if not os.path.exists(PH.path_directory_working(set_name, sample_id)):
-        os.makedirs(PH.path_directory_working(set_name, sample_id))
-    if not os.path.exists(PH.path_directory_rend_leaf(set_name, sample_id)):
-        os.makedirs(PH.path_directory_rend_leaf(set_name, sample_id))
-    if not os.path.exists(PH.path_directory_rend_reference(C.imaging_type_refl, PH.path_directory_working(set_name, sample_id))):
-        os.makedirs(PH.path_directory_rend_reference(C.imaging_type_refl, PH.path_directory_working(set_name, sample_id)))
-    if not os.path.exists(PH.path_directory_rend_reference(C.imaging_type_tran, PH.path_directory_working(set_name, sample_id))):
-        os.makedirs(PH.path_directory_rend_reference(C.imaging_type_tran, PH.path_directory_working(set_name, sample_id)))
-    if not os.path.exists(PH.path_directory_subresult(set_name, sample_id)):
-        os.makedirs(PH.path_directory_subresult(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_slab_optimization_working_temp(set_name, sample_id)):
+        os.makedirs(PH.path_directory_slab_optimization_working_temp(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_slab_temp_rend(set_name, sample_id)):
+        os.makedirs(PH.path_directory_slab_temp_rend(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(set_name, sample_id))):
+        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
+    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(set_name, sample_id))):
+        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
+    if not os.path.exists(PH.path_directory_optimization_result(set_name, sample_id)):
+        os.makedirs(PH.path_directory_optimization_result(set_name, sample_id))
 
 
 def list_target_ids(set_name: str):
@@ -132,10 +131,10 @@ def list_finished_sample_ids(set_name: str):
     """
 
     ids = []
-    for sample_folder_name in os.listdir(PH.path_directory_sample_result(set_name)):
-        p = PH.join(PH.path_directory_sample_result(set_name), sample_folder_name)
+    for sample_folder_name in os.listdir(PH.path_directory_result_signal_top(set_name)):
+        p = PH.join(PH.path_directory_result_signal_top(set_name), sample_folder_name)
         for filename in os.listdir(p):
-            if filename.startswith(C.file_sample_result) and filename.endswith(C.postfix_text_data_format):
+            if filename.startswith(C.filename_result_signal) and filename.endswith(C.postfix_text_data_format):
                 ids.append(FN.parse_sample_id(filename))
     return ids
 
@@ -172,14 +171,14 @@ def clear_all_rendered_images(set_name: str) -> None:
 def clear_rend_leaf(set_name: str, sample_id: int) -> None:
     """Clears leaf render folder of given set, but leave reference renders untouched. """
 
-    clear_folder(PH.path_directory_rend_leaf(set_name, sample_id))
+    clear_folder(PH.path_directory_slab_temp_rend(set_name, sample_id))
 
 
 def clear_rend_refs(set_name: str, sample_id: int) -> None:
     """Clears reference render folders of given set but leave leaf renders untouched. """
 
-    clear_folder(PH.path_directory_rend_reference(C.imaging_type_refl, PH.path_directory_working(set_name, sample_id)))
-    clear_folder(PH.path_directory_rend_reference(C.imaging_type_tran, PH.path_directory_working(set_name, sample_id)))
+    clear_folder(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
+    clear_folder(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
 
 
 def clear_folder(path: str) -> None:
@@ -217,7 +216,7 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
         res = abs(f1 - f2) <= epsilon
         return res
 
-    folder = PH.path_directory_render(target_type, imaging_type, base_path)
+    folder = PH.path_directory_slab_working_refl_or_trans(target_type, imaging_type, base_path)
     for filename in os.listdir(folder):
         image_wl = FN.parse_wl_from_filename(filename)
         if almost_equals(wl, image_wl):
@@ -264,7 +263,7 @@ def reduce(set_name: str) -> None:
     sample_ids = list_finished_sample_ids(set_name)
     logging.info(f"Removing generated plots from set '{set_name}'.")
     for sample_id in sample_ids:
-        p = PH.path_directory_subresult(set_name, sample_id)
+        p = PH.path_directory_optimization_result(set_name, sample_id)
         file_list = os.listdir(p)
         if len(file_list) == 0:
             logging.info(f"Nothing to remove. Directory '{p}' already empty.")
@@ -309,10 +308,10 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
 
         if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
             os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
-        if not os.path.exists(PH.path_directory_forest_rend_spectral(dst_forest_id)):
-            os.makedirs(PH.path_directory_forest_rend_spectral(dst_forest_id))
-        if not os.path.exists(PH.path_directory_forest_rend_visibility_maps(dst_forest_id)):
-            os.makedirs(PH.path_directory_forest_rend_visibility_maps(dst_forest_id))
+        if not os.path.exists(PH.path_directory_system_rend_spectral(dst_forest_id)):
+            os.makedirs(PH.path_directory_system_rend_spectral(dst_forest_id))
+        if not os.path.exists(PH.path_directory_system_rend_visibility_maps(dst_forest_id)):
+            os.makedirs(PH.path_directory_system_rend_visibility_maps(dst_forest_id))
     else:
         raise RuntimeError(f"Forest scene not found for duplication from '{source_path}'. "
                            f"If you tried to duplicate from template forest, check git repository "
@@ -377,7 +376,7 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
     except FileNotFoundError:
         logging.warning(f"Could not find resampled target plot for copying from '{plot_path}'.")
 
-    with open(PH.path_file_forest_leaf_csv(forest_id, leaf_id), 'w+', newline=CSV_NEWLINE) as csvfile:
+    with open(PH.path_file_system_slab_csv(forest_id, leaf_id), 'w+', newline=CSV_NEWLINE) as csvfile:
 
         writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
 
@@ -403,7 +402,7 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
     """
 
     if lighting_type == 'sun':
-        p = PH.path_file_forest_sun_csv(forest_id)
+        p = PH.path_file_system_forest_sun_spectra_csv(forest_id)
     elif lighting_type == 'sky':
         p = PH.path_file_forest_sky_csv(forest_id)
     else:
@@ -433,7 +432,7 @@ def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
     """
 
     if lighting_type == 'sun':
-        p = PH.path_file_forest_sun_csv(forest_id)
+        p = PH.path_file_system_forest_sun_spectra_csv(forest_id)
     elif lighting_type == 'sky':
         p = PH.path_file_forest_sky_csv(forest_id)
     else:

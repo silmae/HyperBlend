@@ -11,8 +11,7 @@ import math
 
 import numpy as np
 
-from src import plotter
-from src.definitions import constants as C
+from src import plotter, constants as C
 from src.data import toml_handling as TH, file_handling as FH
 from src.leaf_model.opt import Optimization
 

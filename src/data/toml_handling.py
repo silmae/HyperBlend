@@ -13,7 +13,7 @@ import logging
 
 from src.data import file_handling as FH
 from src.data import file_names as FN
-from src.definitions import constants as C
+from src import constants as C
 from src.data import path_handling as PH
 
 
@@ -179,7 +179,7 @@ def write_set_result(set_name: str):
         result_dict[C.key_set_result_wl_ai_std] = np.zeros_like(r[0][C.key_sample_result_wls])
         result_dict[C.key_set_result_wl_mf_std] = np.zeros_like(r[0][C.key_sample_result_wls])
 
-    p = PH.join(PH.path_directory_set_result(set_name), FN.filename_set_result())
+    p = PH.join(PH.path_directory_slab_simulation(set_name), FN.filename_set_result())
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -187,7 +187,7 @@ def write_set_result(set_name: str):
 def read_set_result(set_name: str):
     """Reads the set result file. Created if does not exist."""
 
-    p = PH.join(PH.path_directory_set_result(set_name), FN.filename_set_result())
+    p = PH.join(PH.path_directory_slab_simulation(set_name), FN.filename_set_result())
     if not os.path.exists(p):
         write_set_result(set_name)
     with open(p, 'r') as file:
@@ -224,7 +224,7 @@ def read_sample_result(set_name: str, sample_id: int):
         Result file content as a dict.
     """
 
-    p = PH.join(PH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = PH.join(PH.path_directory_result_signal(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 
@@ -242,7 +242,7 @@ def write_sample_result(set_name: str, res_dict: dict, sample_id: int) -> None:
         Sample id.
     """
 
-    p = PH.join(PH.path_directory_sample(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = PH.join(PH.path_directory_result_signal(set_name, sample_id), FN.filename_sample_result(sample_id))
     with open(p, 'w+') as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -258,7 +258,7 @@ def collect_wavelength_result(set_name: str, sample_id: int):
         A list of wavelength result dictionaries.
     """
 
-    p = PH.path_directory_subresult(set_name, sample_id)
+    p = PH.path_directory_optimization_result(set_name, sample_id)
     subres_list = []
     for filename in os.listdir(p):
         if filename.endswith(C.postfix_text_data_format):
@@ -374,7 +374,7 @@ def write_sampling(set_name: str, sampling: list = None, overwrite=False):
         If True, overwrite existing sampling with the new one. Default is False.
     """
 
-    p = PH.path_file_sampling(set_name)
+    p = PH.path_file_spectral_sampling(set_name)
 
     # Escape if the file exists already
     if os.path.exists(p) and not overwrite:
@@ -407,7 +407,7 @@ def read_sampling(set_name: str,):
     :raises
         Raises RuntimeError in case some of the entries could not be interpreted as a float.
     """
-    p = PH.path_file_sampling(set_name)
+    p = PH.path_file_spectral_sampling(set_name)
 
     if not os.path.exists(p):
         raise RuntimeError(f"Sampling not found from '{p}'. Write sampling before use.")

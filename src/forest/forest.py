@@ -6,7 +6,7 @@ import copy
 
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH, path_handling as PH, toml_handling as TH
-import src.definitions.constants as C
+import src.constants as C
 from src.forest import lighting
 from src.forest import soil
 from src import plotter
@@ -69,14 +69,14 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
 
     # Config file
     if conf_type is None or conf_type == 'm2m':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.filename_system_sim_control)
         forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
     elif conf_type == 'm2s':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.filename_system_sim_control)
         control_dict = m2s(control_dict=control_dict, rng=rng)
         forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
     elif conf_type == 's2m':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.file_forest_control)
+        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.filename_system_sim_control)
         control_dict = s2m(control_dict=control_dict)
         forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
     else:

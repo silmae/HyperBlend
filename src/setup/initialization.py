@@ -8,7 +8,7 @@ import logging
 
 from src.data import path_handling as PH
 from src.data import toml_handling as TH
-from src.definitions import constants as C
+from src import constants as C
 
 RECOGNIZED_KEYS = ["name", "type", "extensions"]
 

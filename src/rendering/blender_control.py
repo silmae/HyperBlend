@@ -9,7 +9,7 @@ import time
 from sys import platform
 import logging
 
-from src.definitions import constants as C
+from src import constants as C
 from src.data import path_handling as PH
 
 

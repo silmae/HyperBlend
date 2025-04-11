@@ -11,10 +11,9 @@ import logging
 
 # SpectRes is used for resampling spectra to lower resolution
 
-from src import plotter
+from src import plotter, constants as C
 from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU, data_utils as DU
-from src.definitions import constants as C
 from src.leaf_model.opt import Optimization
 from scipy.interpolate import CubicSpline
 

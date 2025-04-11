@@ -117,7 +117,7 @@ def set_sun_or_sky_power_hsi(scene_id: str, for_sun=True):
     """
 
     if for_sun:
-        p = PH.path_file_forest_sun_csv(forest_id=scene_id)
+        p = PH.path_file_system_forest_sun_spectra_csv(forest_id=scene_id)
     else:
         p = PH.path_file_forest_sky_csv(forest_id=scene_id)
     if not os.path.exists(p):

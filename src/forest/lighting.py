@@ -7,7 +7,7 @@ import numpy as np
 import os
 import logging
 
-from src.definitions import constants as C
+from src import constants as C
 from src.data import path_handling as PH
 from src.data import light_file_handling as LFH
 from src.utils import spectra_utils as SU

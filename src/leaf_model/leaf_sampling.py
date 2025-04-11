@@ -3,9 +3,8 @@ import numpy as np
 import logging
 
 from src.data import file_handling as FH, toml_handling as TH
-from src.definitions import constants as C
 from src.utils import data_utils as DU, spectra_utils as SU
-from src import plotter
+from src import plotter, constants as C
 
 
 def sampling_empty(set_name: str) -> bool:

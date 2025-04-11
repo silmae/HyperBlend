@@ -8,7 +8,7 @@ import numpy as np
 import logging
 
 from src.data import path_handling as P, file_handling as FH
-from src.definitions import constants as C
+from src import constants as C
 from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU
 
@@ -50,7 +50,7 @@ def _render(args):
 
     set_name = args[0]
     sample_id = args[1]
-    p = P.path_directory_working(set_name, sample_id)
+    p = P.path_directory_slab_optimization_working_temp(set_name, sample_id)
     p = os.path.abspath(p)
 
     if not os.path.exists(p):
@@ -106,8 +106,8 @@ def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
     r = []
     t = []
     for wl in wls:
-        r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
-        t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+        r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
+        t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
         r.append(r_wl)
         t.append(t_wl)
 
@@ -181,4 +181,4 @@ def initialize_directories(set_name, clear_old_results=False):
         FH.clear_rend_leaf(set_name, sample_id)
         FH.clear_rend_refs(set_name, sample_id)
         if clear_old_results:
-            FH.clear_folder(P.path_directory_subresult(set_name, sample_id))
+            FH.clear_folder(P.path_directory_optimization_result(set_name, sample_id))

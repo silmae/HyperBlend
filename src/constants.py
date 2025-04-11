@@ -12,8 +12,8 @@ imaging_type_refl = 'refl'
 imaging_type_tran = 'tran'
 """Imaging type transmittance (for rendering). """
 
-target_type_leaf = 'leaf'
-"""Rendering target leaf object."""
+target_type_slab = 'slab'
+"""Rendering target is the slab object."""
 
 target_type_ref = 'reference'
 """Rendering target (white) reference."""
@@ -43,18 +43,43 @@ ramdisk = '/media/ramdisk'
 """Location of the ramdisk if used."""
 
 """Project root relative to working folder that is assumed to be project_root/src/."""
-path_project_root = '../../'
+path_project_root = '../'
 
-# folder names
+# Names of the directories
 # NOTE do not change render folder names as they are used by Blender script
-folder_rend = 'rend'
+
+dirname_internal = "Internal"
+
+dirname_system_sim = "System simulation"
+
+dirname_light_spectra = "Light spectra"
+
+dirname_reflectance_spectra = "Reflectance spectra"
+
+dirname_source = "src"
+
+dirname_blender_scripts = "blender_scripts"
+
+dirname_definitions = "definitions"
+
+dirname_gsv = "gsv"
+
+dirname_system_sim_rend = "rend"
+
+dirname_system_sim_spectral_rend = "Spectral"
+
+dirname_system_sim_visibility_maps_rend = "Visibility maps"
+
+dirname_system_cube = "Spectral cube"
+
+dirname_slab_sim_rend = 'rend'
 """Folder name for leaf target renders."""
 
 folder_rend_ref_refl = 'rend_refl_ref'
 """Folder name for reflectance white reference renders."""
 
 folder_rend_ref_tran = 'rend_tran_ref'
-"""Folder name for transmittancewhite reference renders."""
+"""Folder name for transmittance white reference renders."""
 
 dirname_system_simulation = 'System simulation'
 """Top level system simulation directory name."""
@@ -68,26 +93,21 @@ dirname_slab_models = 'Slab models'
 dirname_slab_models_default = 'Default slab'
 """Default slab model directory name."""
 
-folder_opt_sample_targets = 'sample_targets'
-"""Target files are stored to this folder."""
+dirname_opt_target_signal = 'Target signal'
+"""Target signal files are stored to this directory."""
 
-folder_opt_sample_results = 'sample_results'
-"""Sample result numerical data is stored in here. """
+dirname_result_signal = 'Result signal'
+"""Stores simulated signals matching to target signals. """
 
-folder_sample_prefix = 'sample'
-"""Prefix for sample folder names as in 'sample_0'. """
+signal_directory_prefix = 'Signal'
+"""Prefix for signal directories within a single slab simulation such as 'signal_0'. """
 
-folder_opt_work = 'working_temp'
-"""Top level folder where rendered images are saved in their own subfolders."""
+dirname_slab_sim_working_temp = 'working_temp'
+"""Top level folder where rendered images of slab simulation are saved in their own subdirectories."""
 
-folder_opt_result = 'result'
-"""Top level folder for optimization results."""
+dirname_optimization_results = 'Optimization results'
+"""Wavelength-wise results for each signal solved by optimization method are stored here (numerical and png images)."""
 
-folder_opt_subresult = 'sub_results'
-"""Wavelength-wise results for each sample are stored here (numerical and png images)."""
-
-folder_set_result = 'set_result'
-"""Set result is saved here."""
 
 # file names
 
@@ -97,11 +117,11 @@ file_opt_target = 'target'
 file_opt_res = 'final_result'
 """Set result file name."""
 
-file_sample_result = 'sample_result'
-"""Sample result file name."""
+filename_result_signal = 'result_signal'
+"""Simulated result signal of a slab simulation."""
 
-file_model_parameters = 'model_parameters'
-"""Model parameter file name."""
+filename_model_parameters = 'surface_model_params'
+"""Surface model parameters file."""
 
 file_default_sun = 'default_sun.txt'
 """Default sun spectrum file name that is included in the repository."""
@@ -112,10 +132,15 @@ file_default_sky = 'default_sky.txt'
 file_sampling_data = 'sampling'
 """Toml formatted file storing wavelengths for resampling."""
 
-file_forest_control = 'forest_control'
-"""Toml formatted file for forest scene control parameters."""
+filename_system_sim_control = 'system_sim_control'
+"""Toml formatted file for system simulation scene control parameters."""
+
+filename_system_sim_forest_template = 'system_sim_forest_template'
+
+filename_slab_sim_forest_template = 'slab_sim_template'
 
 file_directory_structure = 'directory_structure'
+"""Toml formatted file that defines directory structure and core files."""
 
 # Resampling keys
 

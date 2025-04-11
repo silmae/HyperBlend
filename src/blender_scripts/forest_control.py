@@ -11,7 +11,7 @@ import os
 import toml
 
 from src.data import path_handling as PH
-from src.definitions import constants as C
+from src import constants as C
 
 
 def write_forest_control(forest_id: str, control_dict: dict, global_master: bool = False):
@@ -28,14 +28,14 @@ def write_forest_control(forest_id: str, control_dict: dict, global_master: bool
     """
 
     if global_master:
-        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename=C.file_forest_control)
+        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename=C.filename_system_sim_control)
     else:
         write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_system_simulation(forest_id=forest_id),
-                           filename=C.file_forest_control)
+                           filename=C.filename_system_sim_control)
 
 
 def read_forest_control(forest_id: str) -> dict:
-    return read_toml_as_dict(directory=PH.path_directory_system_simulation(forest_id=forest_id), filename=C.file_forest_control)
+    return read_toml_as_dict(directory=PH.path_directory_system_simulation(forest_id=forest_id), filename=C.filename_system_sim_control)
 
 
 def write_dict_as_toml(dictionary: dict, directory: str, filename: str):

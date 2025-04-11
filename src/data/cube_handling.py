@@ -8,7 +8,7 @@ import csv
 
 from src.data import path_handling as PH
 from src.utils import spectra_utils as SU
-from src.definitions import constants as C
+from src import constants as C
 
 
 def construct_envi_cube(forest_id: str):
@@ -25,7 +25,7 @@ def construct_envi_cube(forest_id: str):
     :return:
     """
 
-    p = PH.path_directory_forest_rend_spectral(forest_id=forest_id)
+    p = PH.path_directory_system_rend_spectral(forest_id=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(f"Rend directory for forest '{forest_id}' not found.")
 
@@ -80,7 +80,7 @@ def construct_envi_cube(forest_id: str):
     reflectance_cube = np.swapaxes(reflectance_cube, 0,2)
     reflectance_cube = np.swapaxes(reflectance_cube, 0,1)
 
-    p = PH.path_file_forest_sun_csv(forest_id=forest_id)
+    p = PH.path_file_system_forest_sun_spectra_csv(forest_id=forest_id)
     if not os.path.exists(p):
         logging.warning(f"Could not find sun data for wavelength info. The image cube will be saved without it.")
 
@@ -117,11 +117,11 @@ def construct_envi_cube(forest_id: str):
         "wavelength units": "nm",
     }
 
-    cube_dir_path = PH.path_directory_forest_cube(forest_id)
+    cube_dir_path = PH.path_directory_system_spectral_cube(forest_id)
     if not os.path.exists(cube_dir_path):
         os.makedirs(cube_dir_path)
 
-    p_hdr = PH.path_file_forest_reflectance_header(forest_id=forest_id)
+    p_hdr = PH.path_file_system_sim_reflectance_header(forest_id=forest_id)
     # SPy wants to know only the path to the header. It will find the image file automatically from the same dir.
     spectral.envi.save_image(hdr_file=p_hdr, image=reflectance_cube, dtype=np.float32, force=True, metadata=header_dict)
 
@@ -139,7 +139,7 @@ def show_cube(forest_id: str):
         FileNotFoundError if the cube does not exist.
     """
 
-    p_cube = PH.path_file_forest_reflectance_header(forest_id=forest_id)
+    p_cube = PH.path_file_system_sim_reflectance_header(forest_id=forest_id)
     if not os.path.exists(p_cube):
         raise FileNotFoundError(f"Cannot find spectral cube file from '{p_cube}'. "
                                 f"Use construct_envi_cube() to generate the cube from rendered images.")

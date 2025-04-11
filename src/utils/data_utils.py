@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from src.data import file_handling as FH
-from src.definitions import constants as C
+from src import constants as C
 
 
 def get_relative_refl_or_tran(imaging_type: str, wl: float, base_path: str) -> float:
@@ -24,7 +24,7 @@ def get_relative_refl_or_tran(imaging_type: str, wl: float, base_path: str) -> f
         Relative reflectance or transmittance as a single float.
     """
 
-    leaf_mean = get_rend_as_mean(FH.search_by_wl(C.target_type_leaf, imaging_type, wl, base_path))
+    leaf_mean = get_rend_as_mean(FH.search_by_wl(C.target_type_slab, imaging_type, wl, base_path))
     reference_mean = get_rend_as_mean(FH.search_by_wl(C.target_type_ref, imaging_type, wl, base_path))
     relative = leaf_mean / reference_mean
     return relative

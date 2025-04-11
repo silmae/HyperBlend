@@ -10,11 +10,10 @@ from multiprocessing import Pool
 import scipy.optimize as optimize
 import numpy as np
 
-from src.definitions import constants as C
 from src.rendering import blender_control as B
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
-from src import plotter
+from src import plotter, constants as C
 from src.leaf_model import leaf_commons as LC
 
 # TESTR
@@ -241,15 +240,15 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
         ad, sd, ai, mf = LC._convert_raw_params_to_renderable(x[0], x[1], x[2], x[3])
 
-        B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
+        B.run_render_single(rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
                             wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                             clear_rend_folder=False,
                             clear_references=False,
                             render_references=False,
                             dry_run=False)
 
-        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
-        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
+        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
 
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
@@ -277,7 +276,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         return total_loss
 
     # Render references here as it only needs to be done once per wavelength
-    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
+    B.run_render_single(rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
                         mf=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
 
     if starting_guess_type == 'hard-coded':
@@ -358,15 +357,15 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     ad, sd, ai, mf = LC._convert_raw_params_to_renderable(res.x[0], res.x[1], res.x[2], res.x[3])
     # Render one more time with best values (in case it was not the last run)
-    B.run_render_single(rend_base_path=P.path_directory_working(set_name, sample_id),
+    B.run_render_single(rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
                         wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
                         render_references=False,
                         dry_run=False)
 
-    r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_working(set_name, sample_id))
-    t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_working(set_name, sample_id))
+    r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
+    t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
 
     # Create wavelength result dictionary to be saved on disk.
     res_dict = {

@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-from src.definitions import constants as C
+from src import constants as C
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
 from src.leaf_model import nn, surf, training_data as training
 from src.utils import data_utils as DU, spectra_utils as SU
@@ -524,7 +524,7 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
     _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
 
     if save_thumbnail is not None:
-        folder = PH.path_directory_subresult(set_name, sample_id)
+        folder = PH.path_directory_optimization_result(set_name, sample_id)
         image_name = FN.filename_wl_result_plot(wl)
         path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
@@ -604,7 +604,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.plot(wls, tm_mean + (tm_std / 2), color='gray', ls='dashed')
 
     if save_thumbnail:
-        folder = PH.path_directory_set_result(set_name)
+        folder = PH.path_directory_slab_simulation(set_name)
         image_name = FN.filename_set_result_plot()
         path = PH.join(folder, image_name)
         logging.info(f"Saving the set result plot to '{path}'.")
@@ -651,7 +651,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        folder = PH.path_directory_set_result(set_name)
+        folder = PH.path_directory_slab_simulation(set_name)
         image_name = FN.filename_set_error_plot()
         path = PH.join(folder, image_name)
         logging.info(f"Saving the set error plot to '{path}'.")
@@ -727,7 +727,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
-        folder = PH.path_directory_set_result(set_name)
+        folder = PH.path_directory_slab_simulation(set_name)
         image_name = FN.filename_sample_result_plot(sample_id=sample_id)
         path = PH.join(folder, image_name)
         logging.info(f"Saving the sample result plot to '{path}'.")
@@ -785,7 +785,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set
     plt.legend()
 
     if save_thumbnail:
-        p = PH.path_directory_set_result(set_name)
+        p = PH.path_directory_slab_simulation(set_name)
         image_name = f"variable_fitting.png"
         path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")

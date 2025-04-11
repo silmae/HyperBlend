@@ -63,9 +63,9 @@ def forest_pipe_test(rng):
     # Pack leaf data for forest scene initialization. This can be uncommented all times
     leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
 
-    forest.init(leaves=leaves, conf_type='m2m', rng=rng,
-                custom_forest_id=forest_id_master, soil_name=soil_name,
-                sun_file_name=sun_name, sky_file_name=sky_name)
+    # forest.init(leaves=leaves, conf_type='m2m', rng=rng,
+    #             custom_forest_id=forest_id_master, soil_name=soil_name,
+    #             sun_file_name=sun_name, sky_file_name=sky_name)
 
     # # Setup master and render preview
     # BC.setup_forest(forest_id=forest_id_master, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # plotter.plot_resampling(set_name='low_res')
 
     #### RUN ME FOR TESTING FOREST CANOPY STUFF OUT. SEE THE COMMENTS IN THE METHOD BEFORE RUNNING!!! ######
-    # forest_pipe_test(rng=rng)
+    forest_pipe_test(rng=rng)
 
 
     # forest_id = forest.init()

@@ -2,7 +2,7 @@
 Parsing and generating file names.
 """
 
-from src.definitions import constants as C
+from src import constants as C
 
 
 def get_nn_save_name(layer_count: int, layer_width: int, batch_size: int, lr: float, split:float, training_set:str) -> str:
@@ -134,7 +134,7 @@ def filename_rendered_image(imaging_type: str, wl: float) -> str:
 def filename_sample_result(sample_id: int) -> str:
     """Filename of the sample result toml file."""
 
-    filename = f'{C.file_sample_result}_{sample_id}{C.postfix_text_data_format}'
+    filename = f'{C.filename_result_signal}_{sample_id}{C.postfix_text_data_format}'
     return filename
 
 
@@ -172,7 +172,7 @@ def filename_forest_reflectance_cube(scene_id):
     return filename
 
 
-def filename_forest_reflectance_header(scene_id):
+def filename_system_sim_reflectance_header(scene_id):
 
     filename = f"reflectance_cube_{scene_id}.hdr"
     return filename

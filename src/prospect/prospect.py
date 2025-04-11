@@ -27,7 +27,7 @@ def make_random_leaf_targets(set_name, count=1):
         wls, r, t, p_dict = run_prospect_random()
         logging.info(f"Generating random leaf data with prospect.")
         SU._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=i) # sample directories are now created
-        dict_dir = PH.path_directory_sample(set_name, sample_id=i)
+        dict_dir = PH.path_directory_result_signal(set_name, sample_id=i)
         dict_name = f'prospect_params_{i}'
         TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
 
@@ -82,7 +82,7 @@ def make_leaf_target(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None
 
     logging.info(f"Generating random leaf data with prospect.")
     SU._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id)  # sample directory is now created
-    dict_dir = PH.path_directory_sample(set_name, sample_id=sample_id)
+    dict_dir = PH.path_directory_result_signal(set_name, sample_id=sample_id)
     dict_name = f'prospect_params_{sample_id}' # save used prospect parameters
     TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
     return wls, r, t
