@@ -1,9 +1,8 @@
 """
-Leaf model implementation as a neural network.
+Slab model implementation as a neural network.
 
 Greatly accelerates prediction time compared to the original
 optimization method with some loss to accuracy.
-
 """
 
 import logging
@@ -15,21 +14,20 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
-from torch import save
-from torch import load
 from torch import from_numpy
 import torch.optim as optim
 
-import src.leaf_model.training_data as TD
+import src.slab_model.training_data as TD
 from src.data import path_handling as PH, file_names as FN
 from src import plotter
+from src.data.path_handling import path_nn_model
+
 
 # Set manual seed when doing hyperparameter search for comparable results
 # between training runs.
 # torch.manual_seed(666)
 
-
-class Leafnet(nn.Module):
+class Slabnet(nn.Module):
     """Neural network implementation."""
 
     def __init__(self, layer_count=5, layer_width=1000):
@@ -39,7 +37,7 @@ class Leafnet(nn.Module):
         leaky relu.
         """
 
-        super(Leafnet, self).__init__()
+        super(Slabnet, self).__init__()
         input_dim = 2
         output_dim = 4
         self.layer_count = layer_count
@@ -63,16 +61,16 @@ class Leafnet(nn.Module):
 class TrainingData(Dataset):
     """Handles catering the training data from disk to NN."""
 
-    def __init__(self, set_name):
-        """Initialize data.
+    def __init__(self, training_sim_name: str):
+        """Initialize the training data for NN training.
 
-        Prunes badly fitted data points from the set.
+        Badly fitted data points are pruned from the data set.
 
-        :param set_name:
-            Set name from where the data is loaded.
+        :param training_sim_name:
+            Name of the training data slab simulation.
         """
 
-        ad, sd, ai, mf, r, t, re, te = TD.get_training_data(set_name=set_name)
+        ad, sd, ai, mf, r, t, re, te = TD.get_training_data(training_sim_name=training_sim_name)
         ad, sd, ai, mf, r, t = TD.prune_training_data(ad, sd, ai, mf, r, t, re, te)
 
         self.X = np.column_stack((r,t))
@@ -86,7 +84,7 @@ class TrainingData(Dataset):
 
 
 def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_size=2, learning_rate=0.001, patience=30,
-          split=0.1, set_name='training_data'):
+          split=0.1, training_sim_name='training_data'):
     """Train the neural network with given parameters.
 
     Saves the best performing model onto disk with generated name (according to NN architecture and some training
@@ -112,20 +110,23 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     :param split:
         Percentage [0,1] of data reserved for testing between epochs. Value between 0.1 and 0.2
         is usually sufficient.
-    :param set_name:
-        Set name of the training data. Default is OK if you didn't generate training data with a custom name.
+    :param training_sim_name:
+       Name of the training data slab simulation. Note that the training data actually is another slab
+            simulation; just a special kind where we generate the training data points and solved their
+            material parameters with the optimization method. No need to change the default name unless you
+            generated the data with custom name.
     :return:
         Returns the best loss for hyperparameter tuning loops.
     """
 
-    whole_data = TrainingData(set_name=set_name)
+    whole_data = TrainingData(training_sim_name=training_sim_name)
     test_n = int(len(whole_data) * split)
     train_set, test_set = random_split(whole_data, [len(whole_data) - test_n, test_n])
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
 
-    net = Leafnet(layer_count=layer_count, layer_width=layer_width)
+    net = Slabnet(layer_count=layer_count, layer_width=layer_width)
     best_model_state = net.state_dict()
 
     logging.info(f"Learning rate {learning_rate}")
@@ -150,7 +151,7 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     patience_trigger = 0
 
     nn_filename = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
-                                      lr=learning_rate, split=split, training_set=set_name)
+                                      lr=learning_rate, split=split, training_set=training_sim_name)
 
     for epoch in range(n_epochs):
 
@@ -200,32 +201,28 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
             logging.info(f"Early stopping criteria met: no improvement in test loss in {patience} epochs.")
             break
 
-    print(train_losses)
+    logging.info(train_losses)
     logging.info(f"Neural network training finished. Final loss {best_loss}")
     plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx,
                                   dont_show=not show_plot, save_thumbnail=True, file_name=nn_filename)
     return best_loss
 
 
-def predict(r_m, t_m, nn_name='nn_default'):
-    """Use neural network to predict HyperBlend leaf model parameters from measured reflectance and transmittance.
+def predict(target_refl, target_tran, nn_name='nn_default'):
+    """Use neural network to predict HyperBlend slab model parameters from target reflectance and transmittance.
 
-    :param r_m:
-        Measured reflectance.
-    :param t_m:
-        Measured transmittance.
-    :param nn_name:
-        Neural network name. Default name 'nn_default' is used if not given.
+    :param target_refl: Target reflectance.
+    :param target_tran: Target transmittance.
+    :param nn_name: Neural network name. Default name 'nn_default' is used if not given.
         Provide only if you want to use your trained custom NN.
-    :return:
-        Lists ad, sd, ai, mf (absorption density, scattering desnity, scattering anisotropy, and mixing factor).
-        Use ``leaf_commons._convert_raw_params_to_renderable()`` before passing them to rendering method.
+    :return: Lists ad, sd, ai, mf (absorption density, scattering density, scattering anisotropy, and mixing factor).
+        Use ``slab_commons._convert_raw_params_to_renderable()`` before passing them to rendering method.
     """
 
     net = _load_model(nn_name=nn_name)
-    r_m = np.array(r_m)
-    t_m = np.array(t_m)
-    res = net(from_numpy(np.column_stack([r_m, t_m])))
+    target_refl = np.array(target_refl)
+    target_tran = np.array(target_tran)
+    res = net(from_numpy(np.column_stack([target_refl, target_tran])))
     res_item = res.detach().numpy()
     ad = np.clip(res_item[:,0], 0., 1.)
     sd = np.clip(res_item[:,1], 0., 1.)
@@ -234,7 +231,7 @@ def predict(r_m, t_m, nn_name='nn_default'):
     return ad, sd, ai, mf
 
 
-def _load_model(nn_name):
+def _load_model(nn_name: str):
     """Loads the NN from disk.
 
     :param nn_name:
@@ -248,7 +245,7 @@ def _load_model(nn_name):
     """
 
     try:
-        p = _get_model_path(nn_name)
+        p = path_nn_model(nn_name)
 
         # Old load where the whole model is used.
         # net = load(p)
@@ -256,38 +253,16 @@ def _load_model(nn_name):
         # New load where only state dict is used.
         # NOTE that the Leafnet object must be initialized with the
         #   same layer width and layer count as what it was trained with.
-        net = Leafnet()
+        net = Slabnet()
         net.load_state_dict(torch.load(p))
         net.double()
 
         net.eval()
         logging.info(f"NN model loaded from '{p}'")
     except ModuleNotFoundError as e:
-        logging.error(f"Pytorch could not load requested neural network. "
-                      f"This happens if class or file names associated with "
-                      f"NN are changed. You must train a new model to fix this.")
+        logging.error(f"Pytorch could not load requested neural network.")
         raise
     return net
-
-
-def _get_model_path(nn_name='nn_default'):
-    """Returns path to the NN model.
-
-    :param nn_name:
-        Name of the NN.
-    :return:
-        Returns path to the NN model.
-    :exception:
-        FileNotFoundError if the model cannot be found.
-    """
-
-    if not nn_name.endswith('.pt'):
-        nn_name = nn_name + '.pt'
-    model_path = PH.join(PH.path_directory_default_slab_model(), nn_name)
-    if os.path.exists(model_path):
-        return model_path
-    else:
-        raise FileNotFoundError(f"Model '{model_path}' was not found. Check spelling.")
 
 
 def exists(nn_name='nn_default.pt'):
@@ -297,7 +272,4 @@ def exists(nn_name='nn_default.pt'):
         True if found, False otherwise.
     """
 
-    if not nn_name.endswith('.pt'):
-        nn_name = nn_name + '.pt'
-    model_path = PH.join(PH.path_directory_default_slab_model(), nn_name)
-    return os.path.exists(model_path)
+    return os.path.exists(PH.path_nn_model(nn_name=nn_name))

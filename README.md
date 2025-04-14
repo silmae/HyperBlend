@@ -171,7 +171,7 @@ documentation. We have made an effort to document the code well, so you should b
 Let's try generating random leaves with PROSPECT and running leaf material parameter solver.
 
 ```python
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 
 set_name = "try_random_p_leaves"
 
@@ -188,7 +188,7 @@ If you want to give certain PROSPECT parameters instead of using random ones, yo
 can call it like this:
 
 ```python
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 
 # Similarly, we can provide exact parameters. Lets give a new set name.
 set_name = "try_p_leaves"
@@ -213,7 +213,7 @@ used until now. Try running the code below and see the results
 in `\HyperBlend\leaf_measurement_sets\try_copying_set\set_result`
 
 ```python
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 
 copy_set = "try_copying_set"
 LI.solve_leaf_material_parameters(set_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
@@ -227,7 +227,7 @@ you must write the targets before solving for leaf material parameters. Let's as
 data in a list (we will write the list manually for the sake of example)
 
 ```python
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 from src.data import toml_handling as TH
 
 set_name = "try_manual_set"
@@ -289,10 +289,10 @@ get by following the documentation of the `training_data` module.
 
 #### Actual training
 
-The actual training is simple by calling the leaf model interface again 
+The actual training is simple by calling the leaf model interface again
 
 ```python
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 
 LI.train_models()
 ```
@@ -301,10 +301,10 @@ The `train_models()` method takes a bunch of arguments. If you downloaded the tr
 you can call it without arguments. You can select to train only one of the models 
 or all. You can use existing training data or generate new. See the documentation for more details.
 
-Once the training is done, you can visualize the result by calling 
+Once the training is done, you can visualize the result by calling
 
 ```python
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 
 LI.visualize_leaf_models()
 ```

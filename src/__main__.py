@@ -14,7 +14,7 @@ import numpy as np
 from src.forest import forest
 
 from src.data import toml_handling as TH, cube_handling as CH, file_names as FN, path_handling as PH
-from src.leaf_model import interface as LI
+from src.slab_model import interface as LI
 
 from src.rendering import blender_control as BC
 from src.setup import initialization
@@ -40,11 +40,11 @@ def forest_pipe_test(rng):
     set_name = "demo_leaves"
 
     # Generating low resolution random leaves. Uncomment for the first run, comment out for later runs.
-    # LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=2) # generate 2 random leaf spectra
-    # LI.generate_prospect_leaf(set_name=set_name, sample_id=3, w=0.001) # add one dry default leaf spectra
-    # new_sampling = [450,500,550,600,650,700,750,800,1450,1930] # wavelengths to be rendered
-    # LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling) # resample leaf spectra
-    # LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True) # run slab simulation
+    LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=2) # generate 2 random leaf spectra
+    LI.generate_prospect_leaf(set_name=set_name, sample_id=3, w=0.001) # add one dry default leaf spectra
+    new_sampling = [450,500,550,600,650,700,750,800,1450,1930] # wavelengths to be rendered
+    LI.resample_leaf_targets(set_name=set_name, new_sampling=new_sampling) # resample leaf spectra
+    LI.solve_leaf_material_parameters(set_name=set_name, clear_old_results=True) # run slab simulation
 
     # Some ID's and names. Can be uncommented all times
     # Scene IDs
@@ -61,8 +61,8 @@ def forest_pipe_test(rng):
     # This creates a new "master" forest you can use to generate other similar forests later.
 
     # Pack leaf data for forest scene initialization. This can be uncommented all times
-    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-
+    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+    #
     # forest.init(leaves=leaves, conf_type='m2m', rng=rng,
     #             custom_forest_id=forest_id_master, soil_name=soil_name,
     #             sun_file_name=sun_name, sky_file_name=sky_name)
@@ -76,20 +76,20 @@ def forest_pipe_test(rng):
     # When you are happy with the new settings, uncomment the following (and comment out the previous lines as
     # instructed for second run).
 
-    forest.init(leaves=leaves, conf_type='m2s', rng=rng,
-                custom_forest_id=forest_id, copy_forest_id=forest_id_master,
-                soil_name=soil_name, sun_file_name=sun_name, sky_file_name=sky_name)
-
-    # Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
-
-    # Render bands for spectral cube along with additional images
-    BC.render_forest(forest_id=forest_id, render_mode='preview')
-    BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    BC.render_forest(forest_id=forest_id, render_mode='spectral')
-
-    # Construct spectral cube in ENVI format
-    CH.construct_envi_cube(forest_id=forest_id)
+    # forest.init(leaves=leaves, conf_type='m2s', rng=rng,
+    #             custom_forest_id=forest_id, copy_forest_id=forest_id_master,
+    #             soil_name=soil_name, sun_file_name=sun_name, sky_file_name=sky_name)
+    #
+    # # Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    # BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
+    #
+    # # Render bands for spectral cube along with additional images
+    # BC.render_forest(forest_id=forest_id, render_mode='preview')
+    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
+    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
+    #
+    # # Construct spectral cube in ENVI format
+    # CH.construct_envi_cube(forest_id=forest_id)
 
 
 def run_paper_tests():
@@ -111,7 +111,7 @@ def run_paper_tests():
 
 def asym_test(smthng='const_r_var_t'):
     import numpy as np
-    from src.leaf_model import leaf_commons as LC
+    from src.slab_model import slab_commons as LC
     from src.utils import data_utils
 
     set_name = f"{smthng}_test"
@@ -129,7 +129,7 @@ def asym_test(smthng='const_r_var_t'):
 
     data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
 
-    LC.initialize_directories(set_name=set_name, clear_old_results=True)
+    LC.initialize_directories(slab_sim_name=set_name, clear_old_results=True)
     TH.write_target(set_name=set_name, data=data)
     # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
     # o = Optimization(set_name=set_name, diffstep=0.01)

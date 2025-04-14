@@ -9,12 +9,12 @@ import numpy as np
 import time
 import logging
 
-import src.leaf_model.training_data
-import src.leaf_model.leaf_sampling as sampling
-from src.leaf_model.opt import Optimization
+import src.slab_model.training_data
+import src.slab_model.leaf_sampling as sampling
+from src.slab_model.opt import Optimization
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN
 from src import plotter
-from src.leaf_model import nn, surf, leaf_commons as LC
+from src.slab_model import nn, surf, slab_commons as LC
 from src.prospect import prospect
 from src.utils import data_utils as DU
 
@@ -116,7 +116,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
     if copyof:
         FH.copy_target(from_set=copyof, to_set=set_name)
     else:
-        LC.initialize_directories(set_name=set_name, clear_old_results=clear_old_results)
+        LC.initialize_directories(slab_sim_name=set_name, clear_old_results=clear_old_results)
 
     if resolution is not None:
         step = int(resolution) # let it fail if cannot be cast to int
@@ -165,12 +165,12 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
             t_m = targets[:, 2]
 
             if solver == 'surf' and solver_model_name is not None:
-                ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(r_m=r_m, t_m=t_m, surface_model_name=solver_model_name)
+                ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(target_refl=r_m, target_tran=t_m, surface_model_name=solver_model_name)
             elif solver == "nn":
                 if solver_model_name: # when using custom NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m, nn_name=solver_model_name)
+                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(target_refl=r_m, target_tran=t_m, nn_name=solver_model_name)
                 else: # when using default NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(r_m=r_m, t_m=t_m)
+                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(target_refl=r_m, target_tran=t_m)
 
             ad, sd, ai, mf = LC._convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw)
             r, t = LC._material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf)
@@ -271,10 +271,10 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
         return
 
     if train_surf:
-        surf.train(set_name=set_name)
+        surf.train(training_sim_name=set_name)
     if train_nn:
         nn.train(show_plot=show_plot, layer_count=layer_count, layer_width=layer_width, epochs=epochs,
-                 batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split, set_name=set_name)
+                 batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split, training_sim_name=set_name)
 
     nn_name = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
                                   lr=learning_rate, split=split, training_set=set_name)

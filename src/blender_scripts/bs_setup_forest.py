@@ -242,7 +242,7 @@ if __name__ == '__main__':
     was used when running the leaf simulation. It only needs to be changed if the simulated 
     leaf has different thickness. The default leaf has thickness of 2 mm and density of 3000. 
     If the thickness is changed, the density in leaf simulation can be changed from 
-    src/leaf_model/leaf_commons.py.
+    src/slab_model/slab_commons.py.
     """
 
     """Maximum sun power set to 4 W/m2 so that white does not burn. Can be increased 

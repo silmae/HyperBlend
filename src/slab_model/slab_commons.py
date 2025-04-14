@@ -1,11 +1,11 @@
 """
-Shared functionality that is used by the three leaf models.
+Shared functionality that is used by all slab models: optimization, surface, and neural network.
 """
+
 import os.path
 from multiprocessing import Pool
 
 import numpy as np
-import logging
 
 from src.data import path_handling as P, file_handling as FH
 from src import constants as C
@@ -13,14 +13,17 @@ from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU
 
 
+
+# TODO find a way to get rid of this hard-coded stuff.
 density_scale = 3000
 """Control how much density variables (absorption and scattering density) are scaled 
 for rendering. Value of 1000 cannot produce r = 0 or t = 0. Produced values do not 
-significantly change when greater than 3000."""
+significantly change when greater than 3000.
+"""
 
 
 def _convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw):
-    """Convert machine learning parameters [0,1] to rendering parameters (scaling and re-centering).
+    """Convert machine learning parameters in range [0,1] to rendering parameters (scaling and re-centering).
 
     :param ad_raw:
         Numpy array absorption particle density [0,1].
@@ -48,13 +51,12 @@ def _render(args):
     is sensitive to refactoring.
     """
 
-    set_name = args[0]
-    sample_id = args[1]
-    p = P.path_directory_slab_optimization_working_temp(set_name, sample_id)
-    p = os.path.abspath(p)
+    slab_sim_name = args[0]
+    signal_id = args[1]
+    p = P.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
 
     if not os.path.exists(p):
-        raise FileNotFoundError(f"File {p} does not exist. Cannot render.")
+        raise FileNotFoundError(f"File {p} does not exist. Cannot render the slab model.")
 
     BC.run_render_series(rend_base_path=p,
                          wl=args[2],
@@ -66,13 +68,13 @@ def _render(args):
                          render_references=True, dry_run=False)
 
 
-def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
-    """ Material parameters are converted to reflectance and transmittance by rendering the leaf model.
+def _material_params_to_RT(slab_sim_name: str, signal_id: int, wls, ad, sd, ai, mf):
+    """ Material parameters are converted to reflectance and transmittance by rendering the slab model.
 
-    :param set_name:
-        Set name.
-    :param sample_id:
-        Sample id.
+    :param slab_sim_name:
+        Name of the slab simulation.
+    :param signal_id:
+        Signal ID.
     :param wls:
         Numpy array wavelengths.
     :param ad:
@@ -90,7 +92,6 @@ def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
     # Render all wavelengths in parallel
     with Pool() as pool:
         n = pool._processes
-        logging.info(f"Using {n} threads for rendering.")
         # Divide given parameter arrays into chucks for each worker thread.
         wl_chunks = GU.chunks(wls, n)
         ad_chunks = GU.chunks(ad, n)
@@ -98,7 +99,7 @@ def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
         ai_chunks = GU.chunks(ai, n)
         mf_chunks = GU.chunks(mf, n)
 
-        param_list = [(set_name, sample_id, wl, ad, sd, ai, mf) for wl, ad, sd, ai, mf in
+        param_list = [(slab_sim_name, signal_id, wl, ad, sd, ai, mf) for wl, ad, sd, ai, mf in
                       zip(wl_chunks, ad_chunks, sd_chunks, ai_chunks, mf_chunks)]
         pool.map(_render, param_list)
 
@@ -106,8 +107,8 @@ def _material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf):
     r = []
     t = []
     for wl in wls:
-        r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
-        t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
+        r_wl = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))
+        t_wl = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))
         r.append(r_wl)
         t.append(t_wl)
 
@@ -167,18 +168,20 @@ def _build_sample_res_dict(wls, r, r_m, re, t, t_m, te, ad_raw, sd_raw, ai_raw, 
     return sample_result_dict
 
 
-def initialize_directories(set_name, clear_old_results=False):
+def initialize_directories(slab_sim_name, clear_old_results=False):
+    """ Create necessary directories.
+
+    Optionally, one can wipe out old results of the same slab simulation by setting ``clear_old_results=True``.
+
+    :param slab_sim_name: Slab simulation name.
+    :param clear_old_results: If True, old results are deleted.
     """
-    Create necessary directories.
 
-    Optionally, one can wipe out old results of the same set by setting ``clear_old_results=True``.
-    """
+    FH.create_first_level_folders(slab_sim_name)
 
-    FH.create_first_level_folders(set_name)
-
-    ids = FH.list_target_ids(set_name)
-    for _, sample_id in enumerate(ids):
-        FH.clear_rend_leaf(set_name, sample_id)
-        FH.clear_rend_refs(set_name, sample_id)
+    ids = FH.list_target_ids(slab_sim_name)
+    for _, signal_id in enumerate(ids):
+        FH.clear_rend_leaf(slab_sim_name, signal_id)
+        FH.clear_rend_refs(slab_sim_name, signal_id)
         if clear_old_results:
-            FH.clear_folder(P.path_directory_optimization_result(set_name, sample_id))
+            FH.clear_folder(P.path_directory_optimization_result(slab_sim_name, signal_id))

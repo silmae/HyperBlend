@@ -14,10 +14,10 @@ from src.rendering import blender_control as B
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter, constants as C
-from src.leaf_model import leaf_commons as LC
+from src.slab_model import slab_commons as LC
 
 # TESTR
-from src.leaf_model import surf
+from src.slab_model import surf
 
 
 hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
@@ -93,7 +93,7 @@ class Optimization:
         if starting_guess_type == 'surf' and surf_model_name is None:
             raise AttributeError(f"Surface model name must be given when using starting guess type '{starting_guess_type}'.")
         self.surface_model_name = surf_model_name
-        LC.initialize_directories(set_name=set_name, clear_old_results=clear_old_results)
+        LC.initialize_directories(slab_sim_name=set_name, clear_old_results=clear_old_results)
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):
         """Runs the optimization for each sample in the set.
@@ -284,7 +284,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     elif starting_guess_type == 'curve':
         x_0 = get_starting_guess(1 - (r_m + t_m))
     elif starting_guess_type == 'surf':
-        x_0 = surf.predict(r_m=r_m, t_m=t_m, surface_model_name=surf_model_name)
+        x_0 = surf.predict(target_refl=r_m, target_tran=t_m, surface_model_name=surf_model_name)
     else:
         raise AttributeError(f"Starting guess type '{starting_guess_type}' not recogniced. "
                              f"Use on of ")

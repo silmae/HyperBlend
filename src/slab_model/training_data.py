@@ -13,7 +13,7 @@ import numpy as np
 
 from src import plotter, constants as C
 from src.data import toml_handling as TH, file_handling as FH
-from src.leaf_model.opt import Optimization
+from src.slab_model.opt import Optimization
 
 
 """
@@ -191,16 +191,21 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     visualize_training_data_pruning(set_name=set_name, show=False, save=True)
 
 
-def get_training_data(set_name='training_data'):
+def get_training_data(training_sim_name: str):
     """Returns training data.
 
-    :param set_name:
-        Set name of the training data. No need to change the default unless you
-        generated the data with custom name.
+    :param training_sim_name:
+        Name of the training data slab simulation. Note that the training data actually is another slab
+        simulation; just a special kind where we generate the training data points and solved their
+        material parameters with the optimization method.
     :return:
         Returns ad, sd, ai, mf, r, t, re, te Numpy arrays (vector).
     """
-    result = TH.read_sample_result(set_name, sample_id=0)
+
+    if training_sim_name is None or not isinstance(training_sim_name, str):
+        raise AttributeError("Training simulation name must be provided.")
+
+    result = TH.read_sample_result(training_sim_name, sample_id=0)
     ad = np.array(result[C.key_sample_result_ad])
     sd = np.array(result[C.key_sample_result_sd])
     ai = np.array(result[C.key_sample_result_ai])

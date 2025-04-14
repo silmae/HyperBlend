@@ -511,3 +511,23 @@ def join(*args) -> str:
             s = s + arg + '/'
     p = os.path.abspath(s)
     return p
+
+
+def path_nn_model(nn_name='nn_default'):
+    """Returns path to the NN model.
+
+    :param nn_name:
+        Name of the NN.
+    :return:
+        Returns path to the NN model.
+    :exception:
+        FileNotFoundError if the model cannot be found.
+    """
+
+    if not nn_name.endswith('.pt'):
+        nn_name = nn_name + '.pt'
+    model_path = join(path_directory_default_slab_model(), nn_name)
+    if os.path.exists(model_path):
+        return model_path
+    else:
+        raise FileNotFoundError(f"Model '{model_path}' was not found. Check spelling.")

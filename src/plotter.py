@@ -14,7 +14,7 @@ from matplotlib import cm
 
 from src import constants as C
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
-from src.leaf_model import nn, surf, training_data as training
+from src.slab_model import nn, surf, training_data as training
 from src.utils import data_utils as DU, spectra_utils as SU
 
 
@@ -339,7 +339,8 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             return v
 
     plt.close('all')
-    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(set_name=set_name)
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(
+        training_sim_name=set_name)
     ad_train, sd_train, ai_train, mf_train, r_train, t_train = training.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']

@@ -14,7 +14,7 @@ import logging
 from src import plotter, constants as C
 from src.data import file_handling as FH, toml_handling as T
 from src.utils import general_utils as GU, data_utils as DU
-from src.leaf_model.opt import Optimization
+from src.slab_model.opt import Optimization
 from scipy.interpolate import CubicSpline
 
 

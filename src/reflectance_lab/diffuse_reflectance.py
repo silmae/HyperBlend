@@ -1,7 +1,7 @@
 
 from src import plotter, constants as C
 from src.rendering import blender_control as BC
-from src.leaf_model import leaf_commons as LC
+from src.slab_model import slab_commons as LC
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, path_handling as PH
 
@@ -17,7 +17,7 @@ def run(data_exits=False):
     """
 
     set_name = 'reflectance_lab'
-    LC.initialize_directories(set_name=set_name, clear_old_results=True)
+    LC.initialize_directories(slab_sim_name=set_name, clear_old_results=True)
 
     powers = [4,5,6]
     reflectance = []
