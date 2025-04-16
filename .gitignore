@@ -3,7 +3,7 @@ __pycache__/
 .vscode/
 .idea/
 
-# Exclude all renders, plots and Blender backups
+# Ignore all renders, plots and Blender backups
 System\ simulation/
 rend*/*
 plot*/*
@@ -29,7 +29,18 @@ Reflectance\ spectra/*
 !Reflectance\ spectra/wet_sand_reflectance.csv
 !Reflectance\ spectra/default_soils.png
 
+# Ignore documentation
+Documentation/build
+
+# Ignore log files
 log*/* 
 
+# Ignore other than the default slab model
 Slab\ models/*
 !Slab\ models/Default\ slab
+
+# Ignore old (version 0.2) directories
+
+sun_data/
+scenes/
+leaf_measurement_sets/

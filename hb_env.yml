@@ -25,6 +25,7 @@ dependencies:
   - pytorch
   - pip
   - pip:
+      - groundwork-sphinx-theme # shpinx theme
       - spectral # for image cube read and write
       - spectres # for resampling spectra
       - Pillow
