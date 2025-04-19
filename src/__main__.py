@@ -61,15 +61,15 @@ def forest_pipe_test(rng):
     # This creates a new "master" forest you can use to generate other similar forests later.
 
     # Pack leaf data for forest scene initialization. This can be uncommented all times
-    # leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
-    #
-    # forest.init(leaves=leaves, conf_type='m2m', rng=rng,
-    #             custom_forest_id=forest_id_master, soil_name=soil_name,
-    #             sun_file_name=sun_name, sky_file_name=sky_name)
+    leaves = [(set_name, 0, 'Leaf material 1'), (set_name, 1, 'Leaf material 2'), (set_name, 3, 'Leaf material 3')]
+
+    forest.init(leaves=leaves, conf_type='m2m', rng=rng,
+                custom_forest_id=forest_id_master, soil_name=soil_name,
+                sun_file_name=sun_name, sky_file_name=sky_name)
 
     # # Setup master and render preview
-    # BC.setup_forest(forest_id=forest_id_master, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
-    # BC.render_forest(forest_id=forest_id_master, render_mode='preview')
+    BC.setup_forest(forest_id=forest_id_master, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
+    BC.render_forest(forest_id=forest_id_master, render_mode='preview')
 
     # Stop here. For the first run, everything after this should be commented out
     # Check the master file and make any changes before generating new "slave" forest with random settings.

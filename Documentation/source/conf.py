@@ -6,6 +6,20 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+import sys
+#
+# from matplotlib import pyplot as plt
+# from PIL import Image
+#
+# for x in os.walk('../../src'):
+#   sys.path.insert(0, os.path.abspath(x[0]))
+#
+
+
+# sys.path.insert(0, os.path.abspath("../../src/gsv/"))
+# print(sys.path)
+
 project = 'HyperBlend'
 copyright = '2025, Kimmo Riihiaho'
 author = 'Kimmo Riihiaho'
@@ -24,5 +38,9 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'groundwork'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+# html_theme_options = {
+#     'collapse_navigation': True,
+#     'sticky_navigation': True,
+# }

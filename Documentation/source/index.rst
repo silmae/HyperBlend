@@ -12,8 +12,17 @@ This documentation is still work in progress. We will get it done eventually!
    :maxdepth: 2
    :caption: Contents:
 
+   setup
    slab_model
+   utils
+   rendering
+   reflectance_lab
+   prospect
+   gsv
+   forest
+   definitions
    data
+   blender_scripts
 
 Indices and tables
 ==================
