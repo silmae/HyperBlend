@@ -7,18 +7,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.7
+  - python=3.10
   - numpy
-  - Pillow
- # - pandas
- # - xarray
+#  - Pillow
   - scipy
- # - netcdf4
   - matplotlib
- # - appdirs
- # - tqdm
   - toml
- # - tabulate
   - ipython
   - sphinx #API documentation
   - cpuonly # disables pytorch CUDA that interferes with Blender's CUDA rendering (.dll loading errors)
@@ -26,6 +20,7 @@ dependencies:
   - pip
   - pip:
       - groundwork-sphinx-theme # shpinx theme
+      - sphinx-rtd-theme
       - spectral # for image cube read and write
       - spectres # for resampling spectra
       - Pillow
