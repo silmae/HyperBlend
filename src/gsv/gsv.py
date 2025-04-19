@@ -18,8 +18,6 @@ new_wls = np.arange(400, 2501, 1)
 Spectral resolution in HyperBlend is assumed to be 1 nm, so we 
 linearly interpolate the native GSV resolution to 1 nm."""
 
-GSV = np.vstack([np.loadtxt(PH.path_file_soil_dry_vector()), np.loadtxt(PH.path_file_soil_humid_vector())])
-"""The general spectral vectors derived in the manuscript"""
 
 default_soils = {
     "wet_clay":             [0.245, -0.039,  0.003, -0.145],
@@ -60,6 +58,9 @@ def simulate_gsv_soil(c1: float, c2: float, c3: float, cSM: float):
         Reflectance is returned as a 1D Numpy array from 400-2500 nm with 1 nm resolution
         that is linearly interpolated from the native GSV resolution of 10 nm.
     """
+
+    GSV = np.vstack([np.loadtxt(PH.path_file_soil_dry_vector()), np.loadtxt(PH.path_file_soil_humid_vector())])
+    """The general spectral vectors derived in the manuscript"""
 
     gsv_spectra = c1 * GSV[0] + c2 * GSV[1] + c3 * GSV[2] + cSM * GSV[3]
     resampled_spectra = np.interp(new_wls, gsv_wls, gsv_spectra)
