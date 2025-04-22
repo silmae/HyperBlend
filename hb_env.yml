@@ -18,9 +18,9 @@ dependencies:
   - cpuonly # disables pytorch CUDA that interferes with Blender's CUDA rendering (.dll loading errors)
   - pytorch
   - pip
-  - pip:
-      - groundwork-sphinx-theme # shpinx theme
-      - sphinx-rtd-theme
+  - pip: 
+      - sphinx-rtd-theme # shpinx theme
+      - myst-parser # for parsing Markdown files to sphinx documentation
       - spectral # for image cube read and write
       - spectres # for resampling spectra
       - Pillow
