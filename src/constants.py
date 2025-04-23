@@ -30,6 +30,9 @@ postfix_text_data_format = '.toml'
 blender_executable_path_win = 'C:\Program Files\Blender Foundation\Blender 3.6/blender.exe'
 """change this to where your Blender is installed."""
 
+blender_foundation_win = 'C:\Program Files\Blender Foundation'
+"""By default, all Blender versions on Windows are installed here."""
+
 blender_executable_path_linux = '/snap/bin/blender'
 """Default location of Blender on Ubuntu."""
 
@@ -141,6 +144,12 @@ filename_slab_sim_forest_template = 'slab_sim_template'
 
 file_directory_structure = 'directory_structure'
 """Toml formatted file that defines directory structure and core files."""
+
+file_app_info = 'app_info'
+"""Toml formatted file that application info such as version number."""
+
+file_dynamic_definitions = 'dynamic'
+"""Toml formatted file that dynamically inferred info such as operating system."""
 
 # Resampling keys
 

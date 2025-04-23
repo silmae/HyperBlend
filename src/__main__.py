@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # plotter.plot_resampling(set_name='low_res')
 
     #### RUN ME FOR TESTING FOREST CANOPY STUFF OUT. SEE THE COMMENTS IN THE METHOD BEFORE RUNNING!!! ######
-    forest_pipe_test(rng=rng)
+    # forest_pipe_test(rng=rng)
 
 
     # forest_id = forest.init()
