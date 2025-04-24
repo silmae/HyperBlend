@@ -1,31 +1,47 @@
 """
-Check directory structure and create missing directories.
+
+This module contains the initialization functions for HyperBlend.
+
+Running the initialization populates :mod:`definitions.runtime_environment`. After this, the values
+in there are not supposed to be changed.
 
 """
 
 import logging
+import os
+from sys import platform
 
-from src.setup import system_check as SC
-from src.setup.blender_check import check_blender_version
+import numpy as np
+
 from src.setup.directory_check import check_directory_structure
 from src.data import path_handling as PH, toml_handling as TH
 from src import constants as C
-from src.setup.runtime_environment import RuntimeEnvironment
+from src.setup import runtime_environment as RE
 
 
 def initialize():
+    """Initializes HyperBlend.
+
+    Directory structure is checked and missing directories created as necessary.
+    Dynamically checks operating system and found Blender versions.
+    """
+
     logging.info("Initializing HyperBlend")
-    runtime = RuntimeEnvironment()
-    runtime = _load_app_info(runtime=runtime)
-    check_directory_structure(runtime=runtime)
-    runtime = SC.gather_system_info(runtime=runtime)
-    # TODO find path to Blender executable
-    runtime = check_blender_version(runtime=runtime)
-
-    return runtime
+    _load_app_info()
+    check_directory_structure()
+    _check_operating_system()
+    _check_blender_version()
 
 
-def _load_app_info(runtime: RuntimeEnvironment):
+def _load_app_info():
+    """Load application information from the app info from :mod:`definitions.app_info`.
+
+    This function reads the application information file, which contains metadata about HyperBlend,
+    such as the application version and supported Blender versions. The data is then stored in the
+    runtime environment for later use.
+
+    :raises FileNotFoundError: If the app info file is not found. This is an unrecoverable error.
+    """
 
     logging.info("Loading app info")
 
@@ -41,10 +57,81 @@ def _load_app_info(runtime: RuntimeEnvironment):
 
     for key, value in app_info_dict.items():
         if key == "app_version":
-            runtime._HB_VERSION = value
+            RE._HB_VERSION = value
         elif key == "supported_blender_versions":
-            runtime._SUPPORTED_BLENDER_VERSIONS = value
-
-    return runtime
+            RE._SUPPORTED_BLENDER_VERSIONS = value
 
 
+def _check_operating_system():
+    """Check the operating system and set the corresponding variable in the runtime environment.
+
+    .. warning:: If the operating system is not recognized (Windows or Linux), the program will exit.
+
+    :raises NotImplementedError: If the operating system is not supported, i.e., Mac OS.
+    """
+
+    if platform == "linux":
+        RE._OS = platform
+    elif platform == "darwin":
+        raise NotImplementedError("OS X is not supported.")
+    elif platform == "win32":
+        RE._OS = platform
+    else:
+        logging.error(f"Unknown operating system: {platform}. Cannot continue.")
+        exit(1)
+
+
+def _check_blender_version():
+    """Check the installed Blender version and set the corresponding variable in the runtime environment.
+
+    On a Windows machine, the latest supported version is selected. Supported versions are listed in
+    :mod:`definitions.app_info`.
+    """
+
+    logging.info("Checking Blender version")
+
+    found_versions = []
+
+    operating_system = RE._OS
+    supported_blender_versions = RE._SUPPORTED_BLENDER_VERSIONS
+
+    path_foundation = C.blender_foundation_win
+
+    if operating_system == "linux":
+        # TODO linux has only one installation at a time? Check it and do something with the information
+        raise NotImplementedError("Linux is not supported yet.")
+    elif operating_system == "win32":
+        if not os.path.exists(path_foundation):
+            logging.error(f"It seems that there is no Blender installed to the default "
+                          f"path in {path_foundation}. Install Blender or change the path in "
+                          f"'constants.py' file.")
+            exit(1)
+
+        logging.debug(f"Searching for Blender versions from {path_foundation}")
+        # check available versions
+        for x in os.listdir(path_foundation):
+            splitted = x.split(" ")
+            version = splitted[1]
+            logging.debug(f"Found {x}. Parsed version number: {version}")
+            found_versions.append(version)
+    elif not operating_system:
+        logging.error("Operating system is not recognized.")
+        exit(1)
+
+    logging.debug(f"Checking found Blender versions against supported versions.")
+    logging.debug(f"Found versions: {found_versions}")
+    logging.debug(f"Supported versions: {supported_blender_versions}")
+
+    res = np.array(list(i in supported_blender_versions for i in found_versions))
+
+    if not np.any(res):
+        logging.error(f"Found Blender versions {found_versions} are not supported. Please install one of the "
+                      f"supported versions: {supported_blender_versions}")
+        exit(1)
+
+    # It's a tuple so take the newest version
+    i = np.where(res)[0][-1]
+    blender_ex_path = f"Blender {found_versions[i]}\\blender.exe"
+    full_blender_ex_path = os.path.join(path_foundation, blender_ex_path)
+    RE._BLENDER_EXECUTABLE = full_blender_ex_path
+    logging.info(f"Set Blender executable to: {full_blender_ex_path}")

@@ -1,15 +1,22 @@
+"""
+
+This module checks the directory structure of the project and ensures
+that all required directories and files are present.
+
+"""
 import logging
 import os
 
 from src import constants as C
 from src.data import path_handling as PH, toml_handling as TH
-from src.setup.runtime_environment import RuntimeEnvironment
+from src.setup import runtime_environment as RE
 
 RECOGNIZED_KEYS = ["name", "type", "extensions"]
+"""List of recognized keys in the directory structure definition file."""
 
 
-def check_directory_structure(runtime: RuntimeEnvironment):
-    """Check the directory structure of the project."""
+def check_directory_structure():
+    """Checks the directory structure of the project."""
 
     logging.info("Checking directory structure")
 
@@ -29,9 +36,9 @@ def check_directory_structure(runtime: RuntimeEnvironment):
             _process_dir_struct_sub_entry(value, dir_list=[])
         elif key == "version":
             # Check if the version of the directory structure matches the version of HyperBlend
-            if value != runtime._HB_VERSION:
+            if value != RE._HB_VERSION:
                 logging.error(f"Version of the directory structure '{value}' does not match "
-                      f"the version of HyperBlend '{runtime._HB_VERSION}'. Please re-install "
+                      f"the version of HyperBlend '{RE._HB_VERSION}'. Please re-install "
                       f"HyperBlend.")
                 exit(1)
 
@@ -101,7 +108,7 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
             logging.info(f"Directory '{current_path}' does not exist. Creating directory.")
             os.makedirs(current_path, exist_ok=True)
         else:
-            logging.info(f"OK - Directory '{current_path}' exists as it should.")
+            logging.debug(f"OK - Directory '{current_path}' exists as it should.")
 
     elif entry_type == "file":
 
@@ -119,6 +126,6 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
         if not file_found:
             raise FileNotFoundError(f"File '{with_extension}' does not exist in '{current_path}'.")
         else:
-            logging.info(f"OK - File '{with_extension}' exists in '{current_path}' as it should.")
+            logging.debug(f"OK - File '{with_extension}' exists in '{current_path}' as it should.")
 
 
