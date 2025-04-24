@@ -11,6 +11,7 @@ import logging
 
 from src import constants as C
 from src.data import path_handling as PH
+from src.setup import runtime_environment as RE
 
 
 def _get_blender_executable_path():
@@ -26,13 +27,19 @@ def _get_blender_executable_path():
         The version should not cause problems on Linux machine.
     """
 
-    bpath = C.blender_executable_path_win
-    if not platform.startswith('win'):
-        bpath = C.blender_executable_path_linux
+    if RE._BLENDER_EXECUTABLE is not None:
+        # FIXME the runtime env is not ok even if initialization has been rune before calling this
+        return RE._BLENDER_EXECUTABLE
+    else:
+        logging.warning("Using default Blender executable path from constants.py file as a fallback.")
 
-    if not os.path.exists(bpath):
-        raise FileNotFoundError(f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
-                                f"Check Blender installation and set correct path to 'constants.py'. ")
+        bpath = C.blender_executable_path_win
+        if not platform.startswith('win'):
+            bpath = C.blender_executable_path_linux
+
+        if not os.path.exists(bpath):
+            raise FileNotFoundError(f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
+                                    f"Check Blender installation and set correct path to 'constants.py'. ")
     return bpath
 
 
@@ -70,7 +77,7 @@ def _get_base_blender_args(script_name: str, scene_path: str):
         scene_path,  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         script_path,  # Python script file to be run.
-        # "--log-level", "0",
+        "--log-level", "0",
     ]
     return blender_args
 
@@ -93,21 +100,23 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
     if dry_run:
         scirpt_args += ['-y']  # no render
 
-    scirpt_args += ['-wl', f'{list(wl)}']  # wavelength to be used
-    scirpt_args += ['-da', f'{list(ad)}']  # absorption density
-    scirpt_args += ['-ds', f'{list(sd)}']  # scattering density
-    scirpt_args += ['-ai', f'{list(ai)}']  # scattering anisotropy
-    scirpt_args += ['-mf', f'{list(mf)}']  # mixing factor
+    scirpt_args += ['-wl', f'{list(float(x) for x in wl)}']  # wavelength to be used
+    scirpt_args += ['-da', f'{list(float(x) for x in ad)}']  # absorption density
+    scirpt_args += ['-ds', f'{list(float(x) for x in sd)}']  # scattering density
+    scirpt_args += ['-ai', f'{list(float(x) for x in ai)}']  # scattering anisotropy
+    scirpt_args += ['-mf', f'{list(float(x) for x in mf)}']  # mixing factor
+
     logging.info(f"running Blender with '{blender_args + scirpt_args}'")
 
     start = time.perf_counter()
-    # Uncomment for debugging
-    # logging.info(f"running Blender with '{blender_args + scirpt_args}'")
 
-    # Direct Blender logging info to null stream to avoid cluttering of console.
+    # Direct Blender logging info to `os.devnull` null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
         try:
-            subprocess.run(blender_args + scirpt_args, stdout=stream)
+            exit_code = subprocess.run(blender_args + scirpt_args, stdout=stream)
+            if exit_code.returncode != 0:
+                logging.fatal(f"Blender script failed to run. Check the arguments passed to it.")
+                exit(1)
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Blender script argument string is too long for Windows to handle. Use less "
                                     f"wavelengths to reduce the amount of passed information. You can also try "

@@ -76,20 +76,20 @@ def forest_pipe_test(rng):
     # When you are happy with the new settings, uncomment the following (and comment out the previous lines as
     # instructed for second run).
 
-    # forest.init(leaves=leaves, conf_type='m2s', rng=rng,
-    #             custom_forest_id=forest_id, copy_forest_id=forest_id_master,
-    #             soil_name=soil_name, sun_file_name=sun_name, sky_file_name=sky_name)
-    #
-    # # Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    # BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
-    #
-    # # Render bands for spectral cube along with additional images
-    # BC.render_forest(forest_id=forest_id, render_mode='preview')
-    # BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    # BC.render_forest(forest_id=forest_id, render_mode='spectral')
-    #
-    # # Construct spectral cube in ENVI format
-    # CH.construct_envi_cube(forest_id=forest_id)
+    forest.init(leaves=leaves, conf_type='m2s', rng=rng,
+                custom_forest_id=forest_id, copy_forest_id=forest_id_master,
+                soil_name=soil_name, sun_file_name=sun_name, sky_file_name=sky_name)
+
+    # Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
+
+    # Render bands for spectral cube along with additional images
+    BC.render_forest(forest_id=forest_id, render_mode='preview')
+    BC.render_forest(forest_id=forest_id, render_mode='visibility')
+    BC.render_forest(forest_id=forest_id, render_mode='spectral')
+
+    # Construct spectral cube in ENVI format
+    CH.construct_envi_cube(forest_id=forest_id)
 
 
 def run_paper_tests():
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # plotter.plot_resampling(set_name='low_res')
 
     #### RUN ME FOR TESTING FOREST CANOPY STUFF OUT. SEE THE COMMENTS IN THE METHOD BEFORE RUNNING!!! ######
-    # forest_pipe_test(rng=rng)
+    forest_pipe_test(rng=rng)
 
 
     # forest_id = forest.init()
