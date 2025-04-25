@@ -1,4 +1,9 @@
+"""
 
+.. note::
+    Write the docs
+
+"""
 import logging
 
 import numpy as np
@@ -16,9 +21,7 @@ from src.blender_scripts import forest_constants as FC
 
 def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file_name: str = None,
          copy_forest_id: str = None, custom_forest_id: str = None, conf_type: str = None, rng=None):
-    """
-
-    Create a new forest by copying template.
+    """Create a new forest by copying template.
 
     Load leaf material parameters for each leaf. They must use same spectral sampling,
     but do not have to be from a single measurement set.
@@ -31,13 +34,9 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
     Normalize with highest sun intensity.
     Save as local sky spectra.
 
-    # TODO Load trunk reflectance spectrum.
-
-    :param rng:
-        Numpy random number generator for reproducibility.
-    :param soil_name:
-    :param leaves:
-        Leaves should be given as list of tuples [(set_name: str, sample_id: int, leaf_material_name: str), (),...].
+    :param rng: Numpy random number generator for reproducibility.
+    :param soil_name: Soil name
+    :param leaves: Leaves should be given as list of tuples [(set_name: str, sample_id: int, leaf_material_name: str), (),...].
     :param sun_file_name:
     :param sky_file_name:
     :param copy_forest_id:
@@ -46,15 +45,16 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         If given, this will be the identifier for the new forest instead of the standard generated id.
     :param conf_type:
         How to produce configuration file: string from ['m2m','m2s','s2m'].
+
             - m2m (from master to master) makes a pure copy of the scene configuration file from the source scene.
               This is the default behavior.
             - m2s (from master to slave) will generate (gaussian) random values based on standard deviations defined in
               the source master configuration file.
             - s2m (from slave to master) will create a new master configuration from the source scene configuration
               with default standard deviation.
+
         Note: s2s does not exist as there is no standard deviations present in slave configs.
-    :return
-        Forest id that is generated if custom_forest_id is not given.
+    :return: Forest id that is generated if custom_forest_id is not given.
     """
 
     if copy_forest_id is not None:

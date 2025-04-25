@@ -1,5 +1,5 @@
 The System Simulation
-===============
+==============================
 
 .. note::
     Add instructions how to run the system simulation. Tutorial style?

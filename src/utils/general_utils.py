@@ -10,7 +10,7 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst.
 
     Example
-    -----
+    ----------
         original_list = [0,1,2,3,4,5,6,7,8,9]
         chunked_list = list(chunks(original_list, 3))
         -> [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]

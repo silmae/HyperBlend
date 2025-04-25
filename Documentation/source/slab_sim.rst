@@ -1,5 +1,5 @@
 The Slab Simulation
-===============
+==============================
 
 .. note::
     Add instructions how to run the slab simulation. Tutorial style?
