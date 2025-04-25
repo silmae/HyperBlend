@@ -8,46 +8,6 @@ import logging
 import importlib
 import csv
 
-from src.blender_scripts.forest_utils import set_material_parameter_per_frame
-
-blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
-
-if 'System simulation' in blend_dir:
-    # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-    script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
-    data_dir = os.path.abspath(blend_dir + '../../../src/data')
-    forest_dir = os.path.abspath(blend_dir + '../../../src/forest')
-else:
-    # We are in the template forest blend file
-    script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
-    data_dir = os.path.abspath(blend_dir + '/src/data')
-    forest_dir = os.path.abspath(blend_dir + '/src/forest')
-
-# After this is set, any script in /blender_scripts can be imported
-if script_dir not in sys.path:
-    sys.path.append(script_dir)
-if data_dir not in sys.path:
-    sys.path.append(data_dir)
-if forest_dir not in sys.path:
-    sys.path.append(forest_dir)
-
-import forest_constants as FC
-import forest_control as control
-import forest_utils as FU
-import file_names as FN
-import path_handling as PH
-
-importlib.reload(FC)
-importlib.reload(FU)
-importlib.reload(FN)
-importlib.reload(PH)
-importlib.reload(control)
-
-b_context = bpy.context
-b_data = bpy.data
-b_ops = bpy.ops
-b_scene = b_data.scenes[FC.key_scene_name]
-
 
 def set_leaf_material(leaf_material_name, band_list, ad_list, sd_list, ai_list, mf_list):
     """Set leaf material for all frames in band list.
@@ -235,6 +195,48 @@ def init_cameras():
 
 
 if __name__ == '__main__':
+
+    from src.blender_scripts.forest_utils import set_material_parameter_per_frame
+
+    logging.error(f"Setting up system simulation")
+
+    blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
+
+    if 'System simulation' in blend_dir:
+        # We are in a copied blend file in HyperBlend/System simulation/scene_12345
+        script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
+        data_dir = os.path.abspath(blend_dir + '../../../src/data')
+        forest_dir = os.path.abspath(blend_dir + '../../../src/forest')
+    else:
+        # We are in the template forest blend file
+        script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
+        data_dir = os.path.abspath(blend_dir + '/src/data')
+        forest_dir = os.path.abspath(blend_dir + '/src/forest')
+
+    # After this is set, any script in /blender_scripts can be imported
+    if script_dir not in sys.path:
+        sys.path.append(script_dir)
+    if data_dir not in sys.path:
+        sys.path.append(data_dir)
+    if forest_dir not in sys.path:
+        sys.path.append(forest_dir)
+
+    import forest_constants as FC
+    import forest_control as control
+    import forest_utils as FU
+    import file_names as FN
+    import path_handling as PH
+
+    importlib.reload(FC)
+    importlib.reload(FU)
+    importlib.reload(FN)
+    importlib.reload(PH)
+    importlib.reload(control)
+
+    b_context = bpy.context
+    b_data = bpy.data
+    b_ops = bpy.ops
+    b_scene = b_data.scenes[FC.key_scene_name]
 
     DENSITY = 3000
     """ Nasty global that requires some explaining. This is the density of scattering and 

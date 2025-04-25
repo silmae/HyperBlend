@@ -5,49 +5,6 @@ import argparse  # to parse options for us and print a nice help message
 import logging
 import importlib
 
-blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
-
-if 'System simulation' in blend_dir:
-    # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-    script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
-    data_dir = os.path.abspath(blend_dir + '../../../src/data')
-else:
-    # We are in the template forest blend file
-    script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
-    data_dir = os.path.abspath(blend_dir + '/src/data')
-
-# After this is set, any script in /blender_scripts can be imported
-if script_dir not in sys.path:
-    sys.path.append(script_dir)
-    sys.path.append(data_dir)
-
-import forest_constants as FC
-import forest_utils as FU
-from src.data import file_names as FN
-from src.data import path_handling as PH
-import forest_control as control
-
-importlib.reload(FC)
-importlib.reload(FU)
-importlib.reload(FN)
-importlib.reload(PH)
-importlib.reload(control)
-
-context = bpy.context
-data = bpy.data
-ops = bpy.ops
-scene = data.scenes[FC.key_scene_name]
-# TODO should this be taken as : scene = bpy.context.scene ?
-
-cameras = data.collections[FC.key_collection_cameras].all_objects
-lights = data.collections[FC.key_collection_lights].all_objects
-trees = data.collections[FC.key_collection_trees].all_objects
-tree_collection = data.collections[FC.key_collection_trees]
-leaf_collection = data.collections[FC.key_collection_leaves]
-leaves = data.collections[FC.key_collection_leaves].all_objects
-ground = data.collections[FC.key_collection_ground].all_objects
-ground_collection = data.collections[FC.key_collection_ground]
-
 
 def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RGB', res_x=512, res_y=512, res_percent=100):
     """Sets render parameters for spectral or RGB rendering.
@@ -427,6 +384,50 @@ def render_visibility_maps():
 
 
 if __name__ == '__main__':
+
+    blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
+
+    if 'System simulation' in blend_dir:
+        # We are in a copied blend file in HyperBlend/System simulation/scene_12345
+        script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
+        data_dir = os.path.abspath(blend_dir + '../../../src/data')
+    else:
+        # We are in the template forest blend file
+        script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
+        data_dir = os.path.abspath(blend_dir + '/src/data')
+
+    # After this is set, any script in /blender_scripts can be imported
+    if script_dir not in sys.path:
+        sys.path.append(script_dir)
+        sys.path.append(data_dir)
+
+    import forest_constants as FC
+    import forest_utils as FU
+    from src.data import file_names as FN
+    from src.data import path_handling as PH
+    import forest_control as control
+
+    importlib.reload(FC)
+    importlib.reload(FU)
+    importlib.reload(FN)
+    importlib.reload(PH)
+    importlib.reload(control)
+
+    context = bpy.context
+    data = bpy.data
+    ops = bpy.ops
+    scene = data.scenes[FC.key_scene_name]
+    # TODO should this be taken as : scene = bpy.context.scene ?
+
+    cameras = data.collections[FC.key_collection_cameras].all_objects
+    lights = data.collections[FC.key_collection_lights].all_objects
+    trees = data.collections[FC.key_collection_trees].all_objects
+    tree_collection = data.collections[FC.key_collection_trees]
+    leaf_collection = data.collections[FC.key_collection_leaves]
+    leaves = data.collections[FC.key_collection_leaves].all_objects
+    ground = data.collections[FC.key_collection_ground].all_objects
+    ground_collection = data.collections[FC.key_collection_ground]
+
 
     # Store arguments passed from blender_control.py
     argv = sys.argv

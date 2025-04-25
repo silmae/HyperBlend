@@ -19,25 +19,25 @@ Reflectance lab
 Render forest
 ------------------------
 
-.. automodule:: blender_scripts.render_forest
+.. automodule:: blender_scripts.bs_render_forest
    :members:
 
 Render series
 ------------------------
 
-.. automodule:: blender_scripts.render_series
+.. automodule:: blender_scripts.bs_render_series
    :members:
 
 Render single
 ------------------------
 
-.. automodule:: blender_scripts.render_single
+.. automodule:: blender_scripts.bs_render_single
    :members:
 
 Setup forest
 ------------------------
 
-.. automodule:: blender_scripts.setup_forest
+.. automodule:: blender_scripts.bs_setup_forest
    :members:
 
 Forest constants

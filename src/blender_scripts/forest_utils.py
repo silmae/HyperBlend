@@ -7,6 +7,12 @@ import csv
 import numpy as np
 import math
 
+"""
+These imports cannot be protected by if __name__ == '__main__' because 
+the scipts calling this one will fail. Sphinx will not be able to autodoc 
+this script, but we'll have to deal with that.
+"""
+
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
 if 'System simulation' in blend_dir:
