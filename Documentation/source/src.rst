@@ -21,3 +21,4 @@ Source Code
    definitions
    data
    blender_scripts
+   playground
