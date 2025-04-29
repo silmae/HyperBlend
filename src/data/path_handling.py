@@ -260,6 +260,12 @@ def path_file_wl_result(set_name: str, wl: float, sample_id: int) -> str:
     return p
 
 
+def path_file_signal_result(slab_sim_name: str, signal_id: int) -> str:
+    """Path to signal result toml file of given slab simulation."""
+
+    p = join(path_directory_result_signal(slab_sim_name, signal_id), FN.filename_sample_result(signal_id))
+    return p
+
 def path_file_target(set_name: str, sample_id: int, resampled=False):
     """Path to leaf measurement target spectrum file of given slab simulation and signal.
 

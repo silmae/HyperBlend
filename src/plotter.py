@@ -12,9 +12,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+import src.slab_model.training_utils
 from src import constants as C
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
-from src.slab_model import nn, surf, training_data as training
+from src.slab_model import nn, surf
 from src.utils import data_utils as DU, spectra_utils as SU
 
 
@@ -339,9 +340,9 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             return v
 
     plt.close('all')
-    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = training.get_training_data(
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = src.slab_model.training_utils.get_training_data(
         training_sim_name=set_name)
-    ad_train, sd_train, ai_train, mf_train, r_train, t_train = training.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train = src.slab_model.training_utils.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
@@ -766,7 +767,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set
     if set_name is None:
         set_name = C.starting_guess_set_name
 
-    a_list, ad_list, sd_list, ai_list, mf_list = SU.get_starting_guess_points(set_name=set_name)
+    a_list, ad_list, sd_list, ai_list, mf_list = src.slab_model.training_utils.get_starting_guess_points(set_name=set_name)
 
     ms = 10 # markersize
     ls = 2 # linesize

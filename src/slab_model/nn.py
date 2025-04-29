@@ -17,7 +17,7 @@ from torch.utils.data import random_split
 from torch import from_numpy
 import torch.optim as optim
 
-import src.slab_model.training_data as TD
+import src.slab_model.training_utils
 from src.data import path_handling as PH, file_names as FN
 from src import plotter
 from src.data.path_handling import path_nn_model
@@ -70,8 +70,8 @@ class TrainingData(Dataset):
             Name of the training data slab simulation.
         """
 
-        ad, sd, ai, mf, r, t, re, te = TD.get_training_data(training_sim_name=training_sim_name)
-        ad, sd, ai, mf, r, t = TD.prune_training_data(ad, sd, ai, mf, r, t, re, te)
+        ad, sd, ai, mf, r, t, re, te = src.slab_model.training_utils.get_training_data(training_sim_name=training_sim_name)
+        ad, sd, ai, mf, r, t = src.slab_model.training_utils.prune_training_data(ad, sd, ai, mf, r, t, re, te)
 
         self.X = np.column_stack((r,t))
         self.Y = np.column_stack((ad, sd, ai, mf))

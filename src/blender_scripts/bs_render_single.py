@@ -153,15 +153,15 @@ def render_target(imaging_type, wl, target_name, render_path, dry_run=True):
         logging.warning(f'Faking to save render to "{file_path}"')
 
 
-def make_folders():
-    """Create default folder if not exist."""
-
-    if not os.path.exists(os.path.normpath(render_path_leaf)):
-        os.mkdir(os.path.normpath(render_path_leaf))
-    if not os.path.exists(os.path.normpath(render_path_refl_ref)):
-        os.mkdir(os.path.normpath(render_path_refl_ref))
-    if not os.path.exists(os.path.normpath(render_path_tran_ref)):
-        os.mkdir(os.path.normpath(render_path_tran_ref))
+# def make_folders():
+#     """Create default folder if not exist."""
+#
+#     if not os.path.exists(os.path.normpath(render_path_leaf)):
+#         os.mkdir(os.path.normpath(render_path_leaf))
+#     if not os.path.exists(os.path.normpath(render_path_refl_ref)):
+#         os.mkdir(os.path.normpath(render_path_refl_ref))
+#     if not os.path.exists(os.path.normpath(render_path_tran_ref)):
+#         os.mkdir(os.path.normpath(render_path_tran_ref))
 
 
 def clear_folders(clear_reference=False):
@@ -171,7 +171,7 @@ def clear_folders(clear_reference=False):
     debugging if run straight from Blender. Primarily, use clearing code in file_handling.py.
     """
 
-    make_folders()
+    # make_folders()
     print("Clearing old data")
     list(map(os.unlink, (os.path.join(render_path_leaf, f) for f in os.listdir(render_path_leaf))))
     if clear_reference:
@@ -281,7 +281,7 @@ if __name__ == '__main__':
 
     #################################################
 
-    make_folders()
+    # make_folders()
 
     if clear and not dry_run:
         clear_folders(clear_reference=clear_refs)

@@ -13,8 +13,8 @@ import logging
 
 from src import plotter, constants as C
 from src.data import file_handling as FH, toml_handling as T
+from src.slab_model.training_utils import get_starting_guess_points
 from src.utils import general_utils as GU, data_utils as DU
-from src.slab_model.opt import Optimization
 from scipy.interpolate import CubicSpline
 
 
@@ -276,42 +276,3 @@ def fit_starting_guess_coefficients(degree=4, set_name: str = None):
     T.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs)
 
 
-def get_starting_guess_points(set_name: str = None):
-    """Get starting guess points.
-
-    NOTE: Points where reflectance or transmittance error exceeds 0.002 are deleted.
-
-    :param set_name:
-        Custom set name to fetch the data from. If not given, default set name variable
-        'starting_guess_set_name' stored in constants.py is used.
-    :return:
-        a_list, ad_list, sd_list, ai_list, mf_list
-    """
-
-    if set_name is None:
-        set_name = C.starting_guess_set_name
-
-    result_dict = T.read_sample_result(set_name, 0)
-    wls = result_dict[C.key_sample_result_wls]
-
-    re_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_re]))])
-    te_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_te]))])
-    eps = 0.002
-
-    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
-    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
-    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
-    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
-    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
-    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
-
-    r_list  = r_list[(re_list < eps) & (te_list < eps)]
-    t_list  = t_list[(re_list < eps) & (te_list < eps)]
-    ad_list = ad_list[(re_list < eps) & (te_list < eps)]
-    sd_list = sd_list[(re_list < eps) & (te_list < eps)]
-    ai_list = ai_list[(re_list < eps) & (te_list < eps)]
-    mf_list = mf_list[(re_list < eps) & (te_list < eps)]
-
-    a_list = np.ones_like(r_list) - (r_list + t_list)  # modeled absorptions 1 - (r+t)
-
-    return a_list, ad_list, sd_list, ai_list, mf_list

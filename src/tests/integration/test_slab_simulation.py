@@ -1,5 +1,7 @@
 
+
 import os
+import unittest
 from shutil import rmtree
 from unittest import TestCase
 
@@ -56,22 +58,24 @@ class Test(TestCase):
 
         # Check that for all signals and all wavelengths, there exists a result file
         for signal_id in [0, 1, 3]:
-            for wl in new_sampling:
-                p = PH.path_file_wl_result(set_name=self.slab_sim_name, sample_id=signal_id, wl=wl)
-                error_msg = (f"Result file for signal {signal_id} and wavelength {wl} does not exist "
-                             f"at path {p}.")
+            p = PH.path_file_signal_result(slab_sim_name=self.slab_sim_name, signal_id=signal_id)
+            with self.subTest(p=p):
+                error_msg = f"Result file for signal {signal_id} does not exist at path {p}."
                 self.assertTrue(os.path.exists(p), msg=error_msg)
 
-            # Check that all result signal directories exist
-            p_signal_result = PH.path_directory_result_signal(set_name=self.slab_sim_name, sample_id=signal_id)
-            self.assertTrue(os.path.exists(p_signal_result))
+        # We could check also the file contents, but if the program is so broken that the content
+        # is not correct, we are in trouble anyway.
 
     def test_slab_optimization(self):
+        """ Tests that the slab simulation run with the optimization solver works as expected.
+
+        The optimizer is run mainly when training the nn model, so it is important to be tested.
+        """
 
         path_slab_sim_top = PH.path_directory_slab_simulation(slab_sim_name=self.slab_sim_opt_name)
 
         # Remove the old test directory if it exists
-        if os.path.exists(path_slab_sim_top):g
+        if os.path.exists(path_slab_sim_top):
             rmtree(path_slab_sim_top)
 
         p1 = PH.path_file_target(set_name=self.slab_sim_opt_name, sample_id=0, resampled=False)
@@ -85,14 +89,19 @@ class Test(TestCase):
         SMI.resample_leaf_targets(set_name=self.slab_sim_opt_name, new_sampling=new_sampling)
 
         SMI.solve_leaf_material_parameters(
-            set_name=self.slab_sim_name, clear_old_results=True,
+            set_name=self.slab_sim_opt_name, clear_old_results=True,
             resolution=None, use_dumb_sampling=False, solver='opt',
             copyof=None, plot_resampling=False)
 
-        # Check that for all wavelengths, there exists a result file
+        # Check that for all wavelengths, there exists a subresult file
         signal_id = 0
         for wl in new_sampling:
             p = PH.path_file_wl_result(set_name=self.slab_sim_opt_name, sample_id=signal_id, wl=wl)
-            error_msg = (f"Result file for signal {signal_id} and wavelength {wl} does not exist "
-                         f"at path {p}.")
-            self.assertTrue(os.path.exists(p), msg=error_msg)
+            with self.subTest(p=p):
+                error_msg = (f"Result file for signal {signal_id} and wavelength {wl} does not exist "
+                             f"at path {p}.")
+                self.assertTrue(os.path.exists(p), msg=error_msg)
+
+        # Check that signal result file exists
+        p_signal_result = PH.path_file_signal_result(slab_sim_name=self.slab_sim_opt_name, signal_id=signal_id)
+        self.assertTrue(os.path.exists(p_signal_result))

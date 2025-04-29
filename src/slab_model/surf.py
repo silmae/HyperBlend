@@ -8,7 +8,7 @@ import logging
 import numpy as np
 from scipy.optimize import curve_fit
 
-import src.slab_model.training_data as training
+import src.slab_model.training_utils as TU
 from src.data import toml_handling as TH, path_handling as PH, file_names as FN
 from src.slab_model import surface_functions as FF
 
@@ -45,8 +45,8 @@ def train(training_sim_name='training_data'):
     """
 
     logging.info(f"Starting surface model training.")
-    ad, sd, ai, mf, r, t, re, te = training.get_training_data(training_sim_name=training_sim_name)
-    ad, sd, ai, mf, r, t = training.prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
+    ad, sd, ai, mf, r, t, re, te = TU.get_training_data(training_sim_name=training_sim_name)
+    ad, sd, ai, mf, r, t = TU.prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
 
     surface_param_dict = {
         'ad': curve_fit(FF.function_exp, [r, t], ad, p0=FF.get_x0())[0],

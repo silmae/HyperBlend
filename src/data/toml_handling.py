@@ -224,7 +224,7 @@ def read_sample_result(set_name: str, sample_id: int):
         Result file content as a dict.
     """
 
-    p = PH.join(PH.path_directory_result_signal(set_name, sample_id), FN.filename_sample_result(sample_id))
+    p = PH.path_file_signal_result(slab_sim_name=set_name, signal_id=sample_id)
     with open(p, 'r') as file:
         subres_dict = toml.load(file)
 

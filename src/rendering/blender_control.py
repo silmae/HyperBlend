@@ -128,12 +128,14 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
 
 def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
-    """Renders a single image of the leaf simulation with given leaf material parameters.
+    """Renders a single image of the slab simulation with given leaf material parameters.
+
+    Used by the optimization solver :mod:`slab_model.opt`.
 
     :param rend_base_path:
         Base path for Blender renders (set_name/working_temp/).
     :param wl:
-        Wavelegth (for image name generation).
+        Wavelength (for image name generation).
     :param ad:
         Absorption particle density.
     :param sd:
@@ -178,7 +180,11 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
 
     # Direct Blender logging info to null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+
+        if status.returncode != 0:
+            logging.fatal(f"Failed to render a single slab. Exiting HyperBlend.")
+            exit(1)
 
 
 def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
@@ -195,8 +201,10 @@ def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
 
     # Direct Blender logging info to null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
-
+        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        if status.returncode != 0:
+            logging.fatal(f"Failed to run reflectance lab. Exiting HyperBlend.")
+            exit(1)
 
 def generate_forest_control(forest_id: str = None, global_master: bool = False):
     """Generates a forest control file by reading parameters from a Blender file.

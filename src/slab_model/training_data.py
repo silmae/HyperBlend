@@ -14,7 +14,7 @@ import numpy as np
 from src import plotter, constants as C
 from src.data import toml_handling as TH, file_handling as FH
 from src.slab_model.opt import Optimization
-
+from src.slab_model.training_utils import prune_training_data
 
 """
 Additional conditions after analyzing erronous areas. 
@@ -53,62 +53,6 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
     _, _, _, _, r_good, t_good = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
     plotter.plot_training_data_set(r_good=r_good, r_bad=r_bad, t_good=t_good, t_bad=t_bad,
                                    k1=k1, b1=b1, k2=k2, b2=b2, show=show, save=save, save_name=set_name)
-
-
-def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
-    """ Prune bad datapoints from training data.
-
-    Data point is considered bad if either reflectance or transmittance error is
-    more than 1%.
-
-    :param ad:
-        Numpy array absorption particle density.
-    :param sd:
-        Numpy array scattering particle density.
-    :param ai:
-        Numpy array scattering anisotropy.
-    :param mf:
-        Numpy array mix factor.
-    :param r:
-        Numpy array reflectance.
-    :param t:
-        Numpy array transmittance.
-    :param re:
-        Numpy array reflectance error.
-    :param te:
-        Numpy array transmittance error.
-    :param invereted:
-        If true, instead of good points, the bad points will be returned.
-    :return:
-        Pruned ad,sd,ai,mf,r,t corresponding to arguments.
-    """
-
-    max_error = 0.02 # 1%
-    logging.info(f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned.")
-
-    to_delete = [(a > max_error or b > max_error) for a, b in zip(re, te)]
-
-    if invereted:
-        to_delete = np.invert(to_delete)
-
-    initial_count = len(ad)
-    logging.info(f"Initial point count {initial_count} in training data.")
-
-    to_delete = np.where(to_delete)[0]
-    ad = np.delete(ad, to_delete)
-    sd = np.delete(sd, to_delete)
-    ai = np.delete(ai, to_delete)
-    mf = np.delete(mf, to_delete)
-    r = np.delete(r, to_delete)
-    t = np.delete(t, to_delete)
-
-    bad_points_count = initial_count - len(ad)
-
-    if not invereted:
-        logging.info(f"Pruned {len(to_delete)} ({(bad_points_count/initial_count)*100:.2}%) points because exceeding error threshold {max_error}.")
-        logging.info(f"Point count after pruning {len(ad)}.")
-
-    return ad, sd, ai, mf, r, t
 
 
 def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25,
@@ -191,28 +135,3 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     visualize_training_data_pruning(set_name=set_name, show=False, save=True)
 
 
-def get_training_data(training_sim_name: str):
-    """Returns training data.
-
-    :param training_sim_name:
-        Name of the training data slab simulation. Note that the training data actually is another slab
-        simulation; just a special kind where we generate the training data points and solved their
-        material parameters with the optimization method.
-    :return:
-        Returns ad, sd, ai, mf, r, t, re, te Numpy arrays (vector).
-    """
-
-    if training_sim_name is None or not isinstance(training_sim_name, str):
-        raise AttributeError("Training simulation name must be provided.")
-
-    result = TH.read_sample_result(training_sim_name, sample_id=0)
-    ad = np.array(result[C.key_sample_result_ad])
-    sd = np.array(result[C.key_sample_result_sd])
-    ai = np.array(result[C.key_sample_result_ai])
-    mf = np.array(result[C.key_sample_result_mf])
-
-    r = np.array(result[C.key_sample_result_r])
-    t = np.array(result[C.key_sample_result_t])
-    re = np.array(result[C.key_sample_result_re])
-    te = np.array(result[C.key_sample_result_te])
-    return ad, sd, ai, mf, r, t, re, te
