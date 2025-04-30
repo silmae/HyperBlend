@@ -145,13 +145,6 @@ def filename_sample_result_plot(sample_id: int) -> str:
     return filename
 
 
-def filename_set_error_plot() -> str:
-    """Returns filename of set error plot. """
-
-    filename = f"set_error_plot{C.postfix_plot_image_format}"
-    return filename
-
-
 def filename_forest_reflectance_cube(scene_id):
 
     filename = f"reflectance_cube_{scene_id}.img"

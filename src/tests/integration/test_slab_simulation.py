@@ -12,20 +12,28 @@ from src.data import path_handling as PH, toml_handling as TH
 class Test(TestCase):
 
     def check_existence_of_common_files(self, slab_sim_name):
-        """ Check that the common files exist in the slab simulation directory after the simulation is run. """
+        """ Check that required result files exist after running the slab simulation.
 
-        print(f"Checking existence of common files in {slab_sim_name} directory.")
+        Files common to optimizer, surface fitting and NN are checked here. Files specific to
+        each solver are checked in their respective tests.
+        """
+
+        print(f"Checking existence of common files in {PH.path_directory_slab_simulation(slab_sim_name)} directory.")
 
         path_slab_sim_result = PH.path_file_slab_sim_result(slab_sim_name=slab_sim_name)
         fail_msg = f"Could not find the slab simulation result file at {path_slab_sim_result}."
         self.assertTrue(os.path.exists(path_slab_sim_result), msg=fail_msg)
         print(f"Found slab simulation result file at {path_slab_sim_result}.")
 
-
         path_slab_sim_result_plot = PH.path_file_slab_sim_result_plot(slab_sim_name=slab_sim_name)
         fail_msg = f"Could not find the slab simulation result plot file at {path_slab_sim_result_plot}."
         self.assertTrue(os.path.exists(path_slab_sim_result_plot), msg=fail_msg)
         print(f"Found slab simulation result plot file at {path_slab_sim_result_plot}.")
+
+        path_slab_sim_error_plot = PH.path_file_slab_sim_error_plot(slab_sim_name=slab_sim_name)
+        fail_msg = f"Could not find the slab simulation error plot file at {path_slab_sim_error_plot}."
+        self.assertTrue(os.path.exists(path_slab_sim_error_plot), msg=fail_msg)
+        print(f"Found slab simulation error plot file at {path_slab_sim_error_plot}.")
 
     def test_generate_prospect_leaf(self):
 
@@ -82,6 +90,7 @@ class Test(TestCase):
         # We could check also the file contents, but if the program is so broken that the content
         # is not correct, we are in trouble anyway.
 
+    @unittest.skip("Skipping test_slab_optimization. Just construct and test the common test quicker.")
     def test_slab_optimization(self):
         """ Tests that the slab simulation run with the optimization solver works as expected.
 

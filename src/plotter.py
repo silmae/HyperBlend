@@ -651,9 +651,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        folder = PH.path_directory_slab_simulation(set_name)
-        image_name = FN.filename_set_error_plot()
-        path = PH.join(folder, image_name)
+        path = PH.path_file_slab_sim_error_plot(slab_sim_name=set_name)
         logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:

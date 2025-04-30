@@ -123,6 +123,9 @@ file_opt_res = 'final_result'
 filename_slab_sim_result = 'slab_sim_result'
 """File name of the final result toml and plot of a slab simulation.."""
 
+filename_slab_sim_error_plot = 'slab_sim_error'
+"""File name of the error plot of a slab simulation."""
+
 filename_result_signal = 'result_signal'
 """Simulated result signal of a slab simulation. This is postfixed with the signal id by :mod:`file_names`."""
 
