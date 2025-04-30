@@ -179,7 +179,7 @@ def write_set_result(set_name: str):
         result_dict[C.key_set_result_wl_ai_std] = np.zeros_like(r[0][C.key_sample_result_wls])
         result_dict[C.key_set_result_wl_mf_std] = np.zeros_like(r[0][C.key_sample_result_wls])
 
-    p = PH.join(PH.path_directory_slab_simulation(set_name), FN.filename_set_result())
+    p = PH.path_file_slab_sim_result(slab_sim_name=set_name)
     with open(p, 'w+') as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -187,7 +187,7 @@ def write_set_result(set_name: str):
 def read_set_result(set_name: str):
     """Reads the set result file. Created if does not exist."""
 
-    p = PH.join(PH.path_directory_slab_simulation(set_name), FN.filename_set_result())
+    p = PH.path_file_slab_sim_result(slab_sim_name=set_name)
     if not os.path.exists(p):
         write_set_result(set_name)
     with open(p, 'r') as file:

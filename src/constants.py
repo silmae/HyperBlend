@@ -120,6 +120,8 @@ file_opt_target = 'target'
 file_opt_res = 'final_result'
 """Set result file name."""
 
+filename_slab_sim_result = 'set_result'
+
 filename_result_signal = 'result_signal'
 """Simulated result signal of a slab simulation."""
 
