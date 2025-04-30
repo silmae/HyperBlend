@@ -121,9 +121,10 @@ file_opt_res = 'final_result'
 """Set result file name."""
 
 filename_slab_sim_result = 'slab_sim_result'
+"""File name of the final result toml and plot of a slab simulation.."""
 
 filename_result_signal = 'result_signal'
-"""Simulated result signal of a slab simulation."""
+"""Simulated result signal of a slab simulation. This is postfixed with the signal id by :mod:`file_names`."""
 
 filename_model_parameters = 'surface_model_params'
 """Surface model parameters file."""

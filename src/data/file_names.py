@@ -145,13 +145,6 @@ def filename_sample_result_plot(sample_id: int) -> str:
     return filename
 
 
-def filename_set_result_plot() -> str:
-    """Returns filename of set result plot. """
-
-    filename = f"set_result_plot{C.postfix_plot_image_format}"
-    return filename
-
-
 def filename_set_error_plot() -> str:
     """Returns filename of set error plot. """
 

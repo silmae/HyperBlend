@@ -606,9 +606,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.plot(wls, tm_mean + (tm_std / 2), color='gray', ls='dashed')
 
     if save_thumbnail:
-        folder = PH.path_directory_slab_simulation(set_name)
-        image_name = FN.filename_set_result_plot()
-        path = PH.join(folder, image_name)
+        path = PH.path_file_slab_sim_result_plot(slab_sim_name=set_name)
         logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution, bbox_inches='tight', pad_inches=0.1)
     if not dont_show:

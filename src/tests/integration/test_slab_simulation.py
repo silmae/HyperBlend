@@ -22,6 +22,10 @@ class Test(TestCase):
         print(f"Found slab simulation result file at {path_slab_sim_result}.")
 
 
+        path_slab_sim_result_plot = PH.path_file_slab_sim_result_plot(slab_sim_name=slab_sim_name)
+        fail_msg = f"Could not find the slab simulation result plot file at {path_slab_sim_result_plot}."
+        self.assertTrue(os.path.exists(path_slab_sim_result_plot), msg=fail_msg)
+        print(f"Found slab simulation result plot file at {path_slab_sim_result_plot}.")
 
     def test_generate_prospect_leaf(self):
 

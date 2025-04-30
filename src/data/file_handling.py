@@ -351,9 +351,7 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         ai = result_dict[C.key_set_result_wl_ai_mean]
         mf = result_dict[C.key_set_result_wl_mf_mean]
 
-        folder = PH.path_directory_set_result(source_set_name)
-        image_name = FN.filename_set_result_plot()
-        plot_path = PH.join(folder, image_name)
+        plot_path = PH.path_file_slab_sim_result_plot(slab_sim_name=source_set_name)
 
     else:
         result_dict = TH.read_sample_result(set_name=source_set_name,sample_id=sample_id)
