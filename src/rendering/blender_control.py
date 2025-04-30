@@ -180,7 +180,7 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
 
     # Direct Blender logging info to null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
-        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args, stdout=stream)
 
         if status.returncode != 0:
             logging.fatal(f"Failed to render a single slab. Exiting HyperBlend.")
