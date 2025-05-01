@@ -13,16 +13,18 @@ from src.data import toml_handling as TH, path_handling as PH, file_names as FN
 from src.slab_model import surface_functions as FF
 
 
-def predict(target_refl, target_tran, surface_model_name: str):
+def predict(target_refl, target_tran, solver_dirname: str):
     """Predicts the surface model parameters for given r_m and t_m.
     
     :param target_refl: Target reflectance.
     :param target_tran: Target transmittance.
-    :param surface_model_name: Name of the surface model to be used.
+    :param solver_dirname: Name of the (directory of the) surface model to be used. If None, the default
+        surface model is used.
     :return: Lists ad, sd, ai, mf (absorption density, scattering density, scattering anisotropy, and mixing factor).
         Use :func:`<slab_commons._convert_raw_params_to_renderable()>` before passing them to rendering method.
     """
-    param_dict = TH.read_surface_model_parameters(surface_model_name)
+
+    param_dict = TH.read_surface_model_parameters(solver_dirname)
     ad_p = param_dict['ad']
     sd_p = param_dict['sd']
     ai_p = param_dict['ai']
@@ -60,13 +62,13 @@ def train(training_sim_name='training_data'):
     logging.info(f"Surface model training done.")
 
 
-def exists(file_name=None):
+def exists(solver_dirname=None):
     """Checks whether surface model parameters exist.
 
-    :param file_name:
+    :param solver_dirname:
     :return:
         Returns True if surface model parameters exist, False otherwise.
     """
 
-    p = PH.path_file_surface_model_parameters(file_name=file_name)
+    p = PH.path_file_surface_model_parameters(solver_dirname=solver_dirname)
     return os.path.exists(p)

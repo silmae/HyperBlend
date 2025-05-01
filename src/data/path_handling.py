@@ -91,6 +91,15 @@ def path_directory_default_slab_model() -> str:
     p = join(C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default)
     return p
 
+def path_directory_slab_model(dirname:str) -> str:
+    """Path to the arbitrary slab model directory where the
+    surface model parameters and the neural network are stored.
+
+    For the default slab models, use :func:`path_directory_default_slab_model()`.
+    """
+
+    p = join(C.path_project_root, C.dirname_slab_models, dirname)
+    return p
 
 def path_directory_slab_simulation_top() -> str:
     """Path to top level leaf measurement sets root folder. """
@@ -234,22 +243,19 @@ def path_directory_system_rend_visibility_maps(forest_id: str) -> str:
 ##########################################################################
 
 
-def path_file_surface_model_parameters(file_name:str=None) -> str:
+def path_file_surface_model_parameters(solver_dirname: str = None) -> str:
     """Path to surface model parameter file.
 
-    # TODO rework so that each slab sim has their own directories
-
-    :param file_name:
-        File name to be used. If none given, the default name in constants.py
-        will be used.
+    :param solver_dirname:
+        Name of the solver directory. If none given, the default surface model directory is used.
     """
 
-    if file_name is None:
-        file_name = C.filename_model_parameters
-    if not file_name.endswith(C.postfix_text_data_format):
-        file_name = file_name + C.postfix_text_data_format
+    filename = C.filename_model_parameters + C.postfix_text_data_format
+    if solver_dirname is None:
+        p = join(path_directory_default_slab_model(), filename)
+    else:
+        p = join(path_directory_slab_model(dirname=solver_dirname), filename)
 
-    p = join(path_directory_default_slab_model(), file_name)
     return p
 
 
@@ -266,6 +272,11 @@ def path_file_signal_result(slab_sim_name: str, signal_id: int) -> str:
     p = join(path_directory_result_signal(slab_sim_name, signal_id), FN.filename_sample_result(signal_id))
     return p
 
+def path_file_signal_result_plot(slab_sim_name: str, signal_id: int) -> str:
+    """Path to signal result plot file of given slab simulation."""
+
+    p = join(path_directory_result_signal(slab_sim_name, signal_id), FN.filename_signal_result_plot(signal_id))
+    return p
 
 def path_file_slab_sim_result(slab_sim_name: str) -> str:
     """Path to slab simulation result toml file of given slab simulation."""
@@ -354,6 +365,7 @@ def path_system_simulation_template(template_name=C.filename_system_sim_forest_t
 
     p = join(path_directory_internal(), template_name)
     return p
+
 
 def path_slab_simulation_template(template_name=C.filename_slab_sim_forest_template):
     """Path to slab simulation template blend file found in directory 'Internal/'.
@@ -544,20 +556,21 @@ def join(*args) -> str:
     return p
 
 
-def path_nn_model(nn_name='nn_default'):
+def path_nn_model(solver_dirname='nn_default'):
     """Returns path to the NN model.
 
-    :param nn_name:
-        Name of the NN.
-    :return:
-        Returns path to the NN model.
-    :exception:
-        FileNotFoundError if the model cannot be found.
+    :param solver_dirname: Name of the solver directory. If none given, the default NN model is used.
+    :return: Returns path to the NN model.
+    :exception: FileNotFoundError if the model cannot be found.
     """
 
-    if not nn_name.endswith('.pt'):
-        nn_name = nn_name + '.pt'
-    model_path = join(path_directory_default_slab_model(), nn_name)
+    nn_name = 'nn_default.pt'
+
+    if solver_dirname is None:
+        model_path = join(path_directory_default_slab_model(), nn_name)
+    else:
+        model_path = join(path_directory_slab_model(dirname=solver_dirname), nn_name)
+
     if os.path.exists(model_path):
         return model_path
     else:

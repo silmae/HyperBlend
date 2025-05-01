@@ -42,7 +42,7 @@ if __name__ == '__main__':
     from src.slab_model import interface as SI
 
     slab_sim_opt_name = "integration_test_opt_slabs"
-    SI.solve_leaf_material_parameters(set_name=slab_sim_opt_name, solver='opt', clear_old_results=False)
+    SI.solve_leaf_material_parameters(set_name=slab_sim_opt_name, solver='surf', clear_old_results=False)
 
     # rng = np.random.default_rng(4321)
     # #### RUN ME FOR TESTING FOREST CANOPY STUFF OUT. SEE THE COMMENTS IN THE METHOD BEFORE RUNNING!!! ######

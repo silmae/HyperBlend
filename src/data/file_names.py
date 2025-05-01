@@ -138,10 +138,10 @@ def filename_sample_result(sample_id: int) -> str:
     return filename
 
 
-def filename_sample_result_plot(sample_id: int) -> str:
-    """Filename of the sample result plot file."""
+def filename_signal_result_plot(signal_id: int) -> str:
+    """Filename of the signal result plot file."""
 
-    filename = f"sample_{sample_id}_result_plot{C.postfix_plot_image_format}"
+    filename = f"signal_{signal_id}_result_plot{C.postfix_plot_image_format}"
     return filename
 
 

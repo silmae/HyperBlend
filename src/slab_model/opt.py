@@ -284,7 +284,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     elif starting_guess_type == 'curve':
         x_0 = get_starting_guess(1 - (r_m + t_m))
     elif starting_guess_type == 'surf':
-        x_0 = surf.predict(target_refl=r_m, target_tran=t_m, surface_model_name=surf_model_name)
+        x_0 = surf.predict(target_refl=r_m, target_tran=t_m, solver_dirname=surf_model_name)
     else:
         raise AttributeError(f"Starting guess type '{starting_guess_type}' not recogniced. "
                              f"Use on of ")

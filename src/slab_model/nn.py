@@ -208,18 +208,17 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     return best_loss
 
 
-def predict(target_refl, target_tran, nn_name='nn_default'):
+def predict(target_refl, target_tran, solver_dirname: str=None):
     """Use neural network to predict HyperBlend slab model parameters from target reflectance and transmittance.
 
     :param target_refl: Target reflectance.
     :param target_tran: Target transmittance.
-    :param nn_name: Neural network name. Default name 'nn_default' is used if not given.
-        Provide only if you want to use your trained custom NN.
+    :param solver_dirname: Name of the (directory of the) neural network to be used. If None, the default is used.
     :return: Lists ad, sd, ai, mf (absorption density, scattering density, scattering anisotropy, and mixing factor).
         Use ``slab_commons._convert_raw_params_to_renderable()`` before passing them to rendering method.
     """
 
-    net = _load_model(nn_name=nn_name)
+    net = _load_model(solver_dirname=solver_dirname)
     target_refl = np.array(target_refl)
     target_tran = np.array(target_tran)
     res = net(from_numpy(np.column_stack([target_refl, target_tran])))
@@ -231,28 +230,16 @@ def predict(target_refl, target_tran, nn_name='nn_default'):
     return ad, sd, ai, mf
 
 
-def _load_model(nn_name: str):
+def _load_model(solver_dirname: str):
     """Loads the NN from disk.
 
-    :param nn_name:
-        Name of the model file.
-    :return:
-        Returns loaded NN.
-    :exception:
-        ModuleNotFoundError can happen if the network was trained when the name
-        of this script was something else than what it is now. Your only help
-        is to train again.
+    :param solver_dirname: Name of the (directory of the) neural network to be used. If None, the default is used.
+    :return: Returns loaded NN.
+    :raises ModuleNotFoundError: If PyTorch cannot load the requested neural network.
     """
 
     try:
-        p = path_nn_model(nn_name)
-
-        # Old load where the whole model is used.
-        # net = load(p)
-
-        # New load where only state dict is used.
-        # NOTE that the Leafnet object must be initialized with the
-        #   same layer width and layer count as what it was trained with.
+        p = path_nn_model(solver_dirname=solver_dirname)
         net = Slabnet()
         net.load_state_dict(torch.load(p))
         net.double()
@@ -272,4 +259,4 @@ def exists(nn_name='nn_default.pt'):
         True if found, False otherwise.
     """
 
-    return os.path.exists(PH.path_nn_model(nn_name=nn_name))
+    return os.path.exists(PH.path_nn_model(solver_dirname=nn_name))

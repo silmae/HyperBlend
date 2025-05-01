@@ -17,14 +17,14 @@ def run_paper_tests():
 
     resolution = 5
     LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_specchio_nn", copyof="specchio", solver="nn",
-                                      solver_model_name=nn_name, plot_resampling=False, use_dumb_sampling=True)
+                                      solver_dirname=nn_name, plot_resampling=False, use_dumb_sampling=True)
     LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_specchio_surf", copyof="specchio", solver="surf",
-                                      plot_resampling=False, solver_model_name=surf_model_name, use_dumb_sampling=True)
+                                      plot_resampling=False, solver_dirname=surf_model_name, use_dumb_sampling=True)
 
     LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_prospect_nn", copyof="prospect_randoms", solver="nn",
-                                      solver_model_name=nn_name, plot_resampling=False, use_dumb_sampling=True)
+                                      solver_dirname=nn_name, plot_resampling=False, use_dumb_sampling=True)
     LI.solve_leaf_material_parameters(clear_old_results=True, resolution=resolution, set_name="iterative_prospect_surf", copyof="prospect_randoms",
-                                      solver="surf", plot_resampling=False, solver_model_name=surf_model_name, use_dumb_sampling=True)
+                                      solver="surf", plot_resampling=False, solver_dirname=surf_model_name, use_dumb_sampling=True)
 
 
 def asym_test(smthng='const_r_var_t'):

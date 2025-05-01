@@ -81,7 +81,8 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
     sampling.resample(set_name=set_name)
 
 
-def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_sampling=False, solver='nn', clear_old_results=False, solver_model_name=None,
+def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_sampling=False, solver='nn',
+                                   clear_old_results=False, solver_dirname: str = None,
                                    copyof=None, plot_resampling=True):
     """Solves leaf material parameters for rendering.
     
@@ -106,9 +107,8 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
     :param clear_old_results: 
         If True, clear old results of the set. This is handy for redoing the same set with different method, for 
         example. Note that existing wavelength results are not redone unless first removed.
-    :param solver_model_name:
-        Name of the neural network or surface model to use. The default is 'nn_default' but if you have trained your own custom
-        NN, use that name (or rename your NN to 'nn_default.pt'. TODO fix docs
+    :param solver_dirname:
+        Name of the (directory of the) solver to be used. If None, the default solver is used.
     :param copyof: 
         Name of the set to copy. Copies target from existing set (walengths, reflectances, and transmittances).
     """
@@ -164,13 +164,12 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
             r_m = targets[:, 1]
             t_m = targets[:, 2]
 
-            if solver == 'surf' and solver_model_name is not None:
-                ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(target_refl=r_m, target_tran=t_m, surface_model_name=solver_model_name)
+            if solver == 'surf':
+                ad_raw, sd_raw, ai_raw, mf_raw = surf.predict(target_refl=r_m, target_tran=t_m, solver_dirname=solver_dirname)
             elif solver == "nn":
-                if solver_model_name: # when using custom NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(target_refl=r_m, target_tran=t_m, nn_name=solver_model_name)
-                else: # when using default NN
-                    ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(target_refl=r_m, target_tran=t_m)
+                ad_raw, sd_raw, ai_raw, mf_raw = nn.predict(target_refl=r_m, target_tran=t_m, solver_dirname=solver_dirname)
+            else:
+                raise AttributeError(f"Unknown solver '{solver}'.")
 
             ad, sd, ai, mf = LC._convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw)
             r, t = LC._material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf)
@@ -293,4 +292,4 @@ def visualize_leaf_models(training_set_name:str, show_plot=False, nn_name='nn_de
     """
 
     plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
-                                     plot_points=plot_points, nn_name=nn_name, set_name=training_set_name)
+                                     plot_points=plot_points, solver_dirname=nn_name, set_name=training_set_name)

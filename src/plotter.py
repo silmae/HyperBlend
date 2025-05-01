@@ -323,7 +323,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
 
 
 def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show_plot=False, plot_surf=True,
-                             plot_nn=True, plot_points=True, nn_name='nn_default'):
+                             plot_nn=True, plot_points=True, solver_dirname: str = None):
 
     def variable_name_to_latex(v):
         """Change variable name into Latex format."""
@@ -346,16 +346,14 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
-    surf_model_name = FN.get_surface_model_save_name(training_set_name=set_name)
-
-    if plot_surf and surf.exists(surf_model_name):
-        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train,surface_model_name=surf_model_name)
+    if plot_surf and surf.exists(solver_dirname=solver_dirname):
+        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train, solver_dirname=solver_dirname)
         surf_params = [ad_surf, sd_surf, ai_surf, mf_surf]
     else:
         surf_params = None
 
-    if plot_nn and nn.exists(nn_name=nn_name):
-        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, nn_name=nn_name)
+    if plot_nn and nn.exists(nn_name=solver_dirname):
+        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, solver_dirname=solver_dirname)
         nn_params = [ad_nn, sd_nn, ai_nn, mf_nn]
     else:
         nn_params = None
@@ -725,9 +723,7 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
     _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
     if save_thumbnail:
-        folder = PH.path_directory_slab_simulation(set_name)
-        image_name = FN.filename_sample_result_plot(sample_id=sample_id)
-        path = PH.join(folder, image_name)
+        path = PH.path_file_signal_result_plot(slab_sim_name=set_name, signal_id=sample_id)
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
