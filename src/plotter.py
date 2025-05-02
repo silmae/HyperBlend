@@ -744,7 +744,8 @@ def replot_wl_results(set_name: str):
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
-def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set_name: str = None) -> None:
+def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set_name: str = None,
+                                        solver_name: str = None) -> None:
     """Plot starting guess poynomial fit with data.
 
     Used only when generating the starting guess.
@@ -768,7 +769,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set
     plt.scatter(a_list, ai_list, label='Scattering anisotropy', color=color_ai, s=ms)
     plt.scatter(a_list, mf_list, label='Mix factor', color=color_mf, s=ms)
 
-    coeffs = TH.read_starting_guess_coeffs()
+    coeffs = TH.read_starting_guess_coeffs(solver_name=solver_name)
     for _,key in enumerate(coeffs):
         coeff  = coeffs[key]
         y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])

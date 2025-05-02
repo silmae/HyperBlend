@@ -154,8 +154,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
             targets = targets[::resolution]
 
         if solver == 'opt':
-            # use_resampling = not disable_sampling and resolution is not None
-            o = Optimization(set_name=set_name)
+            o = Optimization(set_name=set_name, solver_name=solver_dirname)
             o.run_optimization(resampled=not use_dumb_sampling)
         elif solver == 'surf' or solver == "nn":
             start = time.perf_counter()

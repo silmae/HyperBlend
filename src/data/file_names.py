@@ -109,13 +109,6 @@ def filename_resample_plot(sample_id: int) -> str:
     return filename
 
 
-def filename_starting_guess() -> str:
-    """Generates the name of the default starting guess file."""
-
-    filename = 'default_starting_guess' + C.postfix_text_data_format
-    return filename
-
-
 def filename_rendered_image(imaging_type: str, wl: float) -> str:
     """Generates a name for a rendered image based on given wavelength.
 

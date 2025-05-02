@@ -259,13 +259,14 @@ to. You might want to rename the old starting guess first, so that it will
 not get overwritten. You can always get the starting guess from the Git repository 
 as well. 
 
-Generating new starting for original optimization method can be done by 
+Generating new starting for original optimization method can be done by
 
 ```python
+import slab_model.training_data
 from src.utils import spectra_utils as SU
 
-SU.generate_starting_guess()
-SU.fit_starting_guess_coefficients()
+slab_model.training_data.generate_starting_guess()
+slab_model.training_data.fit_starting_guess_coefficients()
 ```
 
 Copy paste this to ```__main__.py``` and run.

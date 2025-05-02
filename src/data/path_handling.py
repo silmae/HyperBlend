@@ -91,14 +91,19 @@ def path_directory_default_slab_model() -> str:
     p = join(C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default)
     return p
 
-def path_directory_slab_model(dirname:str) -> str:
+
+def path_directory_slab_model(solver_name:str = None) -> str:
     """Path to the arbitrary slab model directory where the
     surface model parameters and the neural network are stored.
 
-    For the default slab models, use :func:`path_directory_default_slab_model()`.
+    :param solver_name: If None, the default slab model is used, i.e.,
+        :func:`path_directory_default_slab_model()` is called.
     """
 
-    p = join(C.path_project_root, C.dirname_slab_models, dirname)
+    if solver_name is None:
+        p = path_directory_default_slab_model()
+    else:
+        p = join(C.path_project_root, C.dirname_slab_models, solver_name)
     return p
 
 def path_directory_slab_simulation_top() -> str:
@@ -254,7 +259,7 @@ def path_file_surface_model_parameters(solver_dirname: str = None) -> str:
     if solver_dirname is None:
         p = join(path_directory_default_slab_model(), filename)
     else:
-        p = join(path_directory_slab_model(dirname=solver_dirname), filename)
+        p = join(path_directory_slab_model(solver_name=solver_dirname), filename)
 
     return p
 
@@ -320,10 +325,14 @@ def path_file_spectral_sampling(set_name: str):
     return p
 
 
-def path_file_default_starting_guess():
-    """Path to the default starting guess to be used in optimization."""
+def path_file_starting_guess(solver_name=None):
+    """Path to the default starting guess to be used in optimization.
 
-    p = join(path_directory_internal(), FN.filename_starting_guess())
+    :param solver_name: If None given the default starting guess is used.
+    """
+
+    filename = 'default_starting_guess' + C.postfix_text_data_format
+    p = join(path_directory_slab_model(solver_name=solver_name), filename)
     return p
 
 
@@ -569,7 +578,7 @@ def path_nn_model(solver_dirname='nn_default'):
     if solver_dirname is None:
         model_path = join(path_directory_default_slab_model(), nn_name)
     else:
-        model_path = join(path_directory_slab_model(dirname=solver_dirname), nn_name)
+        model_path = join(path_directory_slab_model(solver_name=solver_dirname), nn_name)
 
     if os.path.exists(model_path):
         return model_path

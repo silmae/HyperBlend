@@ -38,12 +38,13 @@ class Optimization:
         against a set of measured leaf spectra.
     """
 
-    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01,
-                 starting_guess_type='curve', clear_old_results=False, surf_model_name=None):
+    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01, starting_guess_type='curve',
+                 clear_old_results=False, surf_model_name=None, solver_name=None):
         """Initialize new optimization object.
 
         Creates necessary folder structure if needed.
 
+        :param solver_name:
         :param set_name:
             Set name. This is used to identify the measurement set.
         :param ftol:
@@ -90,6 +91,7 @@ class Optimization:
         self.xtol = xtol
         self.diffstep = diffstep
         self.starting_guess_type = starting_guess_type
+        self.solver_name = solver_name
         if starting_guess_type == 'surf' and surf_model_name is None:
             raise AttributeError(f"Surface model name must be given when using starting guess type '{starting_guess_type}'.")
         self.surface_model_name = surf_model_name
@@ -134,7 +136,7 @@ class Optimization:
             if use_threads:
                 param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,self.ftol, self.xtol,
                                self.bounds, LC.density_scale, self.optimizer_verbosity, use_basin_hopping,
-                               sample_id, self.ftol_abs, self.starting_guess_type, self.surface_model_name)
+                               sample_id, self.ftol_abs, self.starting_guess_type, self.solver_name)
                               for a in targets]
                 with Pool() as pool:
                     pool.map(optimize_single_wl_threaded, param_list)
@@ -146,7 +148,7 @@ class Optimization:
                     optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
                                        self.ftol, self.xtol, self.bounds, LC.density_scale, self.optimizer_verbosity,
                                        use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type,
-                                       self.surface_model_name)
+                                       self.solver_name)
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
@@ -166,7 +168,8 @@ def optimize_single_wl_threaded(args):
 
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
-                       use_basin_hopping: bool, sample_id: int, ftol_abs, starting_guess_type, surf_model_name):
+                       use_basin_hopping: bool, sample_id: int, ftol_abs, starting_guess_type,
+                       solver_name):
     """Optimize single wavelength to given reflectance and transmittance.
 
     Result is saved in a .toml file and plotted as an image.
@@ -217,6 +220,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
             only work in cases where R and T are relatively close to each other (around +- 0.2).
             Surface fitting method 'surf' can be used after the first training iteration has been carried
             out. It can more robustly adapt to situations where R and T are dissimilar.
+    :param solver_name: The name of the solver to be used. If None given, the default one will be used.
     """
 
     print(f'Optimizing wavelength {wl} nm started.', flush=True)
@@ -282,9 +286,9 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     if starting_guess_type == 'hard-coded':
         x_0 = hard_coded_starting_guess
     elif starting_guess_type == 'curve':
-        x_0 = get_starting_guess(1 - (r_m + t_m))
+        x_0 = get_starting_guess(1 - (r_m + t_m), solver_name=solver_name)
     elif starting_guess_type == 'surf':
-        x_0 = surf.predict(target_refl=r_m, target_tran=t_m, solver_dirname=surf_model_name)
+        x_0 = surf.predict(target_refl=r_m, target_tran=t_m, solver_dirname=solver_name)
     else:
         raise AttributeError(f"Starting guess type '{starting_guess_type}' not recogniced. "
                              f"Use on of ")
@@ -406,7 +410,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     plotter.plot_wl_optimization_history(set_name, wl, sample_id, dont_show=True, save_thumbnail=True)
 
 
-def get_starting_guess(absorption: float):
+def get_starting_guess(absorption: float, solver_name: str=None) -> tuple:
     """
     Gives starting guess for given absorption.
 
@@ -425,7 +429,7 @@ def get_starting_guess(absorption: float):
             res = ub
         return res
 
-    coeff_dict = TH.read_starting_guess_coeffs()
+    coeff_dict = TH.read_starting_guess_coeffs(solver_name=solver_name)
     absorption_density      = f(coeff_dict[C.ad_coeffs], LOWER_BOUND[0], UPPER_BOUND[0])
     scattering_density      = f(coeff_dict[C.sd_coeffs], LOWER_BOUND[1], UPPER_BOUND[1])
     scattering_anisotropy   = f(coeff_dict[C.ai_coeffs], LOWER_BOUND[2], UPPER_BOUND[2])

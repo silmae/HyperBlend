@@ -6,7 +6,7 @@ TODO: test custom solvers. The default ones seem to be working now.
 """
 
 import os
-import unittest
+import unittest # needed for skipping tests
 from shutil import rmtree
 from unittest import TestCase
 
@@ -41,8 +41,12 @@ class Test(TestCase):
         print(f"Found slab simulation error plot file at {path_slab_sim_error_plot}.")
 
     def check_existance_of_signal_result_files(self, slab_sim_name, signal_ids):
+        """ Check that the result files for the signals exist.
 
-        # Check that for all signals and all wavelengths, there exists a result file
+        :param slab_sim_name: Name of the slab simulation.
+        :param signal_ids: List of signal IDs (int) to check.
+        """
+
         for signal_id in signal_ids:
             p = PH.path_file_signal_result(slab_sim_name=slab_sim_name, signal_id=signal_id)
             with self.subTest(p=p):
@@ -56,7 +60,11 @@ class Test(TestCase):
                 self.assertTrue(os.path.exists(p), msg=error_msg)
                 print(f"Found result plot for signal at {p}.")
 
-    def general_nn_surf(self, solver: str):
+    def check_nn_and_surf_result_files(self, solver: str, solver_dirname: str = None):
+        """ Check that the result files for the neural network and surface fitting solvers exist.
+
+        :param solver: Solver to check. Either 'nn' or 'surf'.
+        """
 
         if solver == 'nn':
             slab_sim_name = "integration_test_nn_slabs"
@@ -105,7 +113,7 @@ class Test(TestCase):
         SMI.solve_leaf_material_parameters(
             set_name=slab_sim_name, clear_old_results=True,
             resolution=None, use_dumb_sampling=False, solver=solver,
-            copyof=None, plot_resampling=False)
+            copyof=None, plot_resampling=False, solver_dirname=solver_dirname)
 
         self.check_existance_of_signal_result_files(slab_sim_name=slab_sim_name, signal_ids=[0, 1, 3])
         self.check_existence_of_common_files(slab_sim_name=slab_sim_name)
@@ -113,17 +121,24 @@ class Test(TestCase):
         # We could check also the file contents, but if the program is so broken that the content
         # is not correct, we are in trouble anyway.
 
+    # @unittest.skip("Temporarily skipping test_slab_simulation.")
     def test_advanced_solvers(self):
+        self.run_advanced_solvers()
+
+    def run_advanced_solvers(self, solver_dirname: str = None):
         """ Tests that the slab simulation run with the advanced solvers works as expected.
 
         The advanced solvers are the neural network and surface fitting solvers.
         """
 
-        self.general_nn_surf(solver='nn')
-        self.general_nn_surf(solver='surf')
+        self.check_nn_and_surf_result_files(solver='nn', solver_dirname=solver_dirname)
+        self.check_nn_and_surf_result_files(solver='surf', solver_dirname=solver_dirname)
 
     # @unittest.skip("Skipping test_slab_optimization. Just construct and test the common test quicker.")
     def test_slab_optimization(self):
+        self.run_slab_optimization()
+
+    def run_slab_optimization(self, solver_dirname: str = None):
         """ Tests that the slab simulation run with the optimization solver works as expected.
 
         The optimizer is run mainly when training the nn model, so it is important to be tested.
@@ -149,7 +164,7 @@ class Test(TestCase):
         SMI.solve_leaf_material_parameters(
             set_name=slab_sim_opt_name, clear_old_results=True,
             resolution=None, use_dumb_sampling=False, solver='opt',
-            copyof=None, plot_resampling=False)
+            copyof=None, plot_resampling=False, solver_dirname=solver_dirname)
 
         # Check that for all wavelengths, there exists a subresult file. This check is done only for the optimizer.
         signal_id = 0
@@ -162,3 +177,46 @@ class Test(TestCase):
 
         self.check_existance_of_signal_result_files(slab_sim_name=slab_sim_opt_name, signal_ids=[0])
         self.check_existence_of_common_files(slab_sim_name=slab_sim_opt_name)
+
+    def test_custom_solver(self):
+        """Tests that the slab simulation run with a custom solver works as expected."""
+
+        print("Testing custom solver.")
+
+        fake_solver_name = "Integration test custom solver"
+        path_default_slab_model = PH.path_directory_default_slab_model()
+        path_custom_slab_model = PH.path_directory_slab_model(solver_name=fake_solver_name)
+
+        # os.rename(path_custom_slab_model, path_default_slab_model)
+        # exit()
+
+        # Check that the default slab model directory exists and the custom one does not
+        self.assertTrue(os.path.exists(path_default_slab_model))
+        self.assertFalse(os.path.exists(path_custom_slab_model))
+
+        # Rename the default slab model to fake a custom model for testing
+        os.rename(path_default_slab_model, path_custom_slab_model)
+
+        # Surround all the rest to try catch so that we can revert the name change
+        try:
+            # Check that the custom slab model directory exists and the default one does not
+            self.assertTrue(os.path.exists(path_custom_slab_model))
+            self.assertFalse(os.path.exists(path_default_slab_model))
+
+            # These should now not work as the default slab model directory is renamed
+            self.assertRaises(FileNotFoundError, self.run_advanced_solvers)
+            self.assertRaises(Exception, self.run_slab_optimization)
+
+            # Finally, run the advanced solvers and slab optimization with the custom solver
+            self.run_advanced_solvers(solver_dirname=fake_solver_name)
+            self.run_slab_optimization(solver_dirname=fake_solver_name)
+
+        except:
+            # Revert the name change of the default slab model directory
+            #   even if something goes wrong in the test so that testing
+            #   doesn't break the actual structure.
+            os.rename(path_custom_slab_model, path_default_slab_model)
+            raise
+
+        # In case we did not run into an exception earlier, revert the name change here
+        os.rename(path_custom_slab_model, path_default_slab_model)

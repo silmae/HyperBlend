@@ -417,7 +417,7 @@ def read_sampling(set_name: str,):
         return data
 
 
-def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs) -> None:
+def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs, solver_name: str = None) -> None:
     """Writes given starting guess coefficients to disk.
 
     :param ad_coeffs:
@@ -428,22 +428,25 @@ def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs) -> N
         Coefficients for scattering anisotropy as a list of floats.
     :param mf_coeffs:
         Coefficients for mix factor as a list of floats.
+    :param solver_name: If None, the default solver name is used and the previous default
+        starting guess is overwritten.
     """
 
-    path = PH.path_file_default_starting_guess()
+    path = PH.path_file_starting_guess(solver_name=solver_name)
     coeff_dict = {C.ad_coeffs:ad_coeffs, C.sd_coeffs:sd_coeffs, C.ai_coeffs:ai_coeffs, C.mf_coeffs:mf_coeffs}
     with open(path, 'w+') as file:
         toml.dump(coeff_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_starting_guess_coeffs():
+def read_starting_guess_coeffs(solver_name: str = None) -> dict:
     """Reads starting guess coefficients from disk and return as dictionary.
 
+    :param solver_name: If None, the default solver name is used.
     :return:
         Starting guess coefficients in a dictionary.
     """
 
-    path = PH.path_file_default_starting_guess()
+    path = PH.path_file_starting_guess(solver_name=solver_name)
     with open(path, 'r') as file:
         data = toml.load(file)
         return data
