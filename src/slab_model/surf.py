@@ -40,7 +40,8 @@ def train(training_sim_name='training_data'):
     """Train surface model.
 
     :param training_sim_name:
-        Name of the training data slab simulation. Note that the training data actually is another slab
+        Name of the training data loaded for slab simulation. A new solver will be saved with this name.
+        Note that the training data actually is another slab
         simulation; just a special kind where we generate the training data points and solved their
         material parameters with the optimization method. No need to change the default name unless you
         generated the data with custom name.
@@ -57,8 +58,8 @@ def train(training_sim_name='training_data'):
         'mf': curve_fit(FF.function_exp, [r, t], mf, p0=FF.get_x0())[0],
     }
 
-    file_name = FN.get_surface_model_save_name(training_set_name=training_sim_name)
-    TH.write_surface_model_parameters(surface_param_dict, file_name=file_name)
+    # file_name = FN.get_surface_model_save_name(training_set_name=training_sim_name)
+    TH.write_surface_model_parameters(surface_param_dict, solver_name=training_sim_name)
     logging.info(f"Surface model training done.")
 
 

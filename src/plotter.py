@@ -276,7 +276,7 @@ def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, 
 
 
 def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True, save_thumbnail=True,
-                          file_name="nn_train_history.png") -> None:
+                          solver_name=None) -> None:
     """Plot training history of neural network.
 
     :param train_loss:
@@ -290,14 +290,10 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
         running multiple times in a loop (hyperparameter tuning). Default True.
     :param save_thumbnail:
         If True, save plot to disk. Default True.
-    :param file_name:
-        Filename for saving the plot. Postfix '.png' is added if missing. Default name is "nn_train_history.png".
     :return:
     """
 
     plt.close('all')
-    if not file_name.endswith(C.postfix_plot_image_format):
-        file_name = file_name + C.postfix_plot_image_format
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training history", fontsize=fig_title_font_size)
@@ -308,11 +304,10 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     ax.legend()
 
     if save_thumbnail:
-        folder = PH.path_directory_default_slab_model()
-        # image_name = "nn_train_history.png"
-        if not file_name.endswith(".png"):
-            file_name = file_name + '.png'
-        path = PH.join(folder, file_name)
+        folder = PH.path_directory_slab_model(solver_name=solver_name)
+        image_name = "nn_train_history.png"
+        path = PH.join(folder, image_name)
+
         logging.info(f"Saving NN training history to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
@@ -323,7 +318,7 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
 
 
 def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show_plot=False, plot_surf=True,
-                             plot_nn=True, plot_points=True, solver_dirname: str = None):
+                             plot_nn=True, plot_points=True, solver_name: str = None):
 
     def variable_name_to_latex(v):
         """Change variable name into Latex format."""
@@ -346,14 +341,14 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
     train_params = [ad_train, sd_train, ai_train, mf_train]
     leaf_param_names = ['ad', 'sd', 'ai', 'mf']
 
-    if plot_surf and surf.exists(solver_dirname=solver_dirname):
-        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train, solver_dirname=solver_dirname)
+    if plot_surf and surf.exists(solver_dirname=solver_name):
+        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train, solver_dirname=solver_name)
         surf_params = [ad_surf, sd_surf, ai_surf, mf_surf]
     else:
         surf_params = None
 
-    if plot_nn and nn.exists(nn_name=solver_dirname):
-        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, solver_dirname=solver_dirname)
+    if plot_nn and nn.exists(nn_name=solver_name):
+        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, solver_dirname=solver_name)
         nn_params = [ad_nn, sd_nn, ai_nn, mf_nn]
     else:
         nn_params = None
@@ -400,7 +395,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             ax.legend()
 
         if save_thumbnail:
-            folder = PH.path_directory_default_slab_model()
+            folder = PH.path_directory_slab_model(solver_name=solver_name)
             image_name = f"{set_name}_{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")

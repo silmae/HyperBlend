@@ -39,7 +39,7 @@ class Optimization:
     """
 
     def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01, starting_guess_type='curve',
-                 clear_old_results=False, surf_model_name=None, solver_name=None):
+                 clear_old_results=False, solver_name=None):
         """Initialize new optimization object.
 
         Creates necessary folder structure if needed.
@@ -75,8 +75,6 @@ class Optimization:
             used, also surf_model_name must be provided.
         :param clear_old_results:
             Wipe out old results of the same set by setting ```True```.
-        :param surf_model_name:
-            Surface model name.
         :param solver_name:
         """
 
@@ -92,9 +90,8 @@ class Optimization:
         self.diffstep = diffstep
         self.starting_guess_type = starting_guess_type
         self.solver_name = solver_name
-        if starting_guess_type == 'surf' and surf_model_name is None:
+        if starting_guess_type == 'surf':
             raise AttributeError(f"Surface model name must be given when using starting guess type '{starting_guess_type}'.")
-        self.surface_model_name = surf_model_name
         LC.initialize_directories(slab_sim_name=set_name, clear_old_results=clear_old_results)
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):

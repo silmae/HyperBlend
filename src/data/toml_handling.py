@@ -83,17 +83,16 @@ def read_surface_model_parameters(solver_dirname: str = None):
     return result
 
 
-def write_surface_model_parameters(parameter_dict, file_name=None):
+def write_surface_model_parameters(parameter_dict, solver_name=None):
     """Writes surface model parameters to a file
 
     :param parameter_dict:
         Parameter dictionary to be saved.
-    :param file_name:
-        File name to be used. If none given, the default name in constants.py
-        will be used.
+    :param solver_name:
+        Solver name used for saving the surface model parameters.
     """
 
-    p = PH.path_file_surface_model_parameters(solver_dirname=file_name)
+    p = PH.path_file_surface_model_parameters(solver_dirname=solver_name)
     with open(p, 'w+') as file:
         toml.dump(parameter_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 

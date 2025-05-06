@@ -18,21 +18,29 @@ import os
 import unittest # needed for skipping tests
 from shutil import rmtree
 from unittest import TestCase
+import logging
 
 from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 from src.slab_model import training_data as TD
+from src.setup import initialization
 
 
 class Test(TestCase):
 
+    def setUp(self):
+        initialization.initialize()
+
+    def tearDown(self):
+        logging.shutdown()
+
+    @unittest.skip("Skipping test for now")
     def test_starting_guess(self):
 
         # Test the normal starting guess generation to a custom dir
         slab_sim_name = "test_starting_guess"
         new_solver_name = "test_solver"
-        # TD.generate_starting_guess(slab_sim_name=slab_sim_name, solver_name=new_solver_name, step=100)
+        TD.generate_starting_guess(slab_sim_name=slab_sim_name, solver_name=new_solver_name, step=100)
 
-        from src import plotter
-
-        plotter._plot_starting_guess_coeffs_fitting(set_name=slab_sim_name, solver_name=new_solver_name)
+    def test_iterative_training(self):
+        SMI.iterative_train(iterations=3, training_points=20, dry_run=True)

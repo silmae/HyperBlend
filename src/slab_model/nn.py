@@ -84,7 +84,7 @@ class TrainingData(Dataset):
 
 
 def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_size=2, learning_rate=0.001, patience=30,
-          split=0.1, training_sim_name='training_data'):
+          split=0.1, training_sim_name='training_data', solver_name=None):
     """Train the neural network with given parameters.
 
     Saves the best performing model onto disk with generated name (according to NN architecture and some training
@@ -111,10 +111,12 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
         Percentage [0,1] of data reserved for testing between epochs. Value between 0.1 and 0.2
         is usually sufficient.
     :param training_sim_name:
-       Name of the training data slab simulation. Note that the training data actually is another slab
-            simulation; just a special kind where we generate the training data points and solved their
-            material parameters with the optimization method. No need to change the default name unless you
-            generated the data with custom name.
+        Name of the training data slab simulation. A new solver will be saved with this name.
+        Note that the training data actually is another slab
+        simulation; just a special kind where we generate the training data points and solved their
+        material parameters with the optimization method. No need to change the default name unless you
+        generated the data with custom name.
+    :param solver_name: Trained solver is saved with this name.
     :return:
         Returns the best loss for hyperparameter tuning loops.
     """
@@ -150,8 +152,9 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     best_epoch_idx = None
     patience_trigger = 0
 
-    nn_filename = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
-                                      lr=learning_rate, split=split, training_set=training_sim_name)
+    # nn_filename = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
+    #                                   lr=learning_rate, split=split, training_set=training_sim_name)
+
 
     for epoch in range(n_epochs):
 
@@ -185,7 +188,8 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
 
             # nn_filename = save_name + '.pt'
 
-            save_path = PH.join(PH.path_directory_default_slab_model(), nn_filename)
+            # save_path = PH.join(PH.path_directory_slab_model(solver_name=solver_name), nn_filename)
+            save_path = PH.path_nn_model(solver_dirname=solver_name)
 
             # Old save method
             # save(net, save_path)
@@ -204,7 +208,7 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     logging.info(train_losses)
     logging.info(f"Neural network training finished. Final loss {best_loss}")
     plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx,
-                                  dont_show=not show_plot, save_thumbnail=True, file_name=nn_filename)
+                                  dont_show=not show_plot, save_thumbnail=True)
     return best_loss
 
 

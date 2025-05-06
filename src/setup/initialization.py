@@ -9,6 +9,7 @@ in there are not supposed to be changed.
 
 import logging
 import os
+import datetime
 from sys import platform
 
 import numpy as np
@@ -27,10 +28,33 @@ def initialize():
     """
 
     logging.info("Initializing HyperBlend")
+    _init_logging()
     _load_app_info()
     check_directory_structure()
     _check_operating_system()
     _check_blender_version()
+
+
+def _init_logging():
+    # log to stdout instead of stderr for nice coloring
+    # logging.basicConfig(stream=sys.stdout, level='INFO')
+    path_dir_logs = "../log"
+    if not os.path.exists(path_dir_logs):
+        os.makedirs(path_dir_logs)
+
+    log_identifier = str(datetime.datetime.now())
+    log_identifier = log_identifier.replace(' ', '_')
+    log_identifier = log_identifier.replace(':', '')
+    log_identifier = log_identifier.replace('.', '')
+
+    log_file_name = f"{log_identifier}.log"
+    log_path = PH.join(path_dir_logs, log_file_name)
+    logging.basicConfig(level='INFO', format='%(asctime)s %(levelname)s: %(message)s',
+                        force=True,
+                        handlers=[
+                            logging.FileHandler(log_path, mode='w'),
+                            logging.StreamHandler(),
+                        ])
 
 
 def _load_app_info():

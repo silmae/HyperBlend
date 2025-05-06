@@ -59,7 +59,7 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
 
 
 def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25,
-                        starting_guess_type='curve', surf_model_name=None, data_generation_diff_step=0.01):
+                        starting_guess_type='curve', data_generation_diff_step=0.01, solver_name=None):
     """Generate reflectance-transmittance pairs as training data for surface fitting and neural network.
 
     Generated data will have fake wavelengths attached to them. They run from 1 to the number of
@@ -93,8 +93,7 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
             only work in cases where R and T are relatively close to each other (around +- 0.2).
             Surface fitting method 'surf' can be used after the first training iteration has been carried
             out. It can more robustly adapt to situations where R and T are dissimilar.
-    :param surf_model_name:
-        Must be given if starting guess type is 'surf'.
+    :param solver_name: Name of the solver to be used. If None, default solver name is used.
     """
 
     FH.create_top_level_slab_sim_directories(set_name)
@@ -126,16 +125,13 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
     if not dry_run:
         logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance targets.")
         TH.write_target(set_name, data, sample_id=0)
-        if starting_guess_type == 'surf' and surf_model_name is None:
-            raise AttributeError(f"Solver model name must be provided if starting guess type is '{starting_guess_type}'.")
-        o = Optimization(set_name=set_name, diffstep=data_generation_diff_step, starting_guess_type=starting_guess_type,
-                         surf_model_name=surf_model_name)
+        o = Optimization(set_name=set_name, diffstep=data_generation_diff_step, starting_guess_type=starting_guess_type, solver_name=solver_name)
         o.run_optimization(resampled=False)
+        visualize_training_data_pruning(set_name=set_name, show=False, save=True)
     else:
         logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
                      f"but this was just a dry run..")
 
-    visualize_training_data_pruning(set_name=set_name, show=False, save=True)
 
 
 def generate_starting_guess(slab_sim_name: str = None, solver_name: str = None, step=None):

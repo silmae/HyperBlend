@@ -9,7 +9,7 @@ import numpy as np
 import time
 import logging
 
-import src.slab_model.training_data
+import src.slab_model.training_data as TD
 import src.slab_model.leaf_sampling as sampling
 from src.slab_model.opt import Optimization
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN
@@ -191,10 +191,68 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
     plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
 
 
+def iterative_train(iterations=8, training_points=200, dry_run=False):
+
+    first_run_similarity_requirement = 0.2
+    last_run_similarity_requirement = 1.0
+    diff_similarity = (last_run_similarity_requirement - first_run_similarity_requirement) / iterations
+    curr_similarity = first_run_similarity_requirement
+
+    # Diffstep for optimizer's finite difference Jacobian estimation
+    first_run_diffstep = 0.01
+    diffstep = 0.001
+
+    for i in range(iterations):
+        current_iteration_slab_sim_name = f"train_iter_{i+1}"
+        previous_iteration_slab_sim_name = f"train_iter_{i}"
+
+        if i == 0:
+            # First iteration
+            train_models(set_name=current_iteration_slab_sim_name,
+                         generate_data=True,
+                         data_generation_diff_step=first_run_diffstep,
+                         starting_guess_type='curve',
+                         similarity_rt=first_run_similarity_requirement,
+                         train_surf=True,
+                         train_nn=False,
+                         train_points_per_dim=training_points,
+                         dry_run=dry_run)
+
+        elif i == iterations - 1:
+            # Last iteration
+            train_models(set_name=current_iteration_slab_sim_name,
+                         generate_data=True,
+                         data_generation_diff_step=diffstep,
+                         starting_guess_type='surf',
+                         similarity_rt=last_run_similarity_requirement,
+                         train_surf=True,
+                         train_nn=True,
+                         learning_rate=0.0005,
+                         train_points_per_dim=training_points,
+                         dry_run=dry_run,
+                         solver_name=previous_iteration_slab_sim_name)
+        else:
+            # Intermediate iterations
+            train_models(set_name=current_iteration_slab_sim_name,
+                         generate_data=True,
+                         data_generation_diff_step=diffstep,
+                         starting_guess_type='surf',
+                         similarity_rt=curr_similarity,
+                         train_surf=True,
+                         train_nn=False,
+                         train_points_per_dim=training_points,
+                         dry_run=dry_run,
+                         solver_name=previous_iteration_slab_sim_name)
+
+        # At the end of the loop, increase the similarity requirement
+        curr_similarity += diff_similarity
+
+
+
 def train_models(set_name='training_data', generate_data=False, data_generation_diff_step=0.01,
-                 starting_guess_type='curve', surface_model_name=None, similarity_rt=0.25, train_surf=True,
-                 train_nn=True, layer_count=5, layer_width=1000, epochs=300, batch_size=32, learning_rate=0.01,
-                 patience=30, split=0.1, train_points_per_dim=20, dry_run=False, show_plot=False):
+                 starting_guess_type='curve', similarity_rt=0.25, train_surf=True, train_nn=True, layer_count=5,
+                 layer_width=1000, epochs=300, batch_size=32, learning_rate=0.01, patience=30, split=0.1,
+                 train_points_per_dim=20, dry_run=False, show_plot=False, solver_name=None):
     """Train surface model and neural network.
     
     If training data does not yet exist, it must be created by setting ``generate_data=True``. Note that 
@@ -210,7 +268,6 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
     Show plot is safe to be kept at default ``False``. The plots are saved to the disk anyways. 
     
     :param data_generation_diff_step:
-    :param surface_model_name:
     :param starting_guess_type:
             One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
             Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
@@ -257,13 +314,14 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
         If True, train the surface model. Default is True.
     :param train_nn: 
         If True, train the neural network. Default is True.
+    :param solver_name: Name of the solver used to get a starting guess if ``starting_guess_type='surf'``.
+        For iterative training, this should be the name of the previous iteration's solver.
     """
 
     if generate_data:
-        src.leaf_model.training_data.generate_train_data(set_name=set_name, dry_run=dry_run,
-                                                         cuts_per_dim=train_points_per_dim, similarity_rt=similarity_rt,
-                                                         starting_guess_type=starting_guess_type,
-                                                         surf_model_name=surface_model_name, data_generation_diff_step=data_generation_diff_step)
+        TD.generate_train_data(set_name=set_name, dry_run=dry_run, cuts_per_dim=train_points_per_dim,
+                               similarity_rt=similarity_rt, starting_guess_type=starting_guess_type,
+                               data_generation_diff_step=data_generation_diff_step, solver_name=solver_name)
 
     if dry_run:
         return
@@ -272,15 +330,16 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
         surf.train(training_sim_name=set_name)
     if train_nn:
         nn.train(show_plot=show_plot, layer_count=layer_count, layer_width=layer_width, epochs=epochs,
-                 batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split, training_sim_name=set_name)
+                 batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split,
+                 training_sim_name=set_name)
+    #
+    # nn_name = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
+    #                               lr=learning_rate, split=split, training_set=set_name)
 
-    nn_name = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
-                                  lr=learning_rate, split=split, training_set=set_name)
-
-    visualize_leaf_models(show_plot=False,training_set_name=set_name, nn_name=nn_name, plot_nn=train_nn, plot_surf=train_surf)
+    visualize_leaf_models(show_plot=False,training_set_name=set_name, plot_nn=train_nn, plot_surf=train_surf)
 
 
-def visualize_leaf_models(training_set_name:str, show_plot=False, nn_name='nn_default', plot_surf=True,
+def visualize_leaf_models(training_set_name:str, show_plot=False, plot_surf=True,
                           plot_nn=True, plot_points=True):
     """Visualize trained surface and neural network model against training data.
 
@@ -291,4 +350,4 @@ def visualize_leaf_models(training_set_name:str, show_plot=False, nn_name='nn_de
     """
 
     plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
-                                     plot_points=plot_points, solver_dirname=nn_name, set_name=training_set_name)
+                                     plot_points=plot_points, set_name=training_set_name)

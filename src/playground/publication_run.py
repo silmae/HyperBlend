@@ -60,22 +60,23 @@ def iterative_train():
 
     # Iterative train manually
     set_name_iter_1 = "train_iter_1v4"
-    LI.train_models(set_name=set_name_iter_1, generate_data=True, starting_guess_type='curve',
-                    train_points_per_dim=30, similarity_rt=0.25, train_surf=True, train_nn=False, data_generation_diff_step=0.01)
+    LI.train_models(set_name=set_name_iter_1, generate_data=True, data_generation_diff_step=0.01,
+                    starting_guess_type='curve', similarity_rt=0.25, train_surf=True, train_nn=False,
+                    train_points_per_dim=30)
     set_name_iter_2 = "train_iter_2_v4"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_1)
-    LI.train_models(set_name=set_name_iter_2, generate_data=True, starting_guess_type='surf',
-                    surface_model_name=surf_model_name, similarity_rt=0.5, train_surf=True, train_nn=False,
-                    train_points_per_dim=50, data_generation_diff_step=0.001)
+    LI.train_models(set_name=set_name_iter_2, generate_data=True, data_generation_diff_step=0.001,
+                    starting_guess_type='surf', similarity_rt=0.5, train_surf=True, train_nn=False,
+                    train_points_per_dim=50)
     set_name_iter_3 = "train_iter_3_v4"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_2)
-    LI.train_models(set_name=set_name_iter_3, generate_data=True, starting_guess_type='surf',
-                    surface_model_name=surf_model_name, similarity_rt=0.75, train_surf=True, train_nn=False,
-                    train_points_per_dim=70, data_generation_diff_step=0.001)
+    LI.train_models(set_name=set_name_iter_3, generate_data=True, data_generation_diff_step=0.001,
+                    starting_guess_type='surf', similarity_rt=0.75, train_surf=True, train_nn=False,
+                    train_points_per_dim=70)
     set_name_iter_4 = "train_iter_4_v4"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_3)
-    LI.train_models(set_name=set_name_iter_4, generate_data=False, starting_guess_type='surf',
-                    surface_model_name=surf_model_name, similarity_rt=1.0, train_surf=False, train_nn=True,
-                    train_points_per_dim=200, dry_run=False, data_generation_diff_step=0.001, show_plot=True, learning_rate=0.0005)
+    LI.train_models(set_name=set_name_iter_4, generate_data=False, data_generation_diff_step=0.001,
+                    starting_guess_type='surf', similarity_rt=1.0, train_surf=False, train_nn=True,
+                    learning_rate=0.0005, train_points_per_dim=200, dry_run=False, show_plot=True)
 
     # surf_model_name = FN.get_surface_model_save_name(set_name_iter_4)
