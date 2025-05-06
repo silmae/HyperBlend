@@ -177,7 +177,7 @@ def initialize_directories(slab_sim_name, clear_old_results=False):
     :param clear_old_results: If True, old results are deleted.
     """
 
-    FH.create_first_level_folders(slab_sim_name)
+    FH.create_top_level_slab_sim_directories(slab_sim_name)
 
     ids = FH.list_target_ids(slab_sim_name)
     for _, signal_id in enumerate(ids):

@@ -143,7 +143,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
         raise RuntimeError(f'Could not find any targets for set "{set_name}".')
 
     for _, sample_id in enumerate(ids):
-        FH.create_opt_folder_structure_for_samples(set_name, sample_id)
+        FH.create_signal_optimization_directories(set_name, sample_id)
         logging.info(f'Starting optimization of sample {sample_id}')
         targets = TH.read_target(set_name, sample_id, resampled=not use_dumb_sampling)
 

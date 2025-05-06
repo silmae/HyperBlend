@@ -34,7 +34,7 @@ def copy_target(from_set: str, to_set: str):
     """
 
     # Initialize new set with proper directories
-    create_first_level_folders(set_name=to_set)
+    create_top_level_slab_sim_directories(slab_simu_name=to_set)
 
     # Copy all targets and resampled targets if they exist
     sample_ids = list_target_ids(from_set)
@@ -57,50 +57,43 @@ def copy_target(from_set: str, to_set: str):
         shutil.copy2(src_sampling, dst_sampling)
 
 
-def create_first_level_folders(set_name: str):
-    """Create first level folders for a set.
+def create_top_level_slab_sim_directories(slab_simu_name: str):
+    """Create top level directories for slab simulation.
 
     Should be called when a new leaf measurement set is created.
 
-    :param set_name:
-        Set name.
+    :param slab_simu_name: Name of the slab simulation.
     """
 
     if not os.path.exists(PH.path_directory_slab_simulation_top()):
         os.makedirs(PH.path_directory_slab_simulation_top())
-    if not os.path.exists(PH.path_directory_target(set_name)):
-        os.makedirs(PH.path_directory_target(set_name))
-    if not os.path.exists(PH.path_directory_result_signal_top(set_name)):
-        os.makedirs(PH.path_directory_result_signal_top(set_name))
+    if not os.path.exists(PH.path_directory_target(slab_simu_name)):
+        os.makedirs(PH.path_directory_target(slab_simu_name))
+    if not os.path.exists(PH.path_directory_result_signal_top(slab_simu_name)):
+        os.makedirs(PH.path_directory_result_signal_top(slab_simu_name))
     # if not os.path.exists(PH.path_directory_set_result(set_name)):
     #     os.makedirs(PH.path_directory_set_result(set_name))
 
 
-def create_opt_folder_structure_for_samples(set_name: str, sample_id: int):
-    """Check that the folder structure for optimization is OK. Create if not.
+def create_signal_optimization_directories(slab_sim_name: str, signal_id: int):
+    """Create directories for slab simulation signal optimization."""
 
-    :param set_name:
-        Set name.
-    :param sample_id:
-        Sample id
-    """
-
-    sample_folder_name = f'{C.signal_directory_prefix}_{sample_id}'
-    sample_path = PH.join(PH.path_directory_result_signal_top(set_name), sample_folder_name)
+    sample_folder_name = f'{C.signal_directory_prefix}_{signal_id}'
+    sample_path = PH.join(PH.path_directory_result_signal_top(slab_sim_name), sample_folder_name)
 
     if not os.path.exists(sample_path):
         os.makedirs(sample_path)
 
-    if not os.path.exists(PH.path_directory_slab_optimization_working_temp(set_name, sample_id)):
-        os.makedirs(PH.path_directory_slab_optimization_working_temp(set_name, sample_id))
-    if not os.path.exists(PH.path_directory_slab_temp_rend(set_name, sample_id)):
-        os.makedirs(PH.path_directory_slab_temp_rend(set_name, sample_id))
-    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(set_name, sample_id))):
-        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
-    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(set_name, sample_id))):
-        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
-    if not os.path.exists(PH.path_directory_optimization_result(set_name, sample_id)):
-        os.makedirs(PH.path_directory_optimization_result(set_name, sample_id))
+    if not os.path.exists(PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)):
+        os.makedirs(PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))
+    if not os.path.exists(PH.path_directory_slab_temp_rend(slab_sim_name, signal_id)):
+        os.makedirs(PH.path_directory_slab_temp_rend(slab_sim_name, signal_id))
+    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))):
+        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)))
+    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))):
+        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)))
+    if not os.path.exists(PH.path_directory_optimization_result(slab_sim_name, signal_id)):
+        os.makedirs(PH.path_directory_optimization_result(slab_sim_name, signal_id))
 
 
 def list_target_ids(set_name: str):

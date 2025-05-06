@@ -44,7 +44,6 @@ class Optimization:
 
         Creates necessary folder structure if needed.
 
-        :param solver_name:
         :param set_name:
             Set name. This is used to identify the measurement set.
         :param ftol:
@@ -78,6 +77,7 @@ class Optimization:
             Wipe out old results of the same set by setting ```True```.
         :param surf_model_name:
             Surface model name.
+        :param solver_name:
         """
 
         self.bounds = (LOWER_BOUND, UPPER_BOUND)
@@ -123,7 +123,7 @@ class Optimization:
         ids.sort()
 
         for _,sample_id in enumerate(ids):
-            FH.create_opt_folder_structure_for_samples(self.set_name, sample_id)
+            FH.create_signal_optimization_directories(self.set_name, sample_id)
             logging.info(f'Starting optimization of sample {sample_id}')
             total_time_start = time.perf_counter()
             targets = TH.read_target(self.set_name, sample_id, resampled=resampled)

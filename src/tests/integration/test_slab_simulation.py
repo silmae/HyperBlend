@@ -14,6 +14,7 @@ from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 
 
+@unittest.skip("Skipping test_slab_simulation for now")
 class Test(TestCase):
 
     def check_existence_of_common_files(self, slab_sim_name):

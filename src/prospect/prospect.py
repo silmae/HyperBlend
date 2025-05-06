@@ -5,6 +5,7 @@ Little PROSPECT interface with some quality-of-life calls.
 import logging
 import numpy as np
 
+import src.slab_model.training_data
 from src.prospect import prospect_d as PD
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
@@ -21,12 +22,12 @@ def make_random_leaf_targets(set_name, count=1):
         How many target leaves are generated to the set.
     """
 
-    FH.create_first_level_folders(set_name) # make sure to have directories created
+    FH.create_top_level_slab_sim_directories(set_name) # make sure to have directories created
 
     for i in range(count):
         wls, r, t, p_dict = run_prospect_random()
         logging.info(f"Generating random leaf data with prospect.")
-        SU._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=i) # sample directories are now created
+        src.slab_model.training_data._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=i) # sample directories are now created
         dict_dir = PH.path_directory_result_signal(set_name, sample_id=i)
         dict_name = f'prospect_params_{i}'
         TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
@@ -60,7 +61,7 @@ def make_leaf_target(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None
         Tuple (wls, r, t) and writes the target to the disk.
     """
 
-    FH.create_first_level_folders(set_name) # make sure to have directories created
+    FH.create_top_level_slab_sim_directories(set_name) # make sure to have directories created
 
     if n is None:
         n = p_default_dict["n"]
@@ -81,7 +82,7 @@ def make_leaf_target(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None
     wls, r, t = run_prospect_with_dict(p_dict)
 
     logging.info(f"Generating random leaf data with prospect.")
-    SU._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id)  # sample directory is now created
+    src.slab_model.training_data._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id)  # sample directory is now created
     dict_dir = PH.path_directory_result_signal(set_name, sample_id=sample_id)
     dict_name = f'prospect_params_{sample_id}' # save used prospect parameters
     TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)

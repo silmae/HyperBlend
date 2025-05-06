@@ -319,8 +319,8 @@ def write_target(set_name: str, data, sample_id=0, resampled=False) -> None:
     res = {'wlrt': floated_list}
     p = PH.path_file_target(set_name, sample_id, resampled=resampled)
     if not os.path.exists(p):
-        FH.create_first_level_folders(set_name)
-        FH.create_opt_folder_structure_for_samples(set_name, sample_id=0)
+        FH.create_top_level_slab_sim_directories(set_name)
+        FH.create_signal_optimization_directories(set_name, signal_id=0)
     with open(p, 'w+') as file:
         toml.dump(res, file)
 
@@ -431,6 +431,10 @@ def write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs, solv
     :param solver_name: If None, the default solver name is used and the previous default
         starting guess is overwritten.
     """
+
+    dir_path = PH.path_directory_slab_model(solver_name=solver_name)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
     path = PH.path_file_starting_guess(solver_name=solver_name)
     coeff_dict = {C.ad_coeffs:ad_coeffs, C.sd_coeffs:sd_coeffs, C.ai_coeffs:ai_coeffs, C.mf_coeffs:mf_coeffs}

@@ -12,8 +12,6 @@ import logging
 # SpectRes is used for resampling spectra to lower resolution
 
 from src import constants as C
-from src.data import file_handling as FH, toml_handling as T
-from src.utils import data_utils as DU
 from scipy.interpolate import CubicSpline
 
 
@@ -159,24 +157,6 @@ def resample(original_wl, original_val, new_wl):
         resampled = cs(new_wavs)
     return resampled
 
-def make_linear_test_target(set_name: str):
-    """Creates a test target where reflectance and transmittance grow linearly from 0 to 0.5.
-
-    Wavelength ranges from 400 to 2500.
-
-    :param set_name:
-        Set name to be used (such as 'linearity_test').
-    :return:
-        None
-    """
-
-    start_wl = 400
-    end_wl = 2500
-    wls = np.arange(start_wl,end_wl+1)
-    r_m = np.linspace(0,0.5,len(wls))
-    t_m = np.linspace(0,0.5,len(wls))
-    _make_target(set_name, wls, r_m, t_m)
-
 
 def make_default_target(set_name: str):
     """Creates default target with hard-coded wavelegth, reflectance, and transmittance values.
@@ -205,25 +185,3 @@ def make_default_target(set_name: str):
     _make_target(set_name, wls, r_m, t_m)
 
 
-def _make_target(set_name: str, wls, r_m, t_m, sample_id=None):
-    """Write target reflectances and transmittances to disk.
-
-    :param set_name:
-        Set name to be used.
-    :param wls:
-        A list of wavelengths to be saved.
-    :param r_m:
-        A list of measured reflectances to be saved.
-    :param t_m:
-        A list of measured transmittances to be saved.
-    :return:
-        None
-    """
-
-    if len(wls) != len(r_m) or len(wls) != len(t_m):
-        raise ValueError(f'Length of the lists of wavelenghts ({len(wls)}), reflectances ({len(r_m)}) or transmittances ({len(t_m)}) did not match.')
-    if sample_id is None:
-        sample_id = 0
-    FH.create_opt_folder_structure_for_samples(set_name, sample_id)
-    target_data = DU.pack_target(wls=wls, refls=r_m, trans=t_m)
-    T.write_target(set_name, target_data, sample_id=sample_id)

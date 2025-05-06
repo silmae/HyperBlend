@@ -326,12 +326,12 @@ def path_file_spectral_sampling(set_name: str):
 
 
 def path_file_starting_guess(solver_name=None):
-    """Path to the default starting guess to be used in optimization.
+    """Path to the starting guess parameter file to be used in optimization.
 
     :param solver_name: If None given the default starting guess is used.
     """
 
-    filename = 'default_starting_guess' + C.postfix_text_data_format
+    filename = 'starting_guess' + C.postfix_text_data_format
     p = join(path_directory_slab_model(solver_name=solver_name), filename)
     return p
 
