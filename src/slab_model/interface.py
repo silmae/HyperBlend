@@ -216,7 +216,8 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
                          train_surf=True,
                          train_nn=False,
                          train_points_per_dim=training_points,
-                         dry_run=dry_run)
+                         dry_run=dry_run,
+                         solver_name_to_save=current_iteration_slab_sim_name)
 
         elif i == iterations - 1:
             # Last iteration
@@ -230,7 +231,8 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
                          learning_rate=0.0005,
                          train_points_per_dim=training_points,
                          dry_run=dry_run,
-                         solver_name=previous_iteration_slab_sim_name)
+                         solver_name_to_save=current_iteration_slab_sim_name,
+                         solver_name_to_use=previous_iteration_slab_sim_name)
         else:
             # Intermediate iterations
             train_models(set_name=current_iteration_slab_sim_name,
@@ -242,7 +244,8 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
                          train_nn=False,
                          train_points_per_dim=training_points,
                          dry_run=dry_run,
-                         solver_name=previous_iteration_slab_sim_name)
+                         solver_name_to_save=current_iteration_slab_sim_name,
+                         solver_name_to_use=previous_iteration_slab_sim_name)
 
         # At the end of the loop, increase the similarity requirement
         curr_similarity += diff_similarity
@@ -252,7 +255,7 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
 def train_models(set_name='training_data', generate_data=False, data_generation_diff_step=0.01,
                  starting_guess_type='curve', similarity_rt=0.25, train_surf=True, train_nn=True, layer_count=5,
                  layer_width=1000, epochs=300, batch_size=32, learning_rate=0.01, patience=30, split=0.1,
-                 train_points_per_dim=20, dry_run=False, show_plot=False, solver_name=None):
+                 train_points_per_dim=20, dry_run=False, show_plot=False, solver_name_to_save=None, solver_name_to_use=None):
     """Train surface model and neural network.
     
     If training data does not yet exist, it must be created by setting ``generate_data=True``. Note that 
@@ -264,6 +267,9 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
     
     You can select to train surface model (``train_surf``) and neural network (``train_nn``) separately 
     or just generate the points.
+
+    TODO: The names are pure chaos now. There is a name for the dataset to use, name for the solver to
+        be saved, and a name for the solver that is used as a starting guess. Some sense must be made of this.
     
     Show plot is safe to be kept at default ``False``. The plots are saved to the disk anyways. 
     
@@ -314,40 +320,43 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
         If True, train the surface model. Default is True.
     :param train_nn: 
         If True, train the neural network. Default is True.
-    :param solver_name: Name of the solver used to get a starting guess if ``starting_guess_type='surf'``.
+    :param solver_name_to_save: Name of the solver used to get a starting guess if ``starting_guess_type='surf'``.
         For iterative training, this should be the name of the previous iteration's solver.
     """
 
     if generate_data:
         TD.generate_train_data(set_name=set_name, dry_run=dry_run, cuts_per_dim=train_points_per_dim,
                                similarity_rt=similarity_rt, starting_guess_type=starting_guess_type,
-                               data_generation_diff_step=data_generation_diff_step, solver_name=solver_name)
+                               data_generation_diff_step=data_generation_diff_step,
+                               solver_name_to_use=solver_name_to_use, solver_name_to_save=solver_name_to_save)
 
     if dry_run:
         return
 
     if train_surf:
-        surf.train(training_sim_name=set_name)
+        surf.train(training_sim_name=set_name, solver_save_name=solver_name_to_save)
     if train_nn:
         nn.train(show_plot=show_plot, layer_count=layer_count, layer_width=layer_width, epochs=epochs,
                  batch_size=batch_size, learning_rate=learning_rate, patience=patience, split=split,
-                 training_sim_name=set_name)
+                 training_sim_name=set_name, solver_name=solver_name_to_save)
     #
     # nn_name = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
     #                               lr=learning_rate, split=split, training_set=set_name)
 
-    visualize_leaf_models(show_plot=False,training_set_name=set_name, plot_nn=train_nn, plot_surf=train_surf)
+    visualize_leaf_models(training_set_name=set_name, show_plot=False, plot_surf=train_surf, plot_nn=train_nn,
+                          solver_name=solver_name_to_save)
 
 
-def visualize_leaf_models(training_set_name:str, show_plot=False, plot_surf=True,
-                          plot_nn=True, plot_points=True):
+def visualize_leaf_models(training_set_name: str, show_plot=False, plot_surf=True, plot_nn=True, plot_points=True,
+                          solver_name=None):
     """Visualize trained surface and neural network model against training data.
 
     The plot is always saved to disk regardless of ``show_plot`` flag.
 
+    :param solver_name:
     :param show_plot:
         If True, show interactive plot. Default is false.
     """
 
     plotter.plot_trained_leaf_models(save_thumbnail=True, show_plot=show_plot, plot_surf=plot_surf, plot_nn=plot_nn,
-                                     plot_points=plot_points, set_name=training_set_name)
+                                     plot_points=plot_points, set_name=training_set_name, solver_name=solver_name)

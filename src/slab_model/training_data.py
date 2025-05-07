@@ -8,13 +8,14 @@ in the leaf model interface script.
 
 import logging
 import math
+import os.path
 
 import numpy as np
 
 from src.slab_model.training_utils import get_starting_guess_points
 
 from src import plotter, constants as C
-from src.data import toml_handling as TH, file_handling as FH
+from src.data import toml_handling as TH, file_handling as FH, path_handling as PH
 from src.slab_model.opt import Optimization
 from src.slab_model.training_utils import prune_training_data
 from src.utils import general_utils as GU, data_utils as DU
@@ -30,9 +31,10 @@ b1 = 0.02
 b2 = -0.035
 
 
-def visualize_training_data_pruning(set_name="training_data", show=False, save=True):
+def visualize_training_data_pruning(set_name="training_data", show=False, save=True, solver_name=None):
     """Visualizes training data. Can be saved to disk or shown directly (or both).
 
+    :param solver_name:
     :param set_name:
         Name of the training data set. Change only if custom name was used in data generation.
     :param show:
@@ -54,12 +56,13 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
     te = np.array(result[C.key_sample_result_te])
     _, _, _, _, r_bad, t_bad = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=True)
     _, _, _, _, r_good, t_good = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
-    plotter.plot_training_data_set(r_good=r_good, r_bad=r_bad, t_good=t_good, t_bad=t_bad,
-                                   k1=k1, b1=b1, k2=k2, b2=b2, show=show, save=save, save_name=set_name)
+    plotter.plot_training_data_set(r_good=r_good, t_good=t_good, r_bad=r_bad, t_bad=t_bad, k1=k1, b1=b1, k2=k2, b2=b2,
+                                   show=show, save=save, save_name=set_name, solver_name=solver_name)
 
 
 def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25,
-                        starting_guess_type='curve', data_generation_diff_step=0.01, solver_name=None):
+                        starting_guess_type='curve', data_generation_diff_step=0.01,
+                        solver_name_to_use: str = None, solver_name_to_save: str = None):
     """Generate reflectance-transmittance pairs as training data for surface fitting and neural network.
 
     Generated data will have fake wavelengths attached to them. They run from 1 to the number of
@@ -93,7 +96,7 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
             only work in cases where R and T are relatively close to each other (around +- 0.2).
             Surface fitting method 'surf' can be used after the first training iteration has been carried
             out. It can more robustly adapt to situations where R and T are dissimilar.
-    :param solver_name: Name of the solver to be used. If None, default solver name is used.
+    :param solver_name_to_use: Name of the solver to be used. If None, default solver name is used.
     """
 
     FH.create_top_level_slab_sim_directories(set_name)
@@ -124,14 +127,18 @@ def generate_train_data(set_name='training_data', dry_run=True, cuts_per_dim=10,
 
     if not dry_run:
         logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance targets.")
+
+        p_solver_dir = PH.path_directory_slab_model(solver_name=solver_name_to_save)
+        if not os.path.exists(p_solver_dir):
+            os.makedirs(p_solver_dir)
+
         TH.write_target(set_name, data, sample_id=0)
-        o = Optimization(set_name=set_name, diffstep=data_generation_diff_step, starting_guess_type=starting_guess_type, solver_name=solver_name)
+        o = Optimization(set_name=set_name, diffstep=data_generation_diff_step, starting_guess_type=starting_guess_type, solver_name=solver_name_to_use)
         o.run_optimization(resampled=False)
-        visualize_training_data_pruning(set_name=set_name, show=False, save=True)
+        visualize_training_data_pruning(set_name=set_name, show=False, save=True, solver_name=solver_name_to_save)
     else:
         logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
                      f"but this was just a dry run..")
-
 
 
 def generate_starting_guess(slab_sim_name: str = None, solver_name: str = None, step=None):

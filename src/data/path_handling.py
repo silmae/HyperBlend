@@ -82,17 +82,7 @@ def path_directory_soil_code() -> str:
 
 # Simulation directories
 
-
-def path_directory_default_slab_model() -> str:
-    """Path to the default slab model directory where the default
-    surface model parameters and the default neural network are stored.
-    """
-
-    p = join(C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default)
-    return p
-
-
-def path_directory_slab_model(solver_name:str = None) -> str:
+def path_directory_slab_model(solver_name: str = None) -> str:
     """Path to the arbitrary slab model directory where the
     surface model parameters and the neural network are stored.
 
@@ -101,10 +91,11 @@ def path_directory_slab_model(solver_name:str = None) -> str:
     """
 
     if solver_name is None:
-        p = path_directory_default_slab_model()
+        p = join(C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default)
     else:
         p = join(C.path_project_root, C.dirname_slab_models, solver_name)
     return p
+
 
 def path_directory_slab_simulation_top() -> str:
     """Path to top level leaf measurement sets root folder. """
@@ -255,11 +246,10 @@ def path_file_surface_model_parameters(solver_dirname: str = None) -> str:
         Name of the solver directory. If none given, the default surface model directory is used.
     """
 
-    filename = C.filename_model_parameters + C.postfix_text_data_format
     if solver_dirname is None:
-        p = join(path_directory_default_slab_model(), filename)
+        p = join(path_directory_slab_model(), C.slab_surf_name)
     else:
-        p = join(path_directory_slab_model(solver_name=solver_dirname), filename)
+        p = join(path_directory_slab_model(solver_name=solver_dirname), C.slab_surf_name)
 
     return p
 
@@ -565,22 +555,20 @@ def join(*args) -> str:
     return p
 
 
-def path_nn_model(solver_dirname='nn_default'):
+def path_nn_model(solver_dirname: str = None):
     """Returns path to the NN model.
+
+    Existence of the file has to be checked by caller.
 
     :param solver_dirname: Name of the solver directory. If none given, the default NN model is used.
     :return: Returns path to the NN model.
-    :exception: FileNotFoundError if the model cannot be found.
     """
 
-    nn_name = 'nn_default.pt'
-
     if solver_dirname is None:
-        model_path = join(path_directory_default_slab_model(), nn_name)
+        model_dir = path_directory_slab_model()
     else:
-        model_path = join(path_directory_slab_model(solver_name=solver_dirname), nn_name)
+        model_dir = path_directory_slab_model(solver_name=solver_dirname)
 
-    if os.path.exists(model_path):
-        return model_path
-    else:
-        raise FileNotFoundError(f"Model '{model_path}' was not found. Check spelling.")
+    model_path = join(model_dir, C.slab_nn_name)
+
+    return model_path

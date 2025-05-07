@@ -9,13 +9,21 @@ import os
 import unittest # needed for skipping tests
 from shutil import rmtree
 from unittest import TestCase
+import logging
 
+from src.setup import initialization
 from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 
 
-@unittest.skip("Skipping test_slab_simulation for now")
+# @unittest.skip("Skipping test_slab_simulation for now")
 class Test(TestCase):
+
+    def setUp(self):
+        initialization.initialize()
+
+    def tearDown(self):
+        logging.shutdown()
 
     def check_existence_of_common_files(self, slab_sim_name):
         """ Check that required result files exist after running the slab simulation.
@@ -185,7 +193,7 @@ class Test(TestCase):
         print("Testing custom solver.")
 
         fake_solver_name = "Integration test custom solver"
-        path_default_slab_model = PH.path_directory_default_slab_model()
+        path_default_slab_model = PH.path_directory_slab_model()
         path_custom_slab_model = PH.path_directory_slab_model(solver_name=fake_solver_name)
 
         # os.rename(path_custom_slab_model, path_default_slab_model)

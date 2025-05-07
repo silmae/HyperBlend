@@ -36,7 +36,7 @@ def predict(target_refl, target_tran, solver_dirname: str):
     return ad_raw, sd_raw, ai_raw, mf_raw
 
 
-def train(training_sim_name='training_data'):
+def train(training_sim_name='training_data', solver_save_name: str = None):
     """Train surface model.
 
     :param training_sim_name:
@@ -59,7 +59,7 @@ def train(training_sim_name='training_data'):
     }
 
     # file_name = FN.get_surface_model_save_name(training_set_name=training_sim_name)
-    TH.write_surface_model_parameters(surface_param_dict, solver_name=training_sim_name)
+    TH.write_surface_model_parameters(surface_param_dict, solver_name=solver_save_name)
     logging.info(f"Surface model training done.")
 
 

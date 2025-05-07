@@ -24,13 +24,13 @@ description = "Root directory"
 
 			[root.slab_models.default.surface_model_params]
 			type = "file"
-			name = "surface_model_params"
+			name = "slab_surf"
 			extensions = ["toml",]
 			description = "Model parameters for the default surface fitting model."
 
 			[root.slab_models.default.nn_default]
 			type = "file"
-			name = "nn_default"
+			name = "slab_nn"
 			extensions = ["pt",]
 			description = "The default neural network."
 

@@ -347,7 +347,7 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
     else:
         surf_params = None
 
-    if plot_nn and nn.exists(nn_name=solver_name):
+    if plot_nn and nn.exists(solver_mame=solver_name):
         ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, solver_dirname=solver_name)
         nn_params = [ad_nn, sd_nn, ai_nn, mf_nn]
     else:
@@ -405,11 +405,13 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             plt.show()
 
 
-def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False, save=True, save_name='training_data'):
+def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False,
+                           save=True, save_name='training_data', solver_name=None):
     """Plot training data either interactively or save to disk.
 
     Constants k1,2 and b1,2 are used to visualize cutting lines along equation k*r + b.
 
+    :param solver_name:
     :param r_good:
         List of reflectances of good points.
     :param t_good:
@@ -465,7 +467,7 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     ax.legend()
 
     if save:
-        folder = PH.path_directory_default_slab_model()
+        folder = PH.path_directory_slab_model(solver_name=solver_name)
         image_name = save_name + C.postfix_plot_image_format
         path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
@@ -775,7 +777,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set
     plt.legend()
 
     if save_thumbnail:
-        p = PH.path_directory_slab_simulation(set_name)
+        p = PH.path_directory_slab_simulation(slab_sim_name=set_name)
         image_name = f"variable_fitting.png"
         path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")

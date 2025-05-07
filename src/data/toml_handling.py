@@ -92,7 +92,12 @@ def write_surface_model_parameters(parameter_dict, solver_name=None):
         Solver name used for saving the surface model parameters.
     """
 
+    p_dir = PH.path_directory_slab_model(solver_name=solver_name)
     p = PH.path_file_surface_model_parameters(solver_dirname=solver_name)
+
+    if not os.path.exists(p_dir):
+        os.makedirs(p_dir)
+
     with open(p, 'w+') as file:
         toml.dump(parameter_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 

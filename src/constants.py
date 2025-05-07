@@ -45,8 +45,14 @@ blender_script_name = 'bs_render_single.py'
 ramdisk = '/media/ramdisk'
 """Location of the ramdisk if used."""
 
-"""Project root relative to working folder that is assumed to be project_root/src/."""
+slab_nn_name = 'slab_nn.pt'
+"""Name of the neural network solver."""
+
+slab_surf_name = 'slab_surf.toml'
+"""Name of the surface solver."""
+
 path_project_root = '../'
+"""Project root relative to working folder that is assumed to be project_root/src/."""
 
 # Names of the directories
 # NOTE do not change render folder names as they are used by Blender script
@@ -128,9 +134,6 @@ filename_slab_sim_error_plot = 'slab_sim_error'
 
 filename_result_signal = 'result_signal'
 """Simulated result signal of a slab simulation. This is postfixed with the signal id by :mod:`file_names`."""
-
-filename_model_parameters = 'surface_model_params'
-"""Surface model parameters file."""
 
 file_default_sun = 'default_sun.txt'
 """Default sun spectrum file name that is included in the repository."""

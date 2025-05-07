@@ -11,7 +11,7 @@ from src.forest import forest
 if __name__ == '__main__':
 
 
-    SI.visualize_leaf_models(show_plot=False, training_set_name='train_iter_1', plot_nn=False, plot_surf=True)
+    SI.visualize_leaf_models(training_set_name='train_iter_1', show_plot=False, plot_surf=True, plot_nn=False)
 
     run_paper_tests()
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     set_name_iter_4 = 'train_iter_4'
     # Training data visualization
     TD.visualize_training_data_pruning(set_name=set_name_iter_4, show=True)
-    SI.visualize_leaf_models(training_set_name=set_name_iter_4, show_plot=True, nn_name ="lc5_lw1000_b32_lr0.000_split0.10.pt")
+    SI.visualize_leaf_models(training_set_name=set_name_iter_4, show_plot=True)
     SI.visualize_leaf_models(training_set_name=set_name_iter_4, show_plot=True, plot_nn=True)
     plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
 

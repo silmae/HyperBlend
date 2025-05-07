@@ -90,8 +90,6 @@ class Optimization:
         self.diffstep = diffstep
         self.starting_guess_type = starting_guess_type
         self.solver_name = solver_name
-        if starting_guess_type == 'surf':
-            raise AttributeError(f"Surface model name must be given when using starting guess type '{starting_guess_type}'.")
         LC.initialize_directories(slab_sim_name=set_name, clear_old_results=clear_old_results)
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):

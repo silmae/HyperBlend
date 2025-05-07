@@ -186,15 +186,7 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
             patience_trigger = 0
             best_model_state = net.state_dict()
 
-            # nn_filename = save_name + '.pt'
-
-            # save_path = PH.join(PH.path_directory_slab_model(solver_name=solver_name), nn_filename)
             save_path = PH.path_nn_model(solver_dirname=solver_name)
-
-            # Old save method
-            # save(net, save_path)
-
-            # Just save the state dict instead of the whole model.
             torch.save(best_model_state, save_path)
 
             logging.info(f"Saved model with test loss {best_loss:.8f} epoch {epoch}")
@@ -208,7 +200,7 @@ def train(show_plot=False, layer_count=10, layer_width=1000, epochs=300, batch_s
     logging.info(train_losses)
     logging.info(f"Neural network training finished. Final loss {best_loss}")
     plotter.plot_nn_train_history(train_loss=train_losses, test_loss=test_losses, best_epoch_idx=best_epoch_idx,
-                                  dont_show=not show_plot, save_thumbnail=True)
+                                  dont_show=not show_plot, save_thumbnail=True, solver_name=solver_name)
     return best_loss
 
 
@@ -221,6 +213,9 @@ def predict(target_refl, target_tran, solver_dirname: str=None):
     :return: Lists ad, sd, ai, mf (absorption density, scattering density, scattering anisotropy, and mixing factor).
         Use ``slab_commons._convert_raw_params_to_renderable()`` before passing them to rendering method.
     """
+
+    if not exists(solver_mame=solver_dirname):
+        raise FileNotFoundError(f"Neural network with name '{solver_dirname}' not found.")
 
     net = _load_model(solver_dirname=solver_dirname)
     target_refl = np.array(target_refl)
@@ -256,11 +251,11 @@ def _load_model(solver_dirname: str):
     return net
 
 
-def exists(nn_name='nn_default.pt'):
+def exists(solver_mame: str = None):
     """Checks whether NN with given name exists.
 
     :return:
         True if found, False otherwise.
     """
 
-    return os.path.exists(PH.path_nn_model(solver_dirname=nn_name))
+    return os.path.exists(PH.path_nn_model(solver_dirname=solver_mame))
