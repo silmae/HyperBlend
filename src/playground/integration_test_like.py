@@ -1,9 +1,10 @@
 from data import cube_handling as CH
 from forest import forest
 from rendering import blender_control as BC
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
-def forest_pipe_test(rng):
+def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     """ This is a testing box for all forest canopy simulation funcionality.
 
     You'll have to run this several times. See inline comments what to run and what to
@@ -55,12 +56,13 @@ def forest_pipe_test(rng):
                 soil_name=soil_name, sun_file_name=sun_name, sky_file_name=sky_name)
 
     # Running forest.init only copies files. Running setup makes the Blender scene renderable.
-    BC.setup_forest(forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])  #, 'Leaf material 4'])
+    BC.setup_forest(
+        forest_id=forest_id, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'], runtime=runtime)  #, 'Leaf material 4'])
 
     # Render bands for spectral cube along with additional images
-    BC.render_forest(forest_id=forest_id, render_mode='preview')
-    BC.render_forest(forest_id=forest_id, render_mode='visibility')
-    BC.render_forest(forest_id=forest_id, render_mode='spectral')
+    BC.render_forest(forest_id=forest_id, render_mode='preview', runtime=runtime)
+    BC.render_forest(forest_id=forest_id, render_mode='visibility', runtime=runtime)
+    BC.render_forest(forest_id=forest_id, render_mode='spectral', runtime=runtime)
 
     # Construct spectral cube in ENVI format
     CH.construct_envi_cube(forest_id=forest_id)

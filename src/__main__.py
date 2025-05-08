@@ -18,7 +18,7 @@ from src.setup import initialization
 
 if __name__ == '__main__':
 
-    initialization.initialize()
+    runtime = initialization.initialize()
 
     # rng = np.random.default_rng(4321)
     # #### RUN ME FOR TESTING FOREST CANOPY STUFF OUT. SEE THE COMMENTS IN THE METHOD BEFORE RUNNING!!! ######

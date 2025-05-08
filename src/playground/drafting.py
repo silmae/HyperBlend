@@ -1,4 +1,5 @@
 import slab_model.training_data
+from setup import initialization
 from src.reflectance_lab import diffuse_reflectance
 from src.slab_model import interface as SI, training_data as TD
 from src.utils import spectra_utils as SU
@@ -10,6 +11,7 @@ from src.forest import forest
 
 if __name__ == '__main__':
 
+    runtime = initialization.initialize()
 
     SI.visualize_leaf_models(training_set_name='train_iter_1', show_plot=False, plot_surf=True, plot_nn=False)
 
@@ -42,7 +44,7 @@ if __name__ == '__main__':
     forest_id = '1406231352'
 
     # Sun power test
-    diffuse_reflectance.run(data_exits=True)
+    diffuse_reflectance.run(runtime=runtime ,data_exits=True)
 
     leaf_stuff = [('try_random_p_leaves', 0, 1), ('try_random_p_leaves', 1, 3)]
     forest.init(copy_forest_id='0102231033')

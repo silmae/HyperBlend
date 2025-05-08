@@ -9,13 +9,13 @@ import os
 
 from src import constants as C
 from src.data import path_handling as PH, toml_handling as TH
-from src.setup import runtime_environment as RE
+from src.setup.runtime_environment import RuntimeEnvironment
 
 RECOGNIZED_KEYS = ["name", "type", "extensions"]
 """List of recognized keys in the directory structure definition file."""
 
 
-def check_directory_structure():
+def check_directory_structure(runtime: RuntimeEnvironment):
     """Checks the directory structure of the project."""
 
     logging.info("Checking directory structure")
@@ -36,9 +36,9 @@ def check_directory_structure():
             _process_dir_struct_sub_entry(value, dir_list=[])
         elif key == "version":
             # Check if the version of the directory structure matches the version of HyperBlend
-            if value != RE._HB_VERSION:
+            if value != runtime.hyperblend_version:
                 logging.error(f"Version of the directory structure '{value}' does not match "
-                      f"the version of HyperBlend '{RE._HB_VERSION}'. Please re-install "
+                      f"the version of HyperBlend '{runtime.hyperblend_version}'. Please re-install "
                       f"HyperBlend.")
                 exit(1)
 

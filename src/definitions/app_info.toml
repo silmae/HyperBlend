@@ -2,4 +2,4 @@
 app_title = "HyperBlend"
 app_version = 0.3
 app_author = "Kimmo Riihiaho"
-supported_blender_versions = ["3.6",]
+supported_blender_versions = ["3.6","4.4"]

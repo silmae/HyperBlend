@@ -11,10 +11,10 @@ import logging
 
 from src import constants as C
 from src.data import path_handling as PH
-from src.setup import runtime_environment as RE
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
-def _get_blender_executable_path():
+def _get_blender_executable_path(runtime: RuntimeEnvironment):
     """Returns path to Blender executable file.
 
     Checks whether running on Windows. If not, returns the default location on Linux.
@@ -27,11 +27,12 @@ def _get_blender_executable_path():
         The version should not cause problems on Linux machine.
     """
 
-    if RE._BLENDER_EXECUTABLE is not None:
+    if runtime.blender_executable_path is not None:
         # FIXME the runtime env is not ok even if initialization has been rune before calling this
-        return RE._BLENDER_EXECUTABLE
+        return runtime.blender_executable_path
     else:
-        logging.warning("Using default Blender executable path from constants.py file as a fallback.")
+        logging.warning("Could not get Blender executable path from RuntimeEnvironment. "
+                        "Using default Blender executable path from constants.py file as a fallback.")
 
         bpath = C.blender_executable_path_win
         if not platform.startswith('win'):
@@ -43,7 +44,7 @@ def _get_blender_executable_path():
     return bpath
 
 
-def _get_base_blender_args(script_name: str, scene_path: str):
+def _get_base_blender_args(script_name: str, scene_path: str, runtime: RuntimeEnvironment):
     """ Return basic arguments passed to Blender.
 
     :param script_name:
@@ -70,7 +71,7 @@ def _get_base_blender_args(script_name: str, scene_path: str):
         raise RuntimeError(f"Cannot find scene '{scene_path}'.")
 
     blender_args = [
-        _get_blender_executable_path(),
+        _get_blender_executable_path(runtime=runtime),
         "--background",  # Run Blender in the background.
         "--python-exit-code", # Tell Blender to set exit code
         "1",                  # to 1 if the script does not execute properly.
@@ -82,11 +83,14 @@ def _get_base_blender_args(script_name: str, scene_path: str):
     return blender_args
 
 
-def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
+def run_render_series(runtime: RuntimeEnvironment, rend_base_path: str, wl, ad, sd, ai, mf,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
-    """This is mainly an utility function to plot a full wavelength series once the parameters are found."""
+    """This is mainly an utility function to plot a full wavelength series once the parameters are found.
 
-    blender_args = _get_base_blender_args(script_name='bs_render_series.py', scene_path=PH.path_slab_simulation_template())
+    """
+
+    blender_args = _get_base_blender_args(
+        script_name='bs_render_series.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime)
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -126,7 +130,7 @@ def run_render_series(rend_base_path: str, wl, ad, sd, ai, mf,
     logging.info(f"Render loop run for {seconds:.1f} seconds")
 
 
-def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
+def run_render_single(runtime: RuntimeEnvironment, rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
                       clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
     """Renders a single image of the slab simulation with given leaf material parameters.
 
@@ -155,7 +159,9 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
         If True, Blender will not render anything but only print out some debugging stuff.
     """
 
-    blender_args = _get_base_blender_args(script_name=C.blender_script_name, scene_path=PH.path_slab_simulation_template())
+    blender_args = _get_base_blender_args(script_name=C.blender_script_name,
+                                          scene_path=PH.path_slab_simulation_template(),
+                                          runtime=runtime)
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -187,9 +193,11 @@ def run_render_single(rend_base_path: str, wl:float, ad:float, sd:float, ai:floa
             exit(1)
 
 
-def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
+def run_reflectance_lab(runtime: RuntimeEnvironment, rend_base_path: str, dry_run=False, sun_power=None):
 
-    blender_args = _get_base_blender_args(script_name='bs_reflectance_lab.py', scene_path=PH.path_slab_simulation_template())
+    blender_args = _get_base_blender_args(
+        script_name='bs_reflectance_lab.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime
+    )
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -206,19 +214,24 @@ def run_reflectance_lab(rend_base_path: str, dry_run=False, sun_power=None):
             logging.fatal(f"Failed to run reflectance lab. Exiting HyperBlend.")
             exit(1)
 
-def generate_forest_control(forest_id: str = None, global_master: bool = False):
+
+def generate_forest_control(runtime: RuntimeEnvironment, forest_id: str = None, global_master: bool = False):
     """Generates a forest control file by reading parameters from a Blender file.
+
+    .. note::
+        Even if there are no usages for this method, do not remove it. It is used to
+        generate the forest control file from the scene template.
 
     :param forest_id:
         ID of the forest to create the control file for.
     :param global_master:
         If True, the global master control file is updated based on the parameters
         in forest template file. The result is saved to the project root directory.
-    :raises
-        AttributeError if either:
+    :raises AttributeError:
+            if either
             1. global_master == False and scene_id == None, because there is nothing to be done.
             2. global_master == True and scene_id is not None, because the caller might expect
-            something else to happen than rewriting of the global master control.
+                something else to happen than rewriting of the global master control.
     """
 
     if not global_master and forest_id is None:
@@ -232,7 +245,7 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
     else:
         scene_path = PH.path_file_system_simulation_blend(forest_id)
 
-    blender_args = _get_base_blender_args(script_name='bs_configuration.py', scene_path=scene_path)
+    blender_args = _get_base_blender_args(script_name='bs_configuration.py', scene_path=scene_path, runtime=runtime)
 
     scirpt_args = ['--']
 
@@ -249,7 +262,7 @@ def generate_forest_control(forest_id: str = None, global_master: bool = False):
             exit(1)
 
 
-def setup_forest(forest_id: str, leaf_name_list=None):
+def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=None):
     """ Setup the forest for rendering.
 
     :param forest_id:
@@ -261,8 +274,8 @@ def setup_forest(forest_id: str, leaf_name_list=None):
 
     logging.info(f"Calling forest scene setup")
 
-    blender_args = _get_base_blender_args(script_name='bs_setup_forest.py',
-                                          scene_path=PH.path_file_system_simulation_blend(forest_id))
+    blender_args = _get_base_blender_args(
+        script_name='bs_setup_forest.py', scene_path=PH.path_file_system_simulation_blend(forest_id), runtime=runtime)
 
     scirpt_args = ['--']
     scirpt_args += ['-id', f'{forest_id}']
@@ -277,7 +290,7 @@ def setup_forest(forest_id: str, leaf_name_list=None):
             exit(1)
 
 
-def render_forest(forest_id: str, render_mode: str):
+def render_forest(runtime: RuntimeEnvironment, forest_id: str, render_mode: str):
     """Render different presentations of the forest scene.
 
     :param forest_id:
@@ -291,10 +304,10 @@ def render_forest(forest_id: str, render_mode: str):
         in each pixel.
     """
 
-    logging.info(f"render_forest() called, I can possibly do something.")
+    logging.info(f"Calling Blender for system simulation rendering.")
 
     scene_path = PH.path_file_system_simulation_blend(forest_id)
-    blender_args = _get_base_blender_args(script_name='bs_render_forest', scene_path=scene_path)
+    blender_args = _get_base_blender_args(script_name='bs_render_forest', scene_path=scene_path, runtime=runtime)
 
     scirpt_args = ['--']
     scirpt_args += ['-id', f'{forest_id}']

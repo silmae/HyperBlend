@@ -17,6 +17,7 @@ from src import plotter
 from src.slab_model import nn, surf, slab_commons as LC
 from src.prospect import prospect
 from src.utils import data_utils as DU
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def generate_prospect_leaf(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None, w=None, m=None, ant=None):
@@ -81,7 +82,7 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
     sampling.resample(set_name=set_name)
 
 
-def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_sampling=False, solver='nn',
+def solve_leaf_material_parameters(runtime: RuntimeEnvironment, set_name: str, resolution=None, use_dumb_sampling=False, solver='nn',
                                    clear_old_results=False, solver_dirname: str = None,
                                    copyof=None, plot_resampling=True):
     """Solves leaf material parameters for rendering.
@@ -154,7 +155,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
             targets = targets[::resolution]
 
         if solver == 'opt':
-            o = Optimization(set_name=set_name, solver_name=solver_dirname)
+            o = Optimization(runtime=runtime, set_name=set_name, solver_name=solver_dirname)
             o.run_optimization(resampled=not use_dumb_sampling)
         elif solver == 'surf' or solver == "nn":
             start = time.perf_counter()
@@ -171,7 +172,10 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
                 raise AttributeError(f"Unknown solver '{solver}'.")
 
             ad, sd, ai, mf = LC._convert_raw_params_to_renderable(ad_raw, sd_raw, ai_raw, mf_raw)
-            r, t = LC._material_params_to_RT(set_name, sample_id, wls, ad, sd, ai, mf)
+
+            r, t = LC._material_params_to_RT(
+                runtime=runtime, slab_sim_name=set_name, signal_id=sample_id, wls=wls, ad=ad, sd=sd, ai=ai, mf=mf
+            )
 
             re = np.abs(r - r_m)
             te = np.abs(t - t_m)
@@ -191,7 +195,7 @@ def solve_leaf_material_parameters(set_name: str, resolution=None, use_dumb_samp
     plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
 
 
-def iterative_train(iterations=8, training_points=200, dry_run=False):
+def iterative_train(runtime: RuntimeEnvironment, iterations=8, training_points=200, dry_run=False):
 
     first_run_similarity_requirement = 0.2
     last_run_similarity_requirement = 1.0
@@ -208,7 +212,8 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
 
         if i == 0:
             # First iteration
-            train_models(set_name=current_iteration_slab_sim_name,
+            train_models(runtime=runtime,
+                         set_name=current_iteration_slab_sim_name,
                          generate_data=True,
                          data_generation_diff_step=first_run_diffstep,
                          starting_guess_type='curve',
@@ -221,7 +226,8 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
 
         elif i == iterations - 1:
             # Last iteration
-            train_models(set_name=current_iteration_slab_sim_name,
+            train_models(runtime=runtime,
+                         set_name=current_iteration_slab_sim_name,
                          generate_data=True,
                          data_generation_diff_step=diffstep,
                          starting_guess_type='surf',
@@ -235,7 +241,8 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
                          solver_name_to_use=previous_iteration_slab_sim_name)
         else:
             # Intermediate iterations
-            train_models(set_name=current_iteration_slab_sim_name,
+            train_models(runtime=runtime,
+                         set_name=current_iteration_slab_sim_name,
                          generate_data=True,
                          data_generation_diff_step=diffstep,
                          starting_guess_type='surf',
@@ -252,7 +259,7 @@ def iterative_train(iterations=8, training_points=200, dry_run=False):
 
 
 
-def train_models(set_name='training_data', generate_data=False, data_generation_diff_step=0.01,
+def train_models(runtime: RuntimeEnvironment, set_name='training_data', generate_data=False, data_generation_diff_step=0.01,
                  starting_guess_type='curve', similarity_rt=0.25, train_surf=True, train_nn=True, layer_count=5,
                  layer_width=1000, epochs=300, batch_size=32, learning_rate=0.01, patience=30, split=0.1,
                  train_points_per_dim=20, dry_run=False, show_plot=False, solver_name_to_save=None, solver_name_to_use=None):
@@ -325,7 +332,7 @@ def train_models(set_name='training_data', generate_data=False, data_generation_
     """
 
     if generate_data:
-        TD.generate_train_data(set_name=set_name, dry_run=dry_run, cuts_per_dim=train_points_per_dim,
+        TD.generate_train_data(runtime=runtime, set_name=set_name, dry_run=dry_run, cuts_per_dim=train_points_per_dim,
                                similarity_rt=similarity_rt, starting_guess_type=starting_guess_type,
                                data_generation_diff_step=data_generation_diff_step,
                                solver_name_to_use=solver_name_to_use, solver_name_to_save=solver_name_to_save)

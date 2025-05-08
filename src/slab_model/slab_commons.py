@@ -11,6 +11,7 @@ from src.data import path_handling as P, file_handling as FH
 from src import constants as C
 from src.rendering import blender_control as BC
 from src.utils import general_utils as GU, data_utils as DU
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
 
@@ -51,24 +52,27 @@ def _render(args):
     is sensitive to refactoring.
     """
 
-    slab_sim_name = args[0]
-    signal_id = args[1]
+    runtime = args[0]
+    slab_sim_name = args[1]
+    signal_id = args[2]
     p = P.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
 
     if not os.path.exists(p):
         raise FileNotFoundError(f"File {p} does not exist. Cannot render the slab model.")
 
-    BC.run_render_series(rend_base_path=p,
-                         wl=args[2],
-                         ad=args[3],
-                         sd=args[4],
-                         ai=args[5],
-                         mf= args[6],
-                         clear_rend_folder=False, clear_references=False,
-                         render_references=True, dry_run=False)
+    BC.run_render_series(
+        runtime=runtime,
+        rend_base_path=p,
+        wl=args[3],
+        ad=args[4],
+        sd=args[5],
+        ai=args[6],
+        mf= args[7],
+        clear_rend_folder=False, clear_references=False,
+        render_references=True, dry_run=False)
 
 
-def _material_params_to_RT(slab_sim_name: str, signal_id: int, wls, ad, sd, ai, mf):
+def _material_params_to_RT(runtime: RuntimeEnvironment, slab_sim_name: str, signal_id: int, wls, ad, sd, ai, mf):
     """ Material parameters are converted to reflectance and transmittance by rendering the slab model.
 
     :param slab_sim_name:
@@ -99,7 +103,7 @@ def _material_params_to_RT(slab_sim_name: str, signal_id: int, wls, ad, sd, ai, 
         ai_chunks = GU.chunks(ai, n)
         mf_chunks = GU.chunks(mf, n)
 
-        param_list = [(slab_sim_name, signal_id, wl, ad, sd, ai, mf) for wl, ad, sd, ai, mf in
+        param_list = [(runtime, slab_sim_name, signal_id, wl, ad, sd, ai, mf) for wl, ad, sd, ai, mf in
                       zip(wl_chunks, ad_chunks, sd_chunks, ai_chunks, mf_chunks)]
         pool.map(_render, param_list)
 

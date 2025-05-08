@@ -17,10 +17,10 @@ from src.data import path_handling as PH, toml_handling as TH
 
 
 # @unittest.skip("Skipping test_slab_simulation for now")
-class Test(TestCase):
+class TestSlabs(TestCase):
 
     def setUp(self):
-        initialization.initialize()
+        self.runtime = initialization.initialize()
 
     def tearDown(self):
         logging.shutdown()
@@ -120,6 +120,7 @@ class Test(TestCase):
         self.assertTrue(os.path.exists(p3))
 
         SMI.solve_leaf_material_parameters(
+            runtime=self.runtime,
             set_name=slab_sim_name, clear_old_results=True,
             resolution=None, use_dumb_sampling=False, solver=solver,
             copyof=None, plot_resampling=False, solver_dirname=solver_dirname)
@@ -171,6 +172,7 @@ class Test(TestCase):
         SMI.resample_leaf_targets(set_name=slab_sim_opt_name, new_sampling=new_sampling)
 
         SMI.solve_leaf_material_parameters(
+            runtime=self.runtime,
             set_name=slab_sim_opt_name, clear_old_results=True,
             resolution=None, use_dumb_sampling=False, solver='opt',
             copyof=None, plot_resampling=False, solver_dirname=solver_dirname)

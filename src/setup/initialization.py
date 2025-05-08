@@ -17,7 +17,7 @@ import numpy as np
 from src.setup.directory_check import check_directory_structure
 from src.data import path_handling as PH, toml_handling as TH
 from src import constants as C
-from src.setup import runtime_environment as RE
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def initialize():
@@ -27,15 +27,18 @@ def initialize():
     Dynamically checks operating system and found Blender versions.
     """
 
-    logging.info("Initializing HyperBlend")
+    runtime = RuntimeEnvironment()
     _init_logging()
-    _load_app_info()
-    check_directory_structure()
-    _check_operating_system()
-    _check_blender_version()
+    _load_app_info(runtime)
+    check_directory_structure(runtime)
+    _check_operating_system(runtime)
+    _check_blender_version(runtime)
+    logging.info("Initialization complete")
+    return runtime
 
 
 def _init_logging():
+
     # log to stdout instead of stderr for nice coloring
     # logging.basicConfig(stream=sys.stdout, level='INFO')
     path_dir_logs = "../log"
@@ -56,8 +59,10 @@ def _init_logging():
                             logging.StreamHandler(),
                         ])
 
+    logging.info("Logging initialized")
 
-def _load_app_info():
+
+def _load_app_info(runtime: RuntimeEnvironment):
     """Load application information from the app info from :mod:`definitions.app_info`.
 
     This function reads the application information file, which contains metadata about HyperBlend,
@@ -81,12 +86,14 @@ def _load_app_info():
 
     for key, value in app_info_dict.items():
         if key == "app_version":
-            RE._HB_VERSION = value
+            runtime._HB_VERSION = value
         elif key == "supported_blender_versions":
-            RE._SUPPORTED_BLENDER_VERSIONS = value
+            runtime._SUPPORTED_BLENDER_VERSIONS = value
+
+    logging.info(f"App info loaded. Running HyperBlend version: {runtime.hyperblend_version}")
 
 
-def _check_operating_system():
+def _check_operating_system(runtime: RuntimeEnvironment):
     """Check the operating system and set the corresponding variable in the runtime environment.
 
     .. warning:: If the operating system is not recognized (Windows or Linux), the program will exit.
@@ -94,18 +101,22 @@ def _check_operating_system():
     :raises NotImplementedError: If the operating system is not supported, i.e., Mac OS.
     """
 
+    logging.info("Checking operating system")
+
     if platform == "linux":
-        RE._OS = platform
+        runtime._OS = platform
     elif platform == "darwin":
         raise NotImplementedError("OS X is not supported.")
     elif platform == "win32":
-        RE._OS = platform
+        runtime._OS = platform
     else:
         logging.error(f"Unknown operating system: {platform}. Cannot continue.")
         exit(1)
 
+    logging.info(f"Operating system: {runtime.operating_system_string}")
 
-def _check_blender_version():
+
+def _check_blender_version(runtime: RuntimeEnvironment):
     """Check the installed Blender version and set the corresponding variable in the runtime environment.
 
     On a Windows machine, the latest supported version is selected. Supported versions are listed in
@@ -116,8 +127,8 @@ def _check_blender_version():
 
     found_versions = []
 
-    operating_system = RE._OS
-    supported_blender_versions = RE._SUPPORTED_BLENDER_VERSIONS
+    operating_system = runtime.operating_system_string
+    supported_blender_versions = runtime.supported_blender_versions
 
     path_foundation = C.blender_foundation_win
 
@@ -142,10 +153,6 @@ def _check_blender_version():
         logging.error("Operating system is not recognized.")
         exit(1)
 
-    logging.debug(f"Checking found Blender versions against supported versions.")
-    logging.debug(f"Found versions: {found_versions}")
-    logging.debug(f"Supported versions: {supported_blender_versions}")
-
     res = np.array(list(i in supported_blender_versions for i in found_versions))
 
     if not np.any(res):
@@ -155,7 +162,11 @@ def _check_blender_version():
 
     # It's a tuple so take the newest version
     i = np.where(res)[0][-1]
-    blender_ex_path = f"Blender {found_versions[i]}\\blender.exe"
+    selected_version = found_versions[i]
+    blender_ex_path = f"Blender {selected_version}\\blender.exe"
     full_blender_ex_path = os.path.join(path_foundation, blender_ex_path)
-    RE._BLENDER_EXECUTABLE = full_blender_ex_path
+    runtime._BLENDER_EXECUTABLE = full_blender_ex_path
+
+    logging.info(f"Autoselected Blender version {selected_version} from installed versions: {found_versions}, "
+                  f"which is the newest of the supported versions {supported_blender_versions}.")
     logging.info(f"Set Blender executable to: {full_blender_ex_path}")

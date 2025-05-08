@@ -27,10 +27,11 @@ from src.setup import initialization
 from src import constants as C
 
 
-class Test(TestCase):
+# @unittest.skip("Skipping training test for now")
+class TestTraining(TestCase):
 
     def setUp(self):
-        initialization.initialize()
+        self.runtime = initialization.initialize()
 
     def tearDown(self):
         logging.shutdown()
@@ -41,12 +42,12 @@ class Test(TestCase):
         # Test the normal starting guess generation to a custom dir
         slab_sim_name = "test_starting_guess"
         new_solver_name = "test_solver"
-        TD.generate_starting_guess(slab_sim_name=slab_sim_name, solver_name=new_solver_name, step=100)
+        TD.generate_starting_guess(slab_sim_name=slab_sim_name, solver_name=new_solver_name, step=100, runtime=self.runtime)
 
     def test_iterative_training(self):
 
         iterations = 3
-        SMI.iterative_train(iterations=iterations, training_points=10, dry_run=False)
+        SMI.iterative_train(runtime=self.runtime, iterations=iterations, training_points=10, dry_run=False)
 
         model_name_base = "train_iter_"
         for i in range(3):

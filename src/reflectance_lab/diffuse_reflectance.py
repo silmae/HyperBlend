@@ -4,9 +4,10 @@ from src.rendering import blender_control as BC
 from src.slab_model import slab_commons as LC
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, path_handling as PH
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
-def run(data_exits=False):
+def run(runtime: RuntimeEnvironment, data_exits=False):
     """Run virtual reflectance lab. The result will be plotted to project's root directory.
 
     This is only to show that if the sun power is more than 4 W/m2, a completely white
@@ -25,7 +26,7 @@ def run(data_exits=False):
     for sun_power in powers:
         sample_dir = PH.path_directory_result_signal(set_name=set_name, sample_id=sun_power)
         if not data_exits:
-            BC.run_reflectance_lab(rend_base_path=sample_dir, dry_run=False, sun_power=sun_power)
+            BC.run_reflectance_lab(rend_base_path=sample_dir, dry_run=False, sun_power=sun_power, runtime=runtime)
         vals = []
         for value in HSV_values:
             p = FH.search_by_wl(C.target_type_slab, 'refl', wl=value, base_path=sample_dir)

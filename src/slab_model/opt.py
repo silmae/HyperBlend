@@ -15,6 +15,7 @@ from src.utils import data_utils as DU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter, constants as C
 from src.slab_model import slab_commons as LC
+from src.setup.runtime_environment import RuntimeEnvironment
 
 # TESTR
 from src.slab_model import surf
@@ -38,7 +39,7 @@ class Optimization:
         against a set of measured leaf spectra.
     """
 
-    def __init__(self, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01, starting_guess_type='curve',
+    def __init__(self, runtime: RuntimeEnvironment, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01, starting_guess_type='curve',
                  clear_old_results=False, solver_name=None):
         """Initialize new optimization object.
 
@@ -90,6 +91,7 @@ class Optimization:
         self.diffstep = diffstep
         self.starting_guess_type = starting_guess_type
         self.solver_name = solver_name
+        self.runtime = runtime
         LC.initialize_directories(slab_sim_name=set_name, clear_old_results=clear_old_results)
 
     def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):
@@ -131,7 +133,7 @@ class Optimization:
             if use_threads:
                 param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,self.ftol, self.xtol,
                                self.bounds, LC.density_scale, self.optimizer_verbosity, use_basin_hopping,
-                               sample_id, self.ftol_abs, self.starting_guess_type, self.solver_name)
+                               sample_id, self.ftol_abs, self.starting_guess_type, self.solver_name, self.runtime)
                               for a in targets]
                 with Pool() as pool:
                     pool.map(optimize_single_wl_threaded, param_list)
@@ -143,7 +145,7 @@ class Optimization:
                     optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
                                        self.ftol, self.xtol, self.bounds, LC.density_scale, self.optimizer_verbosity,
                                        use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type,
-                                       self.solver_name)
+                                       self.solver_name, self.runtime)
 
             logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
             elapsed_min = (time.perf_counter() - total_time_start) / 60.
@@ -164,7 +166,7 @@ def optimize_single_wl_threaded(args):
 def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
                        ftol, xtol, bounds, density_scale, optimizer_verbosity,
                        use_basin_hopping: bool, sample_id: int, ftol_abs, starting_guess_type,
-                       solver_name):
+                       solver_name, runtime: RuntimeEnvironment):
     """Optimize single wavelength to given reflectance and transmittance.
 
     Result is saved in a .toml file and plotted as an image.
@@ -239,7 +241,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
         ad, sd, ai, mf = LC._convert_raw_params_to_renderable(x[0], x[1], x[2], x[3])
 
-        B.run_render_single(rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
+        B.run_render_single(runtime=runtime,
+                            rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
                             wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                             clear_rend_folder=False,
                             clear_references=False,
@@ -275,7 +278,7 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         return total_loss
 
     # Render references here as it only needs to be done once per wavelength
-    B.run_render_single(rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
+    B.run_render_single(runtime=runtime, rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
                         mf=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
 
     if starting_guess_type == 'hard-coded':
@@ -356,7 +359,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     ad, sd, ai, mf = LC._convert_raw_params_to_renderable(res.x[0], res.x[1], res.x[2], res.x[3])
     # Render one more time with best values (in case it was not the last run)
-    B.run_render_single(rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
+    B.run_render_single(runtime=runtime,
+                        rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
                         wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
                         clear_rend_folder=False,
                         clear_references=False,
