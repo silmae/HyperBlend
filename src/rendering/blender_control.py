@@ -1,13 +1,12 @@
 """
-This file passes the rendering parameters to the Blender rendering script.
+This script passes the rendering parameters to the Blender rendering scripts.
 """
 
+import logging
 import os
-
 import subprocess
 import time
 from sys import platform
-import logging
 
 from src import constants as C
 from src.data import path_handling as PH
@@ -15,32 +14,31 @@ from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def _get_blender_executable_path(runtime: RuntimeEnvironment):
-    """Returns path to Blender executable file.
+    """Returns a path to a Blender executable file.
 
-    Checks whether running on Windows. If not, returns the default location on Linux.
-
-    :returns
-        Path to Blender executable.
-    :raises
-        FileNotFoundError if cannot find the path on Windows. This will happen if Blender
-        is not installed, or the version does not match the path given in `constants.py` file.
-        The version should not cause problems on Linux machine.
+    :param runtime: The runtime environment object which contains the path to the Blender executable.
+    :returns:Path to Blender executable.
+    :raises FileNotFoundError: if none of the paths actually contain the executable. This
+        can happen if there is no Blender installed or none of the installed versions is compatible.
     """
 
     if runtime.blender_executable_path is not None:
-        # FIXME the runtime env is not ok even if initialization has been rune before calling this
         return runtime.blender_executable_path
     else:
-        logging.warning("Could not get Blender executable path from RuntimeEnvironment. "
-                        "Using default Blender executable path from constants.py file as a fallback.")
+        logging.warning(
+            "Could not get Blender executable path from RuntimeEnvironment. "
+            "Using default Blender executable path from constants.py file as a fallback."
+            )
 
         bpath = C.blender_executable_path_win
         if not platform.startswith('win'):
             bpath = C.blender_executable_path_linux
 
         if not os.path.exists(bpath):
-            raise FileNotFoundError(f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
-                                    f"Check Blender installation and set correct path to 'constants.py'. ")
+            raise FileNotFoundError(
+                f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
+                f"Check Blender installation and set correct path to 'constants.py'. "
+                )
     return bpath
 
 
@@ -73,8 +71,8 @@ def _get_base_blender_args(script_name: str, scene_path: str, runtime: RuntimeEn
     blender_args = [
         _get_blender_executable_path(runtime=runtime),
         "--background",  # Run Blender in the background.
-        "--python-exit-code", # Tell Blender to set exit code
-        "1",                  # to 1 if the script does not execute properly.
+        "--python-exit-code",  # Tell Blender to set exit code
+        "1",  # to 1 if the script does not execute properly.
         scene_path,  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         script_path,  # Python script file to be run.
@@ -83,14 +81,17 @@ def _get_base_blender_args(script_name: str, scene_path: str, runtime: RuntimeEn
     return blender_args
 
 
-def run_render_series(runtime: RuntimeEnvironment, rend_base_path: str, wl, ad, sd, ai, mf,
-                      clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
+def run_render_series(
+    runtime: RuntimeEnvironment, rend_base_path: str, wl, ad, sd, ai, mf,
+    clear_rend_folder = True, clear_references = True, render_references = True, dry_run = False
+    ):
     """This is mainly an utility function to plot a full wavelength series once the parameters are found.
 
     """
 
     blender_args = _get_base_blender_args(
-        script_name='bs_render_series.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime)
+        script_name='bs_render_series.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime
+    )
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -122,16 +123,20 @@ def run_render_series(runtime: RuntimeEnvironment, rend_base_path: str, wl, ad, 
                 logging.fatal(f"Blender script failed to run. Check the arguments passed to it.")
                 exit(1)
         except FileNotFoundError as e:
-            raise FileNotFoundError(f"Blender script argument string is too long for Windows to handle. Use less "
-                                    f"wavelengths to reduce the amount of passed information. You can also try "
-                                    f"running in separate batches.") from e
+            raise FileNotFoundError(
+                f"Blender script argument string is too long for Windows to handle. Use less "
+                f"wavelengths to reduce the amount of passed information. You can also try "
+                f"running in separate batches."
+                ) from e
 
     seconds = time.perf_counter() - start
     logging.info(f"Render loop run for {seconds:.1f} seconds")
 
 
-def run_render_single(runtime: RuntimeEnvironment, rend_base_path: str, wl:float, ad:float, sd:float, ai:float, mf:float,
-                      clear_rend_folder=True, clear_references=True, render_references=True, dry_run=False):
+def run_render_single(
+    runtime: RuntimeEnvironment, rend_base_path: str, wl: float, ad: float, sd: float, ai: float, mf: float,
+    clear_rend_folder = True, clear_references = True, render_references = True, dry_run = False
+    ):
     """Renders a single image of the slab simulation with given leaf material parameters.
 
     Used by the optimization solver :mod:`slab_model.opt`.
@@ -159,9 +164,11 @@ def run_render_single(runtime: RuntimeEnvironment, rend_base_path: str, wl:float
         If True, Blender will not render anything but only print out some debugging stuff.
     """
 
-    blender_args = _get_base_blender_args(script_name=C.blender_script_name,
-                                          scene_path=PH.path_slab_simulation_template(),
-                                          runtime=runtime)
+    blender_args = _get_base_blender_args(
+        script_name=C.blender_script_name,
+        scene_path=PH.path_slab_simulation_template(),
+        runtime=runtime
+        )
 
     scirpt_args = ['--']
     p = os.path.abspath(rend_base_path)
@@ -193,7 +200,7 @@ def run_render_single(runtime: RuntimeEnvironment, rend_base_path: str, wl:float
             exit(1)
 
 
-def run_reflectance_lab(runtime: RuntimeEnvironment, rend_base_path: str, dry_run=False, sun_power=None):
+def run_reflectance_lab(runtime: RuntimeEnvironment, rend_base_path: str, dry_run = False, sun_power = None):
 
     blender_args = _get_base_blender_args(
         script_name='bs_reflectance_lab.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime
@@ -209,7 +216,7 @@ def run_reflectance_lab(runtime: RuntimeEnvironment, rend_base_path: str, dry_ru
 
     # Direct Blender logging info to null stream to avoid cluttering of console.
     with open(os.devnull, 'wb') as stream:
-        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
             logging.fatal(f"Failed to run reflectance lab. Exiting HyperBlend.")
             exit(1)
@@ -256,14 +263,14 @@ def generate_forest_control(runtime: RuntimeEnvironment, forest_id: str = None, 
         scirpt_args += ['-g']
 
     with open(os.devnull, 'wb') as stream:
-        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
             logging.fatal(f"Failed to generate forest control file.")
             exit(1)
 
 
-def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=None):
-    """ Setup the forest for rendering.
+def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list = None):
+    """Set up the forest for rendering.
 
     :param forest_id:
         ID of the forest to be set up.
@@ -275,7 +282,8 @@ def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=Non
     logging.info(f"Calling forest scene setup")
 
     blender_args = _get_base_blender_args(
-        script_name='bs_setup_forest.py', scene_path=PH.path_file_system_simulation_blend(forest_id), runtime=runtime)
+        script_name='bs_setup_forest.py', scene_path=PH.path_file_system_simulation_blend(forest_id), runtime=runtime
+    )
 
     scirpt_args = ['--']
     scirpt_args += ['-id', f'{forest_id}']
@@ -284,7 +292,7 @@ def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=Non
         scirpt_args += ['-l_ids', f'{list(leaf_name_list)}']  # available leaf indexes
 
     with open(os.devnull, 'wb') as stream:
-        status = subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
             logging.fatal(f"Failed to setup forest scene file.")
             exit(1)
@@ -314,4 +322,4 @@ def render_forest(runtime: RuntimeEnvironment, forest_id: str, render_mode: str)
     scirpt_args += ['-rm', render_mode]
 
     with open(os.devnull, 'wb') as stream:
-        subprocess.run(blender_args + scirpt_args)#, stdout=stream)
+        subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
