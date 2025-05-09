@@ -28,22 +28,24 @@ def _get_blender_executable_path(runtime: RuntimeEnvironment):
         logging.warning(
             "Could not get Blender executable path from RuntimeEnvironment. "
             "Using default Blender executable path from constants.py file as a fallback."
-            )
+        )
 
         bpath = C.blender_executable_path_win
-        if not platform.startswith('win'):
+        if not platform.startswith("win"):
             bpath = C.blender_executable_path_linux
 
         if not os.path.exists(bpath):
             raise FileNotFoundError(
                 f"Could not find Blender executable from '{os.path.abspath(bpath)}'. "
                 f"Check Blender installation and set correct path to 'constants.py'. "
-                )
+            )
     return bpath
 
 
-def _get_base_blender_args(script_name: str, scene_path: str, runtime: RuntimeEnvironment):
-    """ Return basic arguments passed to Blender.
+def _get_base_blender_args(
+    script_name: str, scene_path: str, runtime: RuntimeEnvironment
+):
+    """Return basic arguments passed to Blender.
 
     :param script_name:
         Name of the Blender script to be run. These are found under `src/blender_scripts`.
@@ -58,8 +60,8 @@ def _get_base_blender_args(script_name: str, scene_path: str, runtime: RuntimeEn
         RuntimeError if either script or scene cannot be found.
     """
 
-    if not script_name.endswith('.py'):
-        script_name = script_name + '.py'
+    if not script_name.endswith(".py"):
+        script_name = script_name + ".py"
 
     script_path = PH.join(PH.path_directory_blender_scripts(), script_name)
     if not os.path.exists(script_path):
@@ -76,67 +78,88 @@ def _get_base_blender_args(script_name: str, scene_path: str, runtime: RuntimeEn
         scene_path,  # Blender file to be run.
         "--python",  # Execute a python script with the Blender file.
         script_path,  # Python script file to be run.
-        "--log-level", "0",
+        "--log-level",
+        "0",
     ]
     return blender_args
 
 
 def run_render_series(
-    runtime: RuntimeEnvironment, rend_base_path: str, wl, ad, sd, ai, mf,
-    clear_rend_folder = True, clear_references = True, render_references = True, dry_run = False
-    ):
-    """This is mainly an utility function to plot a full wavelength series once the parameters are found.
-
-    """
+    runtime: RuntimeEnvironment,
+    rend_base_path: str,
+    wl,
+    ad,
+    sd,
+    ai,
+    mf,
+    clear_rend_folder=True,
+    clear_references=True,
+    render_references=True,
+    dry_run=False,
+):
+    """This is mainly an utility function to plot a full wavelength series once the parameters are found."""
 
     blender_args = _get_base_blender_args(
-        script_name='bs_render_series.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime
+        script_name="bs_render_series.py",
+        scene_path=PH.path_slab_simulation_template(),
+        runtime=runtime,
     )
 
-    scirpt_args = ['--']
+    scirpt_args = ["--"]
     p = os.path.abspath(rend_base_path)
-    scirpt_args += ['-p', f'{p}']
+    scirpt_args += ["-p", f"{p}"]
     if clear_rend_folder:
-        scirpt_args += ['-c']  # c for clearing main rend folder
+        scirpt_args += ["-c"]  # c for clearing main rend folder
     if clear_references:
-        scirpt_args += ['-cr']  # cr for clearing reference folders
+        scirpt_args += ["-cr"]  # cr for clearing reference folders
     if render_references:
-        scirpt_args += ['-r']  # render refs
+        scirpt_args += ["-r"]  # render refs
     if dry_run:
-        scirpt_args += ['-y']  # no render
+        scirpt_args += ["-y"]  # no render
 
-    scirpt_args += ['-wl', f'{list(float(x) for x in wl)}']  # wavelength to be used
-    scirpt_args += ['-da', f'{list(float(x) for x in ad)}']  # absorption density
-    scirpt_args += ['-ds', f'{list(float(x) for x in sd)}']  # scattering density
-    scirpt_args += ['-ai', f'{list(float(x) for x in ai)}']  # scattering anisotropy
-    scirpt_args += ['-mf', f'{list(float(x) for x in mf)}']  # mixing factor
+    scirpt_args += ["-wl", f"{list(float(x) for x in wl)}"]  # wavelength to be used
+    scirpt_args += ["-da", f"{list(float(x) for x in ad)}"]  # absorption density
+    scirpt_args += ["-ds", f"{list(float(x) for x in sd)}"]  # scattering density
+    scirpt_args += ["-ai", f"{list(float(x) for x in ai)}"]  # scattering anisotropy
+    scirpt_args += ["-mf", f"{list(float(x) for x in mf)}"]  # mixing factor
 
     logging.info(f"running Blender with '{blender_args + scirpt_args}'")
 
     start = time.perf_counter()
 
     # Direct Blender logging info to `os.devnull` null stream to avoid cluttering of console.
-    with open(os.devnull, 'wb') as stream:
+    with open(os.devnull, "wb") as stream:
         try:
             exit_code = subprocess.run(blender_args + scirpt_args, stdout=stream)
             if exit_code.returncode != 0:
-                logging.fatal(f"Blender script failed to run. Check the arguments passed to it.")
+                logging.fatal(
+                    f"Blender script failed to run. Check the arguments passed to it."
+                )
                 exit(1)
         except FileNotFoundError as e:
             raise FileNotFoundError(
                 f"Blender script argument string is too long for Windows to handle. Use less "
                 f"wavelengths to reduce the amount of passed information. You can also try "
                 f"running in separate batches."
-                ) from e
+            ) from e
 
     seconds = time.perf_counter() - start
     logging.info(f"Render loop run for {seconds:.1f} seconds")
 
 
 def run_render_single(
-    runtime: RuntimeEnvironment, rend_base_path: str, wl: float, ad: float, sd: float, ai: float, mf: float,
-    clear_rend_folder = True, clear_references = True, render_references = True, dry_run = False
-    ):
+    runtime: RuntimeEnvironment,
+    rend_base_path: str,
+    wl: float,
+    ad: float,
+    sd: float,
+    ai: float,
+    mf: float,
+    clear_rend_folder=True,
+    clear_references=True,
+    render_references=True,
+    dry_run=False,
+):
     """Renders a single image of the slab simulation with given leaf material parameters.
 
     Used by the optimization solver :mod:`slab_model.opt`.
@@ -167,32 +190,32 @@ def run_render_single(
     blender_args = _get_base_blender_args(
         script_name=C.blender_script_name,
         scene_path=PH.path_slab_simulation_template(),
-        runtime=runtime
-        )
+        runtime=runtime,
+    )
 
-    scirpt_args = ['--']
+    scirpt_args = ["--"]
     p = os.path.abspath(rend_base_path)
-    scirpt_args += ['-p', f'{p}']
+    scirpt_args += ["-p", f"{p}"]
     if clear_rend_folder:
-        scirpt_args += ['-c']  # clear rend
+        scirpt_args += ["-c"]  # clear rend
     if clear_references:
-        scirpt_args += ['-cr']  # clear refs
+        scirpt_args += ["-cr"]  # clear refs
     if render_references:
-        scirpt_args += ['-r']  # render refs
+        scirpt_args += ["-r"]  # render refs
     if dry_run:
-        scirpt_args += ['-y']  # no render
+        scirpt_args += ["-y"]  # no render
 
-    scirpt_args += ['-wl', f'{wl}']  # wavelength to be used
-    scirpt_args += ['-da', f'{ad}']  # absorption density
-    scirpt_args += ['-ds', f'{sd}']  # scattering density
-    scirpt_args += ['-ai', f'{ai}']  # scattering anisotropy
-    scirpt_args += ['-mf', f'{mf}']  # mixing factor
+    scirpt_args += ["-wl", f"{wl}"]  # wavelength to be used
+    scirpt_args += ["-da", f"{ad}"]  # absorption density
+    scirpt_args += ["-ds", f"{sd}"]  # scattering density
+    scirpt_args += ["-ai", f"{ai}"]  # scattering anisotropy
+    scirpt_args += ["-mf", f"{mf}"]  # mixing factor
 
     # Uncomment for debugging
     # logging.info(f"running Blender with '{blender_args + scirpt_args}'")
 
     # Direct Blender logging info to null stream to avoid cluttering of console.
-    with open(os.devnull, 'wb') as stream:
+    with open(os.devnull, "wb") as stream:
         status = subprocess.run(blender_args + scirpt_args, stdout=stream)
 
         if status.returncode != 0:
@@ -200,29 +223,35 @@ def run_render_single(
             exit(1)
 
 
-def run_reflectance_lab(runtime: RuntimeEnvironment, rend_base_path: str, dry_run = False, sun_power = None):
+def run_reflectance_lab(
+    runtime: RuntimeEnvironment, rend_base_path: str, dry_run=False, sun_power=None
+):
 
     blender_args = _get_base_blender_args(
-        script_name='bs_reflectance_lab.py', scene_path=PH.path_slab_simulation_template(), runtime=runtime
+        script_name="bs_reflectance_lab.py",
+        scene_path=PH.path_slab_simulation_template(),
+        runtime=runtime,
     )
 
-    scirpt_args = ['--']
+    scirpt_args = ["--"]
     p = os.path.abspath(rend_base_path)
-    scirpt_args += ['-p', f'{p}']
+    scirpt_args += ["-p", f"{p}"]
     if dry_run:
-        scirpt_args += ['-y']  # no render
+        scirpt_args += ["-y"]  # no render
     if sun_power is not None:
-        scirpt_args += ['-s', f'{sun_power}']  # no render
+        scirpt_args += ["-s", f"{sun_power}"]  # no render
 
     # Direct Blender logging info to null stream to avoid cluttering of console.
-    with open(os.devnull, 'wb') as stream:
+    with open(os.devnull, "wb") as stream:
         status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
             logging.fatal(f"Failed to run reflectance lab. Exiting HyperBlend.")
             exit(1)
 
 
-def generate_forest_control(runtime: RuntimeEnvironment, forest_id: str = None, global_master: bool = False):
+def generate_forest_control(
+    runtime: RuntimeEnvironment, forest_id: str = None, global_master: bool = False
+):
     """Generates a forest control file by reading parameters from a Blender file.
 
     .. note::
@@ -242,34 +271,40 @@ def generate_forest_control(runtime: RuntimeEnvironment, forest_id: str = None, 
     """
 
     if not global_master and forest_id is None:
-        raise AttributeError(f"If global_master == False, a scene_id must be provided. Was None.")
+        raise AttributeError(
+            f"If global_master == False, a scene_id must be provided. Was None."
+        )
 
     if global_master and forest_id is not None:
-        raise AttributeError(f"Ignoring provided scene_id because global_master == True.")
+        raise AttributeError(
+            f"Ignoring provided scene_id because global_master == True."
+        )
 
     if global_master:
         scene_path = PH.path_system_simulation_template()
     else:
         scene_path = PH.path_file_system_simulation_blend(forest_id)
 
-    blender_args = _get_base_blender_args(script_name='bs_configuration.py', scene_path=scene_path, runtime=runtime)
+    blender_args = _get_base_blender_args(
+        script_name="bs_configuration.py", scene_path=scene_path, runtime=runtime
+    )
 
-    scirpt_args = ['--']
+    scirpt_args = ["--"]
 
     if forest_id is not None and global_master is False:
-        scirpt_args += ['-id', f'{forest_id}']
+        scirpt_args += ["-id", f"{forest_id}"]
 
     if global_master:
-        scirpt_args += ['-g']
+        scirpt_args += ["-g"]
 
-    with open(os.devnull, 'wb') as stream:
+    with open(os.devnull, "wb") as stream:
         status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
             logging.fatal(f"Failed to generate forest control file.")
             exit(1)
 
 
-def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list = None):
+def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=None):
     """Set up the forest for rendering.
 
     :param forest_id:
@@ -282,16 +317,18 @@ def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list = N
     logging.info(f"Calling forest scene setup")
 
     blender_args = _get_base_blender_args(
-        script_name='bs_setup_forest.py', scene_path=PH.path_file_system_simulation_blend(forest_id), runtime=runtime
+        script_name="bs_setup_forest.py",
+        scene_path=PH.path_file_system_simulation_blend(forest_id),
+        runtime=runtime,
     )
 
-    scirpt_args = ['--']
-    scirpt_args += ['-id', f'{forest_id}']
+    scirpt_args = ["--"]
+    scirpt_args += ["-id", f"{forest_id}"]
 
     if leaf_name_list is not None and len(leaf_name_list) > 0:
-        scirpt_args += ['-l_ids', f'{list(leaf_name_list)}']  # available leaf indexes
+        scirpt_args += ["-l_ids", f"{list(leaf_name_list)}"]  # available leaf indexes
 
-    with open(os.devnull, 'wb') as stream:
+    with open(os.devnull, "wb") as stream:
         status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
             logging.fatal(f"Failed to setup forest scene file.")
@@ -315,11 +352,13 @@ def render_forest(runtime: RuntimeEnvironment, forest_id: str, render_mode: str)
     logging.info(f"Calling Blender for system simulation rendering.")
 
     scene_path = PH.path_file_system_simulation_blend(forest_id)
-    blender_args = _get_base_blender_args(script_name='bs_render_forest', scene_path=scene_path, runtime=runtime)
+    blender_args = _get_base_blender_args(
+        script_name="bs_render_forest", scene_path=scene_path, runtime=runtime
+    )
 
-    scirpt_args = ['--']
-    scirpt_args += ['-id', f'{forest_id}']
-    scirpt_args += ['-rm', render_mode]
+    scirpt_args = ["--"]
+    scirpt_args += ["-id", f"{forest_id}"]
+    scirpt_args += ["-rm", render_mode]
 
-    with open(os.devnull, 'wb') as stream:
+    with open(os.devnull, "wb") as stream:
         subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
