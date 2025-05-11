@@ -1,14 +1,14 @@
 """
-    General Spectral Vectors (GSV) soil model. The code in this script is
-    based on the code written by authors of
-    "GSV: a general model for hyperspectral soil reflectance simulation", 2019.
+General Spectral Vectors (GSV) soil model. The code in this script is
+based on the code written by authors of
+"GSV: a general model for hyperspectral soil reflectance simulation", 2019.
 """
-
 
 import numpy as np
 
 from src.data import path_handling as PH
 from src import plotter
+
 
 gsv_wls = np.arange(400, 2501, 10)
 """Native hyperspectral wavelengths of GSV ranging from 400-2500 nm with 10 nm resolution."""
@@ -20,15 +20,15 @@ linearly interpolate the native GSV resolution to 1 nm."""
 
 
 default_soils = {
-    "wet_clay":             [0.245, -0.039,  0.003, -0.145],
-    "median_humid_clay":    [0.528, -0.011,  0.014, -0.129],
-    "dry_clay":             [0.459,  0.011, -0.009,  0.038],
-    "wet_sand":             [0.649, -0.065,  0.002, -0.587],
-    "median_humid_sand":    [0.512, -0.044, -0.044, -0.103],
-    "dry_sand":             [0.539, -0.009, -0.068,  0.079],
-    "wet_peat":             [0.423, -0.163,  0.045, -0.461],
-    "median_humid_peat":    [0.581, -0.268,  0.061, -0.303],
-    "dry_peat":             [0.384, -0.220,  0.044, -0.066],
+    "wet_clay": [0.245, -0.039, 0.003, -0.145],
+    "median_humid_clay": [0.528, -0.011, 0.014, -0.129],
+    "dry_clay": [0.459, 0.011, -0.009, 0.038],
+    "wet_sand": [0.649, -0.065, 0.002, -0.587],
+    "median_humid_sand": [0.512, -0.044, -0.044, -0.103],
+    "dry_sand": [0.539, -0.009, -0.068, 0.079],
+    "wet_peat": [0.423, -0.163, 0.045, -0.461],
+    "median_humid_peat": [0.581, -0.268, 0.061, -0.303],
+    "dry_peat": [0.384, -0.220, 0.044, -0.066],
 }
 """Default c_n and c_SM values for different kinds of soils from Table 3 in 
 page 9 of the paper.
@@ -59,7 +59,12 @@ def simulate_gsv_soil(c1: float, c2: float, c3: float, cSM: float):
         that is linearly interpolated from the native GSV resolution of 10 nm.
     """
 
-    GSV = np.vstack([np.loadtxt(PH.path_file_soil_dry_vector()), np.loadtxt(PH.path_file_soil_humid_vector())])
+    GSV = np.vstack(
+        [
+            np.loadtxt(PH.path_file_soil_dry_vector()),
+            np.loadtxt(PH.path_file_soil_humid_vector()),
+        ]
+    )
     """The general spectral vectors derived in the manuscript"""
 
     gsv_spectra = c1 * GSV[0] + c2 * GSV[1] + c3 * GSV[2] + cSM * GSV[3]
@@ -110,7 +115,9 @@ def visualize_default_soils(dont_show=True, save=True):
         refls.append(spec)
         labels.append(key)
 
-    plotter.plot_default_soil_visualization(new_wls, reflectances=refls, labels=labels, dont_show=dont_show, save=save)
+    plotter.plot_default_soil_visualization(
+        new_wls, reflectances=refls, labels=labels, dont_show=dont_show, save=save
+    )
 
 
 def _write_default_soils():
@@ -121,7 +128,9 @@ def _write_default_soils():
 
     for key, item in default_soils.items():
         spec = simulate_gsv_soil(*item)
-        write_soil_spectra(wls=new_wls, reflectance_spectra=spec, filename=f"{key}_reflectance.csv")
+        write_soil_spectra(
+            wls=new_wls, reflectance_spectra=spec, filename=f"{key}_reflectance.csv"
+        )
 
 
 def write_soil_spectra(wls, reflectance_spectra, filename):
@@ -139,6 +148,4 @@ def write_soil_spectra(wls, reflectance_spectra, filename):
 
     p = PH.join(PH.path_directory_reflectance_spectra(), filename)
     stacked = np.vstack((wls, reflectance_spectra)).transpose()
-    np.savetxt(p, stacked, delimiter=' ', fmt=('%.1f', '%.9f'))
-
-
+    np.savetxt(p, stacked, delimiter=" ", fmt=("%.1f", "%.9f"))

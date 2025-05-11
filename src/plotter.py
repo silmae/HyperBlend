@@ -14,17 +14,22 @@ from matplotlib import cm
 
 import src.slab_model.training_utils
 from src import constants as C
-from src.data import file_handling as FH, toml_handling as TH, file_names as FN, path_handling as PH
+from src.data import (
+    file_handling as FH,
+    toml_handling as TH,
+    file_names as FN,
+    path_handling as PH,
+)
 from src.slab_model import nn, surf
 from src.utils import data_utils as DU, spectra_utils as SU
 
 
-figsize_triple_width = (22,6)
+figsize_triple_width = (22, 6)
 """Figure size for two plot figures."""
 
-figsize = (12,6)
+figsize = (12, 6)
 """Figure size for two plot figures."""
-figsize_single = (7,6)
+figsize_single = (7, 6)
 """Figure size for single plot figures."""
 fig_title_font_size = 18
 """Title font size."""
@@ -37,15 +42,15 @@ variable_space_ylim = [0.0, 1.0]
 """Y-axis limit for leaf material parameter plot."""
 
 # Colors
-color_reflectance = 'royalblue'
-color_transmittance = 'deeppink'
-color_reflectance_measured = 'black'
-color_transmittance_measured = 'black'
-color_ad = 'olivedrab'
-color_sd = 'darkorange'
-color_ai = 'brown'
-color_mf = 'darkorchid'
-color_history_target = 'black'
+color_reflectance = "royalblue"
+color_transmittance = "deeppink"
+color_reflectance_measured = "black"
+color_transmittance_measured = "black"
+color_ad = "olivedrab"
+color_sd = "darkorange"
+color_ai = "brown"
+color_mf = "darkorchid"
+color_history_target = "black"
 
 alpha_error = 0.2
 """Alpha for std shadow."""
@@ -53,10 +58,12 @@ alpha_error = 0.2
 max_ticks = 8
 """Max tick count for wavelength."""
 
-image_type = 'png'
+image_type = "png"
 
 
-def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_show=True):
+def plot_default_soil_visualization(
+    wls, reflectances, labels, save=True, dont_show=True
+):
     """Plot visualization (reflectances) of the default soil types.
 
     :param wls:
@@ -74,33 +81,33 @@ def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_s
         is manually shut.
     """
 
-    plt.close('all')
-    cm_clay = cm.get_cmap('Greys')
-    cm_sand = cm.get_cmap('Oranges')
-    cm_peat = cm.get_cmap('Greens')
+    plt.close("all")
+    cm_clay = cm.get_cmap("Greys")
+    cm_sand = cm.get_cmap("Oranges")
+    cm_peat = cm.get_cmap("Greens")
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
     fig.suptitle(f"Default soils", fontsize=fig_title_font_size)
 
     for i, reflectance in enumerate(reflectances):
         # Select color map and value based on the label
-        if 'wet' in labels[i]:
+        if "wet" in labels[i]:
             selector = 0.7
-        if 'humid' in labels[i]:
+        if "humid" in labels[i]:
             selector = 0.5
-        if 'dry' in labels[i]:
+        if "dry" in labels[i]:
             selector = 0.3
-        if 'clay' in labels[i]:
+        if "clay" in labels[i]:
             cm_active = cm_clay
-        if 'sand' in labels[i]:
+        if "sand" in labels[i]:
             cm_active = cm_sand
-        if 'peat' in labels[i]:
+        if "peat" in labels[i]:
             cm_active = cm_peat
 
-        ax.plot(wls, reflectance, lw=1., label=labels[i], c=cm_active(selector))
+        ax.plot(wls, reflectance, lw=1.0, label=labels[i], c=cm_active(selector))
 
-    ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-    ax.set_ylabel(f'Reflectance', fontsize=axis_label_font_size)
+    ax.set_xlabel("Wavelength [nm]", fontsize=axis_label_font_size)
+    ax.set_ylabel(f"Reflectance", fontsize=axis_label_font_size)
     plt.legend()
 
     if save:
@@ -113,7 +120,16 @@ def plot_default_soil_visualization(wls, reflectances, labels, save=True, dont_s
         plt.show()
 
 
-def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflectances_resampled=None, forest_id=None, dont_show=True, save=True):
+def plot_blender_soil(
+    wls,
+    reflectances,
+    soil_name,
+    wls_resampled=None,
+    reflectances_resampled=None,
+    forest_id=None,
+    dont_show=True,
+    save=True,
+):
     """Plots possibly resampled soil reflectance.
 
     :param wls:
@@ -139,18 +155,22 @@ def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflecta
         AttributeError if save=True but forest_id=None.
     """
 
-    plt.close('all')
+    plt.close("all")
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
-    fig.suptitle(f"Resampled soil reflectance '{soil_name}'", fontsize=fig_title_font_size)
+    fig.suptitle(
+        f"Resampled soil reflectance '{soil_name}'", fontsize=fig_title_font_size
+    )
 
-    ax.plot(wls, reflectances, lw=1., label=soil_name, c='grey')
+    ax.plot(wls, reflectances, lw=1.0, label=soil_name, c="grey")
 
     if wls_resampled is not None and reflectances_resampled is not None:
-        ax.plot(wls_resampled, reflectances_resampled, lw=2., c='green')
+        ax.plot(wls_resampled, reflectances_resampled, lw=2.0, c="green")
 
     if save:
         if forest_id is None:
-            raise AttributeError(f"Saving soil reflectance requested but no forest id was given to define proper path.")
+            raise AttributeError(
+                f"Saving soil reflectance requested but no forest id was given to define proper path."
+            )
         directory = PH.path_directory_system_simulation(forest_id=forest_id)
         image_name = f"soil_reflectance_{soil_name}{C.postfix_plot_image_format}"
         path = PH.join(directory, image_name)
@@ -160,7 +180,9 @@ def plot_blender_soil(wls, reflectances, soil_name, wls_resampled=None, reflecta
         plt.show()
 
 
-def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=False, save=True):
+def plot_reflectance_lab(
+    HSV_value, reflectance, powers, plot_name=None, show=False, save=True
+):
     """Plot simulation result of virtual reflectance lab.
 
     :param HSV_value:
@@ -179,16 +201,18 @@ def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=Fa
         If `len(powers) != len(reflectance)`.
     """
 
-    plt.close('all')
+    plt.close("all")
     if len(powers) != len(reflectance):
-        raise ValueError(f"Length of sun powers {len(powers)} and measurements {len(reflectance)} must match.")
+        raise ValueError(
+            f"Length of sun powers {len(powers)} and measurements {len(reflectance)} must match."
+        )
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
 
-    for i,measurement in enumerate(reflectance):
-        ax.set_xlabel('HSV value', fontsize=axis_label_font_size)
-        ax.set_ylabel(f'Reflectance', fontsize=axis_label_font_size)
-        ax.plot(HSV_value, measurement, label=f'Sun power {powers[i]} [W/m2]')
+    for i, measurement in enumerate(reflectance):
+        ax.set_xlabel("HSV value", fontsize=axis_label_font_size)
+        ax.set_ylabel(f"Reflectance", fontsize=axis_label_font_size)
+        ax.plot(HSV_value, measurement, label=f"Sun power {powers[i]} [W/m2]")
 
     plt.legend()
 
@@ -200,7 +224,16 @@ def plot_reflectance_lab(HSV_value, reflectance, powers, plot_name=None, show=Fa
         plt.show()
 
 
-def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, forest_id=None, sun_plot_name=None, show=False, lighting_type='sun'):
+def plot_light_data(
+    wls,
+    irradiances,
+    wls_binned=None,
+    irradiances_binned=None,
+    forest_id=None,
+    sun_plot_name=None,
+    show=False,
+    lighting_type="sun",
+):
     """Plot used sun or sky data for a scene.
 
     Plot can either be shown or saved. Plot is saved if scene_id is given.
@@ -230,53 +263,74 @@ def plot_light_data(wls, irradiances, wls_binned=None, irradiances_binned=None, 
         String either 'sun' or 'sky'.
     """
 
-    plt.close('all')
+    plt.close("all")
     bandwith = wls[1] - wls[0]
     if wls_binned is not None and irradiances_binned is not None:
         bandwith_binned = wls_binned[1] - wls_binned[0]
         fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
         fig.suptitle(f"{lighting_type} spectrum", fontsize=fig_title_font_size)
 
-        ax[0].plot(wls, irradiances, label=f'{lighting_type} 1 nm')
-        ax[0].set_title('Spectra in file')
-        ax[0].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-        ax[0].set_ylabel('Irradiance [W/m2/nm]', fontsize=axis_label_font_size)
+        ax[0].plot(wls, irradiances, label=f"{lighting_type} 1 nm")
+        ax[0].set_title("Spectra in file")
+        ax[0].set_xlabel("Wavelength [nm]", fontsize=axis_label_font_size)
+        ax[0].set_ylabel("Irradiance [W/m2/nm]", fontsize=axis_label_font_size)
 
-        if lighting_type == 'sun':
-            resampled_label = 'Resampled and normalized'
-        elif lighting_type == 'sky':
-            resampled_label = 'Resampled and normalized with sun'
+        if lighting_type == "sun":
+            resampled_label = "Resampled and normalized"
+        elif lighting_type == "sky":
+            resampled_label = "Resampled and normalized with sun"
         else:
-            raise ValueError(f"Wrong lighting type. Expected lighting type either 'sun' or 'sky', was '{lighting_type}'.")
+            raise ValueError(
+                f"Wrong lighting type. Expected lighting type either 'sun' or 'sky', was '{lighting_type}'."
+            )
 
-        ax[1].plot(wls_binned, irradiances_binned, label=f'Bandwidth {bandwith_binned:.0f} nm', alpha=0.5)
+        ax[1].plot(
+            wls_binned,
+            irradiances_binned,
+            label=f"Bandwidth {bandwith_binned:.0f} nm",
+            alpha=0.5,
+        )
         ax[1].set_title(resampled_label)
-        ax[1].set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-        ax[1].set_ylabel(f'Irradiance [W/m2/{bandwith_binned:.0f}nm]', fontsize=axis_label_font_size)
-        ax[1].set_xlim([wls[0],wls[-1]])
+        ax[1].set_xlabel("Wavelength [nm]", fontsize=axis_label_font_size)
+        ax[1].set_ylabel(
+            f"Irradiance [W/m2/{bandwith_binned:.0f}nm]", fontsize=axis_label_font_size
+        )
+        ax[1].set_xlim([wls[0], wls[-1]])
     else:
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
         fig.suptitle(f"{lighting_type} spectrum", fontsize=fig_title_font_size)
-        ax.set_xlabel('Wavelength [nm]', fontsize=axis_label_font_size)
-        ax.set_ylabel(f'{lighting_type} irradiance [W/m2/{bandwith:.0f}nm]', fontsize=axis_label_font_size)
-        ax.plot(wls, irradiances, label=f'Bandwidth {bandwith:.0f} nm')
+        ax.set_xlabel("Wavelength [nm]", fontsize=axis_label_font_size)
+        ax.set_ylabel(
+            f"{lighting_type} irradiance [W/m2/{bandwith:.0f}nm]",
+            fontsize=axis_label_font_size,
+        )
+        ax.plot(wls, irradiances, label=f"Bandwidth {bandwith:.0f} nm")
 
     plt.legend()
 
-    if sun_plot_name is None and lighting_type == 'sun':
+    if sun_plot_name is None and lighting_type == "sun":
         sun_plot_name = C.file_default_sun
-    if sun_plot_name is None and lighting_type == 'sky':
+    if sun_plot_name is None and lighting_type == "sky":
         sun_plot_name = C.file_default_sky
 
     if forest_id is not None:
-        path = PH.join(PH.path_directory_system_simulation(forest_id), f"{sun_plot_name.rstrip('.txt')}.png")
+        path = PH.join(
+            PH.path_directory_system_simulation(forest_id),
+            f"{sun_plot_name.rstrip('.txt')}.png",
+        )
         plt.savefig(path, dpi=save_resolution)
     if show:
         plt.show()
 
 
-def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True, save_thumbnail=True,
-                          solver_name=None) -> None:
+def plot_nn_train_history(
+    train_loss,
+    test_loss,
+    best_epoch_idx,
+    dont_show=True,
+    save_thumbnail=True,
+    solver_name=None,
+) -> None:
     """Plot training history of neural network.
 
     :param train_loss:
@@ -293,14 +347,16 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     :return:
     """
 
-    plt.close('all')
+    plt.close("all")
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training history", fontsize=fig_title_font_size)
     ax.plot(train_loss, label="Training loss")
     ax.plot(test_loss, label="Test loss")
-    ax.scatter(best_epoch_idx, test_loss[best_epoch_idx], facecolors='none', edgecolors='r')
-    ax.set_xlabel('Epoch', fontsize=axis_label_font_size)
+    ax.scatter(
+        best_epoch_idx, test_loss[best_epoch_idx], facecolors="none", edgecolors="r"
+    )
+    ax.set_xlabel("Epoch", fontsize=axis_label_font_size)
     ax.legend()
 
     if save_thumbnail:
@@ -317,38 +373,54 @@ def plot_nn_train_history(train_loss, test_loss, best_epoch_idx, dont_show=True,
     plt.close(fig)
 
 
-def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show_plot=False, plot_surf=True,
-                             plot_nn=True, plot_points=True, solver_name: str = None):
+def plot_trained_leaf_models(
+    set_name="training_data",
+    save_thumbnail=True,
+    show_plot=False,
+    plot_surf=True,
+    plot_nn=True,
+    plot_points=True,
+    solver_name: str = None,
+):
 
     def variable_name_to_latex(v):
         """Change variable name into Latex format."""
 
-        if v == 'ad':
-            return r'$\rho_a$'
-        elif v == 'sd':
-            return r'$\rho_s$'
-        elif v == 'ai':
-            return r'$\alpha$'
-        elif v == 'mf':
-            return r'$\beta$'
+        if v == "ad":
+            return r"$\rho_a$"
+        elif v == "sd":
+            return r"$\rho_s$"
+        elif v == "ai":
+            return r"$\alpha$"
+        elif v == "mf":
+            return r"$\beta$"
         else:
             return v
 
-    plt.close('all')
-    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = src.slab_model.training_utils.get_training_data(
-        training_sim_name=set_name)
-    ad_train, sd_train, ai_train, mf_train, r_train, t_train = src.slab_model.training_utils.prune_training_data(ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train)
+    plt.close("all")
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = (
+        src.slab_model.training_utils.get_training_data(training_sim_name=set_name)
+    )
+    ad_train, sd_train, ai_train, mf_train, r_train, t_train = (
+        src.slab_model.training_utils.prune_training_data(
+            ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train
+        )
+    )
     train_params = [ad_train, sd_train, ai_train, mf_train]
-    leaf_param_names = ['ad', 'sd', 'ai', 'mf']
+    leaf_param_names = ["ad", "sd", "ai", "mf"]
 
     if plot_surf and surf.exists(solver_dirname=solver_name):
-        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(r_train, t_train, solver_dirname=solver_name)
+        ad_surf, sd_surf, ai_surf, mf_surf = surf.predict(
+            r_train, t_train, solver_dirname=solver_name
+        )
         surf_params = [ad_surf, sd_surf, ai_surf, mf_surf]
     else:
         surf_params = None
 
     if plot_nn and nn.exists(solver_mame=solver_name):
-        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(r_train, t_train, solver_dirname=solver_name)
+        ad_nn, sd_nn, ai_nn, mf_nn = nn.predict(
+            r_train, t_train, solver_dirname=solver_name
+        )
         nn_params = [ad_nn, sd_nn, ai_nn, mf_nn]
     else:
         nn_params = None
@@ -358,37 +430,47 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
         # setup figure object
         fig = plt.figure(figsize=figsize_single)
         ax = plt.axes(projection="3d")
-        ax.set_xlabel('R', fontsize=axis_label_font_size)
-        ax.set_ylabel('T', fontsize=axis_label_font_size)
+        ax.set_xlabel("R", fontsize=axis_label_font_size)
+        ax.set_ylabel("T", fontsize=axis_label_font_size)
         ax.elev = 30
         # ax.azim = 225
         ax.azim = 180
 
-        ax.set_zlabel(variable_name_to_latex(leaf_param_names[i]), fontsize=axis_label_font_size)
+        ax.set_zlabel(
+            variable_name_to_latex(leaf_param_names[i]), fontsize=axis_label_font_size
+        )
 
         if plot_points:
             # ax.scatter(r_train, t_train, train_params[i], marker='.', color='grey', alpha=0.1)
-            train_surf = ax.plot_trisurf(r_train, t_train, train_params[i], label='training_data', alpha=0.3)
+            train_surf = ax.plot_trisurf(
+                r_train, t_train, train_params[i], label="training_data", alpha=0.3
+            )
             train_surf._edgecolors2d = train_surf._edgecolor3d
             train_surf._facecolors2d = train_surf._facecolor3d
 
         if plot_surf:
             if surf_params is not None:
                 # surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], linewidth=0.1, antialiased=True, color='red', alpha=0.2, label='surf', shade=True)
-                surf_surf = ax.plot_trisurf(r_train, t_train, surf_params[i], label='surf')
+                surf_surf = ax.plot_trisurf(
+                    r_train, t_train, surf_params[i], label="surf"
+                )
                 surf_surf._edgecolors2d = surf_surf._edgecolor3d
                 surf_surf._facecolors2d = surf_surf._facecolor3d
             else:
-                logging.warning(f"Cannot plot surface model plot as the model could not be used.")
+                logging.warning(
+                    f"Cannot plot surface model plot as the model could not be used."
+                )
 
         if plot_nn:
             if nn_params is not None:
                 # nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], linewidth=0.1, antialiased=True, color='blue', alpha=0.2, label='nn', shade=True)
-                nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i],  label='nn')
+                nn_surf = ax.plot_trisurf(r_train, t_train, nn_params[i], label="nn")
                 nn_surf._edgecolors2d = nn_surf._edgecolor3d
                 nn_surf._facecolors2d = nn_surf._facecolor3d
             else:
-                logging.warning(f"Cannot plot nn model plot as the model could not be used.")
+                logging.warning(
+                    f"Cannot plot nn model plot as the model could not be used."
+                )
 
         if surf_params is not None and nn_params is not None:
             # legend breaks if not manually set as above. This is a known bug in matplotlib.
@@ -405,8 +487,20 @@ def plot_trained_leaf_models(set_name='training_data', save_thumbnail=True, show
             plt.show()
 
 
-def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=None, k2=None, b2=None, show=False,
-                           save=True, save_name='training_data', solver_name=None):
+def plot_training_data_set(
+    r_good,
+    t_good,
+    r_bad=None,
+    t_bad=None,
+    k1=None,
+    b1=None,
+    k2=None,
+    b2=None,
+    show=False,
+    save=True,
+    save_name="training_data",
+    solver_name=None,
+):
     """Plot training data either interactively or save to disk.
 
     Constants k1,2 and b1,2 are used to visualize cutting lines along equation k*r + b.
@@ -436,21 +530,23 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         Filename to be used when the image is saved. Only used if 'save' is True.
     """
 
-    plt.close('all')
+    plt.close("all")
 
-    color_good = 'blue'
-    color_bad = 'red'
-    color_cut = 'black'
+    color_good = "blue"
+    color_bad = "red"
+    color_cut = "black"
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Training data", fontsize=fig_title_font_size)
 
     if r_bad is not None and t_bad is not None:
-        ax.scatter(r_bad, t_bad, c=color_bad, alpha=0.5, marker='.', label='Bad points')
+        ax.scatter(r_bad, t_bad, c=color_bad, alpha=0.5, marker=".", label="Bad points")
     else:
-        logging.info("Badly fitted training data points were not given so they are not plotted.")
+        logging.info(
+            "Badly fitted training data points were not given so they are not plotted."
+        )
 
-    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker='.', label='Good points')
+    ax.scatter(r_good, t_good, c=color_good, alpha=0.5, marker=".", label="Good points")
 
     # if k1 and b1:
     #     x = np.array([-0.01,0.1])
@@ -462,8 +558,8 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
     #     y = x*k2 + b2
     #     ax.plot(x, y, c=color_cut, linewidth=1)
 
-    ax.set_xlabel('R', fontsize=axis_label_font_size)
-    ax.set_ylabel('T', fontsize=axis_label_font_size)
+    ax.set_xlabel("R", fontsize=axis_label_font_size)
+    ax.set_ylabel("T", fontsize=axis_label_font_size)
     ax.legend()
 
     if save:
@@ -476,7 +572,9 @@ def plot_training_data_set(r_good, t_good, r_bad=None, t_bad=None, k1=None, b1=N
         plt.show()
 
 
-def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True) -> None:
+def plot_wl_optimization_history(
+    set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True
+) -> None:
     """Plots optimization history of a single wavelength using existing wavelength result toml file.
 
     :param set_name:
@@ -491,41 +589,102 @@ def plot_wl_optimization_history(set_name: str, wl: float, sample_id, dont_show=
         If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
     """
 
-    plt.close('all')
-    subres_dict = TH.read_wavelength_result(set_name=set_name, wl=wl, sample_id=sample_id)
+    plt.close("all")
+    subres_dict = TH.read_wavelength_result(
+        set_name=set_name, wl=wl, sample_id=sample_id
+    )
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=figsize_triple_width)
-    fig.suptitle(f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size)
-    ax[0].set_title('Variable space')
-    ax[1].set_title('Target space')
-    ax[2].set_title('Loss')
-    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ad])), subres_dict[C.key_wl_result_history_ad], label=C.key_wl_result_history_ad, color=color_ad)
-    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_sd])), subres_dict[C.key_wl_result_history_sd], label=C.key_wl_result_history_sd, color=color_sd)
-    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_ai])), subres_dict[C.key_wl_result_history_ai], label=C.key_wl_result_history_ai, color=color_ai)
-    ax[0].plot(np.arange(len(subres_dict[C.key_wl_result_history_mf])), subres_dict[C.key_wl_result_history_mf], label=C.key_wl_result_history_mf, color=color_mf)
-    ax[0].set_xlabel('Render call', fontsize=axis_label_font_size)
+    fig.suptitle(
+        f"Optimization history (wl: {wl:.2f} nm)", fontsize=fig_title_font_size
+    )
+    ax[0].set_title("Variable space")
+    ax[1].set_title("Target space")
+    ax[2].set_title("Loss")
+    ax[0].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_ad])),
+        subres_dict[C.key_wl_result_history_ad],
+        label=C.key_wl_result_history_ad,
+        color=color_ad,
+    )
+    ax[0].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_sd])),
+        subres_dict[C.key_wl_result_history_sd],
+        label=C.key_wl_result_history_sd,
+        color=color_sd,
+    )
+    ax[0].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_ai])),
+        subres_dict[C.key_wl_result_history_ai],
+        label=C.key_wl_result_history_ai,
+        color=color_ai,
+    )
+    ax[0].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_mf])),
+        subres_dict[C.key_wl_result_history_mf],
+        label=C.key_wl_result_history_mf,
+        color=color_mf,
+    )
+    ax[0].set_xlabel("Render call", fontsize=axis_label_font_size)
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
 
     # Loss
-    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_total])), subres_dict[C.key_wl_result_history_loss_total], label=C.key_wl_result_history_loss_total)
-    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_r])), subres_dict[C.key_wl_result_history_loss_r], label=C.key_wl_result_history_loss_r)
-    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_over_one])), subres_dict[C.key_wl_result_history_loss_over_one], label=C.key_wl_result_history_loss_over_one)
-    ax[2].plot(np.arange(len(subres_dict[C.key_wl_result_history_loss_t])), subres_dict[C.key_wl_result_history_loss_t], label=C.key_wl_result_history_loss_t)
+    ax[2].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_loss_total])),
+        subres_dict[C.key_wl_result_history_loss_total],
+        label=C.key_wl_result_history_loss_total,
+    )
+    ax[2].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_loss_r])),
+        subres_dict[C.key_wl_result_history_loss_r],
+        label=C.key_wl_result_history_loss_r,
+    )
+    ax[2].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_loss_over_one])),
+        subres_dict[C.key_wl_result_history_loss_over_one],
+        label=C.key_wl_result_history_loss_over_one,
+    )
+    ax[2].plot(
+        np.arange(len(subres_dict[C.key_wl_result_history_loss_t])),
+        subres_dict[C.key_wl_result_history_loss_t],
+        label=C.key_wl_result_history_loss_t,
+    )
     ax[2].legend()
 
     # Plot horizontal line to location of measured value
     x_data = np.arange(1, len(subres_dict[C.key_wl_result_history_r]))
-    ax[1].plot(x_data, np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured], label=C.key_wl_result_refl_measured, color=color_history_target, linewidth=2)
-    ax[1].plot(x_data, 1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured], label=C.key_wl_result_tran_measured, color=color_history_target, linewidth=2)
+    ax[1].plot(
+        x_data,
+        np.ones(len(x_data)) * subres_dict[C.key_wl_result_refl_measured],
+        label=C.key_wl_result_refl_measured,
+        color=color_history_target,
+        linewidth=2,
+    )
+    ax[1].plot(
+        x_data,
+        1 - np.ones(len(x_data)) * subres_dict[C.key_wl_result_tran_measured],
+        label=C.key_wl_result_tran_measured,
+        color=color_history_target,
+        linewidth=2,
+    )
 
-    _plot_refl_tran_to_axis(ax[1], subres_dict[C.key_wl_result_history_r], subres_dict[C.key_wl_result_history_t], np.arange(len(subres_dict[C.key_wl_result_history_ai])), 'Render call', invert_tran=True)
+    _plot_refl_tran_to_axis(
+        ax[1],
+        subres_dict[C.key_wl_result_history_r],
+        subres_dict[C.key_wl_result_history_t],
+        np.arange(len(subres_dict[C.key_wl_result_history_ai])),
+        "Render call",
+        invert_tran=True,
+    )
 
     if save_thumbnail is not None:
         folder = PH.path_directory_optimization_result(set_name, sample_id)
         image_name = FN.filename_wl_result_plot(wl)
         path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
-        plt.savefig(path, dpi=300) # keep this plot at low resolution as there may be quite a lot of these
+        plt.savefig(
+            path, dpi=300
+        )  # keep this plot at low resolution as there may be quite a lot of these
     if not dont_show:
         plt.show()
 
@@ -544,7 +703,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         If True, save plot to disk. Default is True.
     """
 
-    plt.close('all')
+    plt.close("all")
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     # fig.suptitle(f"Averaged optimization result", fontsize=fig_title_font_size)
     # ax[0].set_title('Variable space')
@@ -556,73 +715,79 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     sd_mean = np.array(r[C.key_set_result_wl_sd_mean])
     ai_mean = np.array(r[C.key_set_result_wl_ai_mean])
     mf_mean = np.array(r[C.key_set_result_wl_mf_mean])
-    r_mean  = np.array(r[C.key_set_result_wl_r_mean])
-    t_mean  = np.array(r[C.key_set_result_wl_t_mean])
+    r_mean = np.array(r[C.key_set_result_wl_r_mean])
+    t_mean = np.array(r[C.key_set_result_wl_t_mean])
     rm_mean = np.array(r[C.key_set_result_wl_rm_mean])
     tm_mean = np.array(r[C.key_set_result_wl_tm_mean])
-    ad_std  = np.array(r[C.key_set_result_wl_ad_std])
-    sd_std  = np.array(r[C.key_set_result_wl_sd_std])
-    ai_std  = np.array(r[C.key_set_result_wl_ai_std])
-    mf_std  = np.array(r[C.key_set_result_wl_mf_std])
-    r_std   = np.array(r[C.key_set_result_wl_r_std])
-    t_std   = np.array(r[C.key_set_result_wl_t_std])
-    rm_std  = np.array(r[C.key_set_result_wl_rm_std])
-    tm_std  = np.array(r[C.key_set_result_wl_tm_std])
+    ad_std = np.array(r[C.key_set_result_wl_ad_std])
+    sd_std = np.array(r[C.key_set_result_wl_sd_std])
+    ai_std = np.array(r[C.key_set_result_wl_ai_std])
+    mf_std = np.array(r[C.key_set_result_wl_mf_std])
+    r_std = np.array(r[C.key_set_result_wl_r_std])
+    t_std = np.array(r[C.key_set_result_wl_t_std])
+    rm_std = np.array(r[C.key_set_result_wl_rm_std])
+    tm_std = np.array(r[C.key_set_result_wl_tm_std])
 
-    _plot_with_shadow(ax[0], wls, ad_mean, ad_std, color_ad, 'Absorption density')
-    _plot_with_shadow(ax[0], wls, sd_mean, sd_std, color_sd, 'Scattering density')
-    _plot_with_shadow(ax[0], wls, ai_mean, ai_std, color_ai, 'Scattering anistropy')
-    _plot_with_shadow(ax[0], wls, mf_mean, mf_std, color_mf, 'Mix factor')
+    _plot_with_shadow(ax[0], wls, ad_mean, ad_std, color_ad, "Absorption density")
+    _plot_with_shadow(ax[0], wls, sd_mean, sd_std, color_sd, "Scattering density")
+    _plot_with_shadow(ax[0], wls, ai_mean, ai_std, color_ai, "Scattering anistropy")
+    _plot_with_shadow(ax[0], wls, mf_mean, mf_std, color_mf, "Mix factor")
 
-    x_label = 'Wavelength [nm]'
+    x_label = "Wavelength [nm]"
     ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[1].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[0].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
     ax[1].xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    ax[0].set_ylabel('Material parameter', fontsize=axis_label_font_size)
+    ax[0].set_ylabel("Material parameter", fontsize=axis_label_font_size)
 
-    ax[1].set_ylim([0,1])
-    ax[1].set_ylabel('Reflectance', color=color_reflectance, fontsize=axis_label_font_size)
-    ax[1].tick_params(axis='y', labelcolor=color_reflectance)
-    _plot_with_shadow(ax[1], wls, r_mean, r_std, color_reflectance, 'Reflectance')
-    ax[1].plot(wls, rm_mean, color=color_reflectance_measured, ls='dotted')
-    ax[1].plot(wls, rm_mean - (rm_std/2), color='gray', ls='dashed')
-    ax[1].plot(wls, rm_mean + (rm_std/2), color='gray', ls='dashed')
+    ax[1].set_ylim([0, 1])
+    ax[1].set_ylabel(
+        "Reflectance", color=color_reflectance, fontsize=axis_label_font_size
+    )
+    ax[1].tick_params(axis="y", labelcolor=color_reflectance)
+    _plot_with_shadow(ax[1], wls, r_mean, r_std, color_reflectance, "Reflectance")
+    ax[1].plot(wls, rm_mean, color=color_reflectance_measured, ls="dotted")
+    ax[1].plot(wls, rm_mean - (rm_std / 2), color="gray", ls="dashed")
+    ax[1].plot(wls, rm_mean + (rm_std / 2), color="gray", ls="dashed")
 
     ax_inverted = ax[1].twinx()
     ax_inverted.set_ylim([1, 0])
-    ax_inverted.set_ylabel('Transmittance', color=color_transmittance, fontsize=axis_label_font_size)
-    ax_inverted.tick_params(axis='y', labelcolor=color_transmittance)
-    _plot_with_shadow(ax_inverted, wls, t_mean, t_std, color_transmittance, 'Transmittance')
-    ax_inverted.plot(wls, tm_mean, color=color_transmittance_measured, ls='dotted')
-    ax_inverted.plot(wls, tm_mean - (tm_std / 2), color='gray', ls='dashed')
-    ax_inverted.plot(wls, tm_mean + (tm_std / 2), color='gray', ls='dashed')
+    ax_inverted.set_ylabel(
+        "Transmittance", color=color_transmittance, fontsize=axis_label_font_size
+    )
+    ax_inverted.tick_params(axis="y", labelcolor=color_transmittance)
+    _plot_with_shadow(
+        ax_inverted, wls, t_mean, t_std, color_transmittance, "Transmittance"
+    )
+    ax_inverted.plot(wls, tm_mean, color=color_transmittance_measured, ls="dotted")
+    ax_inverted.plot(wls, tm_mean - (tm_std / 2), color="gray", ls="dashed")
+    ax_inverted.plot(wls, tm_mean + (tm_std / 2), color="gray", ls="dashed")
 
     if save_thumbnail:
         path = PH.path_file_slab_sim_result_plot(slab_sim_name=set_name)
         logging.info(f"Saving the set result plot to '{path}'.")
-        plt.savefig(path, dpi=save_resolution, bbox_inches='tight', pad_inches=0.1)
+        plt.savefig(path, dpi=save_resolution, bbox_inches="tight", pad_inches=0.1)
     if not dont_show:
         plt.show()
 
 
 def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
-    """Plots averaged optimization errors of a sample. """
+    """Plots averaged optimization errors of a sample."""
 
-    plt.close('all')
+    plt.close("all")
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_single)
     fig.suptitle(f"Optimization errors ", fontsize=fig_title_font_size)
-    marker = '.'
+    marker = "."
 
-    ax.set_ylabel('RMSE', fontsize=axis_label_font_size)
+    ax.set_ylabel("RMSE", fontsize=axis_label_font_size)
 
     ids = FH.list_finished_sample_ids(set_name)
     wls = []
     refl_errs = []
     tran_errs = []
-    for _,sample_id in enumerate(ids):
+    for _, sample_id in enumerate(ids):
         result = TH.read_sample_result(set_name, sample_id)
         wls = result[C.key_sample_result_wls]
         refl_errs.append(result[C.key_sample_result_re])
@@ -635,10 +800,34 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     tran_errs_std = np.array(tran_errs).std(axis=0)
 
     error_every = 5
-    line_width = 0.0 # does not draw line STD if linewidth is 0.0
-    ax.errorbar(wls, refl_errs_mean, yerr=refl_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Reflectance error',   marker='x', markersize=4, color=color_reflectance)
-    ax.errorbar(wls, tran_errs_mean, yerr=tran_errs_std / 2, errorevery=error_every, alpha=1.0, ls='', lw=line_width, label='Transmittance error', marker=marker, markersize=4, color=color_transmittance)
-    x_label = 'Wavelength [nm]'
+    line_width = 0.0  # does not draw line STD if linewidth is 0.0
+    ax.errorbar(
+        wls,
+        refl_errs_mean,
+        yerr=refl_errs_std / 2,
+        errorevery=error_every,
+        alpha=1.0,
+        ls="",
+        lw=line_width,
+        label="Reflectance error",
+        marker="x",
+        markersize=4,
+        color=color_reflectance,
+    )
+    ax.errorbar(
+        wls,
+        tran_errs_mean,
+        yerr=tran_errs_std / 2,
+        errorevery=error_every,
+        alpha=1.0,
+        ls="",
+        lw=line_width,
+        label="Transmittance error",
+        marker=marker,
+        markersize=4,
+        color=color_transmittance,
+    )
+    x_label = "Wavelength [nm]"
 
     ax.xaxis.set_major_locator(plt.MaxNLocator(max_ticks))
     ax.set_xlabel(x_label, fontsize=axis_label_font_size)
@@ -661,22 +850,47 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     :param save_thumbnail:
         If True, a PNG image is saved. Default is True.
     :param dont_show:
-        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+        If True, the plot is not plotted on the monitor. Use together with
+        save_thumbnail. Default is True.
     """
 
-    plt.close('all')
+    plt.close("all")
     target_ids = FH.list_target_ids(set_name=set_name)
 
     for sample_id in target_ids:
-        target_original = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=False)
-        target_resampled = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=True)
+        target_original = TH.read_target(
+            set_name=set_name, sample_id=sample_id, resampled=False
+        )
+        target_resampled = TH.read_target(
+            set_name=set_name, sample_id=sample_id, resampled=True
+        )
         wls_org, refl_org, tran_org = DU.unpack_target(target_original)
-        wls_resampled, refl_resampled, tran_resampled = DU.unpack_target(target_resampled)
+        wls_resampled, refl_resampled, tran_resampled = DU.unpack_target(
+            target_resampled
+        )
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
 
-        fig.suptitle(f"Resampling of leaf sample {sample_id}", fontsize=fig_title_font_size)
-        _plot_refl_tran_to_axis(axis_object=ax, refl=refl_org, tran=tran_org, x_values=wls_org, x_label='Wavelength [nm]', refl_color='black', tran_color='black', invert_tran=True)
-        _plot_refl_tran_to_axis(axis_object=ax, refl=refl_resampled, tran=tran_resampled, x_values=wls_resampled, x_label='Wavelength [nm]', invert_tran=True)
+        fig.suptitle(
+            f"Resampling of leaf sample {sample_id}", fontsize=fig_title_font_size
+        )
+        _plot_refl_tran_to_axis(
+            axis_object=ax,
+            refl=refl_org,
+            tran=tran_org,
+            x_values=wls_org,
+            x_label="Wavelength [nm]",
+            refl_color="black",
+            tran_color="black",
+            invert_tran=True,
+        )
+        _plot_refl_tran_to_axis(
+            axis_object=ax,
+            refl=refl_resampled,
+            tran=tran_resampled,
+            x_values=wls_resampled,
+            x_label="Wavelength [nm]",
+            invert_tran=True,
+        )
 
         if save_thumbnail:
             folder = PH.path_directory_target(set_name=set_name)
@@ -688,7 +902,9 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
             plt.show()
 
 
-def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumbnail=True) -> None:
+def plot_sample_result(
+    set_name: str, sample_id: int, dont_show=True, save_thumbnail=True
+) -> None:
     """Plots sample result.
 
     :param set_name:
@@ -698,29 +914,72 @@ def plot_sample_result(set_name: str, sample_id: int, dont_show=True, save_thumb
     :param save_thumbnail:
         If True, a PNG image is saved. Default is True.
     :param dont_show:
-        If True, the plot is not plotted on the monitor. Use together with save_thumbnail. Default is True.
+        If True, the plot is not plotted on the monitor. Use together with
+        save_thumbnail. Default is True.
     """
 
-    plt.close('all')
+    plt.close("all")
     result = TH.read_sample_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
-    ax[0].set_title('Variable space')
-    ax[1].set_title('Target space')
+    ax[0].set_title("Variable space")
+    ax[1].set_title("Target space")
     x_data = result[C.key_sample_result_wls]
-    marker = '.'
-    ax[0].plot(x_data, result[C.key_sample_result_ad], label=C.key_sample_result_ad, marker=marker, color=color_ad)
-    ax[0].plot(x_data, result[C.key_sample_result_sd], label=C.key_sample_result_sd, marker=marker, color=color_sd)
-    ax[0].plot(x_data, result[C.key_sample_result_ai], label=C.key_sample_result_ai, marker=marker, color=color_ai)
-    ax[0].plot(x_data, result[C.key_sample_result_mf], label=C.key_sample_result_mf, marker=marker, color=color_mf)
-    x_label = 'Wavelength [nm]'
+    marker = "."
+    ax[0].plot(
+        x_data,
+        result[C.key_sample_result_ad],
+        label=C.key_sample_result_ad,
+        marker=marker,
+        color=color_ad,
+    )
+    ax[0].plot(
+        x_data,
+        result[C.key_sample_result_sd],
+        label=C.key_sample_result_sd,
+        marker=marker,
+        color=color_sd,
+    )
+    ax[0].plot(
+        x_data,
+        result[C.key_sample_result_ai],
+        label=C.key_sample_result_ai,
+        marker=marker,
+        color=color_ai,
+    )
+    ax[0].plot(
+        x_data,
+        result[C.key_sample_result_mf],
+        label=C.key_sample_result_mf,
+        marker=marker,
+        color=color_mf,
+    )
+    x_label = "Wavelength [nm]"
     ax[0].set_xlabel(x_label, fontsize=axis_label_font_size)
     ax[0].legend()
     ax[0].set_ylim(variable_space_ylim)
-    _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_rm], result[C.key_sample_result_tm], result[C.key_sample_result_wls], x_label, invert_tran=True, refl_color='black', tran_color='black')
-    _plot_refl_tran_to_axis(ax[1], result[C.key_sample_result_r], result[C.key_sample_result_t], result[C.key_sample_result_wls], x_label, invert_tran=True)
+    _plot_refl_tran_to_axis(
+        ax[1],
+        result[C.key_sample_result_rm],
+        result[C.key_sample_result_tm],
+        result[C.key_sample_result_wls],
+        x_label,
+        invert_tran=True,
+        refl_color="black",
+        tran_color="black",
+    )
+    _plot_refl_tran_to_axis(
+        ax[1],
+        result[C.key_sample_result_r],
+        result[C.key_sample_result_t],
+        result[C.key_sample_result_wls],
+        x_label,
+        invert_tran=True,
+    )
     if save_thumbnail:
-        path = PH.path_file_signal_result_plot(slab_sim_name=set_name, signal_id=sample_id)
+        path = PH.path_file_signal_result_plot(
+            slab_sim_name=set_name, signal_id=sample_id
+        )
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
@@ -741,8 +1000,9 @@ def replot_wl_results(set_name: str):
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
 
 
-def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set_name: str = None,
-                                        solver_name: str = None) -> None:
+def _plot_starting_guess_coeffs_fitting(
+    dont_show=True, save_thumbnail=True, set_name: str = None, solver_name: str = None
+) -> None:
     """Plot starting guess poynomial fit with data.
 
     Used only when generating the starting guess.
@@ -752,28 +1012,35 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set
         'starting_guess_set_name' stored in constants.py is used.
     """
 
-    plt.close('all')
+    plt.close("all")
 
     if set_name is None:
         set_name = C.starting_guess_set_name
 
-    a_list, ad_list, sd_list, ai_list, mf_list = src.slab_model.training_utils.get_starting_guess_points(set_name=set_name)
+    a_list, ad_list, sd_list, ai_list, mf_list = (
+        src.slab_model.training_utils.get_starting_guess_points(set_name=set_name)
+    )
 
-    ms = 10 # markersize
-    ls = 2 # linesize
-    plt.scatter(a_list, ad_list, label='Absorption density', color=color_ad, s=ms)
-    plt.scatter(a_list, sd_list, label='Scattering density', color=color_sd, s=ms)
-    plt.scatter(a_list, ai_list, label='Scattering anisotropy', color=color_ai, s=ms)
-    plt.scatter(a_list, mf_list, label='Mix factor', color=color_mf, s=ms)
+    ms = 10  # markersize
+    ls = 2  # linesize
+    plt.scatter(a_list, ad_list, label="Absorption density", color=color_ad, s=ms)
+    plt.scatter(a_list, sd_list, label="Scattering density", color=color_sd, s=ms)
+    plt.scatter(a_list, ai_list, label="Scattering anisotropy", color=color_ai, s=ms)
+    plt.scatter(a_list, mf_list, label="Mix factor", color=color_mf, s=ms)
 
     coeffs = TH.read_starting_guess_coeffs(solver_name=solver_name)
-    for _,key in enumerate(coeffs):
-        coeff  = coeffs[key]
-        y = np.array([np.sum(np.array([coeff[i] * (j ** i) for i in range(len(coeff))])) for j in a_list])
-        plt.plot(a_list, y, color='black', linewidth=ls)
+    for _, key in enumerate(coeffs):
+        coeff = coeffs[key]
+        y = np.array(
+            [
+                np.sum(np.array([coeff[i] * (j**i) for i in range(len(coeff))]))
+                for j in a_list
+            ]
+        )
+        plt.plot(a_list, y, color="black", linewidth=ls)
 
-    plt.xlabel('Absorption', fontsize=axis_label_font_size)
-    plt.ylabel('Material parameter', fontsize=axis_label_font_size)
+    plt.xlabel("Absorption", fontsize=axis_label_font_size)
+    plt.ylabel("Material parameter", fontsize=axis_label_font_size)
     plt.legend()
 
     if save_thumbnail:
@@ -787,7 +1054,7 @@ def _plot_starting_guess_coeffs_fitting(dont_show=True, save_thumbnail=True, set
         plt.show()
 
 
-def _plot_with_shadow(ax_obj, x_data, y_data, y_data_std, color, label, ls='-') -> None:
+def _plot_with_shadow(ax_obj, x_data, y_data, y_data_std, color, label, ls="-") -> None:
     """Plot data with standard deviation as shadow.
 
     Data must be sorted to show correctly.
@@ -808,11 +1075,26 @@ def _plot_with_shadow(ax_obj, x_data, y_data, y_data_std, color, label, ls='-') 
         Line style. See pyplot linestyle documentation.
     """
 
-    ax_obj.fill_between(x_data, y_data-(y_data_std/2), y_data+(y_data_std/2), alpha=alpha_error, color=color)
+    ax_obj.fill_between(
+        x_data,
+        y_data - (y_data_std / 2),
+        y_data + (y_data_std / 2),
+        alpha=alpha_error,
+        color=color,
+    )
     ax_obj.plot(x_data, y_data, color=color, ls=ls, label=label)
 
 
-def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_tran=False, refl_color=color_reflectance, tran_color=color_transmittance):
+def _plot_refl_tran_to_axis(
+    axis_object,
+    refl,
+    tran,
+    x_values,
+    x_label,
+    invert_tran=False,
+    refl_color=color_reflectance,
+    tran_color=color_transmittance,
+):
     """Plots reflectance and transmittance to given axis object.
 
     :param axis_object:
@@ -836,15 +1118,19 @@ def _plot_refl_tran_to_axis(axis_object, refl, tran, x_values, x_label, invert_t
     """
 
     axis_object.set_xlabel(x_label, fontsize=axis_label_font_size)
-    axis_object.set_ylabel('Reflectance', color=refl_color, fontsize=axis_label_font_size)
-    axis_object.tick_params(axis='y', labelcolor=refl_color)
+    axis_object.set_ylabel(
+        "Reflectance", color=refl_color, fontsize=axis_label_font_size
+    )
+    axis_object.tick_params(axis="y", labelcolor=refl_color)
     # Make twin axis for transmittance
     axt = axis_object.twinx()
-    axt.set_ylabel('Transmittance', color=tran_color, fontsize=axis_label_font_size)
-    axt.tick_params(axis='y', labelcolor=tran_color)
+    axt.set_ylabel("Transmittance", color=tran_color, fontsize=axis_label_font_size)
+    axt.tick_params(axis="y", labelcolor=tran_color)
     # But use given x_values for plotting
-    marker = '.'
-    axis_object.plot(x_values, refl, label="Reflectance", color=refl_color, marker=marker)
+    marker = "."
+    axis_object.plot(
+        x_values, refl, label="Reflectance", color=refl_color, marker=marker
+    )
     axt.plot(x_values, tran, label="Transmittance", color=tran_color, marker=marker)
 
     axis_object.set_ylim([0, 1])

@@ -1,4 +1,3 @@
-
 from src import plotter, constants as C
 from src.rendering import blender_control as BC
 from src.slab_model import slab_commons as LC
@@ -13,25 +12,38 @@ def run(runtime: RuntimeEnvironment, data_exits=False):
     This is only to show that if the sun power is more than 4 W/m2, a completely white
     diffuse surface will burn to white.
 
-    :param data_exits:
-        If True, no new data is created. This is merely for replotting. Default is False.
+    :param data_exits: If True, no new data is created. This is merely for replotting. Default is False.
     """
 
-    set_name = 'reflectance_lab'
+    set_name = "reflectance_lab"
     LC.initialize_directories(slab_sim_name=set_name, clear_old_results=True)
 
-    powers = [4,5,6]
+    powers = [4, 5, 6]
     reflectance = []
     HSV_values = list(range(101))
     for sun_power in powers:
-        sample_dir = PH.path_directory_result_signal(set_name=set_name, sample_id=sun_power)
+        sample_dir = PH.path_directory_result_signal(
+            set_name=set_name, sample_id=sun_power
+        )
         if not data_exits:
-            BC.run_reflectance_lab(rend_base_path=sample_dir, dry_run=False, sun_power=sun_power, runtime=runtime)
+            BC.run_reflectance_lab(
+                rend_base_path=sample_dir,
+                dry_run=False,
+                sun_power=sun_power,
+                runtime=runtime,
+            )
         vals = []
         for value in HSV_values:
-            p = FH.search_by_wl(C.target_type_slab, 'refl', wl=value, base_path=sample_dir)
+            p = FH.search_by_wl(
+                C.target_type_slab, "refl", wl=value, base_path=sample_dir
+            )
             vals.append(DU.get_rend_as_mean(p))
 
         reflectance.append(vals)
 
-    plotter.plot_reflectance_lab(HSV_value=HSV_values, reflectance=reflectance, powers=powers, plot_name='diffuce_reflectance')
+    plotter.plot_reflectance_lab(
+        HSV_value=HSV_values,
+        reflectance=reflectance,
+        powers=powers,
+        plot_name="diffuce_reflectance",
+    )

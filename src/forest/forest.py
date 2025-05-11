@@ -4,6 +4,7 @@
     Write the docs
 
 """
+
 import logging
 
 import numpy as np
@@ -19,8 +20,16 @@ from src.blender_scripts import forest_control
 from src.blender_scripts import forest_constants as FC
 
 
-def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file_name: str = None,
-         copy_forest_id: str = None, custom_forest_id: str = None, conf_type: str = None, rng=None):
+def init(
+    leaves=None,
+    soil_name: str = None,
+    sun_file_name: str = None,
+    sky_file_name: str = None,
+    copy_forest_id: str = None,
+    custom_forest_id: str = None,
+    conf_type: str = None,
+    rng=None,
+):
     """Create a new forest by copying template.
 
     Load leaf material parameters for each leaf. They must use same spectral sampling,
@@ -58,7 +67,9 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
     """
 
     if copy_forest_id is not None:
-        forest_id = FH.duplicate_forest_scene(copy_forest_id=copy_forest_id, custom_forest_id=custom_forest_id)
+        forest_id = FH.duplicate_forest_scene(
+            copy_forest_id=copy_forest_id, custom_forest_id=custom_forest_id
+        )
     else:
         forest_id = FH.duplicate_forest_scene(custom_forest_id=custom_forest_id)
 
@@ -68,25 +79,40 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         source_path = PH.path_directory_internal()
 
     # Config file
-    if conf_type is None or conf_type == 'm2m':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.filename_system_sim_control)
-        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
-    elif conf_type == 'm2s':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.filename_system_sim_control)
+    if conf_type is None or conf_type == "m2m":
+        control_dict = forest_control.read_toml_as_dict(
+            directory=source_path, filename=C.filename_system_sim_control
+        )
+        forest_control.write_forest_control(
+            forest_id=forest_id, control_dict=control_dict
+        )
+    elif conf_type == "m2s":
+        control_dict = forest_control.read_toml_as_dict(
+            directory=source_path, filename=C.filename_system_sim_control
+        )
         control_dict = m2s(control_dict=control_dict, rng=rng)
-        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
-    elif conf_type == 's2m':
-        control_dict = forest_control.read_toml_as_dict(directory=source_path, filename=C.filename_system_sim_control)
+        forest_control.write_forest_control(
+            forest_id=forest_id, control_dict=control_dict
+        )
+    elif conf_type == "s2m":
+        control_dict = forest_control.read_toml_as_dict(
+            directory=source_path, filename=C.filename_system_sim_control
+        )
         control_dict = s2m(control_dict=control_dict)
-        forest_control.write_forest_control(forest_id=forest_id, control_dict=control_dict)
+        forest_control.write_forest_control(
+            forest_id=forest_id, control_dict=control_dict
+        )
     else:
-        raise AttributeError(f"Attribute conf_type '{conf_type}' not recognised. Use one of ['m2m','m2s','s2m'].")
-
+        raise AttributeError(
+            f"Attribute conf_type '{conf_type}' not recognised. Use one of ['m2m','m2s','s2m']."
+        )
 
     # forest_id = '0102231033' # for debugging and testing
 
     if leaves is None:
-        logging.info(f"No leaves were provided for forest initialization, so I just copied the forest scene.")
+        logging.info(
+            f"No leaves were provided for forest initialization, so I just copied the forest scene."
+        )
         return
 
     # load requested leaf sample result dicts
@@ -94,7 +120,7 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
     for leaf in leaves:
         set_name = leaf[0]
         sample_id = leaf[1]
-        sample_res = TH.read_sample_result(set_name=set_name,sample_id=sample_id)
+        sample_res = TH.read_sample_result(set_name=set_name, sample_id=sample_id)
         sample_list.append(sample_res)
 
     # Check that all leaves have been solved with the same sampling
@@ -110,15 +136,20 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
 
         # Check band count
         if len(sampling) != len(wls_other):
-            raise ValueError(f"Band count for set '{other_set_name}' sample {other_sample_id} (len = {len(wls_other)}) does not match "
-                             f"{reference_set_name} sample {reference_sample_id} (len = {len(sampling)}).\n")
+            raise ValueError(
+                f"Band count for set '{other_set_name}' sample {other_sample_id} "
+                f"(len = {len(wls_other)}) does not match "
+                f"{reference_set_name} sample {reference_sample_id} (len = {len(sampling)}).\n"
+            )
         # Check wavelengths
         same = np.allclose(sampling, wls_other, atol=0.01)
         if not same:
-            raise ValueError(f"Wavelengths for {other_set_name} sample {other_sample_id} does not match "
-                             f"{reference_set_name} sample {reference_sample_id}.\n "
-                             f"Expected {sampling}\n"
-                             f"but got {wls_other}")
+            raise ValueError(
+                f"Wavelengths for {other_set_name} sample {other_sample_id} does not match "
+                f"{reference_set_name} sample {reference_sample_id}.\n "
+                f"Expected {sampling}\n"
+                f"but got {wls_other}"
+            )
 
     # Write leaf params
     logging.info(f"Bands and wavelengths ok. Copying leaf data.")
@@ -126,7 +157,12 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
         set_name = leaf[0]
         sample_id = leaf[1]
         leaf_id = leaf[2]
-        FH.copy_leaf_material_parameters(forest_id=forest_id, leaf_id=leaf_id, source_set_name=set_name, sample_id=sample_id)
+        FH.copy_leaf_material_parameters(
+            forest_id=forest_id,
+            leaf_id=leaf_id,
+            source_set_name=set_name,
+            sample_id=sample_id,
+        )
 
     ################ Leaf RGB ################
 
@@ -148,39 +184,90 @@ def init(leaves=None, soil_name: str = None, sun_file_name: str = None, sky_file
     ################ Sun ################
 
     logging.info(f"Normalizing, resampling and writing sun data.")
-    sun_wls_org, sun_irradiance_org = lighting.load_light(file_name=sun_file_name, scene_id=forest_id, lighting_type='sun')
+    sun_wls_org, sun_irradiance_org = lighting.load_light(
+        file_name=sun_file_name, scene_id=forest_id, lighting_type="sun"
+    )
     logging.info(f"Reloading sun with new sampling.")
-    sun_wls, sun_irradiance = lighting.load_light(file_name=sun_file_name, scene_id=forest_id, sampling=sampling, lighting_type='sun')
+    sun_wls, sun_irradiance = lighting.load_light(
+        file_name=sun_file_name,
+        scene_id=forest_id,
+        sampling=sampling,
+        lighting_type="sun",
+    )
     # Normalizing sun
     sun_irr_max = np.max(sun_irradiance)
     sun_irradiance = sun_irradiance / sun_irr_max
-    FH.write_blender_light_spectra(forest_id=forest_id, wls=sun_wls, irradiances=sun_irradiance, lighting_type='sun')
+    FH.write_blender_light_spectra(
+        forest_id=forest_id,
+        wls=sun_wls,
+        irradiances=sun_irradiance,
+        lighting_type="sun",
+    )
 
     logging.info(f"Plotting sun data.")
-    plotter.plot_light_data(wls=sun_wls_org, irradiances=sun_irradiance_org, wls_binned=sun_wls, irradiances_binned=sun_irradiance,
-                            forest_id=forest_id, lighting_type='sun')
+    plotter.plot_light_data(
+        wls=sun_wls_org,
+        irradiances=sun_irradiance_org,
+        wls_binned=sun_wls,
+        irradiances_binned=sun_irradiance,
+        forest_id=forest_id,
+        lighting_type="sun",
+    )
 
     ################ Sky ################
 
-    sky_wls_org, sky_irradiance_org = lighting.load_light(file_name=sky_file_name, scene_id=forest_id, lighting_type='sky')
-    sky_wls, sky_irradiance = lighting.load_light(file_name=sky_file_name, scene_id=forest_id, sampling=sampling, lighting_type='sky')
+    sky_wls_org, sky_irradiance_org = lighting.load_light(
+        file_name=sky_file_name, scene_id=forest_id, lighting_type="sky"
+    )
+    sky_wls, sky_irradiance = lighting.load_light(
+        file_name=sky_file_name,
+        scene_id=forest_id,
+        sampling=sampling,
+        lighting_type="sky",
+    )
     # Normalize with maximum SUN irradiance
     sky_irradiance = sky_irradiance / sun_irr_max
-    FH.write_blender_light_spectra(forest_id=forest_id, wls=sky_wls, irradiances=sky_irradiance, lighting_type='sky')
-    plotter.plot_light_data(wls=sky_wls_org, irradiances=sky_irradiance_org, wls_binned=sky_wls, irradiances_binned=sky_irradiance, forest_id=forest_id,
-                            sun_plot_name=sky_file_name, lighting_type='sky')
+    FH.write_blender_light_spectra(
+        forest_id=forest_id,
+        wls=sky_wls,
+        irradiances=sky_irradiance,
+        lighting_type="sky",
+    )
+    plotter.plot_light_data(
+        wls=sky_wls_org,
+        irradiances=sky_irradiance_org,
+        wls_binned=sky_wls,
+        irradiances_binned=sky_irradiance,
+        forest_id=forest_id,
+        sun_plot_name=sky_file_name,
+        lighting_type="sky",
+    )
 
     ################ Soil ################
 
     if soil_name is None:
         soil_name = "median_humid_clay"
-        logging.warning(f"Soil name not provided for forest initialization. Using default soil '{soil_name}'.")
+        logging.warning(
+            f"Soil name not provided for forest initialization. Using default soil '{soil_name}'."
+        )
 
     soil_wls, soil_refls = soil.load_soil(forest_id=forest_id, soil_name=soil_name)
-    soil_wls_resampled, soil_refls_resampled = soil.load_soil(forest_id=forest_id, soil_name=soil_name, sampling=sampling)
-    FH.write_blender_soil(forest_id=forest_id, wls=soil_wls_resampled, reflectances=soil_refls_resampled)
-    plotter.plot_blender_soil(wls=soil_wls, reflectances=soil_refls, soil_name=soil_name, wls_resampled=soil_wls_resampled,
-                              reflectances_resampled=soil_refls_resampled, forest_id=forest_id, dont_show=True, save=True)
+    soil_wls_resampled, soil_refls_resampled = soil.load_soil(
+        forest_id=forest_id, soil_name=soil_name, sampling=sampling
+    )
+    FH.write_blender_soil(
+        forest_id=forest_id, wls=soil_wls_resampled, reflectances=soil_refls_resampled
+    )
+    plotter.plot_blender_soil(
+        wls=soil_wls,
+        reflectances=soil_refls,
+        soil_name=soil_name,
+        wls_resampled=soil_wls_resampled,
+        reflectances_resampled=soil_refls_resampled,
+        forest_id=forest_id,
+        dont_show=True,
+        save=True,
+    )
 
     return forest_id
 
@@ -205,15 +292,17 @@ def m2s(control_dict: dict, rng) -> dict:
 
     new_dict = {}
 
-    for key,dict_item in control_dict.items():
+    for key, dict_item in control_dict.items():
 
         if key == FC.key_ctrl_is_master_control and dict_item is False:
-            raise RuntimeError(f"Cannot apply randomness from a slave forest control file.")
+            raise RuntimeError(
+                f"Cannot apply randomness from a slave forest control file."
+            )
         elif key == FC.key_ctrl_is_master_control and dict_item is True:
             # Change the control file type from master to slave.
             new_value = False
         elif isinstance(dict_item, dict):
-            if key == 'Seed':
+            if key == "Seed":
                 new_value = rng.integers(1000)
             else:
                 # Recursion for sub-dictionaries.
@@ -276,16 +365,18 @@ def s2m(control_dict: dict) -> dict:
 
     new_dict = copy.deepcopy(control_dict)
 
-    for key,dict_item in control_dict.items():
+    for key, dict_item in control_dict.items():
 
         if key == FC.key_ctrl_is_master_control and dict_item is True:
-            logging.info(f"Already a master control file. Doing nothing and returning the original control.")
+            logging.info(
+                f"Already a master control file. Doing nothing and returning the original control."
+            )
             return control_dict
         elif key == FC.key_ctrl_is_master_control and dict_item is False:
             # Change the control file type from slave to master.
             new_value = True
         elif isinstance(dict_item, dict):
-            if key == 'Seed':
+            if key == "Seed":
                 new_value = dict_item
             else:
                 # Recursion for sub-dictionaries.
@@ -294,7 +385,9 @@ def s2m(control_dict: dict) -> dict:
             item_type = control_dict[FC.key_ctrl_item_type]
             if item_type == "INT" or item_type == "VALUE":
                 internal_value = control_dict[FC.key_ctrl_item_value]
-                new_dict[FC.key_ctrl_item_std] = internal_value * FC.ctrl_default_std_of_value
+                new_dict[FC.key_ctrl_item_std] = (
+                    internal_value * FC.ctrl_default_std_of_value
+                )
         else:
             new_value = dict_item
 

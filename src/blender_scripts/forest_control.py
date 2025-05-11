@@ -14,7 +14,9 @@ from src.data import path_handling as PH
 from src import constants as C
 
 
-def write_forest_control(forest_id: str, control_dict: dict, global_master: bool = False):
+def write_forest_control(
+    forest_id: str, control_dict: dict, global_master: bool = False
+):
     """Writes forest control file.
 
     :param forest_id:
@@ -28,14 +30,24 @@ def write_forest_control(forest_id: str, control_dict: dict, global_master: bool
     """
 
     if global_master:
-        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_project_root(), filename=C.filename_system_sim_control)
+        write_dict_as_toml(
+            dictionary=control_dict,
+            directory=PH.path_directory_project_root(),
+            filename=C.filename_system_sim_control,
+        )
     else:
-        write_dict_as_toml(dictionary=control_dict, directory=PH.path_directory_system_simulation(forest_id=forest_id),
-                           filename=C.filename_system_sim_control)
+        write_dict_as_toml(
+            dictionary=control_dict,
+            directory=PH.path_directory_system_simulation(forest_id=forest_id),
+            filename=C.filename_system_sim_control,
+        )
 
 
 def read_forest_control(forest_id: str) -> dict:
-    return read_toml_as_dict(directory=PH.path_directory_system_simulation(forest_id=forest_id), filename=C.filename_system_sim_control)
+    return read_toml_as_dict(
+        directory=PH.path_directory_system_simulation(forest_id=forest_id),
+        filename=C.filename_system_sim_control,
+    )
 
 
 def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
@@ -50,14 +62,16 @@ def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
     """
 
     if not os.path.exists(os.path.abspath(directory)):
-        raise RuntimeError(f"Cannot write given dictionary to path '{os.path.abspath(directory)}' "
-                           f"because it does not exist.")
+        raise RuntimeError(
+            f"Cannot write given dictionary to path '{os.path.abspath(directory)}' "
+            f"because it does not exist."
+        )
 
     if not filename.endswith(C.postfix_text_data_format):
         filename = filename + C.postfix_text_data_format
 
     p = PH.join(directory, filename)
-    with open(p, 'w+') as file:
+    with open(p, "w+") as file:
         toml.dump(dictionary, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
@@ -78,9 +92,11 @@ def read_toml_as_dict(directory: str, filename: str):
     p = PH.join(directory, filename)
 
     if not os.path.exists(os.path.abspath(p)):
-        raise RuntimeError(f"Cannot read from file '{os.path.abspath(p)}' "
-                           f"because it does not exist.")
+        raise RuntimeError(
+            f"Cannot read from file '{os.path.abspath(p)}' "
+            f"because it does not exist."
+        )
 
-    with open(p, 'r') as file:
+    with open(p, "r") as file:
         result = toml.load(file)
     return result

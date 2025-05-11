@@ -13,8 +13,10 @@ from src.data import light_file_handling as LFH
 from src.utils import spectra_utils as SU
 
 
-def load_light(file_name: str = None, scene_id=None, sampling=None, lighting_type='sun'):
-    """ Loads a lighting file and returns wavelengths and corresponding irradiances.
+def load_light(
+    file_name: str = None, scene_id=None, sampling=None, lighting_type="sun"
+):
+    """Loads a lighting file and returns wavelengths and corresponding irradiances.
 
     Files formatted so that comment lines are prefixed with '#' and rest of the lines
     contain wavelength-irradiance pairs that can be casted to floats, they can be read
@@ -44,23 +46,27 @@ def load_light(file_name: str = None, scene_id=None, sampling=None, lighting_typ
 
     logging.info("Loading light data.")
     if file_name is None:
-        if lighting_type == 'sun':
+        if lighting_type == "sun":
             file_name = C.file_default_sun
-        elif lighting_type == 'sky':
+        elif lighting_type == "sky":
             file_name = C.file_default_sky
         else:
-            raise ValueError(f"Lighting file name was not provided. For loading one of the default files, "
-                             f"expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+            raise ValueError(
+                f"Lighting file name was not provided. For loading one of the default files, "
+                f"expected file type either 'sun' or 'sky', was '{lighting_type}'."
+            )
 
-    if not file_name.endswith('.txt'):
-        file_name = file_name + '.txt'
+    if not file_name.endswith(".txt"):
+        file_name = file_name + ".txt"
 
     path = _find_lighting_file(file_name, scene_id)
 
     wls, irradiances = LFH.read_light_file(path)
 
     if sampling is not None:
-        new_irradiances = SU.resample(original_wl=wls, original_val=irradiances, new_wl=sampling)
+        new_irradiances = SU.resample(
+            original_wl=wls, original_val=irradiances, new_wl=sampling
+        )
         wls = sampling
         irradiances = new_irradiances
 
@@ -88,13 +94,18 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
     """
 
     if forest_id is not None:
-        logging.info(f"Trying to find lighting data from forest scene directory '{PH.path_directory_system_simulation(forest_id)}'.")
+        logging.info(
+            f"Trying to find lighting data from forest scene directory "
+            f"'{PH.path_directory_system_simulation(forest_id)}'."
+        )
         p = PH.join(PH.path_directory_system_simulation(forest_id), file_name)
         if os.path.exists(p):
             logging.info(f"Light data found.")
             return p
         else:
-            logging.info(f"Could not find sun data from scene directory. Now searching default directory.")
+            logging.info(
+                f"Could not find sun data from scene directory. Now searching default directory."
+            )
 
     p_dir = PH.path_directory_light_spectra()
 
@@ -105,26 +116,27 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
     raise FileNotFoundError(f"File from '{p}' can not been found.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     """
-    Main for testing and debugging. 
+    Main for testing and debugging.
     """
 
     import sys
-    logging.basicConfig(stream=sys.stdout, level='DEBUG')
+
+    logging.basicConfig(stream=sys.stdout, level="DEBUG")
 
     # Test splitting GOA-generated file into sun and sky files
     # This should produce an error after the split is done
     try:
-        wls, irradiances = load_light(file_name='goa_output')
+        wls, irradiances = load_light(file_name="goa_output")
     except RuntimeError:
         print("Error produced as is proper.")
 
     # Test loading the new files
-    wls, irradiances = load_light(file_name='goa_output_sun')
-    wls, irradiances = load_light(file_name='goa_output_sky')
+    wls, irradiances = load_light(file_name="goa_output_sun")
+    wls, irradiances = load_light(file_name="goa_output_sky")
 
     # Test loading the default sun and sky files
-    wls, irradiances = load_light(lighting_type='sun')
-    wls, irradiances = load_light(lighting_type='sky')
+    wls, irradiances = load_light(lighting_type="sun")
+    wls, irradiances = load_light(lighting_type="sky")

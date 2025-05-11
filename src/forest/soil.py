@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import logging
@@ -35,11 +34,13 @@ def load_soil(soil_name: str, forest_id: str = None, sampling=None):
 
     p = find_gsv_soil_path(soil_name=soil_name)
     soil_data = np.loadtxt(p)
-    wls = soil_data[:,0]
-    refls = soil_data[:,1]
+    wls = soil_data[:, 0]
+    refls = soil_data[:, 1]
 
     if sampling is not None:
-        resampled_refls = SU.resample(original_wl=wls, original_val=refls, new_wl=sampling)
+        resampled_refls = SU.resample(
+            original_wl=wls, original_val=refls, new_wl=sampling
+        )
         return sampling, resampled_refls
 
     return wls, refls

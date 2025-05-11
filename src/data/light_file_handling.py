@@ -65,17 +65,19 @@ def read_light_file(path: str):
     is_goa = False
     for line in comments:
         for token in line:
-            if 'PSG' in token:
+            if "PSG" in token:
                 is_psg = True
                 break
-            elif 'GOA' in token:
+            elif "GOA" in token:
                 is_goa = True
                 break
 
     if not is_psg and not is_goa:
-        logging.warning(f"Unknown light file type. If it is formatted so that comment lines are "
-                        f"prefixed with '#' and rest of the lines contain wavelenght-irradiance pairs "
-                        f"that can be casted to floats, everything should go well.")
+        logging.warning(
+            f"Unknown light file type. If it is formatted so that comment lines are "
+            f"prefixed with '#' and rest of the lines contain wavelenght-irradiance pairs "
+            f"that can be casted to floats, everything should go well."
+        )
 
     if is_psg:
         _fix_psg_file(path)
@@ -83,15 +85,19 @@ def read_light_file(path: str):
     if is_goa:
         first_line = _read_first_non_comment_line(path)
         if len(first_line) > 2:
-            logging.info(f"Splitting GOA-generated file into separate sun and sky files.")
+            logging.info(
+                f"Splitting GOA-generated file into separate sun and sky files."
+            )
             # This is all cool and dandy but how do we know which file the caller wants?
             new_sun_file_name, new_sky_file_name = _split_goa_file(path)
-            raise RuntimeError(f"The GOA-generated file was not yet split into separate sun "
-                               f"and sky spectrum files. I splitted them for you, but since I "
-                               f"don't know which one you want, you must call me again by one of the "
-                               f"new file names: sun file '{new_sun_file_name}' or sky file '{new_sky_file_name}'. "
-                               f"So this is not an error as such, but I have to halt the execution to avoid "
-                               f"problems for you.")
+            raise RuntimeError(
+                f"The GOA-generated file was not yet split into separate sun "
+                f"and sky spectrum files. I splitted them for you, but since I "
+                f"don't know which one you want, you must call me again by one of the "
+                f"new file names: sun file '{new_sun_file_name}' or sky file '{new_sky_file_name}'. "
+                f"So this is not an error as such, but I have to halt the execution to avoid "
+                f"problems for you."
+            )
 
         wls, irradiances, _ = _read_hb_light_file(path)
 
@@ -99,15 +105,15 @@ def read_light_file(path: str):
 
 
 def _fix_psg_file(path: str):
-    """ Fix double spaces and irradiance units provided by NASA PSG.
+    """Fix double spaces and irradiance units provided by NASA PSG.
 
     Rewrites the file (several times) if needed. Adds a tag to the fixed file that
     tells it is now OK.
     """
 
-    with open(path, 'r') as file:
+    with open(path, "r") as file:
         filedata = file.read()
-        if filedata.startswith('# HyperBlend compliance'):
+        if filedata.startswith("# HyperBlend compliance"):
             logging.info(f"PSG-generated light spectrum file OK.")
             return
         else:
@@ -119,15 +125,15 @@ def _fix_psg_file(path: str):
     wls_i, irradiances_i, comments = _read_hb_light_file(path, try_to_fix=False)
     unit_row_idx = 0
     unit_row_content = []
-    for i,comment in enumerate(comments):
-        if 'Radiance' == comment[1] and 'unit:' == comment[2]:
+    for i, comment in enumerate(comments):
+        if "Radiance" == comment[1] and "unit:" == comment[2]:
             unit = comment[-1]
             unit_row_idx = i
 
-            if unit == '[W/m2/nm]':
+            if unit == "[W/m2/nm]":
                 logging.info(f"Irradiance unit is [W/m2/nm], all good.")
                 unit_row_content = comment
-            elif unit == '[W/m2/um]':
+            elif unit == "[W/m2/um]":
                 logging.info(f"Irradiance unit is [W/m2/um], converting to [W/m2/nm].")
                 irradiances_i = irradiances_i * 0.001
 
@@ -135,14 +141,18 @@ def _fix_psg_file(path: str):
                     if piece != unit:
                         unit_row_content.append(piece)
                     else:
-                        unit_row_content.append('[W/m2/nm]')
+                        unit_row_content.append("[W/m2/nm]")
             else:
-                raise RuntimeError(f"Cannot convert unit '{unit}' to '[W/m2/nm]'. Use [W/m2/um] when generating spectra.")
+                raise RuntimeError(
+                    f"Cannot convert unit '{unit}' to '[W/m2/nm]'. Use [W/m2/um] when generating spectra."
+                )
 
     comments[unit_row_idx] = unit_row_content
-    comments.insert(0, ['#', 'HyperBlend', 'compliance'])
+    comments.insert(0, ["#", "HyperBlend", "compliance"])
 
-    _write_hb_light_file(path=path, wls=wls_i, irradiances=irradiances_i, comments=comments)
+    _write_hb_light_file(
+        path=path, wls=wls_i, irradiances=irradiances_i, comments=comments
+    )
     logging.info(f"PSG-generated light file should now be fixed.")
 
 
@@ -161,9 +171,9 @@ def _split_goa_file(path):
     direct_irradiances = []
     diffuse_irradiances = []
     with open(path) as file:
-        reader = csv.reader(file, delimiter=' ')
+        reader = csv.reader(file, delimiter=" ")
         for row in reader:
-            if row[0].startswith('#'):
+            if row[0].startswith("#"):
                 comments.append(row)
                 continue
             else:
@@ -174,23 +184,35 @@ def _split_goa_file(path):
     # Fix the header comment line
     new_comments = []
     for comment in comments:
-        if 'Wavelength' in comment:
+        if "Wavelength" in comment:
             new_comments.append(["#", "Wavelength", "Irradiance"])
         else:
             new_comments.append(comment)
 
     dir_path = os.path.dirname(path)
-    base_file_name = os.path.basename(path).rsplit('.')[0]
+    base_file_name = os.path.basename(path).rsplit(".")[0]
     new_sun_file_name = base_file_name + "_sun.txt"
     new_sky_file_name = base_file_name + "_sky.txt"
     out_path_sun = PH.join(dir_path, new_sun_file_name)
     out_path_sky = PH.join(dir_path, new_sky_file_name)
 
-    _write_hb_light_file(path=out_path_sun, wls=wls, irradiances=direct_irradiances, comments=new_comments)
-    _write_hb_light_file(path=out_path_sky, wls=wls, irradiances=diffuse_irradiances, comments=new_comments)
+    _write_hb_light_file(
+        path=out_path_sun,
+        wls=wls,
+        irradiances=direct_irradiances,
+        comments=new_comments,
+    )
+    _write_hb_light_file(
+        path=out_path_sky,
+        wls=wls,
+        irradiances=diffuse_irradiances,
+        comments=new_comments,
+    )
 
-    logging.info(f"Splitting done. You can find the new sun file from '{out_path_sun}' and the "
-                 f"sky file from '{out_path_sky}'.")
+    logging.info(
+        f"Splitting done. You can find the new sun file from '{out_path_sun}' and the "
+        f"sky file from '{out_path_sky}'."
+    )
 
     return new_sun_file_name, new_sky_file_name
 
@@ -212,8 +234,8 @@ def _write_hb_light_file(path: str, wls, irradiances, comments):
         Comment lines as a list of strings prefixed with '#'.
     """
 
-    with open(path, 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f, delimiter=' ')
+    with open(path, "w", encoding="UTF8", newline="") as f:
+        writer = csv.writer(f, delimiter=" ")
         writer.writerows(comments)
         writer.writerows(list(zip(wls, irradiances)))
 
@@ -258,9 +280,9 @@ def _read_hb_light_file(path, required_resolution=1.0, resolution_epsilon=0.01):
     comments = []
 
     with open(path) as file:
-        reader = csv.reader(file, delimiter=' ')
+        reader = csv.reader(file, delimiter=" ")
         for row in reader:
-            if row[0].startswith('#'):
+            if row[0].startswith("#"):
                 comments.append(row)
                 continue
             else:
@@ -268,9 +290,14 @@ def _read_hb_light_file(path, required_resolution=1.0, resolution_epsilon=0.01):
                 irradiances.append(float(row[1]))
 
     min_diff, max_diff = _band_separations(wls)
-    resolution_ok = abs(min_diff-required_resolution) < resolution_epsilon and abs(max_diff-required_resolution) < resolution_epsilon
+    resolution_ok = (
+        abs(min_diff - required_resolution) < resolution_epsilon
+        and abs(max_diff - required_resolution) < resolution_epsilon
+    )
     if not resolution_ok:
-        raise RuntimeError(f"Resolution in given file is not 1 nm. Use default sun or fix the file.")
+        raise RuntimeError(
+            f"Resolution in given file is not 1 nm. Use default sun or fix the file."
+        )
 
     return np.array(wls), np.array(irradiances), comments
 
@@ -280,9 +307,9 @@ def _read_file_comments_only(path: str):
 
     comments = []
     with open(path) as file:
-        reader = csv.reader(file, delimiter=' ')
+        reader = csv.reader(file, delimiter=" ")
         for row in reader:
-            if row[0].startswith('#'):
+            if row[0].startswith("#"):
                 comments.append(row)
                 continue
     return comments
@@ -292,9 +319,9 @@ def _read_first_non_comment_line(path: str):
     """Reads only the first line after comments and returns that."""
 
     with open(path) as file:
-        reader = csv.reader(file, delimiter=' ')
+        reader = csv.reader(file, delimiter=" ")
         for row in reader:
-            if row[0].startswith('#'):
+            if row[0].startswith("#"):
                 continue
             else:
                 return row
@@ -313,9 +340,9 @@ def _band_separations(wls):
     max_diff = 0
     min_diff = 1e10
 
-    for i in range(len(wls)-1):
-        current_wl = wls[i+1]
-        diff = math.fabs(current_wl-previous_wl)
+    for i in range(len(wls) - 1):
+        current_wl = wls[i + 1]
+        diff = math.fabs(current_wl - previous_wl)
         previous_wl = current_wl
         if diff > max_diff:
             max_diff = diff
@@ -328,12 +355,12 @@ def _band_separations(wls):
 def _fix_double_space(path: str):
     """Replace double spaces with a single space."""
 
-    with open(path, 'r') as file:
+    with open(path, "r") as file:
         filedata = file.read()
 
     # Replace the target string
-    filedata = filedata.replace('  ', ' ')
+    filedata = filedata.replace("  ", " ")
 
     # Write the file out again
-    with open(path, 'w') as file:
+    with open(path, "w") as file:
         file.write(filedata)

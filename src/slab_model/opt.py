@@ -25,9 +25,14 @@ hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
 """This should be used only if the starting guess based on polynomial fitting is not available. 
  Will produce worse results and is slower. """
 
-LOWER_BOUND = [0.0, 0.0, 0.0, 0.0] # TODO check this comment! Makes sense to have bound at zero so we can clip it proper
-"""Lower constraints of the minimization problem. Absorption and scattering particle density cannot be exactly 
-zero as it may cause problems in rendering. """
+LOWER_BOUND = [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+]  # TODO check this comment! Makes sense to have bound at zero so we can clip it proper
+"""Lower constraints of the minimization problem. Absorption and scattering particle 
+density cannot be exactly zero as it may cause problems in rendering. """
 
 UPPER_BOUND = [1.0, 1.0, 1.0, 1.0]
 """Upper limit of the minimization problem."""
@@ -35,47 +40,55 @@ UPPER_BOUND = [1.0, 1.0, 1.0, 1.0]
 
 class Optimization:
     """
-        Optimization class runs a least squares optimization of the HyperBlend leaf spectral model
-        against a set of measured leaf spectra.
+    Optimization class runs a least squares optimization of the HyperBlend leaf spectral model
+    against a set of measured leaf spectra.
     """
 
-    def __init__(self, runtime: RuntimeEnvironment, set_name: str, ftol=1e-2, ftol_abs=1.0, xtol=1e-5, diffstep=0.01, starting_guess_type='curve',
-                 clear_old_results=False, solver_name=None):
+    def __init__(
+        self,
+        runtime: RuntimeEnvironment,
+        set_name: str,
+        ftol=1e-2,
+        ftol_abs=1.0,
+        xtol=1e-5,
+        diffstep=0.01,
+        starting_guess_type="curve",
+        clear_old_results=False,
+        solver_name=None,
+    ):
         """Initialize new optimization object.
 
         Creates necessary folder structure if needed.
 
         :param set_name:
             Set name. This is used to identify the measurement set.
-        :param ftol:
-            Function value (difference between measured and modeled) change between iterations considered
-            as 'still converging'.
-            This is a stop criterion for the optimizer. Smaller value leads to more accurate result, but increases
-            the optimization time. Works in tandem with xtol, so whichever value is reached first will stop
-            the optimization for that wavelength.
-        :param ftol_abs:
-            Absolute termination condition for basin hopping. There will be no more basin hopping iterations
-             if reached function value is smaller than this value. Only used if run with basin hopping algorithm,
-             which can help if optimization gets caught in local minima. Basin hopping can be turned on when
+        :param ftol: Function value (difference between measured and modeled) change
+            between iterations considered as 'still converging'. This is a stop criterion
+            for the optimizer. Smaller value leads to more accurate result, but increases
+            the optimization time. Works in tandem with xtol, so whichever value is reached
+            first will stop the optimization for that wavelength.
+        :param ftol_abs: Absolute termination condition for basin hopping. There will be
+            no more basin hopping iterations if reached function value is smaller than
+            this value. Only used if run with basin hopping algorithm, which can help if
+            optimization gets caught in local minima. Basin hopping can be turned on when
              Optimization.run() is called.
-        :param xtol:
-            Controls how much the leaf material parameters need to change between iterations to be considered
-            'progressing'. Greater value stops the optimization earlier.
-        :param diffstep:
-            Stepsize for finite difference Jacobian estimation. Smaller step gives
-            better results, but the variables look cloudy. Big step is faster and variables
-            smoother but there will be outliers in the results. Good stepsize is between 0.001 and 0.01.
-        :param starting_guess_type:
-            One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
-            Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
-            example if leaf material parameter count or bounds change in future development).
-            Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
-            only work in cases where R and T are relatively close to each other (around +- 0.2).
-            Surface fitting method 'surf' can be used after the first training iteration has been carried
-            out. It can more robustly adapt to situations where R and T are dissimilar. If 'surf' is
-            used, also surf_model_name must be provided.
-        :param clear_old_results:
-            Wipe out old results of the same set by setting ```True```.
+        :param xtol: Controls how much the leaf material parameters need to change
+            between iterations to be considered 'progressing'. Greater value stops the
+            optimization earlier.
+        :param diffstep: Stepsize for finite difference Jacobian estimation. Smaller
+            step gives better results, but the variables look cloudy. Big step is faster
+            and variables smoother but there will be outliers in the results. Good
+            stepsize is between 0.001 and 0.01.
+        :param starting_guess_type: One of 'hard-coded', 'curve', 'surf' in order of
+            increasing complexity. Hard-coded 'hard-coded' is only needed if training the
+            other methods from absolute scratch (for example if leaf material parameter
+            count or bounds change in future development). Curve fitting 'curve' is the
+            method presented in the first HyperBlend paper. It will only work in cases
+            where R and T are relatively close to each other (around +- 0.2). Surface
+            fitting method 'surf' can be used after the first training iteration has been
+            carried out. It can more robustly adapt to situations where R and T are
+            dissimilar. If 'surf' is used, also surf_model_name must be provided.
+        :param clear_old_results: Wipe out old results of the same set by setting ```True```.
         :param solver_name:
         """
 
@@ -92,9 +105,13 @@ class Optimization:
         self.starting_guess_type = starting_guess_type
         self.solver_name = solver_name
         self.runtime = runtime
-        LC.initialize_directories(slab_sim_name=set_name, clear_old_results=clear_old_results)
+        LC.initialize_directories(
+            slab_sim_name=set_name, clear_old_results=clear_old_results
+        )
 
-    def run_optimization(self, use_threads=True, use_basin_hopping=False, resampled=True):
+    def run_optimization(
+        self, use_threads=True, use_basin_hopping=False, resampled=True
+    ):
         """Runs the optimization for each sample in the set.
 
         It is safe to interrupt this method at any point as intermediate results are
@@ -102,14 +119,13 @@ class Optimization:
 
         Loops through target toml files in set's target folder.
 
-        :param use_threads:
-            If True, use parallel computation on CPU.
-        :param use_basin_hopping:
-            If True, use basin hopping algorithm on top of the default least squares method.
-            It helps in not getting stuck to local optima, but is significantly slower.
-        :param resampled:
-            If False, ignore sampling and use maximum available spectral resolution. Default is True.
-            This is ignored in training data generation where we have fake wavelengths.
+        :param use_threads: If True, use parallel computation on CPU.
+        :param use_basin_hopping: If True, use basin hopping algorithm on top of the
+            default least squares method. It helps in not getting stuck to local optima,
+            but is significantly slower.
+        :param resampled: If False, ignore sampling and use maximum available spectral
+            resolution. Default is True. This is ignored in training data generation
+            where we have fake wavelengths.
         """
 
         ids = FH.list_target_ids(self.set_name)
@@ -119,9 +135,9 @@ class Optimization:
 
         ids.sort()
 
-        for _,sample_id in enumerate(ids):
+        for _, sample_id in enumerate(ids):
             FH.create_signal_optimization_directories(self.set_name, sample_id)
-            logging.info(f'Starting optimization of sample {sample_id}')
+            logging.info(f"Starting optimization of sample {sample_id}")
             total_time_start = time.perf_counter()
             targets = TH.read_target(self.set_name, sample_id, resampled=resampled)
 
@@ -131,10 +147,27 @@ class Optimization:
             #     targets = targets[::ignore_sampling]
 
             if use_threads:
-                param_list = [(a[0], a[1], a[2], self.set_name, self.diffstep,self.ftol, self.xtol,
-                               self.bounds, LC.density_scale, self.optimizer_verbosity, use_basin_hopping,
-                               sample_id, self.ftol_abs, self.starting_guess_type, self.solver_name, self.runtime)
-                              for a in targets]
+                param_list = [
+                    (
+                        a[0],
+                        a[1],
+                        a[2],
+                        self.set_name,
+                        self.diffstep,
+                        self.ftol,
+                        self.xtol,
+                        self.bounds,
+                        LC.density_scale,
+                        self.optimizer_verbosity,
+                        use_basin_hopping,
+                        sample_id,
+                        self.ftol_abs,
+                        self.starting_guess_type,
+                        self.solver_name,
+                        self.runtime,
+                    )
+                    for a in targets
+                ]
                 with Pool() as pool:
                     pool.map(optimize_single_wl_threaded, param_list)
             else:
@@ -142,15 +175,35 @@ class Optimization:
                     wl = target[0]
                     r_m = target[1]
                     t_m = target[2]
-                    optimize_single_wl(wl, r_m, t_m, self.set_name, self.diffstep,
-                                       self.ftol, self.xtol, self.bounds, LC.density_scale, self.optimizer_verbosity,
-                                       use_basin_hopping, sample_id, self.ftol_abs, self.starting_guess_type,
-                                       self.solver_name, self.runtime)
+                    optimize_single_wl(
+                        wl,
+                        r_m,
+                        t_m,
+                        self.set_name,
+                        self.diffstep,
+                        self.ftol,
+                        self.xtol,
+                        self.bounds,
+                        LC.density_scale,
+                        self.optimizer_verbosity,
+                        use_basin_hopping,
+                        sample_id,
+                        self.ftol_abs,
+                        self.starting_guess_type,
+                        self.solver_name,
+                        self.runtime,
+                    )
 
-            logging.info(f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result")
-            elapsed_min = (time.perf_counter() - total_time_start) / 60.
-            TH.make_sample_result(self.set_name, sample_id, wall_clock_time_min=elapsed_min)
-            plotter.plot_sample_result(self.set_name, sample_id, dont_show=True, save_thumbnail=True)
+            logging.info(
+                f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result"
+            )
+            elapsed_min = (time.perf_counter() - total_time_start) / 60.0
+            TH.make_sample_result(
+                self.set_name, sample_id, wall_clock_time_min=elapsed_min
+            )
+            plotter.plot_sample_result(
+                self.set_name, sample_id, dont_show=True, save_thumbnail=True
+            )
 
         TH.write_set_result(self.set_name)
         plotter.plot_set_result(self.set_name, dont_show=True, save_thumbnail=True)
@@ -163,66 +216,74 @@ def optimize_single_wl_threaded(args):
     optimize_single_wl(*args)
 
 
-def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffstep,
-                       ftol, xtol, bounds, density_scale, optimizer_verbosity,
-                       use_basin_hopping: bool, sample_id: int, ftol_abs, starting_guess_type,
-                       solver_name, runtime: RuntimeEnvironment):
+def optimize_single_wl(
+    wl: float,
+    r_m: float,
+    t_m: float,
+    set_name: str,
+    diffstep,
+    ftol,
+    xtol,
+    bounds,
+    density_scale,
+    optimizer_verbosity,
+    use_basin_hopping: bool,
+    sample_id: int,
+    ftol_abs,
+    starting_guess_type,
+    solver_name,
+    runtime: RuntimeEnvironment,
+):
     """Optimize single wavelength to given reflectance and transmittance.
 
-    Result is saved in a .toml file and plotted as an image.
+     Result is saved in a .toml file and plotted as an image.
 
-    :param wl:
-        Wavelength to be optimized.
-    :param r_m:
-        Measured reflectance.
-    :param t_m:
-        Measured transmittance.
-    :param set_name:
-        Set name (name of the working folder).
-    :param diffstep:
-        Stepsize for finite difference Jacobian estimation. Smaller step gives
-        better results, but the variables look cloudy. Big step is faster and variables
-        smoother but there will be outliers in the results. Good stepsize is between 0.001 and 0.01.
-   :param ftol:
-            Function value (difference between measured and modeled) change between iterations considered
-            as 'still converging'.
-            This is a stop criterion for the optimizer. Smaller value leads to more accurate result, but increases
-            the optimization time. Works in tandem with xtol, so whichever value is reached first will stop
-            the optimization for that wavelength.
-    :param xtol:
-        Controls how much the leaf material parameters need to change between iterations to be considered
-        'progressing'. Greater value stops the optimization earlier.
-    :param bounds:
-        Bounds of the optimization problem. A tuple ([l1,l2,..], [h1,h2,...]).
-    :param density_scale:
-        Scaling parameter for absorption and scattering density. The values for rendering are much
-        higher than the ones used in optimization.
-    :param optimizer_verbosity:
-        Optimizer verbosity: 0 least verbose, 2 very verbose.
-    :param use_basin_hopping:
-        If True, use basin hopping algorithm to escape lacal minima (reduce outliers).
-        Using this considerably slows down the optimization (nearly two-fold).
-    :param sample_id:
-        Sample id.
-    :param ftol_abs:
-        Absolute termination condition for basin hopping. There will be no more basin hopping iterations
-         if reached function value is smaller than this value. Only used if run with basin hopping algorithm,
-         which can help if optimization gets caught in local minima. Basin hopping can be turned on when
-         Optimization.run() is called.
-    :param starting_guess_type:
-            One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
-            Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
-            example if leaf material parameter count or bounds change in future development).
-            Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
-            only work in cases where R and T are relatively close to each other (around +- 0.2).
-            Surface fitting method 'surf' can be used after the first training iteration has been carried
-            out. It can more robustly adapt to situations where R and T are dissimilar.
-    :param solver_name: The name of the solver to be used. If None given, the default one will be used.
+     :param wl: Wavelength to be optimized.
+     :param r_m: Measured reflectance.
+     :param t_m: Measured transmittance.
+     :param set_name: Set name (name of the working folder).
+     :param diffstep: Stepsize for finite difference Jacobian estimation. Smaller step
+        gives better results, but the variables look cloudy. Big step is faster and
+        variables smoother but there will be outliers in the results. Good stepsize is
+        between 0.001 and 0.01.
+    :param ftol: Function value (difference between measured and modeled) change between
+        iterations considered as 'still converging'. This is a stop criterion for the
+        optimizer. Smaller value leads to more accurate result, but increases the
+        optimization time. Works in tandem with xtol, so whichever value is reached first
+        will stop the optimization for that wavelength.
+     :param xtol: Controls how much the leaf material parameters need to change between i
+        terations to be considered 'progressing'. Greater value stops the optimization earlier.
+     :param bounds: Bounds of the optimization problem. A tuple ([l1,l2,..], [h1,h2,...]).
+     :param density_scale: Scaling parameter for absorption and scattering density. The
+        values for rendering are much higher than the ones used in optimization.
+     :param optimizer_verbosity: Optimizer verbosity: 0 least verbose, 2 very verbose.
+     :param use_basin_hopping: If True, use basin hopping algorithm to escape local
+        minima (reduce outliers). Using this considerably slows down the optimization
+        (nearly two-fold).
+     :param sample_id: Sample id.
+     :param ftol_abs: Absolute termination condition for basin hopping. There will be
+        no more basin hopping iterations if reached function value is smaller than this
+        value. Only used if run with basin hopping algorithm, which can help if
+        optimization gets caught in local minima. Basin hopping can be turned on when
+        Optimization.run() is called.
+     :param starting_guess_type: One of 'hard-coded', 'curve', 'surf' in order of
+        increasing complexity. Hard-coded 'hard-coded' is only needed if training the
+        other methods from absolute scratch (for example if leaf material parameter count
+        or bounds change in future development). Curve fitting 'curve' is the method
+        presented in the first HyperBlend paper. It will only work in cases where R and T
+        are relatively close to each other (around +- 0.2). Surface fitting method 'surf'
+        can be used after the first training iteration has been carried out. It can more
+        robustly adapt to situations where R and T are dissimilar.
+     :param solver_name: The name of the solver to be used. If None given, the default
+        one will be used.
     """
 
-    print(f'Optimizing wavelength {wl} nm started.', flush=True)
+    print(f"Optimizing wavelength {wl} nm started.", flush=True)
     if FH.subresult_exists(set_name, wl, sample_id):
-        print(f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.", flush=True)
+        print(
+            f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.",
+            flush=True,
+        )
         return
 
     start = time.perf_counter()
@@ -231,8 +292,8 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
     def distance(r, t):
         """Distance function as squared sum of errors."""
 
-        r_diff = (r - r_m)
-        t_diff = (t - t_m)
+        r_diff = r - r_m
+        t_diff = t - t_m
         dist = math.sqrt(r_diff * r_diff + t_diff * t_diff)
         return dist
 
@@ -241,16 +302,36 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
         ad, sd, ai, mf = LC._convert_raw_params_to_renderable(x[0], x[1], x[2], x[3])
 
-        B.run_render_single(runtime=runtime,
-                            rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
-                            wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
-                            clear_rend_folder=False,
-                            clear_references=False,
-                            render_references=False,
-                            dry_run=False)
+        B.run_render_single(
+            runtime=runtime,
+            rend_base_path=P.path_directory_slab_optimization_working_temp(
+                set_name, sample_id
+            ),
+            wl=wl,
+            ad=ad,
+            sd=sd,
+            ai=ai,
+            mf=mf,
+            clear_rend_folder=False,
+            clear_references=False,
+            render_references=False,
+            dry_run=False,
+        )
 
-        r = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
-        t = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
+        r = DU.get_relative_refl_or_tran(
+            C.imaging_type_refl,
+            wl,
+            base_path=P.path_directory_slab_optimization_working_temp(
+                set_name, sample_id
+            ),
+        )
+        t = DU.get_relative_refl_or_tran(
+            C.imaging_type_tran,
+            wl,
+            base_path=P.path_directory_slab_optimization_working_temp(
+                set_name, sample_id
+            ),
+        )
 
         # Debug print
         # print(f"rendering with x = {printable_variable_list(x)} resulting r = {r:.3f}, t = {t:.3f}")
@@ -278,18 +359,33 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         return total_loss
 
     # Render references here as it only needs to be done once per wavelength
-    B.run_render_single(runtime=runtime, rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id), wl=wl, ad=0, sd=0, ai=0,
-                        mf=0, clear_rend_folder=False, clear_references=False, render_references=True, dry_run=False)
+    B.run_render_single(
+        runtime=runtime,
+        rend_base_path=P.path_directory_slab_optimization_working_temp(
+            set_name, sample_id
+        ),
+        wl=wl,
+        ad=0,
+        sd=0,
+        ai=0,
+        mf=0,
+        clear_rend_folder=False,
+        clear_references=False,
+        render_references=True,
+        dry_run=False,
+    )
 
-    if starting_guess_type == 'hard-coded':
+    if starting_guess_type == "hard-coded":
         x_0 = hard_coded_starting_guess
-    elif starting_guess_type == 'curve':
+    elif starting_guess_type == "curve":
         x_0 = get_starting_guess(1 - (r_m + t_m), solver_name=solver_name)
-    elif starting_guess_type == 'surf':
+    elif starting_guess_type == "surf":
         x_0 = surf.predict(target_refl=r_m, target_tran=t_m, solver_dirname=solver_name)
     else:
-        raise AttributeError(f"Starting guess type '{starting_guess_type}' not recogniced. "
-                             f"Use on of ")
+        raise AttributeError(
+            f"Starting guess type '{starting_guess_type}' not recogniced. "
+            f"Use on of "
+        )
 
     # TODO clip so that starting guess values are not exactly 0 or 1
     x_hat_0 = np.clip(x_0[0], 0.05, 0.95)
@@ -301,12 +397,21 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
     print(f"wl ({wl:.2f})x_0: {x_0}", flush=True)
 
-    opt_method = 'least_squares'
+    opt_method = "least_squares"
     if not use_basin_hopping:
-        res = optimize.least_squares(f, x_0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
-                                     gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
+        res = optimize.least_squares(
+            f,
+            x_0,
+            bounds=bounds,
+            method="dogbox",
+            verbose=optimizer_verbosity,
+            gtol=None,
+            diff_step=diffstep,
+            ftol=ftol,
+            xtol=xtol,
+        )
     else:
-        opt_method = 'basin_hopping'
+        opt_method = "basin_hopping"
 
         class Stepper(object):
             """Custom stepper for basin hopping."""
@@ -338,37 +443,79 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
 
             NOTE: f is the value of function f so do not call f(x) in here!
             """
-            print(f'Callback value: {f_val[0]:.6f}')
+            print(f"Callback value: {f_val[0]:.6f}")
             if f_val <= ftol_abs:
-                print(f'Callback value: {f_val[0]:.6f} is smaller than treshold {ftol_abs:.6f}')
+                print(
+                    f"Callback value: {f_val[0]:.6f} is smaller than treshold {ftol_abs:.6f}"
+                )
                 return True
 
         def custom_local_minimizer(fun, x0, *args, **kwargs):
             """Run the default least_squares optimizer as a local minimizer for basin hopping."""
 
-            res_lsq = optimize.least_squares(fun, x0, bounds=bounds, method='dogbox', verbose=optimizer_verbosity,
-                                             gtol=None, diff_step=diffstep, ftol=ftol, xtol=xtol)
+            res_lsq = optimize.least_squares(
+                fun,
+                x0,
+                bounds=bounds,
+                method="dogbox",
+                verbose=optimizer_verbosity,
+                gtol=None,
+                diff_step=diffstep,
+                ftol=ftol,
+                xtol=xtol,
+            )
             return res_lsq
 
         custom_step = Stepper()
-        minimizer_kwargs = {'bounds': bounds, 'options': None, 'method': custom_local_minimizer}
-        res = optimize.basinhopping(f, x0=x_0, stepsize=0.1, niter=2, T=0, interval=1,
-                                    take_step=custom_step, callback=callback, minimizer_kwargs=minimizer_kwargs)
+        minimizer_kwargs = {
+            "bounds": bounds,
+            "options": None,
+            "method": custom_local_minimizer,
+        }
+        res = optimize.basinhopping(
+            f,
+            x0=x_0,
+            stepsize=0.1,
+            niter=2,
+            T=0,
+            interval=1,
+            take_step=custom_step,
+            callback=callback,
+            minimizer_kwargs=minimizer_kwargs,
+        )
 
     elapsed = time.perf_counter() - start
 
-    ad, sd, ai, mf = LC._convert_raw_params_to_renderable(res.x[0], res.x[1], res.x[2], res.x[3])
+    ad, sd, ai, mf = LC._convert_raw_params_to_renderable(
+        res.x[0], res.x[1], res.x[2], res.x[3]
+    )
     # Render one more time with best values (in case it was not the last run)
-    B.run_render_single(runtime=runtime,
-                        rend_base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
-                        wl=wl, ad=ad, sd=sd, ai=ai, mf=mf,
-                        clear_rend_folder=False,
-                        clear_references=False,
-                        render_references=False,
-                        dry_run=False)
+    B.run_render_single(
+        runtime=runtime,
+        rend_base_path=P.path_directory_slab_optimization_working_temp(
+            set_name, sample_id
+        ),
+        wl=wl,
+        ad=ad,
+        sd=sd,
+        ai=ai,
+        mf=mf,
+        clear_rend_folder=False,
+        clear_references=False,
+        render_references=False,
+        dry_run=False,
+    )
 
-    r_best = DU.get_relative_refl_or_tran(C.imaging_type_refl, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
-    t_best = DU.get_relative_refl_or_tran(C.imaging_type_tran, wl, base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id))
+    r_best = DU.get_relative_refl_or_tran(
+        C.imaging_type_refl,
+        wl,
+        base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
+    )
+    t_best = DU.get_relative_refl_or_tran(
+        C.imaging_type_tran,
+        wl,
+        base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
+    )
 
     # Create wavelength result dictionary to be saved on disk.
     res_dict = {
@@ -394,22 +541,30 @@ def optimize_single_wl(wl: float, r_m: float, t_m: float, set_name: str, diffste
         C.key_wl_result_history_sd: [float(h[1]) for h in history],
         C.key_wl_result_history_ai: [float(h[2]) for h in history],
         C.key_wl_result_history_mf: [float(h[3]) for h in history],
-        C.key_wl_result_history_loss_total: [float(h[6]) for h in history], # total loss
+        C.key_wl_result_history_loss_total: [
+            float(h[6]) for h in history
+        ],  # total loss
         C.key_wl_result_history_loss_r: [float(h[7]) for h in history],  # R loss
-        C.key_wl_result_history_loss_over_one: [float(h[8]) for h in history],  # over one
-        C.key_wl_result_history_loss_t: [float(h[9]) for h in history], # T loss
+        C.key_wl_result_history_loss_over_one: [
+            float(h[8]) for h in history
+        ],  # over one
+        C.key_wl_result_history_loss_t: [float(h[9]) for h in history],  # T loss
     }
     # print(res_dict)
-    logging.info(f'Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk.')
+    logging.info(
+        f"Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk."
+    )
 
     TH.write_wavelength_result(set_name, res_dict, sample_id)
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.
-    plotter.plot_wl_optimization_history(set_name, wl, sample_id, dont_show=True, save_thumbnail=True)
+    plotter.plot_wl_optimization_history(
+        set_name, wl, sample_id, dont_show=True, save_thumbnail=True
+    )
 
 
-def get_starting_guess(absorption: float, solver_name: str=None) -> tuple:
+def get_starting_guess(absorption: float, solver_name: str = None) -> tuple:
     """
     Gives starting guess for given absorption.
 
@@ -420,7 +575,7 @@ def get_starting_guess(absorption: float, solver_name: str=None) -> tuple:
         n = len(coeffs)
         res = 0
         for i in range(n):
-            a = (n-i-1)
+            a = n - i - 1
             res += coeffs[a] * absorption**a
         if res < lb:
             res = lb
@@ -429,8 +584,8 @@ def get_starting_guess(absorption: float, solver_name: str=None) -> tuple:
         return res
 
     coeff_dict = TH.read_starting_guess_coeffs(solver_name=solver_name)
-    absorption_density      = f(coeff_dict[C.ad_coeffs], LOWER_BOUND[0], UPPER_BOUND[0])
-    scattering_density      = f(coeff_dict[C.sd_coeffs], LOWER_BOUND[1], UPPER_BOUND[1])
-    scattering_anisotropy   = f(coeff_dict[C.ai_coeffs], LOWER_BOUND[2], UPPER_BOUND[2])
-    mix_factor              = f(coeff_dict[C.mf_coeffs], LOWER_BOUND[3], UPPER_BOUND[3])
+    absorption_density = f(coeff_dict[C.ad_coeffs], LOWER_BOUND[0], UPPER_BOUND[0])
+    scattering_density = f(coeff_dict[C.sd_coeffs], LOWER_BOUND[1], UPPER_BOUND[1])
+    scattering_anisotropy = f(coeff_dict[C.ai_coeffs], LOWER_BOUND[2], UPPER_BOUND[2])
+    mix_factor = f(coeff_dict[C.mf_coeffs], LOWER_BOUND[3], UPPER_BOUND[3])
     return absorption_density, scattering_density, scattering_anisotropy, mix_factor

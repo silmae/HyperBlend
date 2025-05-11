@@ -16,11 +16,11 @@ from src.data import path_handling as PH
 
 from src.setup import initialization
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     runtime = initialization.initialize()
 
     # rng = np.random.default_rng(4321)
     # #### RUN ME FOR TESTING FOREST CANOPY STUFF OUT. SEE THE COMMENTS IN THE METHOD BEFORE RUNNING!!! ######
     # forest_pipe_test(rng=rng)
-

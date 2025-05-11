@@ -12,13 +12,13 @@ import os
 import datetime
 import shutil
 import csv
-import re # regural expressions
+import re  # regular expressions
 
 from src import plotter, constants as C
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
 
-CSV_NEWLINE = ''
-CSV_DELIMITER = ' '
+CSV_NEWLINE = ""
+CSV_DELIMITER = " "
 
 
 def copy_target(from_set: str, to_set: str):
@@ -40,13 +40,21 @@ def copy_target(from_set: str, to_set: str):
     sample_ids = list_target_ids(from_set)
     for sample_id in sample_ids:
 
-        path_src_target = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=False)
-        path_dst_target = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=False)
+        path_src_target = PH.path_file_target(
+            set_name=from_set, sample_id=sample_id, resampled=False
+        )
+        path_dst_target = PH.path_file_target(
+            set_name=to_set, sample_id=sample_id, resampled=False
+        )
         if os.path.exists(path_src_target):
             shutil.copy2(path_src_target, path_dst_target)
 
-        path_src_target_resampled = PH.path_file_target(set_name=from_set, sample_id=sample_id, resampled=True)
-        path_dst_target_resampled = PH.path_file_target(set_name=to_set, sample_id=sample_id, resampled=True)
+        path_src_target_resampled = PH.path_file_target(
+            set_name=from_set, sample_id=sample_id, resampled=True
+        )
+        path_dst_target_resampled = PH.path_file_target(
+            set_name=to_set, sample_id=sample_id, resampled=True
+        )
         if os.path.exists(path_src_target_resampled):
             shutil.copy2(path_src_target_resampled, path_dst_target_resampled)
 
@@ -78,21 +86,53 @@ def create_top_level_slab_sim_directories(slab_simu_name: str):
 def create_signal_optimization_directories(slab_sim_name: str, signal_id: int):
     """Create directories for slab simulation signal optimization."""
 
-    sample_folder_name = f'{C.signal_directory_prefix}_{signal_id}'
-    sample_path = PH.join(PH.path_directory_result_signal_top(slab_sim_name), sample_folder_name)
+    sample_folder_name = f"{C.signal_directory_prefix}_{signal_id}"
+    sample_path = PH.join(
+        PH.path_directory_result_signal_top(slab_sim_name), sample_folder_name
+    )
 
     if not os.path.exists(sample_path):
         os.makedirs(sample_path)
 
-    if not os.path.exists(PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)):
-        os.makedirs(PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))
+    if not os.path.exists(
+        PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
+    ):
+        os.makedirs(
+            PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
+        )
     if not os.path.exists(PH.path_directory_slab_temp_rend(slab_sim_name, signal_id)):
         os.makedirs(PH.path_directory_slab_temp_rend(slab_sim_name, signal_id))
-    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))):
-        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)))
-    if not os.path.exists(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id))):
-        os.makedirs(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)))
-    if not os.path.exists(PH.path_directory_optimization_result(slab_sim_name, signal_id)):
+    if not os.path.exists(
+        PH.path_directory_slab_rend_reference(
+            C.imaging_type_refl,
+            PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id),
+        )
+    ):
+        os.makedirs(
+            PH.path_directory_slab_rend_reference(
+                C.imaging_type_refl,
+                PH.path_directory_slab_optimization_working_temp(
+                    slab_sim_name, signal_id
+                ),
+            )
+        )
+    if not os.path.exists(
+        PH.path_directory_slab_rend_reference(
+            C.imaging_type_tran,
+            PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id),
+        )
+    ):
+        os.makedirs(
+            PH.path_directory_slab_rend_reference(
+                C.imaging_type_tran,
+                PH.path_directory_slab_optimization_working_temp(
+                    slab_sim_name, signal_id
+                ),
+            )
+        )
+    if not os.path.exists(
+        PH.path_directory_optimization_result(slab_sim_name, signal_id)
+    ):
         os.makedirs(PH.path_directory_optimization_result(slab_sim_name, signal_id))
 
 
@@ -127,7 +167,9 @@ def list_finished_sample_ids(set_name: str):
     for sample_folder_name in os.listdir(PH.path_directory_result_signal_top(set_name)):
         p = PH.join(PH.path_directory_result_signal_top(set_name), sample_folder_name)
         for filename in os.listdir(p):
-            if filename.startswith(C.filename_result_signal) and filename.endswith(C.postfix_text_data_format):
+            if filename.startswith(C.filename_result_signal) and filename.endswith(
+                C.postfix_text_data_format
+            ):
                 ids.append(FN.parse_sample_id(filename))
     return ids
 
@@ -153,7 +195,7 @@ def subresult_exists(set_name: str, wl: float, sample_id: int) -> bool:
 
 
 def clear_all_rendered_images(set_name: str) -> None:
-    """Clear all rendered images of finished samples. """
+    """Clear all rendered images of finished samples."""
 
     ids = list_finished_sample_ids(set_name)
     for _, sample_id in enumerate(ids):
@@ -162,16 +204,26 @@ def clear_all_rendered_images(set_name: str) -> None:
 
 
 def clear_rend_leaf(set_name: str, sample_id: int) -> None:
-    """Clears leaf render folder of given set, but leave reference renders untouched. """
+    """Clears leaf render folder of given set, but leave reference renders untouched."""
 
     clear_folder(PH.path_directory_slab_temp_rend(set_name, sample_id))
 
 
 def clear_rend_refs(set_name: str, sample_id: int) -> None:
-    """Clears reference render folders of given set but leave leaf renders untouched. """
+    """Clears reference render folders of given set but leave leaf renders untouched."""
 
-    clear_folder(PH.path_directory_slab_rend_reference(C.imaging_type_refl, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
-    clear_folder(PH.path_directory_slab_rend_reference(C.imaging_type_tran, PH.path_directory_slab_optimization_working_temp(set_name, sample_id)))
+    clear_folder(
+        PH.path_directory_slab_rend_reference(
+            C.imaging_type_refl,
+            PH.path_directory_slab_optimization_working_temp(set_name, sample_id),
+        )
+    )
+    clear_folder(
+        PH.path_directory_slab_rend_reference(
+            C.imaging_type_tran,
+            PH.path_directory_slab_optimization_working_temp(set_name, sample_id),
+        )
+    )
 
 
 def clear_folder(path: str) -> None:
@@ -209,7 +261,9 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
         res = abs(f1 - f2) <= epsilon
         return res
 
-    folder = PH.path_directory_slab_working_refl_or_trans(target_type, imaging_type, base_path)
+    folder = PH.path_directory_slab_working_refl_or_trans(
+        target_type, imaging_type, base_path
+    )
     for filename in os.listdir(folder):
         image_wl = FN.parse_wl_from_filename(filename)
         if almost_equals(wl, image_wl):
@@ -230,7 +284,9 @@ def expand(set_name: str) -> None:
 
     for sample_id in sample_ids:
         TH.make_sample_result(set_name, sample_id)
-        plotter.plot_sample_result(set_name, sample_id, dont_show=True, save_thumbnail=True)
+        plotter.plot_sample_result(
+            set_name, sample_id, dont_show=True, save_thumbnail=True
+        )
 
     TH.write_set_result(set_name)
     plotter.replot_wl_results(set_name)
@@ -286,7 +342,9 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
     if custom_forest_id is not None:
         dst_forest_id = custom_forest_id
     else:
-        dst_forest_id = f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
+        dst_forest_id = (
+            f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
+        )
 
     if copy_forest_id is not None:
         source_path = PH.path_file_system_simulation_blend(copy_forest_id)
@@ -303,19 +361,27 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
             os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
         if not os.path.exists(PH.path_directory_system_rend_spectral(dst_forest_id)):
             os.makedirs(PH.path_directory_system_rend_spectral(dst_forest_id))
-        if not os.path.exists(PH.path_directory_system_rend_visibility_maps(dst_forest_id)):
+        if not os.path.exists(
+            PH.path_directory_system_rend_visibility_maps(dst_forest_id)
+        ):
             os.makedirs(PH.path_directory_system_rend_visibility_maps(dst_forest_id))
     else:
-        raise RuntimeError(f"Forest scene not found for duplication from '{source_path}'. "
-                           f"If you tried to duplicate from template forest, check git repository "
-                           f"to restore the template to root directory. Otherwise check that forest "
-                           f"id is correct.")
-    logging.info(f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_system_simulation(dst_forest_id)}'.")
+        raise RuntimeError(
+            f"Forest scene not found for duplication from '{source_path}'. "
+            f"If you tried to duplicate from template forest, check git repository "
+            f"to restore the template to root directory. Otherwise check that forest "
+            f"id is correct."
+        )
+    logging.info(
+        f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_system_simulation(dst_forest_id)}'."
+    )
 
     return dst_forest_id
 
 
-def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None):
+def copy_leaf_material_parameters(
+    forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None
+):
     """Reads spectral leaf simulation result and copies it as a leaf material parameter file
     to be consumed by forest setup.
 
@@ -347,7 +413,9 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
         plot_path = PH.path_file_slab_sim_result_plot(slab_sim_name=source_set_name)
 
     else:
-        result_dict = TH.read_sample_result(set_name=source_set_name,sample_id=sample_id)
+        result_dict = TH.read_sample_result(
+            set_name=source_set_name, sample_id=sample_id
+        )
         wls = result_dict[C.key_sample_result_wls]
         ad = result_dict[C.key_sample_result_ad]
         sd = result_dict[C.key_sample_result_sd]
@@ -365,13 +433,27 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
     try:
         shutil.copy2(plot_path, dst_plot_path)
     except FileNotFoundError:
-        logging.warning(f"Could not find resampled target plot for copying from '{plot_path}'.")
+        logging.warning(
+            f"Could not find resampled target plot for copying from '{plot_path}'."
+        )
 
-    with open(PH.path_file_system_slab_csv(forest_id, leaf_id), 'w+', newline=CSV_NEWLINE) as csvfile:
+    with open(
+        PH.path_file_system_slab_csv(forest_id, leaf_id), "w+", newline=CSV_NEWLINE
+    ) as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+        writer = csv.writer(
+            csvfile,
+            delimiter=CSV_DELIMITER,
+        )
 
-        header = ["band", "wavelength", "absorption_density", "scattering_density", "scattering_anisotropy", "mix_factor"]
+        header = [
+            "band",
+            "wavelength",
+            "absorption_density",
+            "scattering_density",
+            "scattering_anisotropy",
+            "mix_factor",
+        ]
         writer.writerow(header)
 
         for i, wl in enumerate(wls):
@@ -379,7 +461,7 @@ def copy_leaf_material_parameters(forest_id: str, leaf_id: str, source_set_name:
             writer.writerow(row)
 
 
-def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type='sun'):
+def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type="sun"):
     """Write light spectra to a csv file that can be read by Blender script.
 
     :param forest_id:
@@ -392,16 +474,21 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
          String - either 'sun' or 'sky'.
     """
 
-    if lighting_type == 'sun':
+    if lighting_type == "sun":
         p = PH.path_file_system_forest_sun_spectra_csv(forest_id)
-    elif lighting_type == 'sky':
+    elif lighting_type == "sky":
         p = PH.path_file_forest_sky_csv(forest_id)
     else:
-        raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+        raise ValueError(
+            f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'."
+        )
 
-    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+    with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+        writer = csv.writer(
+            csvfile,
+            delimiter=CSV_DELIMITER,
+        )
 
         header = ["band", "wavelength", "irradiance"]
         writer.writerow(header)
@@ -411,7 +498,7 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
             writer.writerow(row)
 
 
-def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
+def read_blender_light_spectra(forest_id: str, lighting_type="sun"):
     """Read light spectra csv from a Blender script.
 
     :param forest_id:
@@ -422,16 +509,20 @@ def read_blender_light_spectra(forest_id: str, lighting_type='sun'):
         bands, wls, irradiances - each is a list of floats.
     """
 
-    if lighting_type == 'sun':
+    if lighting_type == "sun":
         p = PH.path_file_system_forest_sun_spectra_csv(forest_id)
-    elif lighting_type == 'sky':
+    elif lighting_type == "sky":
         p = PH.path_file_forest_sky_csv(forest_id)
     else:
-        raise ValueError(f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'.")
+        raise ValueError(
+            f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'."
+        )
 
-    with open(p, 'r', newline=CSV_NEWLINE) as csvfile:
+    with open(p, "r", newline=CSV_NEWLINE) as csvfile:
 
-        reader = csv.reader(csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC)
+        reader = csv.reader(
+            csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC
+        )
         next(reader, None)  # skip the headers
 
         bands = []
@@ -449,11 +540,14 @@ def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
 
     p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
 
-    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+    with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+        writer = csv.writer(
+            csvfile,
+            delimiter=CSV_DELIMITER,
+        )
 
-        header = ["item", 'r', 'g', 'b']
+        header = ["item", "r", "g", "b"]
         writer.writerow(header)
 
         for key, value in rgb_dict.items():
@@ -474,9 +568,12 @@ def write_blender_soil(forest_id: str, wls, reflectances):
 
     p = PH.path_file_forest_soil_csv(forest_id=forest_id)
 
-    with open(p, 'w+', newline=CSV_NEWLINE) as csvfile:
+    with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER, )
+        writer = csv.writer(
+            csvfile,
+            delimiter=CSV_DELIMITER,
+        )
 
         header = ["band", "wavelength", "reflectance"]
         writer.writerow(header)

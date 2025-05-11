@@ -43,7 +43,7 @@ def parse_sample_id(filename: str) -> int:
         Parsed sample id.
     """
 
-    sample_id = int(filename.rstrip(C.postfix_text_data_format).split('_')[-1])
+    sample_id = int(filename.rstrip(C.postfix_text_data_format).split("_")[-1])
     return sample_id
 
 
@@ -92,9 +92,11 @@ def filename_target(sample_id: int, resampled=False) -> str:
     """
 
     if resampled:
-        filename = f'{C.file_opt_target}_resampled_{sample_id}{C.postfix_text_data_format}'
+        filename = (
+            f"{C.file_opt_target}_resampled_{sample_id}{C.postfix_text_data_format}"
+        )
     else:
-        filename = f'{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}'
+        filename = f"{C.file_opt_target}_{sample_id}{C.postfix_text_data_format}"
     return filename
 
 
@@ -105,7 +107,7 @@ def filename_resample_plot(sample_id: int) -> str:
         Sample id.
     """
 
-    filename = f'target_{sample_id}_resampling{C.postfix_plot_image_format}'
+    filename = f"target_{sample_id}_resampling{C.postfix_plot_image_format}"
     return filename
 
 
@@ -113,7 +115,8 @@ def filename_rendered_image(imaging_type: str, wl: float) -> str:
     """Generates a name for a rendered image based on given wavelength.
 
     :param imaging_type:
-        String either 'refl' for reflectance or 'tran' for transmittance. Use the ones listed in constants.py.
+        String either 'refl' for reflectance or 'tran' for
+        transmittance. Use the ones listed in constants.py.
     :param wl:
         Wavelength.
     :return:
@@ -127,7 +130,7 @@ def filename_rendered_image(imaging_type: str, wl: float) -> str:
 def filename_sample_result(sample_id: int) -> str:
     """Filename of the sample result toml file."""
 
-    filename = f'{C.filename_result_signal}_{sample_id}{C.postfix_text_data_format}'
+    filename = f"{C.filename_result_signal}_{sample_id}{C.postfix_text_data_format}"
     return filename
 
 
@@ -148,6 +151,7 @@ def filename_system_sim_reflectance_header(scene_id):
 
     filename = f"reflectance_cube_{scene_id}.hdr"
     return filename
+
 
 def filename_leaf_material_csv(leaf_material_name: str) -> str:
     """Spectral leaf material parameters csv file name."""

@@ -7,7 +7,7 @@ These are mostly hacks and should be rewritten into proper code.
 
 """
 
-
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -65,7 +65,9 @@ Just copypasted here out of the way.
 
 def show_forest_rend(band, scene_id):
 
-    p = PH.join(PH.path_directory_system_rend_spectral(scene_id), f"band_{band:04}.tiff")
+    p = PH.join(
+        PH.path_directory_system_rend_spectral(scene_id), f"band_{band:04}.tiff"
+    )
     band1 = plt.imread(p)
     plt.imshow(band1)
     plt.colorbar()
@@ -77,14 +79,21 @@ def white_ref(frame, percent=2):
     ref_half_height = int((frame.shape[1] / 100) * percent / 2)
     x_mid = frame.shape[0] / 2
     y_mid = frame.shape[1] / 2
-    white_area = frame[int(x_mid-ref_half_width):int(x_mid+ref_half_width), int(y_mid-ref_half_height):int(y_mid+ref_half_height)]
+    white_area = frame[
+        int(x_mid - ref_half_width) : int(x_mid + ref_half_width),
+        int(y_mid - ref_half_height) : int(y_mid + ref_half_height),
+    ]
     white_mean = np.mean(white_area)
     return white_mean
 
 
 def ndvi(scene_id):
-    red = plt.imread(PH.join(PH.path_directory_system_rend_spectral(scene_id), f"band_{11:04}.tiff"))
-    nir = plt.imread(PH.join(PH.path_directory_system_rend_spectral(scene_id), f"band_{21:04}.tiff"))
+    red = plt.imread(
+        PH.join(PH.path_directory_system_rend_spectral(scene_id), f"band_{11:04}.tiff")
+    )
+    nir = plt.imread(
+        PH.join(PH.path_directory_system_rend_spectral(scene_id), f"band_{21:04}.tiff")
+    )
     red = red / white_ref(red)
     nir = nir / white_ref(nir)
 
@@ -110,7 +119,7 @@ def maxdiff(set_name="prospect_randoms"):
 
     # Find maximum r t difference of sample.
     res = TH.read_sample_result(set_name, 0)
-    r = np.array(res['refls_modeled'])
-    t = np.array(res['trans_modeled'])
-    diff = np.abs(r-t)
+    r = np.array(res["refls_modeled"])
+    t = np.array(res["trans_modeled"])
+    diff = np.abs(r - t)
     print(f"max diff : {diff.max()}")

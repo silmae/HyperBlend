@@ -12,20 +12,20 @@ import random
 import numpy as np
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
-    if 'System simulation' in blend_dir:
+    if "System simulation" in blend_dir:
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-        script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
-        data_dir = os.path.abspath(blend_dir + '../../../src/data')
-        forest_dir = os.path.abspath(blend_dir + '../../../src/forest')
+        script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "../../../src/data")
+        forest_dir = os.path.abspath(blend_dir + "../../../src/forest")
     else:
         # We are in the template forest blend file
-        script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
-        data_dir = os.path.abspath(blend_dir + '/src/data')
-        forest_dir = os.path.abspath(blend_dir + '/src/forest')
+        script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/src/data")
+        forest_dir = os.path.abspath(blend_dir + "/src/forest")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
@@ -54,20 +54,31 @@ if __name__ == '__main__':
     if "--" not in argv:
         argv = []  # no arguments for the script
     else:
-        argv = argv[argv.index("--") + 1:]  # get all args after "--"
+        argv = argv[argv.index("--") + 1 :]  # get all args after "--"
 
     # Argument names
-    key_scene_id = ['-id', '--scene_id']
-    key_global_master = ['-g', '--global_master']
+    key_scene_id = ["-id", "--scene_id"]
+    key_global_master = ["-g", "--global_master"]
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
-                        required=False, help="Name of the scene for which the scene control file will be generated.")
-    parser.add_argument(key_global_master[0], key_global_master[1], dest=key_global_master[1], action="store_true",
-                        required=False,
-                        help="If True, a global scene configuration file is generated to "
-                        "project root. This will also ignore the scene id parameter.")
+    parser.add_argument(
+        key_scene_id[0],
+        key_scene_id[1],
+        dest=key_scene_id[1],
+        action="store",
+        required=False,
+        help="Name of the scene for which the scene control file will be generated.",
+    )
+    parser.add_argument(
+        key_global_master[0],
+        key_global_master[1],
+        dest=key_global_master[1],
+        action="store_true",
+        required=False,
+        help="If True, a global scene configuration file is generated to "
+        "project root. This will also ignore the scene id parameter.",
+    )
 
     args = parser.parse_args(argv)
 
@@ -81,4 +92,6 @@ if __name__ == '__main__':
 
     scene_dict = FU.get_scene_parameters(as_master=True)
 
-    forest_control.write_forest_control(forest_id=scene_id, control_dict=scene_dict, global_master=global_master)
+    forest_control.write_forest_control(
+        forest_id=scene_id, control_dict=scene_dict, global_master=global_master
+    )

@@ -11,22 +11,44 @@ from scipy.special import expi
 from src.prospect import spectral_library
 
 
-def run_prospect(n, cab, car, cbrown, cw, cm, ant=0.0,
-                 nr=None, kab=None, kcar=None, kbrown=None, kw=None,
-                 km=None, kant=None, alpha=40.):
+def run_prospect(
+    n,
+    cab,
+    car,
+    cbrown,
+    cw,
+    cm,
+    ant=0.0,
+    nr=None,
+    kab=None,
+    kcar=None,
+    kbrown=None,
+    kw=None,
+    km=None,
+    kant=None,
+    alpha=40.0,
+):
     """The PROSPECT model, versions 5 and D"""
 
     ks = spectral_library.get_spectra()
 
-    wv, refl, trans = prospect_d(n, cab, car, cbrown, cw, cm, ant,
-                                 ks.nr if nr is None else nr,
-                                 ks.kab if kab is None else kab,
-                                 ks.kcar if kcar is None else kcar,
-                                 ks.kbrown if kbrown is None else kbrown,
-                                 ks.kw if kw is None else kw,
-                                 ks.km if km is None else km,
-                                 ks.kant if kant is None else kant,
-                                 alpha=alpha)
+    wv, refl, trans = prospect_d(
+        n,
+        cab,
+        car,
+        cbrown,
+        cw,
+        cm,
+        ant,
+        ks.nr if nr is None else nr,
+        ks.kab if kab is None else kab,
+        ks.kcar if kcar is None else kcar,
+        ks.kbrown if kbrown is None else kbrown,
+        ks.kw if kw is None else kw,
+        ks.km if km is None else km,
+        ks.kant if kant is None else kant,
+        alpha=alpha,
+    )
 
     return wv, refl, trans
 
@@ -46,28 +68,38 @@ def calctav(alpha, nr):
     n2 = nr * nr
     npx = n2 + 1
     nm = n2 - 1
-    a = (nr + 1) * (nr + 1) / 2.
-    k = -(n2 - 1) * (n2 - 1) / 4.
+    a = (nr + 1) * (nr + 1) / 2.0
+    k = -(n2 - 1) * (n2 - 1) / 4.0
     sa = np.sin(np.deg2rad(alpha))
 
     if alpha != 90:
         b1 = np.sqrt((sa * sa - npx / 2) * (sa * sa - npx / 2) + k)
     else:
-        b1 = 0.
+        b1 = 0.0
     b2 = sa * sa - npx / 2
     b = b1 - b2
-    b3 = b ** 3
-    a3 = a ** 3
-    ts = (k ** 2 / (6 * b3) + k / b - b / 2) - (k ** 2. / (6 * a3) + k / a - a / 2)
+    b3 = b**3
+    a3 = a**3
+    ts = (k**2 / (6 * b3) + k / b - b / 2) - (k**2.0 / (6 * a3) + k / a - a / 2)
 
-    tp1 = -2 * n2 * (b - a) / (npx ** 2)
-    tp2 = -2 * n2 * npx * np.log(b / a) / (nm ** 2)
+    tp1 = -2 * n2 * (b - a) / (npx**2)
+    tp2 = -2 * n2 * npx * np.log(b / a) / (nm**2)
     tp3 = n2 * (1 / b - 1 / a) / 2
-    tp4 = 16 * n2 ** 2 * (n2 ** 2 + 1) * np.log((2 * npx * b - nm ** 2) / (2 * npx * a - nm ** 2)) / (
-                npx ** 3 * nm ** 2)
-    tp5 = 16 * n2 ** 3 * (1. / (2 * npx * b - nm ** 2) - 1 / (2 * npx * a - nm ** 2)) / (npx ** 3)
+    tp4 = (
+        16
+        * n2**2
+        * (n2**2 + 1)
+        * np.log((2 * npx * b - nm**2) / (2 * npx * a - nm**2))
+        / (npx**3 * nm**2)
+    )
+    tp5 = (
+        16
+        * n2**3
+        * (1.0 / (2 * npx * b - nm**2) - 1 / (2 * npx * a - nm**2))
+        / (npx**3)
+    )
     tp = tp1 + tp2 + tp3 + tp4 + tp5
-    tav = (ts + tp) / (2 * sa ** 2)
+    tav = (ts + tp) / (2 * sa**2)
 
     return tav
 
@@ -85,12 +117,12 @@ def refl_trans_one_layer(alpha, nr, tau):
     talf = calctav(alpha, nr)
     ralf = 1.0 - talf
     t12 = calctav(90, nr)
-    r12 = 1. - t12
+    r12 = 1.0 - t12
     t21 = t12 / (nr * nr)
     r21 = 1 - t21
 
     # top surface side
-    denom = 1. - r21 * r21 * tau * tau
+    denom = 1.0 - r21 * r21 * tau * tau
     Ta = talf * tau * t21 / denom
     Ra = ralf + r21 * tau * Ta
 
@@ -101,20 +133,22 @@ def refl_trans_one_layer(alpha, nr, tau):
     return r, t, Ra, Ta, denom
 
 
-def prospect_d(N, cab, car, cbrown, cw, cm, ant, nr, kab, kcar, kbrown, kw, km, kant, alpha=40.):
+def prospect_d(
+    N, cab, car, cbrown, cw, cm, ant, nr, kab, kcar, kbrown, kw, km, kant, alpha=40.0
+):
 
     lambdas = np.arange(400, 2501)  # wavelengths
     n_lambdas = len(lambdas)
-    n_elems_list = [len(spectrum) for spectrum in
-                    [nr, kab, kcar, kbrown, kw, km, kant]]
+    n_elems_list = [len(spectrum) for spectrum in [nr, kab, kcar, kbrown, kw, km, kant]]
     if not all(n_elems == n_lambdas for n_elems in n_elems_list):
         raise ValueError("Leaf spectra don't have the right shape!")
 
-    kall = (cab * kab + car * kcar + ant * kant + cbrown * kbrown +
-            cw * kw + cm * km) / N
+    kall = (
+        cab * kab + car * kcar + ant * kant + cbrown * kbrown + cw * kw + cm * km
+    ) / N
     j = kall > 0
     t1 = (1 - kall) * np.exp(-kall)
-    t2 = kall ** 2 * (-expi(-kall))
+    t2 = kall**2 * (-expi(-kall))
     tau = np.ones_like(t1)
     tau[j] = t1[j] + t2[j]
 
@@ -129,7 +163,7 @@ def prospect_d(N, cab, car, cbrown, cw, cm, ant, nr, kab, kcar, kbrown, kw, km, 
     # or transmitted through a pile of plates, Proc. Roy. Soc. Lond.,
     # 11:545-556.
     # ***********************************************************************
-    D = np.sqrt((1 + r + t) * (1 + r - t) * (1. - r + t) * (1. - r - t))
+    D = np.sqrt((1 + r + t) * (1 + r - t) * (1.0 - r + t) * (1.0 - r - t))
     rq = r * r
     tq = t * t
     a = (1 + rq - tq + D) / (2 * r)
@@ -143,7 +177,7 @@ def prospect_d(N, cab, car, cbrown, cw, cm, ant, nr, kab, kcar, kbrown, kw, km, 
     Tsub = bNm1 * (a2 - 1) / denom
 
     # Case of zero absorption
-    j = r + t >= 1.
+    j = r + t >= 1.0
     Tsub[j] = t[j] / (t[j] + (1 - t[j]) * (N - 1))
     Rsub[j] = 1 - Tsub[j]
 
@@ -153,6 +187,7 @@ def prospect_d(N, cab, car, cbrown, cw, cm, ant, nr, kab, kcar, kbrown, kw, km, 
     refl = Ra + Ta * Rsub * t / denom
 
     return lambdas, refl, tran
+
 
 ###if __name__ == "__main__":
 

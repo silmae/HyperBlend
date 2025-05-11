@@ -14,54 +14,58 @@ from src.data import path_handling as PH
 
 
 def make_random_leaf_targets(set_name, count=1):
-    """ Generate count number of random PROSPECT leaves.
+    """Generate count number of random PROSPECT leaves.
 
-    :param set_name:
-        Set name to be used.
-    :param count:
-        How many target leaves are generated to the set.
+    :param set_name: Set name to be used.
+    :param count: How many target leaves are generated to the set.
     """
 
-    FH.create_top_level_slab_sim_directories(set_name) # make sure to have directories created
+    FH.create_top_level_slab_sim_directories(
+        set_name
+    )  # make sure to have directories created
 
     for i in range(count):
         wls, r, t, p_dict = run_prospect_random()
         logging.info(f"Generating random leaf data with prospect.")
-        src.slab_model.training_data._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=i) # sample directories are now created
+        src.slab_model.training_data._make_target(
+            set_name, wls=wls, r_m=r, t_m=t, sample_id=i
+        )  # sample directories are now created
         dict_dir = PH.path_directory_result_signal(set_name, sample_id=i)
-        dict_name = f'prospect_params_{i}'
+        dict_name = f"prospect_params_{i}"
         TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
 
 
-def make_leaf_target(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None, w=None, m=None, ant=None):
-    """ Run prospect simulation with given PROSPECT parameters.
+def make_leaf_target(
+    set_name,
+    sample_id=0,
+    n=None,
+    ab=None,
+    ar=None,
+    brown=None,
+    w=None,
+    m=None,
+    ant=None,
+):
+    """Run prospect simulation with given PROSPECT parameters.
 
     If any of the values are not provided, default values are used.
     You get the default PROSPECT leaf by calling without any arguments.
 
-    :param set_name:
-        Set name where the target is saved.
-    :param sample_id:
-        Sample id for this target. Default is 0. Overwrites existing targets if existing id is given.
-    :param n:
-        PROSPECT N parameter [unitless]
-    :param ab:
-        chlorophyll a + b concentration [ug / cm^2]
-    :param ar:
-        cartenoid content [ug / cm^2]
-    :param brown:
-        brown pigment [unitless]
-    :param w:
-        equivalent water thickness [cm]
-    :param m:
-        dry mater content [g / cm^2]
-    :param ant:
-        anthocyanin content [ug / cm^2]
-    :return:
-        Tuple (wls, r, t) and writes the target to the disk.
+    :param set_name: Set name where the target is saved.
+    :param sample_id: Sample id for this target. Default is 0. Overwrites existing targets if existing id is given.
+    :param n: PROSPECT N parameter [unitless]
+    :param ab: chlorophyll a + b concentration [ug / cm^2]
+    :param ar: cartenoid content [ug / cm^2]
+    :param brown: brown pigment [unitless]
+    :param w: equivalent water thickness [cm]
+    :param m: dry mater content [g / cm^2]
+    :param ant: anthocyanin content [ug / cm^2]
+    :return: Tuple (wls, r, t) and writes the target to the disk.
     """
 
-    FH.create_top_level_slab_sim_directories(set_name) # make sure to have directories created
+    FH.create_top_level_slab_sim_directories(
+        set_name
+    )  # make sure to have directories created
 
     if n is None:
         n = p_default_dict["n"]
@@ -82,21 +86,22 @@ def make_leaf_target(set_name, sample_id=0, n=None, ab=None, ar=None, brown=None
     wls, r, t = run_prospect_with_dict(p_dict)
 
     logging.info(f"Generating random leaf data with prospect.")
-    src.slab_model.training_data._make_target(set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id)  # sample directory is now created
+    src.slab_model.training_data._make_target(
+        set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id
+    )  # sample directory is now created
     dict_dir = PH.path_directory_result_signal(set_name, sample_id=sample_id)
-    dict_name = f'prospect_params_{sample_id}' # save used prospect parameters
+    dict_name = f"prospect_params_{sample_id}"  # save used prospect parameters
     TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
     return wls, r, t
 
 
 def run_prospect_random():
-    """ Run PROSPECT with random parameters.
+    """Run PROSPECT with random parameters.
 
     PROSPECT parameters are randomly drawn from normal distribution
     centered at default PRSOPECT leaf parameters.
 
-    :return:
-        (wls, r, t, p_dict), where p_dict is a dictionary of used random PROSPECT parameters.
+    :return: (wls, r, t, p_dict), where p_dict is a dictionary of used random PROSPECT parameters.
     """
 
     def get_val(center, range):
@@ -106,28 +111,26 @@ def run_prospect_random():
         return res
 
     p_dict = prospect_params_as_dict(
-        n       = get_val(p_default_dict["n"], p_range_dict["n_range"]),
-        ab      = get_val(p_default_dict["ab"], p_range_dict["ab_range"]),
-        ar      = get_val(p_default_dict["ar"], p_range_dict["ar_range"]),
-        brown   = get_val(p_default_dict["brown"], p_range_dict["brown_range"]),
-        w       = get_val(p_default_dict["w"], p_range_dict["w_range"]),
-        m       = get_val(p_default_dict["m"], p_range_dict["m_range"]),
-        ant     = get_val(p_default_dict["ant"], p_range_dict["ant_range"]),
+        n=get_val(p_default_dict["n"], p_range_dict["n_range"]),
+        ab=get_val(p_default_dict["ab"], p_range_dict["ab_range"]),
+        ar=get_val(p_default_dict["ar"], p_range_dict["ar_range"]),
+        brown=get_val(p_default_dict["brown"], p_range_dict["brown_range"]),
+        w=get_val(p_default_dict["w"], p_range_dict["w_range"]),
+        m=get_val(p_default_dict["m"], p_range_dict["m_range"]),
+        ant=get_val(p_default_dict["ant"], p_range_dict["ant_range"]),
     )
     wls, r, t = run_prospect_with_dict(p_dict)
     return wls, r, t, p_dict
 
 
-def run_prospect_with_dict(prospect_params:dict):
-    """ Run PROSPECT simulation with a parameter dictionary.
+def run_prospect_with_dict(prospect_params: dict):
+    """Run PROSPECT simulation with a parameter dictionary.
 
     You can get the dictionary by calling prospect_params_as_dict()
     with desired parameter values.
 
-    :param prospect_params:
-        Dictionary of PROSPECT parameters as returned by prospect_params_as_dict().
-    :return:
-        Tuple (wls,r,t)
+    :param prospect_params: Dictionary of PROSPECT parameters as returned by prospect_params_as_dict().
+    :return: Tuple (wls,r,t)
     """
     wls, r, t = PD.run_prospect(
         n=prospect_params["n"],
@@ -137,30 +140,29 @@ def run_prospect_with_dict(prospect_params:dict):
         cw=prospect_params["w"],
         cm=prospect_params["m"],
         ant=prospect_params["ant"],
-        nr=None, kab=None, kcar=None, kbrown=None, kw=None,
-        km=None, kant=None, alpha=40.)
+        nr=None,
+        kab=None,
+        kcar=None,
+        kbrown=None,
+        kw=None,
+        km=None,
+        kant=None,
+        alpha=40.0,
+    )
     return wls, r, t
 
 
 def prospect_params_as_dict(n, ab, ar, brown, w, m, ant):
-    """ Turn set of PROSPECT parameters into a dictionary.
+    """Turn set of PROSPECT parameters into a dictionary.
 
-    :param n:
-        PROSPECT N parameter [unitless]
-    :param ab:
-        chlorophyll a + b concentration [ug / cm^2]
-    :param ar:
-        cartenoid content [ug / cm^2]
-    :param brown:
-        brown pigment [unitless]
-    :param w:
-        equivalent water thickness [cm]
-    :param m:
-        dry mater content [g / cm^2]
-    :param ant:
-        anthocyanin content [ug / cm^2]
-    :return:
-        Dictionary with same key names as in parameters.
+    :param n: PROSPECT N parameter [unitless]
+    :param ab: chlorophyll a + b concentration [ug / cm^2]
+    :param ar:  cartenoid content [ug / cm^2]
+    :param brown: brown pigment [unitless]
+    :param w: equivalent water thickness [cm]
+    :param m: dry mater content [g / cm^2]
+    :param ant: anthocyanin content [ug / cm^2]
+    :return: Dictionary with same key names as in parameters.
     """
 
     p_dict = {
@@ -181,38 +183,37 @@ def p_dict_to_hash(p_dict):
     Can be used for naming files.
     """
 
-    phash = "".join(list([f"{val:.0f}" for key,val in p_dict.items()]))
+    phash = "".join(list([f"{val:.0f}" for key, val in p_dict.items()]))
     return phash
 
 
 def get_default_prospect_leaf():
     """Run PROSPECT with default parameters.
 
-    :return:
-        Tuple (wls,r,t)
+    :return: Tuple (wls,r,t)
     """
     wls, r, t = run_prospect_with_dict(p_default_dict)
-    return wls,r,t
+    return wls, r, t
 
 
 p_range_dict = {
-    "n_range"       : (0.8, 2.5), # PROSPECT N parameter [unitless]
-    "ab_range"      : (0.0, 80.0), # chlorophyll a + b concentration [ug / cm^2]
-    "ar_range"      : (0.0, 20.0), # cartenoid content [ug / cm^2]
-    "brown_range"   : (0.0, 1.0), # brown pigment [unitless]
-    "w_range"       : (0.0, 0.05), # equivalent water thickness [cm]
-    "m_range"       : (0.0, 0.02), # dry mater content [g / cm^2]
-    "ant_range"     : (0.0, 40.), # anthocyanin content [ug / cm^2]
+    "n_range": (0.8, 2.5),  # PROSPECT N parameter [unitless]
+    "ab_range": (0.0, 80.0),  # chlorophyll a + b concentration [ug / cm^2]
+    "ar_range": (0.0, 20.0),  # cartenoid content [ug / cm^2]
+    "brown_range": (0.0, 1.0),  # brown pigment [unitless]
+    "w_range": (0.0, 0.05),  # equivalent water thickness [cm]
+    "m_range": (0.0, 0.02),  # dry mater content [g / cm^2]
+    "ant_range": (0.0, 40.0),  # anthocyanin content [ug / cm^2]
 }
 """Clipping range for PROSPECT parameters. Used in when generating random leaves."""
 
 p_default_dict = {
-    "n"         : 1.5,
-    "ab"        : 32.,
-    "ar"        : 8.,
-    "brown"     : 0.,
-    "w"         : 0.016,
-    "m"         : 0.009,
-    "ant"       : 0.0,
+    "n": 1.5,
+    "ab": 32.0,
+    "ar": 8.0,
+    "brown": 0.0,
+    "w": 0.016,
+    "m": 0.009,
+    "ant": 0.0,
 }
 """Default PROSPECT parameters. These are used for generating random leaves."""

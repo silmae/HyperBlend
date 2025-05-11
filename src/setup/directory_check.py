@@ -4,6 +4,7 @@ This module checks the directory structure of the project and ensures
 that all required directories and files are present.
 
 """
+
 import logging
 import os
 
@@ -25,10 +26,12 @@ def check_directory_structure(runtime: RuntimeEnvironment):
     try:
         struct_toml = TH.read_toml_as_dict(directory=def_dir, filename=filename)
     except FileNotFoundError as e:
-        logging.error(f"File '{def_dir}/{filename}' not found. This is an internal "
-              f"file that defines the directory structure and some core files that must be "
-              f"present for HyperBlend to operate. This file should be included in the installation. "
-              f"There is no way to recover from this error. Please re-install the software.")
+        logging.error(
+            f"File '{def_dir}/{filename}' not found. This is an internal "
+            f"file that defines the directory structure and some core files that must be "
+            f"present for HyperBlend to operate. This file should be included in the installation. "
+            f"There is no way to recover from this error. Please re-install the software."
+        )
         exit(1)
 
     for key, value in struct_toml.items():
@@ -37,9 +40,11 @@ def check_directory_structure(runtime: RuntimeEnvironment):
         elif key == "version":
             # Check if the version of the directory structure matches the version of HyperBlend
             if value != runtime.hyperblend_version:
-                logging.error(f"Version of the directory structure '{value}' does not match "
-                      f"the version of HyperBlend '{runtime.hyperblend_version}'. Please re-install "
-                      f"HyperBlend.")
+                logging.error(
+                    f"Version of the directory structure '{value}' does not match "
+                    f"the version of HyperBlend '{runtime.hyperblend_version}'. Please re-install "
+                    f"HyperBlend."
+                )
                 exit(1)
 
 
@@ -105,7 +110,9 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
 
     if entry_type == "dir":
         if not os.path.exists(current_path):
-            logging.info(f"Directory '{current_path}' does not exist. Creating directory.")
+            logging.info(
+                f"Directory '{current_path}' does not exist. Creating directory."
+            )
             os.makedirs(current_path, exist_ok=True)
         else:
             logging.debug(f"OK - Directory '{current_path}' exists as it should.")
@@ -117,15 +124,17 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
 
         for extension in file_extensions:
             # Check if the file exists with the given extension
-            with_extension = entry_name + '.' + extension
+            with_extension = entry_name + "." + extension
             file_path = PH.join(current_path, with_extension)
             if os.path.exists(file_path):
                 file_found = True
                 break
 
         if not file_found:
-            raise FileNotFoundError(f"File '{with_extension}' does not exist in '{current_path}'.")
+            raise FileNotFoundError(
+                f"File '{with_extension}' does not exist in '{current_path}'."
+            )
         else:
-            logging.debug(f"OK - File '{with_extension}' exists in '{current_path}' as it should.")
-
-
+            logging.debug(
+                f"OK - File '{with_extension}' exists in '{current_path}' as it should."
+            )

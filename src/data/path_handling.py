@@ -15,6 +15,7 @@ from src.data import file_names as FN
 
 # Top level directories
 
+
 def path_directory_project_root():
     """Path to project root directory."""
 
@@ -27,6 +28,7 @@ def path_directory_internal() -> str:
 
     p = join(C.path_project_root, C.dirname_internal)
     return p
+
 
 def path_directory_system_simulation_top() -> str:
     """Top level system simulation directory."""
@@ -51,6 +53,7 @@ def path_directory_reflectance_spectra() -> str:
 
 
 # Code directories
+
 
 def path_source_code() -> str:
     """Path to source code directory."""
@@ -82,6 +85,7 @@ def path_directory_soil_code() -> str:
 
 # Simulation directories
 
+
 def path_directory_slab_model(solver_name: str = None) -> str:
     """Path to the arbitrary slab model directory where the
     surface model parameters and the neural network are stored.
@@ -91,14 +95,16 @@ def path_directory_slab_model(solver_name: str = None) -> str:
     """
 
     if solver_name is None:
-        p = join(C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default)
+        p = join(
+            C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default
+        )
     else:
         p = join(C.path_project_root, C.dirname_slab_models, solver_name)
     return p
 
 
 def path_directory_slab_simulation_top() -> str:
-    """Path to top level leaf measurement sets root folder. """
+    """Path to top level leaf measurement sets root folder."""
 
     p = join(C.path_project_root, C.dirname_slab_simulation)
     return p
@@ -123,8 +129,11 @@ def path_directory_result_signal_top(set_name: str) -> str:
 
 def path_directory_result_signal(set_name: str, sample_id: int) -> str:
     """Path to a directory where a specific signal resulted from slab simulation is saved."""
-    #TODO the name should come from the name handler
-    p = join(path_directory_result_signal_top(set_name), f'{C.signal_directory_prefix}_{sample_id}')
+    # TODO the name should come from the name handler
+    p = join(
+        path_directory_result_signal_top(set_name),
+        f"{C.signal_directory_prefix}_{sample_id}",
+    )
     return p
 
 
@@ -138,25 +147,36 @@ def path_directory_target(set_name: str) -> str:
 def path_directory_slab_optimization_working_temp(set_name: str, sample_id: int) -> str:
     """Path to top level working folder of the slab simulation."""
 
-    p = join(path_directory_result_signal(set_name, sample_id), C.dirname_slab_sim_working_temp)
+    p = join(
+        path_directory_result_signal(set_name, sample_id),
+        C.dirname_slab_sim_working_temp,
+    )
     return p
 
 
 def path_directory_optimization_result(set_name: str, sample_id: int) -> str:
     """Path to optimization result directory. Only used if slab model is run in optimization mode."""
 
-    p = join(path_directory_result_signal(set_name, sample_id), C.dirname_optimization_results)
+    p = join(
+        path_directory_result_signal(set_name, sample_id),
+        C.dirname_optimization_results,
+    )
     return p
 
 
 def path_directory_slab_temp_rend(set_name: str, sample_id: int) -> str:
     """Path to slab simulation rendering directory."""
 
-    p = join(path_directory_slab_optimization_working_temp(set_name, sample_id), C.dirname_slab_sim_rend)
+    p = join(
+        path_directory_slab_optimization_working_temp(set_name, sample_id),
+        C.dirname_slab_sim_rend,
+    )
     return p
 
 
-def path_directory_slab_working_refl_or_trans(rendering_target: str, imaging_type: str, base_path: str) -> str:
+def path_directory_slab_working_refl_or_trans(
+    rendering_target: str, imaging_type: str, base_path: str
+) -> str:
     """Returns a path to correct directory according to given target and imaging type.
 
     :param base_path:
@@ -175,7 +195,10 @@ def path_directory_slab_working_refl_or_trans(rendering_target: str, imaging_typ
     elif rendering_target == C.target_type_ref:
         return path_directory_slab_rend_reference(imaging_type, base_path)
     else:
-        raise AttributeError(f"Target type must be either {C.target_type_slab} or {C.target_type_ref}. Was {rendering_target}.")
+        raise AttributeError(
+            f"Target type must be either {C.target_type_slab} or "
+            f"{C.target_type_ref}. Was {rendering_target}."
+        )
 
 
 def path_directory_slab_rend_reference(imaging_type: str, base_path: str) -> str:
@@ -194,14 +217,17 @@ def path_directory_slab_rend_reference(imaging_type: str, base_path: str) -> str
     elif imaging_type == C.imaging_type_tran:
         p = join(base_path, C.folder_rend_ref_tran)
     else:
-        raise Exception(f"Imaging type {imaging_type} not recognized. Use {C.imaging_type_refl} or {C.imaging_type_tran}.")
+        raise Exception(
+            f"Imaging type {imaging_type} not recognized. Use "
+            f"{C.imaging_type_refl} or {C.imaging_type_tran}."
+        )
     return p
 
 
 def path_directory_system_simulation(forest_id: str) -> str:
     """Specific system simulation scene directory."""
 
-    #TODO the name should come from the name handler
+    # TODO the name should come from the name handler
     p = join(path_directory_system_simulation_top(), f"scene_{forest_id}")
     return p
 
@@ -230,7 +256,9 @@ def path_directory_system_rend_spectral(forest_id: str) -> str:
 def path_directory_system_rend_visibility_maps(forest_id: str) -> str:
     """Rend directory for visibility maps of materials."""
 
-    p = join(path_directory_forest_rend(forest_id), C.dirname_system_sim_visibility_maps_rend)
+    p = join(
+        path_directory_forest_rend(forest_id), C.dirname_system_sim_visibility_maps_rend
+    )
     return p
 
 
@@ -249,7 +277,9 @@ def path_file_surface_model_parameters(solver_dirname: str = None) -> str:
     if solver_dirname is None:
         p = join(path_directory_slab_model(), C.slab_surf_name)
     else:
-        p = join(path_directory_slab_model(solver_name=solver_dirname), C.slab_surf_name)
+        p = join(
+            path_directory_slab_model(solver_name=solver_dirname), C.slab_surf_name
+        )
 
     return p
 
@@ -257,21 +287,32 @@ def path_file_surface_model_parameters(solver_dirname: str = None) -> str:
 def path_file_wl_result(set_name: str, wl: float, sample_id: int) -> str:
     """Path to wavelength result toml file of given sample and wavelength."""
 
-    p = join(path_directory_optimization_result(set_name, sample_id), FN.filename_wl_result(wl))
+    p = join(
+        path_directory_optimization_result(set_name, sample_id),
+        FN.filename_wl_result(wl),
+    )
     return p
 
 
 def path_file_signal_result(slab_sim_name: str, signal_id: int) -> str:
     """Path to signal result toml file of given slab simulation."""
 
-    p = join(path_directory_result_signal(slab_sim_name, signal_id), FN.filename_sample_result(signal_id))
+    p = join(
+        path_directory_result_signal(slab_sim_name, signal_id),
+        FN.filename_sample_result(signal_id),
+    )
     return p
+
 
 def path_file_signal_result_plot(slab_sim_name: str, signal_id: int) -> str:
     """Path to signal result plot file of given slab simulation."""
 
-    p = join(path_directory_result_signal(slab_sim_name, signal_id), FN.filename_signal_result_plot(signal_id))
+    p = join(
+        path_directory_result_signal(slab_sim_name, signal_id),
+        FN.filename_signal_result_plot(signal_id),
+    )
     return p
+
 
 def path_file_slab_sim_result(slab_sim_name: str) -> str:
     """Path to slab simulation result toml file of given slab simulation."""
@@ -304,14 +345,20 @@ def path_file_target(set_name: str, sample_id: int, resampled=False):
         If True, path to corresponding resampled file is returned instead. Default is False.
     """
 
-    p = join(path_directory_target(set_name), FN.filename_target(sample_id, resampled=resampled))
+    p = join(
+        path_directory_target(set_name),
+        FN.filename_target(sample_id, resampled=resampled),
+    )
     return p
 
 
 def path_file_spectral_sampling(set_name: str):
-    """Path to spectral resampling data of given set. """
+    """Path to spectral resampling data of given set."""
 
-    p = join(path_directory_target(set_name), C.file_sampling_data + C.postfix_text_data_format)
+    p = join(
+        path_directory_target(set_name),
+        C.file_sampling_data + C.postfix_text_data_format,
+    )
     return p
 
 
@@ -321,22 +368,26 @@ def path_file_starting_guess(solver_name=None):
     :param solver_name: If None given the default starting guess is used.
     """
 
-    filename = 'starting_guess' + C.postfix_text_data_format
+    filename = "starting_guess" + C.postfix_text_data_format
     p = join(path_directory_slab_model(solver_name=solver_name), filename)
     return p
 
 
-def path_file_rendered_image(target_type: str, imaging_type: str, wl: float, base_path: str) -> str:
+def path_file_rendered_image(
+    target_type: str, imaging_type: str, wl: float, base_path: str
+) -> str:
     """Returns a full path to an image of given wavelength.
 
     :param target_type:
         String either 'slab' or 'reference'. Use the ones listed in constants.py.
     :param imaging_type:
-        String either 'refl' for reflectance or 'tran' for transmittance. Use the ones listed in constants.py.
+        String either 'refl' for reflectance or 'tran' for transmittance.
+        Use the ones listed in constants.py.
     :param wl:
         Wavelength.
     :param base_path:
-        Path to  the working folder. Usually the one returned by get_path_opt_working() is correct and other paths
+        Path to  the working folder. Usually the one returned by
+        get_path_opt_working() is correct and other paths
         should only be used for testing and debugging.
     :returns:
         Returns absolute path to the image.
@@ -346,12 +397,18 @@ def path_file_rendered_image(target_type: str, imaging_type: str, wl: float, bas
     if target_type == C.target_type_slab:
         return join(base_path, C.dirname_slab_sim_rend, image_name)
     elif target_type == C.target_type_ref:
-        return join(path_directory_slab_rend_reference(imaging_type, base_path), image_name)
+        return join(
+            path_directory_slab_rend_reference(imaging_type, base_path), image_name
+        )
     else:
-        raise Exception(f"Target type must be either {C.target_type_slab} or {C.target_type_slab}. Was {target_type}.")
+        raise Exception(
+            f"Target type must be either {C.target_type_slab} or {C.target_type_slab}. Was {target_type}."
+        )
 
 
-def path_system_simulation_template(template_name=C.filename_system_sim_forest_template):
+def path_system_simulation_template(
+    template_name=C.filename_system_sim_forest_template,
+):
     """Path to system simulation template blend file found in directory 'Internal/'.
 
     The .blend extension is added automatically if not given.
@@ -359,8 +416,8 @@ def path_system_simulation_template(template_name=C.filename_system_sim_forest_t
     :param template_name: Name of the template file. Default is 'system_sim_forest_template'.
     """
 
-    if not template_name.endswith('.blend'):
-        template_name = template_name + '.blend'
+    if not template_name.endswith(".blend"):
+        template_name = template_name + ".blend"
 
     p = join(path_directory_internal(), template_name)
     return p
@@ -374,8 +431,8 @@ def path_slab_simulation_template(template_name=C.filename_slab_sim_forest_templ
     :param template_name: Name of the template file. Default is 'slab_sim_template'.
     """
 
-    if not template_name.endswith('.blend'):
-        template_name = template_name + '.blend'
+    if not template_name.endswith(".blend"):
+        template_name = template_name + ".blend"
 
     p = join(path_directory_internal(), template_name)
     return p
@@ -390,26 +447,34 @@ def path_file_system_simulation_blend(simulation_name: str) -> str:
     :param simulation_name: Name of the system simulation with or without .blend extension.
     """
 
-    if not simulation_name.endswith('.blend'):
-        blend_file_name = simulation_name + '.blend'
+    if not simulation_name.endswith(".blend"):
+        blend_file_name = simulation_name + ".blend"
         simulation_directory_name = simulation_name
     else:
         blend_file_name = simulation_name
         simulation_directory_name = simulation_name[:-6]
 
-    p = join(path_directory_system_simulation(simulation_directory_name), blend_file_name)
+    p = join(
+        path_directory_system_simulation(simulation_directory_name), blend_file_name
+    )
     return p
 
 
 def path_file_system_sim_reflectance_header(forest_id: str) -> str:
-    p = join(path_directory_system_spectral_cube(forest_id), FN.filename_system_sim_reflectance_header(forest_id))
+    p = join(
+        path_directory_system_spectral_cube(forest_id),
+        FN.filename_system_sim_reflectance_header(forest_id),
+    )
     return p
 
 
 def path_file_system_slab_csv(forest_id: str, leaf_index):
     """Spectral slab material parameters csv file name."""
 
-    p = join(path_directory_system_simulation(forest_id), FN.filename_leaf_material_csv(leaf_index))
+    p = join(
+        path_directory_system_simulation(forest_id),
+        FN.filename_leaf_material_csv(leaf_index),
+    )
     return p
 
 
@@ -419,7 +484,7 @@ def path_file_system_forest_sun_spectra_csv(forest_id: str):
     Specific for forest type system simulation.
     """
     # TODO what to do with this hard-coded stuff??
-    p = join(path_directory_system_simulation(forest_id), 'blender_sun.csv')
+    p = join(path_directory_system_simulation(forest_id), "blender_sun.csv")
     return p
 
 
@@ -429,7 +494,7 @@ def path_file_forest_sky_csv(forest_id: str):
     Specific for forest type system simulation.
     """
     # TODO what to do with this hard-coded stuff??
-    p = join(path_directory_system_simulation(forest_id), 'blender_sky.csv')
+    p = join(path_directory_system_simulation(forest_id), "blender_sky.csv")
     return p
 
 
@@ -438,26 +503,26 @@ def path_file_forest_soil_csv(forest_id: str):
 
     Specific for forest type system simulation.
     """
-    p = join(path_directory_system_simulation(forest_id), 'blender_soil.csv')
+    p = join(path_directory_system_simulation(forest_id), "blender_soil.csv")
     return p
 
 
 def path_file_soil_dry_vector():
     """Soil dry vector used by GSV."""
 
-    p = join(path_directory_soil_code(), 'DryVec.txt')
+    p = join(path_directory_soil_code(), "DryVec.txt")
     return p
 
 
 def path_file_soil_humid_vector():
     """Soil humid vector used by GSV."""
 
-    p = join(path_directory_soil_code(), 'SMVec.txt')
+    p = join(path_directory_soil_code(), "SMVec.txt")
     return p
 
 
 def path_file_forest_rgb_csv(forest_id: str):
-    p = join(path_directory_system_simulation(forest_id), 'rgb_colors.csv')
+    p = join(path_directory_system_simulation(forest_id), "rgb_colors.csv")
     return p
 
 
@@ -498,11 +563,15 @@ def find_visibility_map(forest_id: str, search_term: str):
     n = len(file_names)
 
     if n > 1:
-        raise KeyError(f"Found more than one ({n}) file containing the search term '{search_term}' "
-                       f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}")
+        raise KeyError(
+            f"Found more than one ({n}) file containing the search term '{search_term}' "
+            f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}"
+        )
     if n < 1:
-        raise FileNotFoundError(f"Could not find a visibility map file containing the search term '{search_term}' "
-                       f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}")
+        raise FileNotFoundError(
+            f"Could not find a visibility map file containing the search term '{search_term}' "
+            f"in directory {p}. Available visibility maps: {list_visibility_maps(forest_id)}"
+        )
 
     res = join(p, file_names[0])
     return res
@@ -542,15 +611,15 @@ def list_reference_visibility_maps(forest_id: str):
 
 
 def join(*args) -> str:
-    """Custom join function to avoid problems using os.path.join. """
+    """Custom join function to avoid problems using os.path.join."""
 
     n = len(args)
-    s = ''
-    for i,arg in enumerate(args):
-        if i == n-1:
+    s = ""
+    for i, arg in enumerate(args):
+        if i == n - 1:
             s = s + arg
         else:
-            s = s + arg + '/'
+            s = s + arg + "/"
     p = os.path.abspath(s)
     return p
 

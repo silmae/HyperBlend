@@ -6,7 +6,13 @@ import logging
 import importlib
 
 
-def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RGB', res_x=512, res_y=512, res_percent=100):
+def set_render_parameters(
+    render_mode: str = "spectral",
+    camera: str = "Drone RGB",
+    res_x=512,
+    res_y=512,
+    res_percent=100,
+):
     """Sets render parameters for spectral or RGB rendering.
 
     :param camera:
@@ -23,8 +29,8 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
     """
 
     # Always render with real objects
-    FU.set_forest_parameter(False, 'Simplified trees')
-    FU.set_forest_parameter(False, 'Simplified understory')
+    FU.set_forest_parameter(False, "Simplified trees")
+    FU.set_forest_parameter(False, "Simplified understory")
 
     # Load control dict
     control_dict = control.read_forest_control(forest_id=SCENE_ID)
@@ -32,71 +38,82 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
     # just in case we have multiple scenes at some point loop them over
     for scene in data.scenes:
 
-        scene.sequencer_colorspace_settings.name = 'Raw'
+        scene.sequencer_colorspace_settings.name = "Raw"
         # Video sequenser can be always set to Raw as it only affects video editing
 
         # Compositing setup
         composite_raw()
-        if render_mode == 'visibility':
+        if render_mode == "visibility":
             composite_material_mask()
         else:
             composite_delete_masking_setup()
 
-        if render_mode.lower() == 'spectral' or render_mode.lower() == 'visibility':
+        if render_mode.lower() == "spectral" or render_mode.lower() == "visibility":
 
-            scene.render.image_settings.file_format = 'TIFF'  # OK
-            scene.render.image_settings.tiff_codec = 'NONE'
-            scene.render.image_settings.color_mode = 'BW'  # 'BW', 'RGB', 'RGBA'
+            scene.render.image_settings.file_format = "TIFF"  # OK
+            scene.render.image_settings.tiff_codec = "NONE"
+            scene.render.image_settings.color_mode = "BW"  # 'BW', 'RGB', 'RGBA'
 
-            scene.camera = cameras.get('Drone HSI')
+            scene.camera = cameras.get("Drone HSI")
 
-            scene.display_settings.display_device = 'None'
-            # scene.view_settings.view_transform = 'Raw' # cannot be used when display device is None as it already turns off the display color transformations
-            scene.view_settings.look = 'None'
+            scene.display_settings.display_device = "None"
+            # scene.view_settings.view_transform = 'Raw' # cannot be used when display device
+            #   is None as it already turns off the display color transformations
+            scene.view_settings.look = "None"
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
 
             FU.set_materials_use_spectral(True)
 
             # Sample count from control dict
-            scene.cycles.samples = control_dict['Rendering'][FC.key_ctrl_sample_count_hsi]
+            scene.cycles.samples = control_dict["Rendering"][
+                FC.key_ctrl_sample_count_hsi
+            ]
 
             FU.set_sun_or_sky_power_hsi(scene_id=SCENE_ID, for_sun=True)
             FU.set_sun_or_sky_power_hsi(scene_id=SCENE_ID, for_sun=False)
 
             # disable sky for spectral images
 
-        elif render_mode.lower() == 'rgb':
+        elif render_mode.lower() == "rgb":
 
-            scene.render.image_settings.file_format = 'PNG'  # OK
-            scene.render.image_settings.compression = 15 # percent packing
-            scene.render.image_settings.color_mode = 'RGB'  # 'BW', 'RGB', 'RGBA'
+            scene.render.image_settings.file_format = "PNG"  # OK
+            scene.render.image_settings.compression = 15  # percent packing
+            scene.render.image_settings.color_mode = "RGB"  # 'BW', 'RGB', 'RGBA'
 
             if camera in cameras:
                 scene.camera = cameras.get(camera)
             else:
-                raise AttributeError(f"Camera '{camera} is not in camera list {cameras}.")
+                raise AttributeError(
+                    f"Camera '{camera} is not in camera list {cameras}."
+                )
 
-            scene.display_settings.display_device = 'sRGB'
-            scene.view_settings.view_transform = 'Filmic Log'
-            scene.view_settings.look = 'None'
+            scene.display_settings.display_device = "sRGB"
+            scene.view_settings.view_transform = "Filmic Log"
+            scene.view_settings.look = "None"
             scene.view_settings.exposure = 0
             scene.view_settings.gamma = 1
 
             FU.set_materials_use_spectral(False)
 
-            # For RGB images, we will always use frame one and set proper (RGB) sun power only for that frame.
+            # For RGB images, we will always use frame one and set proper (RGB) s
+            #   un power only for that frame.
             scene.frame_set(1)
-            sun_power = control_dict['Sun'][FC.key_ctrl_sun_base_power_rgb]
+            sun_power = control_dict["Sun"][FC.key_ctrl_sun_base_power_rgb]
             FU.set_sun_power(power=sun_power, frame=1)
 
             # Sample count from control dict
-            scene.cycles.samples = control_dict['Rendering'][FC.key_ctrl_sample_count_rbg]
+            scene.cycles.samples = control_dict["Rendering"][
+                FC.key_ctrl_sample_count_rbg
+            ]
 
         else:
-            raise AttributeError(f"Parameter render_mode in set_render_parameters() must be either 'spectral', 'visibility' or 'rgb'. Was '{render_mode}'.")
+            raise AttributeError(
+                f"Parameter render_mode in set_render_parameters() must be either 'spectral', "
+                f"'visibility' or 'rgb'. Was '{render_mode}'."
+            )
 
-        scene.render.image_settings.color_depth = '16'
+        scene.render.image_settings.color_depth = "16"
 
         scene.render.resolution_x = res_x
         scene.render.resolution_y = res_y
@@ -108,12 +125,15 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
         scene.render.resolution_percentage = res_percent
 
         scene.render.use_persistent_data = True
-        # Keep render data around for faster re-renders and animation renders, at the cost of increased memory usage
+        # Keep render data around for faster re-renders and animation renders,
+        #   at the cost of increased memory usage
 
-        scene.render.engine = 'CYCLES' # do not use 'BLENDER_EEVEE'
+        scene.render.engine = "CYCLES"  # do not use 'BLENDER_EEVEE'
 
         # Set the device_type
-        context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA" # or "OPENCL"
+        context.preferences.addons["cycles"].preferences.compute_device_type = (
+            "CUDA"  # or "OPENCL"
+        )
 
         # Set the device and feature set
         context.scene.cycles.device = "GPU"
@@ -124,7 +144,7 @@ def set_render_parameters(render_mode: str = 'spectral', camera: str = 'Drone RG
         print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
 
         for d in bpy.context.preferences.addons["cycles"].preferences.devices:
-            d["use"] = 1 # Using all devices, include GPU and CPU
+            d["use"] = 1  # Using all devices, include GPU and CPU
             print(d["name"], d["use"])
 
 
@@ -140,12 +160,21 @@ def set_visibility(mode: str):
         obj.hide_render = False
         obj.hide_set(False)
 
-    if mode != FC.key_cam_sleeper_rgb and mode != FC.key_cam_walker_rgb and mode != FC.key_cam_drone_rgb and mode != 'Map' and mode != FC.key_cam_drone_hsi and mode != FC.key_cam_tree_rgb:
+    if (
+        mode != FC.key_cam_sleeper_rgb
+        and mode != FC.key_cam_walker_rgb
+        and mode != FC.key_cam_drone_rgb
+        and mode != "Map"
+        and mode != FC.key_cam_drone_hsi
+        and mode != FC.key_cam_tree_rgb
+    ):
         raise AttributeError(f"Visibility for mode '{mode}' not recognised.")
 
     """
-    Per documentation https://docs.blender.org/api/master/info_gotcha.html#unfortunate-corner-cases,
-    we have to make a separate copy of the iterator to change object attributes without crashing, thus the [:]
+    Per documentation 
+    https://docs.blender.org/api/master/info_gotcha.html#unfortunate-corner-cases,
+    we have to make a separate copy of the iterator to change object attributes 
+    without crashing, thus the [:]
     """
 
     # First hide everything
@@ -159,9 +188,15 @@ def set_visibility(mode: str):
     for obj in ground[:]:
         hide(obj)
 
-    unhide(lights.get(FC.key_obj_sun)) # always show sun
+    unhide(lights.get(FC.key_obj_sun))  # always show sun
 
-    if mode == FC.key_cam_sleeper_rgb or mode == FC.key_cam_walker_rgb or mode == FC.key_cam_drone_rgb or mode == 'Map' or mode == FC.key_cam_drone_hsi:
+    if (
+        mode == FC.key_cam_sleeper_rgb
+        or mode == FC.key_cam_walker_rgb
+        or mode == FC.key_cam_drone_rgb
+        or mode == "Map"
+        or mode == FC.key_cam_drone_hsi
+    ):
         unhide(ground.get(FC.key_obj_ground))
     elif mode == FC.key_cam_tree_rgb:
         unhide(ground.get(FC.key_obj_ground_test))
@@ -184,7 +219,7 @@ def composite_raw():
     node_tree = scene.node_tree
     src = node_tree.nodes["Render Layers"]
     dst = node_tree.nodes["Composite"]
-    node_tree.links.new(src.outputs['Image'], dst.inputs['Image'])
+    node_tree.links.new(src.outputs["Image"], dst.inputs["Image"])
 
 
 def composite_material_mask():
@@ -205,15 +240,18 @@ def composite_material_mask():
     composite_delete_masking_setup()
     # Delete possible old setup before building it again.
 
-    f_output = node_tree.nodes.new('CompositorNodeOutputFile') # Create new File Output node
+    f_output = node_tree.nodes.new(
+        "CompositorNodeOutputFile"
+    )  # Create new File Output node
 
     # Set saving path and image settings
     f_output.base_path = PH.path_directory_system_rend_visibility_maps(SCENE_ID)
-    f_output.format.file_format = 'TIFF'
-    f_output.format.color_mode = 'BW' # no colors needed
-    f_output.format.tiff_codec = 'NONE' # no packing of images
-    f_output.format.color_depth = '16' # For some reason, 8 bit images look horrible so let's stick with 16 bits
-    f_output.width = 400 # node width in Blender Compositing view
+    f_output.format.file_format = "TIFF"
+    f_output.format.color_mode = "BW"  # no colors needed
+    f_output.format.tiff_codec = "NONE"  # no packing of images
+    # For some reason, 8 bit images look horrible so let's stick with 16 bits
+    f_output.format.color_depth = "16"
+    f_output.width = 400  # node width in Blender Compositing view
 
     # For positioning nodes in readable fashion in Blender Compositing view
     x_offset = 300
@@ -239,10 +277,11 @@ def composite_material_mask():
             processed_materials.append(material.name)
             socet_name = f"{material.name}_"
 
-            ID = node_tree.nodes.new('CompositorNodeIDMask')
+            ID = node_tree.nodes.new("CompositorNodeIDMask")
             ID.label = f"{ID.name}_mat_{material.name}"
             ID.index = pass_index
-            material.pass_index = pass_index # set the same pass index for material as in compositing ID mask
+            # set the same pass index for material as in compositing ID mask
+            material.pass_index = pass_index
             ID.location = (x + x_offset, y - pass_index * y_offset)
             ID.width = 400
 
@@ -251,7 +290,7 @@ def composite_material_mask():
                 f_output.file_slots.new(socet_name)
 
             # Link ID Mask nodes to File Output node
-            node_tree.links.new(src.outputs['IndexMA'], ID.inputs[0])
+            node_tree.links.new(src.outputs["IndexMA"], ID.inputs[0])
             node_tree.links.new(ID.outputs[0], f_output.inputs[socet_name])
 
             pass_index += 1
@@ -269,7 +308,10 @@ def composite_delete_masking_setup():
     # Cannot delete while iterating, so just collect nodes to be deleted
     to_delete = []
     for node in node_tree.nodes:
-        if node.bl_idname == 'CompositorNodeIDMask' or node.bl_idname == 'CompositorNodeOutputFile':
+        if (
+            node.bl_idname == "CompositorNodeIDMask"
+            or node.bl_idname == "CompositorNodeOutputFile"
+        ):
             to_delete.append(node)
 
     # And then delete them all from the node tree
@@ -297,9 +339,15 @@ def render_sleeper_rgb():
     res_x = images_dict[FC.key_ctrl_sleeper_resolution_x]
     res_y = images_dict[FC.key_ctrl_sleeper_resolution_y]
 
-    set_render_parameters(render_mode='rgb', camera='Sleeper RGB', res_x=res_x, res_y=res_y, res_percent=100)
-    set_visibility(mode='Sleeper RGB')
-    image_name = f'sleeper_rgb.png'
+    set_render_parameters(
+        render_mode="rgb",
+        camera="Sleeper RGB",
+        res_x=res_x,
+        res_y=res_y,
+        res_percent=100,
+    )
+    set_visibility(mode="Sleeper RGB")
+    image_name = f"sleeper_rgb.png"
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
@@ -313,9 +361,15 @@ def render_walker_rgb():
     res_x = images_dict[FC.key_ctrl_walker_resolution_x]
     res_y = images_dict[FC.key_ctrl_walker_resolution_y]
 
-    set_render_parameters(render_mode='rgb', camera='Walker RGB', res_x=res_x, res_y=res_y, res_percent=100)
-    set_visibility(mode='Walker RGB')
-    image_name = f'walker_rgb.png'
+    set_render_parameters(
+        render_mode="rgb",
+        camera="Walker RGB",
+        res_x=res_x,
+        res_y=res_y,
+        res_percent=100,
+    )
+    set_visibility(mode="Walker RGB")
+    image_name = f"walker_rgb.png"
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
@@ -329,9 +383,11 @@ def render_drone_rgb():
     res_x = images_dict[FC.key_ctrl_rgb_resolution_x]
     res_y = images_dict[FC.key_ctrl_rgb_resolution_y]
 
-    set_render_parameters(render_mode='rgb', camera='Drone RGB', res_x=res_x, res_y=res_y, res_percent=100)
-    set_visibility(mode='Drone RGB')
-    image_name = f'drone_rgb.png'
+    set_render_parameters(
+        render_mode="rgb", camera="Drone RGB", res_x=res_x, res_y=res_y, res_percent=100
+    )
+    set_visibility(mode="Drone RGB")
+    image_name = f"drone_rgb.png"
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
@@ -345,9 +401,11 @@ def render_tree_rgb():
     res_x = images_dict[FC.key_ctrl_tree_preview_resolution_x]
     res_y = images_dict[FC.key_ctrl_tree_preview_resolution_y]
 
-    set_render_parameters(render_mode='rgb', camera='Tree RGB', res_x=res_x, res_y=res_y, res_percent=100)
-    set_visibility(mode='Tree RGB')
-    image_name = f'tree_rgb.png'
+    set_render_parameters(
+        render_mode="rgb", camera="Tree RGB", res_x=res_x, res_y=res_y, res_percent=100
+    )
+    set_visibility(mode="Tree RGB")
+    image_name = f"tree_rgb.png"
     image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
@@ -361,9 +419,17 @@ def render_drone_hsi():
     res_x = images_dict[FC.key_ctrl_hsi_resolution_x]
     res_y = images_dict[FC.key_ctrl_hsi_resolution_y]
 
-    set_render_parameters(render_mode='spectral', camera='Drone HSI', res_x=res_x, res_y=res_y, res_percent=100)
-    set_visibility(mode='Drone HSI')
-    scene.render.filepath = PH.join(PH.path_directory_system_rend_spectral(SCENE_ID), "band_####.tiff")
+    set_render_parameters(
+        render_mode="spectral",
+        camera="Drone HSI",
+        res_x=res_x,
+        res_y=res_y,
+        res_percent=100,
+    )
+    set_visibility(mode="Drone HSI")
+    scene.render.filepath = PH.join(
+        PH.path_directory_system_rend_spectral(SCENE_ID), "band_####.tiff"
+    )
     call_blender_render(write_still=True, animation=True)
 
 
@@ -374,27 +440,35 @@ def render_visibility_maps():
     res_x = images_dict[FC.key_ctrl_hsi_resolution_x]
     res_y = images_dict[FC.key_ctrl_hsi_resolution_y]
 
-    set_render_parameters(render_mode='visibility', camera='Drone HSI', res_x=res_x, res_y=res_y, res_percent=100)
-    set_visibility(mode='Drone HSI')
-    image_name = f'visibility_map_rgb_preview.png'
-    image_path = PH.join(PH.path_directory_system_rend_visibility_maps(SCENE_ID), image_name)
+    set_render_parameters(
+        render_mode="visibility",
+        camera="Drone HSI",
+        res_x=res_x,
+        res_y=res_y,
+        res_percent=100,
+    )
+    set_visibility(mode="Drone HSI")
+    image_name = f"visibility_map_rgb_preview.png"
+    image_path = PH.join(
+        PH.path_directory_system_rend_visibility_maps(SCENE_ID), image_name
+    )
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
-    if 'System simulation' in blend_dir:
+    if "System simulation" in blend_dir:
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-        script_dir = os.path.abspath(blend_dir + '../../../src/blender_scripts')
-        data_dir = os.path.abspath(blend_dir + '../../../src/data')
+        script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "../../../src/data")
     else:
         # We are in the template forest blend file
-        script_dir = os.path.abspath(blend_dir + '/src/blender_scripts')
-        data_dir = os.path.abspath(blend_dir + '/src/data')
+        script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/src/data")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
@@ -428,44 +502,57 @@ if __name__ == '__main__':
     ground = data.collections[FC.key_collection_ground].all_objects
     ground_collection = data.collections[FC.key_collection_ground]
 
-
     # Store arguments passed from blender_control.py
     argv = sys.argv
 
     if "--" not in argv:
         argv = []  # no arguments for the script
     else:
-        argv = argv[argv.index("--") + 1:]  # get all args after "--"
+        argv = argv[argv.index("--") + 1 :]  # get all args after "--"
 
     # Argument names
-    key_scene_id = ['-id', '--scene_id']
-    key_render_mode = ['-rm', '--render_mode']
+    key_scene_id = ["-id", "--scene_id"]
+    key_render_mode = ["-rm", "--render_mode"]
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(key_scene_id[0], key_scene_id[1], dest=key_scene_id[1], action="store",
-                        required=True, help="Scene id.")
-    parser.add_argument(key_render_mode[0], key_render_mode[1], dest=key_render_mode[1], action="store",
-                        required=True, help="Rendering mode")
+    parser.add_argument(
+        key_scene_id[0],
+        key_scene_id[1],
+        dest=key_scene_id[1],
+        action="store",
+        required=True,
+        help="Scene id.",
+    )
+    parser.add_argument(
+        key_render_mode[0],
+        key_render_mode[1],
+        dest=key_render_mode[1],
+        action="store",
+        required=True,
+        help="Rendering mode",
+    )
 
     args = parser.parse_args(argv)
 
     SCENE_ID = vars(args)[key_scene_id[1]]
 
-    logging.error(f"Hello, I am forest render script in '{PH.path_directory_system_simulation(SCENE_ID)}'")
+    logging.error(
+        f"Hello, I am forest render script in '{PH.path_directory_system_simulation(SCENE_ID)}'"
+    )
 
     RENDER_MODE = vars(args)[key_render_mode[1]]
 
     # FU.list_forest_parameters()
 
-    if RENDER_MODE.lower() == 'preview':
+    if RENDER_MODE.lower() == "preview":
         render_sleeper_rgb()
         render_walker_rgb()
         render_drone_rgb()
         render_tree_rgb()
-    elif RENDER_MODE.lower() == 'spectral':
+    elif RENDER_MODE.lower() == "spectral":
         render_drone_hsi()
-    elif RENDER_MODE.lower() == 'visibility':
+    elif RENDER_MODE.lower() == "visibility":
         render_visibility_maps()
         composite_material_mask()
     else:
