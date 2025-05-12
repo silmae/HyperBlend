@@ -235,8 +235,6 @@ def init_cameras():
 
 if __name__ == "__main__":
 
-    from src.blender_scripts.forest_utils import set_material_parameter_per_frame
-
     logging.error(f"Setting up system simulation")
 
     blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
@@ -248,9 +246,9 @@ if __name__ == "__main__":
         forest_dir = os.path.abspath(blend_dir + "../../../src/forest")
     else:
         # We are in the template forest blend file
-        script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
-        data_dir = os.path.abspath(blend_dir + "/src/data")
-        forest_dir = os.path.abspath(blend_dir + "/src/forest")
+        script_dir = os.path.abspath(blend_dir + "../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "../src/data")
+        forest_dir = os.path.abspath(blend_dir + "../src/forest")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
@@ -260,17 +258,28 @@ if __name__ == "__main__":
     if forest_dir not in sys.path:
         sys.path.append(forest_dir)
 
+    # This is needed for at least Blender 4.4, which cannot
+    #   find the HyperBLend modules otherwise.
+    pythonpath_env = os.getenv("PYTHONPATH")
+    if pythonpath_env:
+        for path in pythonpath_env.split(os.pathsep):
+            if path not in sys.path:
+                sys.path.append(path)
+
+    # print(sys.path)
+
+    # help("modules")
+
+    from src.data import file_names as FN, path_handling as PH
     import forest_constants as FC
-    import forest_control as control
+    import forest_control as FCtrl
     import forest_utils as FU
-    import file_names as FN
-    import path_handling as PH
 
     importlib.reload(FC)
     importlib.reload(FU)
     importlib.reload(FN)
     importlib.reload(PH)
-    importlib.reload(control)
+    importlib.reload(FCtrl)
 
     b_context = bpy.context
     b_data = bpy.data

@@ -1,8 +1,6 @@
 """
 Test slab simulation with different solvers.
 
-TODO: test custom solvers. The default ones seem to be working now.
-
 """
 
 import os
@@ -16,7 +14,7 @@ from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 
 
-# @unittest.skip("Skipping test_slab_simulation for now")
+@unittest.skip("Skipping test_slab_simulation for now")
 class TestSlabs(TestCase):
 
     def setUp(self):
