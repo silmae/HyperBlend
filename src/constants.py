@@ -155,6 +155,14 @@ filename_system_sim_forest_template = "system_sim_forest_template"
 
 filename_slab_sim_forest_template = "slab_sim_template"
 
+filename_system_sim_preview_sleeper = "sleeper_preview"
+
+filename_system_sim_preview_drone = "drone_preview"
+
+filename_system_sim_preview_walker = "walker_preview"
+
+filename_system_sim_preview_trees = "trees_preview"
+
 file_directory_structure = "directory_structure"
 """Toml formatted file that defines directory structure and core files."""
 

@@ -3,9 +3,9 @@
 This module will test the training of slab models.
 
 Test plan:
-    - Test the normal starting guess generation to a cusotm dir
+    - Test the normal starting guess generation to a custom dir
     - Test iterative training
-        - First round with just starting guess curfe
+        - First round with just starting guess
         - Following rounds with surf model
         - The last round trains surf and nn
     - Trained model does not to be good so just a few training points
@@ -27,7 +27,7 @@ from src.setup import initialization
 from src import constants as C
 
 
-@unittest.skip("Skipping training test for now")
+# @unittest.skip("Skipping training test for now")
 class TestTraining(TestCase):
 
     def setUp(self):

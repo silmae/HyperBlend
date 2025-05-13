@@ -468,6 +468,19 @@ def path_file_system_sim_reflectance_header(forest_id: str) -> str:
     return p
 
 
+def path_file_system_sim_preview(system_sim_name: str, image_name: str):
+    """Path to system simulation preview render files.
+
+    Use the image names available in :mod:`src.constants`.
+    """
+
+    if not image_name.endswith(C.postfix_plot_image_format):
+        image_name = image_name + C.postfix_plot_image_format
+
+    p = join(path_directory_forest_rend(system_sim_name), image_name)
+    return p
+
+
 def path_file_system_slab_csv(forest_id: str, leaf_index):
     """Spectral slab material parameters csv file name."""
 

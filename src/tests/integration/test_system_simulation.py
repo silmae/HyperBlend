@@ -11,6 +11,7 @@ from unittest import TestCase
 import logging
 import numpy as np
 
+import constants
 from src.setup import initialization
 from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
@@ -19,6 +20,7 @@ from src.forest import forest
 from src.rendering import blender_control as BC
 from src.setup.runtime_environment import RuntimeEnvironment
 from src.blender_scripts import forest_control as FCtrl
+from src import constants as C
 
 
 class TestSystemSimulation(TestCase):
@@ -49,18 +51,15 @@ class TestSystemSimulation(TestCase):
 
         # Generating low resolution random leaves.
         # First two random leaves
-        # SMI.generate_prospect_leaf_random(set_name=slab_sim_name, leaf_count=2)
-        # # THen one with low water content
-        # SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
-        # # Resample to include only a few bands so the test runs in reasonable time
-        # new_sampling = [450, 550, 650, 1930]
-        # SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
-        # SMI.solve_leaf_material_parameters(
-        #     set_name=slab_sim_name, clear_old_results=True, runtime=self.runtime
-        # )
-
-        # Here we create a new forest scene from the template. Should be uncommented for the first run.
-        # This creates a new "master" forest you can use to generate other similar forests later.
+        SMI.generate_prospect_leaf_random(set_name=slab_sim_name, leaf_count=2)
+        # THen one with low water content
+        SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
+        # Resample to include only a few bands so the test runs in reasonable time
+        new_sampling = [450, 550, 650, 1930]
+        SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
+        SMI.solve_leaf_material_parameters(
+            set_name=slab_sim_name, clear_old_results=True, runtime=self.runtime
+        )
 
         # Pack leaf data for forest scene initialization.
         leaves = [
@@ -91,14 +90,38 @@ class TestSystemSimulation(TestCase):
             runtime=self.runtime,
         )
 
-        # BC.render_forest(
-        #     forest_id=system_sim_name_master,
-        #     render_mode="preview",
-        #     runtime=self.runtime,
-        # )
+        BC.render_forest(
+            forest_id=system_sim_name_master,
+            render_mode="preview",
+            runtime=self.runtime,
+        )
 
-        # TODO check the existance of preview renders
+        # Check that previews were rendered
+        image_path = PH.path_file_system_sim_preview(
+            system_sim_name=system_sim_name_master,
+            image_name=C.filename_system_sim_preview_sleeper,
+        )
+        self.assertTrue(os.path.exists(image_path))
 
+        image_path = PH.path_file_system_sim_preview(
+            system_sim_name=system_sim_name_master,
+            image_name=C.filename_system_sim_preview_drone,
+        )
+        self.assertTrue(os.path.exists(image_path))
+
+        image_path = PH.path_file_system_sim_preview(
+            system_sim_name=system_sim_name_master,
+            image_name=C.filename_system_sim_preview_walker,
+        )
+        self.assertTrue(os.path.exists(image_path))
+
+        image_path = PH.path_file_system_sim_preview(
+            system_sim_name=system_sim_name_master,
+            image_name=C.filename_system_sim_preview_trees,
+        )
+        self.assertTrue(os.path.exists(image_path))
+
+        # Initialize a new slave system simulation from the master
         forest.init(
             leaves=leaves,
             conf_type="m2s",
@@ -117,6 +140,8 @@ class TestSystemSimulation(TestCase):
         )
 
         # Read the master forest control file and modify it and write it to the slave
+        #   Setting the minimum tree separation to lower value spawns more trees so the
+        #   change will be visible in the preview images.
         system_control = FCtrl.read_forest_control(forest_id=system_sim_name_master)
         key_forest = "Forest"
         key_min_tree_separation = "Minimum tree separation [m]"
@@ -149,26 +174,53 @@ class TestSystemSimulation(TestCase):
             runtime=self.runtime,
         )
 
-        # Render bands for spectral cube along with additional images
-        # BC.render_forest(
-        #     forest_id=system_sim_name_slave, render_mode="preview", runtime=self.runtime
-        # )
-        # BC.render_forest(
-        #     forest_id=system_sim_name_slave,
-        #     render_mode="visibility",
-        #     runtime=self.runtime,
-        # )
-        # BC.render_forest(
-        #     forest_id=system_sim_name_slave,
-        #     render_mode="spectral",
-        #     runtime=self.runtime,
-        # )
+        # Render spectral cube, visibility maps, and previews
+        BC.render_forest(
+            forest_id=system_sim_name_slave, render_mode="preview", runtime=self.runtime
+        )
+        BC.render_forest(
+            forest_id=system_sim_name_slave,
+            render_mode="visibility",
+            runtime=self.runtime,
+        )
+        BC.render_forest(
+            forest_id=system_sim_name_slave,
+            render_mode="spectral",
+            runtime=self.runtime,
+        )
 
-        # TODO check existence of the rest of the rendered files
+        for i, wl in enumerate(new_sampling):
+            p = PH.join(
+                PH.path_directory_system_rend_spectral(forest_id=system_sim_name_slave),
+                f"band_000{i+1}.tiff",
+            )
+            with self.subTest(path=p):
+                error_msg = f"Could not find rendered image from path '{p}'."
+                self.assertTrue(os.path.exists(p), msg=error_msg)
+                logging.info(f"Found rendered image at '{p}'")
+
+        ref_map_list = PH.list_reference_visibility_maps(
+            forest_id=system_sim_name_slave
+        )
+        self.assertGreater(len(ref_map_list), 0)
+        for map in ref_map_list:
+            map_path = PH.path_file_visibility_map(
+                forest_id=system_sim_name_slave, file_name=map
+            )
+            with self.subTest(path=map_path):
+                error_msg = f"Could not find visibility map from path '{map_path}'."
+                self.assertTrue(os.path.exists(map_path), msg=error_msg)
+                logging.info(f"Found visibility map at '{map_path}'")
 
         # Construct spectral cube in ENVI format
-        # CH.construct_envi_cube(forest_id=system_sim_name_slave)
-        # TODO check that the spectral cube is built
+        CH.construct_envi_cube(forest_id=system_sim_name_slave)
+
+        p = PH.path_directory_system_spectral_cube(forest_id=system_sim_name_slave)
+        self.assertTrue(
+            os.path.exists(p), msg=f"Spectral cube could not be found from '{p}'."
+        )
+
+        logging.info("System simulation test finished.")
 
     def check_system_simulation_file_existence(
         self, system_sim_name: str, slab_material_names

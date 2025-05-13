@@ -347,8 +347,9 @@ def render_sleeper_rgb():
         res_percent=100,
     )
     set_visibility(mode="Sleeper RGB")
-    image_name = f"sleeper_rgb.png"
-    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
+    image_path = PH.path_file_system_sim_preview(
+        system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_sleeper
+    )
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -369,8 +370,9 @@ def render_walker_rgb():
         res_percent=100,
     )
     set_visibility(mode="Walker RGB")
-    image_name = f"walker_rgb.png"
-    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
+    image_path = PH.path_file_system_sim_preview(
+        system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_walker
+    )
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -387,8 +389,9 @@ def render_drone_rgb():
         render_mode="rgb", camera="Drone RGB", res_x=res_x, res_y=res_y, res_percent=100
     )
     set_visibility(mode="Drone RGB")
-    image_name = f"drone_rgb.png"
-    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
+    image_path = PH.path_file_system_sim_preview(
+        system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_drone
+    )
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -405,8 +408,9 @@ def render_tree_rgb():
         render_mode="rgb", camera="Tree RGB", res_x=res_x, res_y=res_y, res_percent=100
     )
     set_visibility(mode="Tree RGB")
-    image_name = f"tree_rgb.png"
-    image_path = PH.join(PH.path_directory_forest_rend(SCENE_ID), image_name)
+    image_path = PH.path_file_system_sim_preview(
+        system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_trees
+    )
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -465,21 +469,25 @@ if __name__ == "__main__":
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
         script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
         data_dir = os.path.abspath(blend_dir + "../../../src/data")
+        src_dir = os.path.abspath(blend_dir + "../../../src")
     else:
         # We are in the template forest blend file
         script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
         data_dir = os.path.abspath(blend_dir + "/src/data")
+        src_dir = os.path.abspath(blend_dir + "/src")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
         sys.path.append(script_dir)
         sys.path.append(data_dir)
+        sys.path.append(src_dir)
 
     import forest_constants as FC
     import forest_utils as FU
+    import forest_control as control
     from src.data import file_names as FN
     from src.data import path_handling as PH
-    import forest_control as control
+    from src import constants as C
 
     importlib.reload(FC)
     importlib.reload(FU)
