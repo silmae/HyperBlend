@@ -150,12 +150,11 @@ def show_cube(forest_id: str):
 
     Use construct_envi_cube() to generate it.
 
-    :param forest_id:
-        Forest scene id.
-    :return:
-        None
-    :raises
-        FileNotFoundError if the cube does not exist.
+    :param forest_id: Forest scene id.
+
+    :return: None
+
+    :raises FileNotFoundError: if the cube does not exist.
     """
 
     p_cube = PH.path_file_system_sim_reflectance_header(forest_id=forest_id)

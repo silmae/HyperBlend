@@ -241,18 +241,18 @@ def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str)
 
     A path to the image is returned.
 
-    :param target_type:
-        String either 'leaf' or 'reference'. Use the ones listed in constants.py.
-    :param imaging_type:
-        String either 'refl' for reflectance or 'tran' for transmittance. Use the ones listed in constants.py.
-    :param wl:
-        Wavelength.
-    :param base_path:
-        Path to the image folder. Usually the one returned by get_image_file_path() is correct and other paths
-        should only be used for testing and debugging.
-    :returns:
-        Returns absolute path to the image.
-    :raises FileNotFoundError if not found
+    :param target_type: String either 'leaf' or 'reference'. Use the ones listed in
+        constants.py.
+    :param imaging_type: String either 'refl' for reflectance or 'tran' for
+        transmittance. Use the ones listed in constants.py.
+    :param wl: Wavelength.
+    :param base_path: Path to the image folder. Usually the one returned by
+        get_image_file_path() is correct and other paths should only be used f
+        or testing and debugging.
+
+    :returns: Returns absolute path to the image.
+
+    :raises FileNotFoundError: if not found
     """
 
     def almost_equals(f1: float, f2: float, epsilon=0.01):
@@ -329,13 +329,13 @@ def reduce(set_name: str) -> None:
 def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) -> str:
     """Creates a uniquely named copy of a forest scene and returns its id.
 
-    :param copy_forest_id:
-        If provided, a forest with this id is copied. If `None`, the default
-        template forest is copied.
-    :param custom_forest_id:
-        If given, this will be the identifier for the new forest instead of the standard generated id.
-    :return
-        Returns custom_forest_id if it was given. Otherwise, an id will be generated for the scene.
+    :param copy_forest_id: If provided, a forest with this id is copied. If
+        `None`, the default template forest is copied.
+    :param custom_forest_id: If given, this will be the identifier for the new
+        forest instead of the standard generated id.
+
+    :return: Returns custom_forest_id if it was given. Otherwise, an id
+        will be generated for the scene.
     """
 
     now = datetime.datetime.now()

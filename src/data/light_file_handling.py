@@ -8,7 +8,7 @@ directly. For spectra generated with either NASA PSG or SSolar GOA, the files ar
 fixed so that they can be read directly later.
 
 How to generate sun spectra with NASA PSG
------
+---------------------------------------------
 
 Simple use-case:
     1. call load_sun with no filename and get the default sun irradiance integrated
@@ -35,7 +35,7 @@ How to generate spectra with NASA's Planetary Spectrum generator:
 
 
 How to generate sun and sky spectra with SSolar GOA
------
+-------------------------------------------------------
 
     1. Download Windows version of GOA from https://goa.uva.es/ssolar_goa-model/ or use their
         GitHub version from https://github.com/GOA-UVa/SSolar-GOA.
@@ -250,7 +250,7 @@ def _read_hb_light_file(path, required_resolution=1.0, resolution_epsilon=0.01):
     These lines are considered comments. The remaining lines must have to
     numbers separated by a space. The numbers have to castable to a float.
 
-    Example of how the file could look like:
+    Example of how the file could look like::
 
     |  # This is a comment line that can contain some metadata.
     |  # Perhaps this line will tell that the power is in W/m^2/nm
@@ -259,20 +259,17 @@ def _read_hb_light_file(path, required_resolution=1.0, resolution_epsilon=0.01):
     |  401.0 0.6789
     |  ...
 
-    :param path:
-        Path to a file to be read.
-    :param required_resolution:
-        Spectral resolution of the file is checked so that bands cannot be further
-        away from each other than this. Default is 1.0.
-    :param resolution_epsilon:
-        Allow this much variation between adjacent bands. Default is 0.01.
-    :returns:
-        (wls, irradiances, comments) tuple where wls and irradiances are numpy arrays.
+    :param path: Path to a file to be read.
+    :param required_resolution: Spectral resolution of the file is checked so that
+        bands cannot be further away from each other than this. Default is 1.0.
+    :param resolution_epsilon: Allow this much variation between adjacent bands. Default is 0.01.
+
+    :returns: (wls, irradiances, comments) tuple where wls and irradiances are numpy arrays.
         comments is a list of comment rows needed in file fixing. The comments that are
         returned are mainly for internal working of this script and do not matter for outside
         caller.
-    :raises
-        RuntimeError if wavelengths in the file are not in 1 nm resolution.
+
+    :raises RuntimeError: if wavelengths in the file are not in 1 nm resolution.
     """
 
     wls = []

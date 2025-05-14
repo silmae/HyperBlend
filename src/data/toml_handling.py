@@ -443,10 +443,10 @@ def read_target(set_name: str, sample_id: int, resampled=False):
         Sample id.
     :param resampled:
         If True, data is read from a corresponding resampled file. Default is False.
-    :return:
-        List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
-    :raises
-        OSError if file could not be opened.
+
+    :return: List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
+
+    :raises OSError: if file could not be opened.
     """
 
     with open(
@@ -503,17 +503,14 @@ def write_sampling(set_name: str, sampling: list = None, overwrite=False):
         toml.dump(sampling_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_sampling(
-    set_name: str,
-):
+def read_sampling(set_name: str):
     """Read resampling wavelengths from a file.
 
-    :param set_name:
-        Name of the leaf measurement set.
-    :return:
-        Return resampling wavelengths as 1D numpy array.
-    :raises
-        Raises RuntimeError in case some of the entries could not be interpreted as a float.
+    :param set_name: Name of the leaf measurement set.
+
+    :return: Return resampling wavelengths as 1D numpy array.
+
+    :raises RuntimeError: in case some of the entries could not be interpreted as a float.
     """
     p = PH.path_file_spectral_sampling(set_name)
 

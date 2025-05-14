@@ -558,12 +558,12 @@ def find_visibility_map(forest_id: str, search_term: str):
         to the filename. We cannot fully control the filenames coming out of Blender,
         so we only check if the filename includes the search term instead of a full
         match.
+
     :return:
         Returns a path to the file.
-    :raises
-        KeyError if more than one file match the search term.
-    :raises
-        FileNotFoundError if no file match the search term.
+
+    :raises KeyError: if more than one file match the search term.
+    :raises FileNotFoundError: if no file match the search term.
     """
 
     file_names = []
