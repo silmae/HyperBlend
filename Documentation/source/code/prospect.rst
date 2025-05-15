@@ -6,7 +6,7 @@ PROSPECT
 Prospect
 ------------------------
 
-.. automodule:: prospect.prospect
+.. automodule:: prospect.interface
    :members:
 
 Prospect d

@@ -13,6 +13,7 @@ The documentation is organized as follows:
 .. The toctree defines the structure of the documentation on the top level.
    The actual toc is not shown at this location as it is included in the sidebar.
 .. toctree::
+   :glob:
    :maxdepth: 2
    :name: mastertoc
    :caption: Contents:
@@ -21,7 +22,7 @@ The documentation is organized as follows:
    install
    slab_sim
    system_sim
-   src
+   code/**
    license
    contributing
 

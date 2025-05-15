@@ -6,7 +6,7 @@ from src.utils import spectra_utils as SU
 from src import plotter
 from src.data import toml_handling as TH
 from publication_run import run_paper_tests, asym_test
-from src.forest import forest
+from src.system_simulation import forest
 
 
 if __name__ == "__main__":

@@ -13,8 +13,8 @@ import copy
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH, path_handling as PH, toml_handling as TH
 import src.constants as C
-from src.forest import lighting
-from src.forest import soil
+from src.system_simulation import lighting
+from src.system_simulation import soil
 from src import plotter
 from src.blender_scripts import forest_control
 from src.blender_scripts import forest_constants as FC
@@ -30,7 +30,7 @@ def init(
     conf_type: str = None,
     rng=None,
 ):
-    """Create a new forest by copying template.
+    """Create a new system_simulation by copying template.
 
     Load leaf material parameters for each leaf. They must use same spectral sampling,
     but do not have to be from a single measurement set.
@@ -49,9 +49,9 @@ def init(
     :param sun_file_name:
     :param sky_file_name:
     :param copy_forest_id:
-        If given, a forest scene with this id will be copied instead of the default forest template.
+        If given, a system_simulation scene with this id will be copied instead of the default system_simulation template.
     :param custom_forest_id:
-        If given, this will be the identifier for the new forest instead of the standard generated id.
+        If given, this will be the identifier for the new system_simulation instead of the standard generated id.
     :param conf_type:
         How to produce configuration file: string from ['m2m','m2s','s2m'].
 
@@ -111,7 +111,7 @@ def init(
 
     if leaves is None:
         logging.info(
-            f"No leaves were provided for forest initialization, so I just copied the forest scene."
+            f"No leaves were provided for system_simulation initialization, so I just copied the system_simulation scene."
         )
         return
 
@@ -248,7 +248,7 @@ def init(
     if soil_name is None:
         soil_name = "median_humid_clay"
         logging.warning(
-            f"Soil name not provided for forest initialization. Using default soil '{soil_name}'."
+            f"Soil name not provided for system_simulation initialization. Using default soil '{soil_name}'."
         )
 
     soil_wls, soil_refls = soil.load_soil(forest_id=forest_id, soil_name=soil_name)
@@ -296,7 +296,7 @@ def m2s(control_dict: dict, rng) -> dict:
 
         if key == FC.key_ctrl_is_master_control and dict_item is False:
             raise RuntimeError(
-                f"Cannot apply randomness from a slave forest control file."
+                f"Cannot apply randomness from a slave system_simulation control file."
             )
         elif key == FC.key_ctrl_is_master_control and dict_item is True:
             # Change the control file type from master to slave.
@@ -320,7 +320,7 @@ def m2s(control_dict: dict, rng) -> dict:
 
 
 def _gaussian(param_dict: dict, rng) -> dict:
-    """Applies gaussian random value to a value that is represented as a dictionary in forest control file.
+    """Applies gaussian random value to a value that is represented as a dictionary in system_simulation control file.
 
     :param param_dict:
         Dict representation of the value.

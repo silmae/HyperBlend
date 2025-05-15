@@ -149,7 +149,7 @@ def plot_blender_soil(
         pyplot show(), which will halt the execution of the program until the window
         is manually shut.
     :param save:
-         If True (default), save image to forest scene directory (forest_id must then be given too).
+         If True (default), save image to system_simulation scene directory (forest_id must then be given too).
 
     :raises
         AttributeError if save=True but forest_id=None.
@@ -169,7 +169,7 @@ def plot_blender_soil(
     if save:
         if forest_id is None:
             raise AttributeError(
-                f"Saving soil reflectance requested but no forest id was given to define proper path."
+                f"Saving soil reflectance requested but no system_simulation id was given to define proper path."
             )
         directory = PH.path_directory_system_simulation(forest_id=forest_id)
         image_name = f"soil_reflectance_{soil_name}{C.postfix_plot_image_format}"

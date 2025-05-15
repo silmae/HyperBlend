@@ -494,7 +494,7 @@ def path_file_system_slab_csv(forest_id: str, leaf_index):
 def path_file_system_forest_sun_spectra_csv(forest_id: str):
     """Path to the light spectra csv file that is used for rendering.
 
-    Specific for forest type system simulation.
+    Specific for system_simulation type system simulation.
     """
     # TODO what to do with this hard-coded stuff??
     p = join(path_directory_system_simulation(forest_id), "blender_sun.csv")
@@ -504,7 +504,7 @@ def path_file_system_forest_sun_spectra_csv(forest_id: str):
 def path_file_forest_sky_csv(forest_id: str):
     """Path to the sky spectra csv file that is used for rendering.
 
-    Specific for forest type system simulation.
+    Specific for system_simulation type system simulation.
     """
     # TODO what to do with this hard-coded stuff??
     p = join(path_directory_system_simulation(forest_id), "blender_sky.csv")
@@ -514,7 +514,7 @@ def path_file_forest_sky_csv(forest_id: str):
 def path_file_forest_soil_csv(forest_id: str):
     """Path to the soil spectra csv file that is used for rendering.
 
-    Specific for forest type system simulation.
+    Specific for system_simulation type system simulation.
     """
     p = join(path_directory_system_simulation(forest_id), "blender_soil.csv")
     return p
@@ -609,14 +609,14 @@ def find_reference_visibility_map(forest_id: str, reflectivity: float):
 
 
 def list_visibility_maps(forest_id: str):
-    """Lists all available visibility maps for given forest scene."""
+    """Lists all available visibility maps for given system_simulation scene."""
 
     p = path_directory_system_rend_visibility_maps(forest_id=forest_id)
     return os.listdir(p)
 
 
 def list_reference_visibility_maps(forest_id: str):
-    """Lists all available reference visibility maps for given forest scene."""
+    """Lists all available reference visibility maps for given system_simulation scene."""
 
     p = path_directory_system_rend_visibility_maps(forest_id=forest_id)
     res = [filename for filename in os.listdir(p) if "Reference" in filename]

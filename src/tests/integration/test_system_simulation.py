@@ -16,7 +16,7 @@ from src.setup import initialization
 from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 from src.data import cube_handling as CH
-from src.forest import forest
+from src.system_simulation import forest
 from src.rendering import blender_control as BC
 from src.setup.runtime_environment import RuntimeEnvironment
 from src.blender_scripts import forest_control as FCtrl
@@ -32,7 +32,7 @@ class TestSystemSimulation(TestCase):
         logging.shutdown()
 
     def test_forest_pipe(self) -> None:
-        """This is a testing box for all forest canopy simulation functionality."""
+        """This is a testing box for all system_simulation canopy simulation functionality."""
 
         logging.info(f"Running system simulation test")
 
@@ -61,7 +61,7 @@ class TestSystemSimulation(TestCase):
             set_name=slab_sim_name, clear_old_results=True, runtime=self.runtime
         )
 
-        # Pack leaf data for forest scene initialization.
+        # Pack leaf data for system_simulation scene initialization.
         leaves = [
             (slab_sim_name, 0, slab_material_names[0]),
             (slab_sim_name, 1, slab_material_names[1]),
@@ -139,7 +139,7 @@ class TestSystemSimulation(TestCase):
             slab_material_names=slab_material_names,
         )
 
-        # Read the master forest control file and modify it and write it to the slave
+        # Read the master system_simulation control file and modify it and write it to the slave
         #   Setting the minimum tree separation to lower value spawns more trees so the
         #   change will be visible in the preview images.
         system_control = FCtrl.read_forest_control(forest_id=system_sim_name_master)
@@ -166,7 +166,7 @@ class TestSystemSimulation(TestCase):
         ]
         self.assertAlmostEqual(new_separation, slave_separation)
 
-        # Running forest.init only copies files. Running setup makes the
+        # Running system_simulation.init only copies files. Running setup makes the
         #   Blender scene renderable. This also applies the changes in the control file.
         BC.setup_forest(
             forest_id=system_sim_name_slave,

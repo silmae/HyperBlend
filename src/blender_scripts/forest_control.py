@@ -1,5 +1,5 @@
 """
-This script is responsible for writing and reading forest control toml files.
+This script is responsible for writing and reading system_simulation control toml files.
 
 This functionality would be better plced under data.toml_handling, but due to
 Blender using different Python environment than the rest of the code, it would
@@ -17,7 +17,7 @@ from src import constants as C
 def write_forest_control(
     forest_id: str, control_dict: dict, global_master: bool = False
 ):
-    """Writes forest control file.
+    """Writes system_simulation control file.
 
     :param forest_id:
         Forest id for which the control file is written to.
@@ -25,7 +25,7 @@ def write_forest_control(
         Dictionary to be written.
     :param global_master:
         If True, global master file is written to project root. Needs to be done if there are
-        changes made to the forest template file. This will be kept safe in the Git repository.
+        changes made to the system_simulation template file. This will be kept safe in the Git repository.
         Default is False.
     """
 

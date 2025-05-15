@@ -15,7 +15,7 @@ from src.slab_model.opt import Optimization
 from src.data import file_handling as FH, toml_handling as TH, file_names as FN
 from src import plotter
 from src.slab_model import nn, surf, slab_commons as LC
-from src.prospect import prospect
+from src.prospect import interface
 from src.utils import data_utils as DU
 from src.setup.runtime_environment import RuntimeEnvironment
 
@@ -49,7 +49,7 @@ def generate_prospect_leaf(
     :param ant: anthocyanin content [ug / cm^2]
     """
 
-    prospect.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
+    interface.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
 
 
 def generate_prospect_leaf_random(set_name, leaf_count=1):
@@ -61,7 +61,7 @@ def generate_prospect_leaf_random(set_name, leaf_count=1):
     :param leaf_count: How many target leaves are generated to the set.
     """
 
-    prospect.make_random_leaf_targets(set_name, leaf_count)
+    interface.make_random_leaf_targets(set_name, leaf_count)
 
 
 def resample_leaf_targets(set_name: str, new_sampling=None):

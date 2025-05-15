@@ -83,7 +83,7 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
         also scene_id is given, the scene directory is searched first before
         extending the search to light_data directory.
     :param forest_id:
-        Optional. If not given, forest scene directory is not searched.
+        Optional. If not given, system_simulation scene directory is not searched.
     :return:
         Path to found file.
     :raises FileNotFoundError:
@@ -95,7 +95,7 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
 
     if forest_id is not None:
         logging.info(
-            f"Trying to find lighting data from forest scene directory "
+            f"Trying to find lighting data from system_simulation scene directory "
             f"'{PH.path_directory_system_simulation(forest_id)}'."
         )
         p = PH.join(PH.path_directory_system_simulation(forest_id), file_name)

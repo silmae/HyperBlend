@@ -26,7 +26,9 @@ def construct_envi_cube(forest_id: str):
 
     p = PH.path_directory_system_rend_spectral(forest_id=forest_id)
     if not os.path.exists(p):
-        raise FileNotFoundError(f"Rend directory for forest '{forest_id}' not found.")
+        raise FileNotFoundError(
+            f"Rend directory for system_simulation '{forest_id}' not found."
+        )
 
     frame_name_list = os.listdir(p)
     if len(frame_name_list) < 1:

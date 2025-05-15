@@ -6,5 +6,5 @@ GSV soil simulation
 GSV
 ------------------------
 
-.. automodule:: gsv.gsv
+.. automodule:: gsv.interface
    :members:

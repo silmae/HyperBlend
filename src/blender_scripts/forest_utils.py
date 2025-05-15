@@ -9,9 +9,10 @@ import math
 
 
 """
-These imports cannot be protected by if __name__ == '__main__' because 
-the scipts calling this one will fail. Sphinx will not be able to autodoc 
-this script, but we'll have to deal with that.
+These imports must be here because this script is not invoked directly. 
+The other Blender scripts can protect these imports in with if __name__ == '__main__', 
+but this script is imported by them. This ultimately breaks the sphinx documentation 
+generation for this file, but so be it.  
 """
 
 blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
@@ -20,12 +21,20 @@ if "System simulation" in blend_dir:
     # We are in a copied blend file in HyperBlend/System simulation/scene_12345
     script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
 else:
-    # We are in the template forest blend file
-    script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
+    # We are in the template system_simulation blend file
+    script_dir = os.path.abspath(blend_dir + "../src/blender_scripts")
 
 # After this is set, any script in /blender_scripts can be imported
 if script_dir not in sys.path:
     sys.path.append(script_dir)
+
+# This is needed for at least Blender 4.4, which cannot
+#   find the HyperBLend modules otherwise.
+pythonpath_env = os.getenv("PYTHONPATH")
+if pythonpath_env:
+    for path in pythonpath_env.split(os.pathsep):
+        if path not in sys.path:
+            sys.path.append(path)
 
 import forest_constants as FC
 from src.data import path_handling as PH
@@ -44,6 +53,13 @@ scene = data.scenes[FC.key_scene_name]
 cameras = data.collections[FC.key_collection_cameras].all_objects
 lights = data.collections[FC.key_collection_lights].all_objects
 trees = data.collections[FC.key_collection_trees].all_objects
+
+
+"""
+These imports cannot be protected by if __name__ == '__main__' because 
+the scipts calling this one will fail. Sphinx will not be able to autodoc 
+this script, but we'll have to deal with that.
+"""
 
 
 def set_materials_use_spectral(use_spectral: bool):
@@ -131,7 +147,7 @@ def set_sun_or_sky_power_hsi(scene_id: str, for_sun=True):
         p = PH.path_file_forest_sky_csv(forest_id=scene_id)
     if not os.path.exists(p):
         raise FileNotFoundError(
-            f"Sun or sky csv file '{p}' not found. Try rerunning forest initialization."
+            f"Sun or sky csv file '{p}' not found. Try rerunning system_simulation initialization."
         )
 
     bands, _, irradiances = read_csv(p)
@@ -211,7 +227,7 @@ def set_sky_material_parameter(param_name: str, value):
 
 def get_scene_parameters(as_master=False) -> dict:
     """Fetches scene parameters from a Blender file and returns them
-        as a dict that can be saved as a forest control file.
+        as a dict that can be saved as a system_simulation control file.
 
     :param as_master:
         If True, returned dict will be treated as a master control meaning that there
@@ -422,7 +438,7 @@ def _get_tree_as_dict(tree_object, is_master=False) -> dict:
 
 
 def apply_forest_control(forest_id):
-    """Reads forest control file and applies it to the forest scene.
+    """Reads system_simulation control file and applies it to the system_simulation scene.
 
     Note that some values, such as sun power, must be reset when rendering because
     proper values depend on are we rendering an RGB image or a hyperspectral image.
@@ -478,7 +494,7 @@ def apply_forest_control(forest_id):
         elif key == "Forest":
 
             """
-            Loop through forest (ground object) parameters. Almost all of these are dicts (even single valued
+            Loop through system_simulation (ground object) parameters. Almost all of these are dicts (even single valued
             parameters because we store the name and data type also. Then there are other objects (trees) that
             must be looped through separately.
             """
@@ -486,7 +502,7 @@ def apply_forest_control(forest_id):
             forest_dict = control_dict[key]
             for forest_key, forest_dict_item in forest_dict.items():
 
-                # Normal forest parameters
+                # Normal system_simulation parameters
                 if isinstance(forest_dict_item, dict) and "Type" in forest_dict_item:
 
                     forst_item_type = forest_dict_item["Type"]
@@ -554,7 +570,7 @@ def apply_forest_control(forest_id):
                     pass  # just comments
                 else:
                     logging.warning(
-                        f"Unhandled forest parameter '{forest_key}' : {forest_dict_item}"
+                        f"Unhandled system_simulation parameter '{forest_key}' : {forest_dict_item}"
                     )
         elif key == "Note" or key == FC.key_ctrl_is_master_control:
             # No need to handle this key because we can set up a scene based on either master or slave control.
@@ -564,7 +580,7 @@ def apply_forest_control(forest_id):
 
 
 def set_forest_parameter(value, parameter_name: str = None, parameter_id: int = None):
-    """Sets forest parameter (ground object) to given value.
+    """Sets system_simulation parameter (ground object) to given value.
 
     Parameter can be identified either by name (parameter_name) or ID (parameter_id).
     One of these must be given.

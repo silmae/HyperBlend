@@ -471,7 +471,7 @@ if __name__ == "__main__":
         data_dir = os.path.abspath(blend_dir + "../../../src/data")
         src_dir = os.path.abspath(blend_dir + "../../../src")
     else:
-        # We are in the template forest blend file
+        # We are in the template system_simulation blend file
         script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
         data_dir = os.path.abspath(blend_dir + "/src/data")
         src_dir = os.path.abspath(blend_dir + "/src")

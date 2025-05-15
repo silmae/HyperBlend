@@ -15,7 +15,7 @@ def set_leaf_material(
     """Set leaf material for all frames in band list.
 
     :param leaf_material_name:
-        Must be a name that can be found in Blender forest scene file materials.
+        Must be a name that can be found in Blender system_simulation scene file materials.
     :param band_list:
         List of spectral bands (ints) that correspond to animation frames in Blender.
     :param ad_list:
@@ -56,7 +56,7 @@ def _set_leaf_rgb(leaf_material_name: str):
     p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(
-            f"Leaf RGB color file '{p}' not found. Have you removed it? Try rerunning forest initialization."
+            f"Leaf RGB color file '{p}' not found. Have you removed it? Try rerunning system_simulation initialization."
         )
 
     with open(p) as file:
@@ -202,7 +202,7 @@ def insert_soil_data():
     p = PH.path_file_forest_soil_csv(forest_id=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(
-            f"Soil csv file '{p}' not found. Try rerunning forest initialization."
+            f"Soil csv file '{p}' not found. Try rerunning system_simulation initialization."
         )
 
     # TODO Should we raise an error or just go without setting soil material??
@@ -243,12 +243,12 @@ if __name__ == "__main__":
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
         script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
         data_dir = os.path.abspath(blend_dir + "../../../src/data")
-        forest_dir = os.path.abspath(blend_dir + "../../../src/forest")
+        forest_dir = os.path.abspath(blend_dir + "../../../src/system_simulation")
     else:
-        # We are in the template forest blend file
+        # We are in the template system_simulation blend file
         script_dir = os.path.abspath(blend_dir + "../src/blender_scripts")
         data_dir = os.path.abspath(blend_dir + "../src/data")
-        forest_dir = os.path.abspath(blend_dir + "../src/forest")
+        forest_dir = os.path.abspath(blend_dir + "../src/system_simulation")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
@@ -318,7 +318,7 @@ if __name__ == "__main__":
         dest=key_scene_id[1],
         action="store",
         required=True,
-        help="Name of the forest scene.",
+        help="Name of the system_simulation scene.",
     )
     parser.add_argument(
         key_leaf_ids[0],

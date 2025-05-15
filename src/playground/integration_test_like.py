@@ -1,11 +1,11 @@
 from data import cube_handling as CH
-from forest import forest
+from system_simulation import forest
 from rendering import blender_control as BC
 from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def forest_pipe_test(runtime: RuntimeEnvironment, rng):
-    """This is a testing box for all forest canopy simulation funcionality.
+    """This is a testing box for all system_simulation canopy simulation funcionality.
 
     You'll have to run this several times. See inline comments what to run and what to
     comment out at each point.
@@ -32,17 +32,17 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     sun_name = "default_sun"
     sky_name = "default_sky"
 
-    # Here we create a new forest scene from the template. Should be uncommented for the first run.
-    # This creates a new "master" forest you can use to generate other similar forests later.
+    # Here we create a new system_simulation scene from the template. Should be uncommented for the first run.
+    # This creates a new "master" system_simulation you can use to generate other similar forests later.
 
-    # Pack leaf data for forest scene initialization. This can be uncommented all times
+    # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
     leaves = [
         (set_name, 0, "Leaf material 1"),
         (set_name, 1, "Leaf material 2"),
         (set_name, 3, "Leaf material 3"),
     ]
 
-    # forest.init(leaves=leaves, conf_type='m2m', rng=rng,
+    # system_simulation.init(leaves=leaves, conf_type='m2m', rng=rng,
     #             custom_forest_id=forest_id_master, soil_name=soil_name,
     #             sun_file_name=sun_name, sky_file_name=sky_name)
 
@@ -51,7 +51,7 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     # BC.render_forest(forest_id=forest_id_master, render_mode='preview')
 
     # Stop here. For the first run, everything after this should be commented out
-    # Check the master file and make any changes before generating new "slave" forest with random settings.
+    # Check the master file and make any changes before generating new "slave" system_simulation with random settings.
     # When you are happy with the new settings, uncomment the following (and comment out the previous lines as
     # instructed for second run).
 
@@ -66,7 +66,7 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
         sky_file_name=sky_name,
     )
 
-    # Running forest.init only copies files. Running setup makes the Blender scene renderable.
+    # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
     BC.setup_forest(
         forest_id=forest_id,
         leaf_name_list=["Leaf material 1", "Leaf material 2", "Leaf material 3"],

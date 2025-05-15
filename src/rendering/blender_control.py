@@ -51,7 +51,7 @@ def _get_base_blender_args(
         Name of the Blender script to be run. These are found under `src/blender_scripts`.
     :param scene_path:
         Blend file to be run. For leaf simulations this is found from the main project folder.
-        For forest scenes it is either the template found in  main project folder or
+        For system_simulation scenes it is either the template found in  main project folder or
         a modified copy of it in scenes folder.
     :return:
         List of basic arguments for Blender scripts. Add additional arguments after '--' that are passed
@@ -252,17 +252,17 @@ def run_reflectance_lab(
 def generate_forest_control(
     runtime: RuntimeEnvironment, forest_id: str = None, global_master: bool = False
 ):
-    """Generates a forest control file by reading parameters from a Blender file.
+    """Generates a system_simulation control file by reading parameters from a Blender file.
 
     .. note::
         Even if there are no usages for this method, do not remove it. It is used to
-        generate the forest control file from the scene template.
+        generate the system_simulation control file from the scene template.
 
     :param forest_id:
-        ID of the forest to create the control file for.
+        ID of the system_simulation to create the control file for.
     :param global_master:
         If True, the global master control file is updated based on the parameters
-        in forest template file. The result is saved to the project root directory.
+        in system_simulation template file. The result is saved to the project root directory.
     :raises AttributeError:
             if either
             1. global_master == False and scene_id == None, because there is nothing to be done.
@@ -300,21 +300,21 @@ def generate_forest_control(
     with open(os.devnull, "wb") as stream:
         status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
-            logging.fatal(f"Failed to generate forest control file.")
+            logging.fatal(f"Failed to generate system_simulation control file.")
             exit(1)
 
 
 def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=None):
-    """Set up the forest for rendering.
+    """Set up the system_simulation for rendering.
 
     :param forest_id:
-        ID of the forest to be set up.
+        ID of the system_simulation to be set up.
     :param leaf_name_list:
         Names of the leaf materials (must mach the ones used in the Blender file) as a
         list of strings like: ['Leaf material 1', 'Leaf material 2',...].
     """
 
-    logging.info(f"Calling forest scene setup")
+    logging.info(f"Calling system_simulation scene setup")
 
     blender_args = _get_base_blender_args(
         script_name="bs_setup_forest.py",
@@ -331,15 +331,15 @@ def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=Non
     with open(os.devnull, "wb") as stream:
         status = subprocess.run(blender_args + scirpt_args)  # , stdout=stream)
         if status.returncode != 0:
-            logging.fatal(f"Failed to setup forest scene file.")
+            logging.fatal(f"Failed to setup system_simulation scene file.")
             exit(1)
 
 
 def render_forest(runtime: RuntimeEnvironment, forest_id: str, render_mode: str):
-    """Render different presentations of the forest scene.
+    """Render different presentations of the system_simulation scene.
 
     :param forest_id:
-        ID of the forest to be rendered.
+        ID of the system_simulation to be rendered.
     :param render_mode:
         One of the following 'preview', 'spectral' or 'visibility'.
         'preview' renders only some preview images that can give an idea of the

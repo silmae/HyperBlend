@@ -2,7 +2,7 @@ import os
 import numpy as np
 import logging
 
-from src.gsv import gsv
+from src.gsv import interface
 from src.data import path_handling as PH
 from src.utils import spectra_utils as SU
 
@@ -22,7 +22,7 @@ def find_gsv_soil_path(soil_name):
 
 
 def load_soil(soil_name: str, forest_id: str = None, sampling=None):
-    """Find a soil csv from root/soil/ and place a resampled copy of it to given forest scene.
+    """Find a soil csv from root/soil/ and place a resampled copy of it to given system_simulation scene.
 
     :param soil_name:
         Soil name to be searched. Must be one that exists in root/soil/.

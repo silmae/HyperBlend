@@ -327,12 +327,12 @@ def reduce(set_name: str) -> None:
 
 
 def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) -> str:
-    """Creates a uniquely named copy of a forest scene and returns its id.
+    """Creates a uniquely named copy of a system_simulation scene and returns its id.
 
-    :param copy_forest_id: If provided, a forest with this id is copied. If
-        `None`, the default template forest is copied.
+    :param copy_forest_id: If provided, a system_simulation with this id is copied. If
+        `None`, the default template system_simulation is copied.
     :param custom_forest_id: If given, this will be the identifier for the new
-        forest instead of the standard generated id.
+        system_simulation instead of the standard generated id.
 
     :return: Returns custom_forest_id if it was given. Otherwise, an id
         will be generated for the scene.
@@ -368,8 +368,8 @@ def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) ->
     else:
         raise RuntimeError(
             f"Forest scene not found for duplication from '{source_path}'. "
-            f"If you tried to duplicate from template forest, check git repository "
-            f"to restore the template to root directory. Otherwise check that forest "
+            f"If you tried to duplicate from template system_simulation, check git repository "
+            f"to restore the template to root directory. Otherwise check that system_simulation "
             f"id is correct."
         )
     logging.info(
@@ -383,9 +383,9 @@ def copy_leaf_material_parameters(
     forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None
 ):
     """Reads spectral leaf simulation result and copies it as a leaf material parameter file
-    to be consumed by forest setup.
+    to be consumed by system_simulation setup.
 
-    Leaf material parameters are written as a csv file to give to specified forest scene.
+    Leaf material parameters are written as a csv file to give to specified system_simulation scene.
     We use csv file instead of toml files because importing external packages, such as toml,
     into Blender's own Python environment is bit of a hassle. Csv files work just as well and
     they can be read with tools already included by default.
@@ -465,7 +465,7 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
     """Write light spectra to a csv file that can be read by Blender script.
 
     :param forest_id:
-        Id of the forest scene to write to.
+        Id of the system_simulation scene to write to.
     :param wls:
         List of wavelengths to be written.
     :param irradiances:
@@ -502,7 +502,7 @@ def read_blender_light_spectra(forest_id: str, lighting_type="sun"):
     """Read light spectra csv from a Blender script.
 
     :param forest_id:
-        Id of the forest scene to read from.
+        Id of the system_simulation scene to read from.
     :param lighting_type:
          String either 'sun' or 'sky'.
     :return:
@@ -559,7 +559,7 @@ def write_blender_soil(forest_id: str, wls, reflectances):
     """Write soil reflectance spectra to a csv file that can be read by Blender script.
 
     :param forest_id:
-        Id of the forest scene to write to.
+        Id of the system_simulation scene to write to.
     :param wls:
         List of wavelengths to be written.
     :param reflectances:

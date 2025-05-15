@@ -1,6 +1,6 @@
 """
 
-Temporarily store forest scene related stuff here, so they don't
+Temporarily store system_simulation scene related stuff here, so they don't
 mess with 0.2.0 release.
 
 These are mostly hacks and should be rewritten into proper code.
@@ -18,7 +18,7 @@ from src.data import toml_handling as TH
 ######### Stuff for scenes testing #############
 
 """
-This used to be in main for testing forest scenes. 
+This used to be in main for testing system_simulation scenes. 
 Just copypasted here out of the way.
 """
 
@@ -48,7 +48,7 @@ Just copypasted here out of the way.
 
 # scene_id = FH.duplicate_scene_from_template()
 # # scene_id = "0123456789" # id for debugging
-# forest.generate_some_leaf_stuff(scene_id, resolution=50)
+# system_simulation.generate_some_leaf_stuff(scene_id, resolution=50)
 # BC.setup_forest(scene_id, leaf_id_list=[1,2,3])
 # BC.render_forest_previews(scene_id)
 # BC.render_forest_spectral(scene_id)
