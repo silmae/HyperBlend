@@ -32,20 +32,20 @@ def write_forest_control(
     if global_master:
         write_dict_as_toml(
             dictionary=control_dict,
-            directory=PH.path_directory_project_root(),
+            directory=PH.directory_project_root(),
             filename=C.filename_system_sim_control,
         )
     else:
         write_dict_as_toml(
             dictionary=control_dict,
-            directory=PH.path_directory_system_simulation(forest_id=forest_id),
+            directory=PH.directory_system_simulation(system_sim_name=forest_id),
             filename=C.filename_system_sim_control,
         )
 
 
 def read_forest_control(forest_id: str) -> dict:
     return read_toml_as_dict(
-        directory=PH.path_directory_system_simulation(forest_id=forest_id),
+        directory=PH.directory_system_simulation(system_sim_name=forest_id),
         filename=C.filename_system_sim_control,
     )
 

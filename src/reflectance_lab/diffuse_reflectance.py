@@ -1,3 +1,4 @@
+import data.path_handling
 from src import plotter, constants as C
 from src.rendering import blender_control as BC
 from src.slab_model import slab_commons as LC
@@ -22,8 +23,8 @@ def run(runtime: RuntimeEnvironment, data_exits=False):
     reflectance = []
     HSV_values = list(range(101))
     for sun_power in powers:
-        sample_dir = PH.path_directory_result_signal(
-            set_name=set_name, sample_id=sun_power
+        sample_dir = PH.directory_result_signal(
+            slab_sim_name=set_name, signal_id=sun_power
         )
         if not data_exits:
             BC.run_reflectance_lab(
@@ -34,8 +35,11 @@ def run(runtime: RuntimeEnvironment, data_exits=False):
             )
         vals = []
         for value in HSV_values:
-            p = FH.search_by_wl(
-                C.target_type_slab, "refl", wl=value, base_path=sample_dir
+            p = PH.find_by_wl(
+                wl=value,
+                mode=C.target_type_slab,
+                imaging_type=C.imaging_type_refl,
+                base_path=sample_dir,
             )
             vals.append(DU.get_rend_as_mean(p))
 

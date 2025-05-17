@@ -77,7 +77,7 @@ def read_surface_model_parameters(solver_dirname: str = None):
     :param solver_dirname: Name of the solver directory. If none given, the default is used
     """
 
-    p = PH.path_file_surface_model_parameters(solver_dirname=solver_dirname)
+    p = PH.file_surface_model_parameters(slab_model_name=solver_dirname)
     logging.info(f"Reading surface model parameters from '{p}'.")
 
     if not os.path.exists(p):
@@ -96,8 +96,8 @@ def write_surface_model_parameters(parameter_dict, solver_name=None):
         Solver name used for saving the surface model parameters.
     """
 
-    p_dir = PH.path_directory_slab_model(solver_name=solver_name)
-    p = PH.path_file_surface_model_parameters(solver_dirname=solver_name)
+    p_dir = PH.directory_slab_model(slab_model_name=solver_name)
+    p = PH.file_surface_model_parameters(slab_model_name=solver_name)
 
     if not os.path.exists(p_dir):
         os.makedirs(p_dir)
@@ -278,7 +278,7 @@ def write_set_result(set_name: str):
             r[0][C.key_sample_result_wls]
         )
 
-    p = PH.path_file_slab_sim_result(slab_sim_name=set_name)
+    p = PH.file_slab_sim_result(slab_sim_name=set_name)
     with open(p, "w+") as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -286,7 +286,7 @@ def write_set_result(set_name: str):
 def read_set_result(set_name: str):
     """Reads the set result file. Created if does not exist."""
 
-    p = PH.path_file_slab_sim_result(slab_sim_name=set_name)
+    p = PH.file_slab_sim_result(slab_sim_name=set_name)
     if not os.path.exists(p):
         write_set_result(set_name)
     with open(p, "r") as file:
@@ -323,7 +323,7 @@ def read_sample_result(set_name: str, sample_id: int):
         Result file content as a dict.
     """
 
-    p = PH.path_file_signal_result(slab_sim_name=set_name, signal_id=sample_id)
+    p = PH.file_signal_result(slab_sim_name=set_name, signal_id=sample_id)
     with open(p, "r") as file:
         subres_dict = toml.load(file)
 
@@ -342,7 +342,7 @@ def write_sample_result(set_name: str, res_dict: dict, sample_id: int) -> None:
     """
 
     p = PH.join(
-        PH.path_directory_result_signal(set_name, sample_id),
+        PH.directory_result_signal(set_name, sample_id),
         FN.filename_sample_result(sample_id),
     )
     with open(p, "w+") as file:
@@ -360,7 +360,7 @@ def collect_wavelength_result(set_name: str, sample_id: int):
         A list of wavelength result dictionaries.
     """
 
-    p = PH.path_directory_optimization_result(set_name, sample_id)
+    p = PH.directory_optimization_result(set_name, sample_id)
     subres_list = []
     for filename in os.listdir(p):
         if filename.endswith(C.postfix_text_data_format):
@@ -381,7 +381,7 @@ def write_wavelength_result(set_name: str, res_dict: dict, sample_id: int) -> No
     """
 
     wl = res_dict[C.key_wl_result_wl]
-    p = PH.path_file_wl_result(set_name, wl, sample_id)
+    p = PH.file_wl_result(set_name, sample_id, wl)
     with open(p, "w+") as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
@@ -399,7 +399,7 @@ def read_wavelength_result(set_name: str, wl: float, sample_id: int):
         Subresult as a dictionary.
     """
 
-    p = PH.path_file_wl_result(set_name, wl, sample_id)
+    p = PH.file_wl_result(set_name, sample_id, wl)
     with open(p, "r") as file:
         subres_dict = toml.load(file)
 
@@ -424,7 +424,7 @@ def write_target(set_name: str, data, sample_id=0, resampled=False) -> None:
 
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {"wlrt": floated_list}
-    p = PH.path_file_target(set_name, sample_id, resampled=resampled)
+    p = PH.file_slab_target(set_name, sample_id, resampled=resampled)
     if not os.path.exists(p):
         FH.create_top_level_slab_sim_directories(set_name)
         FH.create_signal_optimization_directories(set_name, signal_id=0)
@@ -450,7 +450,7 @@ def read_target(set_name: str, sample_id: int, resampled=False):
     """
 
     with open(
-        PH.path_file_target(set_name, sample_id, resampled=resampled), "r"
+        PH.file_slab_target(set_name, sample_id, resampled=resampled), "r"
     ) as file:
         data = toml.load(file)
         data = data["wlrt"]
@@ -478,7 +478,7 @@ def write_sampling(set_name: str, sampling: list = None, overwrite=False):
         If True, overwrite existing sampling with the new one. Default is False.
     """
 
-    p = PH.path_file_spectral_sampling(set_name)
+    p = PH.file_spectral_sampling(set_name)
 
     # Escape if the file exists already
     if os.path.exists(p) and not overwrite:
@@ -512,7 +512,7 @@ def read_sampling(set_name: str):
 
     :raises RuntimeError: in case some of the entries could not be interpreted as a float.
     """
-    p = PH.path_file_spectral_sampling(set_name)
+    p = PH.file_spectral_sampling(set_name)
 
     if not os.path.exists(p):
         raise RuntimeError(f"Sampling not found from '{p}'. Write sampling before use.")
@@ -546,11 +546,11 @@ def write_starting_guess_coeffs(
         starting guess is overwritten.
     """
 
-    dir_path = PH.path_directory_slab_model(solver_name=solver_name)
+    dir_path = PH.directory_slab_model(slab_model_name=solver_name)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-    path = PH.path_file_starting_guess(solver_name=solver_name)
+    path = PH.file_starting_guess(solver_name=solver_name)
     coeff_dict = {
         C.ad_coeffs: ad_coeffs,
         C.sd_coeffs: sd_coeffs,
@@ -561,15 +561,14 @@ def write_starting_guess_coeffs(
         toml.dump(coeff_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_starting_guess_coeffs(solver_name: str = None) -> dict:
+def read_starting_guess_coeffs(slab_model_name: str = None) -> dict:
     """Reads starting guess coefficients from disk and return as dictionary.
 
-    :param solver_name: If None, the default solver name is used.
-    :return:
-        Starting guess coefficients in a dictionary.
+    :param slab_model_name: If None, the default slab model name is used.
+    :return: Starting guess coefficients in a dictionary.
     """
 
-    path = PH.path_file_starting_guess(solver_name=solver_name)
+    path = PH.file_starting_guess(slab_model_name=slab_model_name)
     with open(path, "r") as file:
         data = toml.load(file)
         return data

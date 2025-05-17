@@ -200,7 +200,7 @@ def train(
             patience_trigger = 0
             best_model_state = net.state_dict()
 
-            save_path = PH.path_nn_model(solver_dirname=solver_name)
+            save_path = PH.path_nn_model(slab_model_name=solver_name)
             torch.save(best_model_state, save_path)
 
             logging.info(f"Saved model with test loss {best_loss:.8f} epoch {epoch}")
@@ -266,7 +266,7 @@ def _load_model(solver_dirname: str):
     """
 
     try:
-        p = path_nn_model(solver_dirname=solver_dirname)
+        p = path_nn_model(slab_model_name=solver_dirname)
         net = Slabnet()
         net.load_state_dict(torch.load(p))
         net.double()
@@ -286,4 +286,4 @@ def exists(solver_mame: str = None):
         True if found, False otherwise.
     """
 
-    return os.path.exists(PH.path_nn_model(solver_dirname=solver_mame))
+    return os.path.exists(PH.path_nn_model(slab_model_name=solver_mame))

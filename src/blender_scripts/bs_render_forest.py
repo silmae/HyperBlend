@@ -245,7 +245,7 @@ def composite_material_mask():
     )  # Create new File Output node
 
     # Set saving path and image settings
-    f_output.base_path = PH.path_directory_system_rend_visibility_maps(SCENE_ID)
+    f_output.base_path = PH.directory_system_rend_visibility_maps(SCENE_ID)
     f_output.format.file_format = "TIFF"
     f_output.format.color_mode = "BW"  # no colors needed
     f_output.format.tiff_codec = "NONE"  # no packing of images
@@ -328,7 +328,7 @@ def call_blender_render(write_still=True, animation=False):
     If the rendering crashes, one can inspect the scene file to find out what went wrong.
     """
 
-    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_system_simulation_blend(SCENE_ID))
+    bpy.ops.wm.save_as_mainfile(filepath=PH.file_blend_system_simulation(SCENE_ID))
     ops.render.render(write_still=write_still, animation=animation)
 
 
@@ -347,7 +347,7 @@ def render_sleeper_rgb():
         res_percent=100,
     )
     set_visibility(mode="Sleeper RGB")
-    image_path = PH.path_file_system_sim_preview(
+    image_path = PH.file_system_sim_preview(
         system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_sleeper
     )
     logging.info(f"Trying to render '{image_path}'.")
@@ -370,7 +370,7 @@ def render_walker_rgb():
         res_percent=100,
     )
     set_visibility(mode="Walker RGB")
-    image_path = PH.path_file_system_sim_preview(
+    image_path = PH.file_system_sim_preview(
         system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_walker
     )
     logging.info(f"Trying to render '{image_path}'.")
@@ -389,7 +389,7 @@ def render_drone_rgb():
         render_mode="rgb", camera="Drone RGB", res_x=res_x, res_y=res_y, res_percent=100
     )
     set_visibility(mode="Drone RGB")
-    image_path = PH.path_file_system_sim_preview(
+    image_path = PH.file_system_sim_preview(
         system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_drone
     )
     logging.info(f"Trying to render '{image_path}'.")
@@ -408,7 +408,7 @@ def render_tree_rgb():
         render_mode="rgb", camera="Tree RGB", res_x=res_x, res_y=res_y, res_percent=100
     )
     set_visibility(mode="Tree RGB")
-    image_path = PH.path_file_system_sim_preview(
+    image_path = PH.file_system_sim_preview(
         system_sim_name=SCENE_ID, image_name=C.filename_system_sim_preview_trees
     )
     logging.info(f"Trying to render '{image_path}'.")
@@ -432,7 +432,7 @@ def render_drone_hsi():
     )
     set_visibility(mode="Drone HSI")
     scene.render.filepath = PH.join(
-        PH.path_directory_system_rend_spectral(SCENE_ID), "band_####.tiff"
+        PH.directory_system_rend_spectral(SCENE_ID), "band_####.tiff"
     )
     call_blender_render(write_still=True, animation=True)
 
@@ -453,9 +453,7 @@ def render_visibility_maps():
     )
     set_visibility(mode="Drone HSI")
     image_name = f"visibility_map_rgb_preview.png"
-    image_path = PH.join(
-        PH.path_directory_system_rend_visibility_maps(SCENE_ID), image_name
-    )
+    image_path = PH.join(PH.directory_system_rend_visibility_maps(SCENE_ID), image_name)
     logging.info(f"Trying to render '{image_path}'.")
     scene.render.filepath = image_path
     call_blender_render(write_still=True)
@@ -546,7 +544,7 @@ if __name__ == "__main__":
     SCENE_ID = vars(args)[key_scene_id[1]]
 
     logging.error(
-        f"Hello, I am forest render script in '{PH.path_directory_system_simulation(SCENE_ID)}'"
+        f"Hello, I am forest render script in '{PH.directory_system_simulation(SCENE_ID)}'"
     )
 
     RENDER_MODE = vars(args)[key_render_mode[1]]
@@ -566,4 +564,4 @@ if __name__ == "__main__":
     else:
         logging.error(f"Render mode '{RENDER_MODE}' not recognised.")
 
-    bpy.ops.wm.save_as_mainfile(filepath=PH.path_file_system_simulation_blend(SCENE_ID))
+    bpy.ops.wm.save_as_mainfile(filepath=PH.file_blend_system_simulation(SCENE_ID))

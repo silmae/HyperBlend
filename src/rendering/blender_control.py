@@ -16,10 +16,12 @@ from src.setup.runtime_environment import RuntimeEnvironment
 def _get_blender_executable_path(runtime: RuntimeEnvironment):
     """Returns a path to a Blender executable file.
 
-    :param runtime: The runtime environment object which contains the path to the Blender executable.
-    :returns:Path to Blender executable.
-    :raises FileNotFoundError: if none of the paths actually contain the executable. This
-        can happen if there is no Blender installed or none of the installed versions is compatible.
+    :param runtime: The runtime environment object which contains the path to the
+        Blender executable.
+    :return: Path to Blender executable.
+    :raises FileNotFoundError: if none of the paths actually contain the executable.
+        This can happen if there is no Blender installed or none of the installed
+        versions is compatible.
     """
 
     if runtime.blender_executable_path is not None:
@@ -56,14 +58,13 @@ def _get_base_blender_args(
     :return:
         List of basic arguments for Blender scripts. Add additional arguments after '--' that are passed
         to the script itself.
-    :raises
-        RuntimeError if either script or scene cannot be found.
+    :raises: RuntimeError if either script or scene cannot be found.
     """
 
     if not script_name.endswith(".py"):
         script_name = script_name + ".py"
 
-    script_path = PH.join(PH.path_directory_blender_scripts(), script_name)
+    script_path = PH.join(PH.directory_code_blender_scripts(), script_name)
     if not os.path.exists(script_path):
         raise RuntimeError(f"Cannot find script '{script_path}'.")
 
@@ -101,7 +102,7 @@ def run_render_series(
 
     blender_args = _get_base_blender_args(
         script_name="bs_render_series.py",
-        scene_path=PH.path_slab_simulation_template(),
+        scene_path=PH.file_blend_slab_simulation_template(),
         runtime=runtime,
     )
 
@@ -189,7 +190,7 @@ def run_render_single(
 
     blender_args = _get_base_blender_args(
         script_name=C.blender_script_name,
-        scene_path=PH.path_slab_simulation_template(),
+        scene_path=PH.file_blend_slab_simulation_template(),
         runtime=runtime,
     )
 
@@ -229,7 +230,7 @@ def run_reflectance_lab(
 
     blender_args = _get_base_blender_args(
         script_name="bs_reflectance_lab.py",
-        scene_path=PH.path_slab_simulation_template(),
+        scene_path=PH.file_blend_slab_simulation_template(),
         runtime=runtime,
     )
 
@@ -263,11 +264,10 @@ def generate_forest_control(
     :param global_master:
         If True, the global master control file is updated based on the parameters
         in system_simulation template file. The result is saved to the project root directory.
-    :raises AttributeError:
-            if either
+    :raises AttributeError: if either
             1. global_master == False and scene_id == None, because there is nothing to be done.
             2. global_master == True and scene_id is not None, because the caller might expect
-                something else to happen than rewriting of the global master control.
+            something else to happen than rewriting of the global master control.
     """
 
     if not global_master and forest_id is None:
@@ -281,9 +281,9 @@ def generate_forest_control(
         )
 
     if global_master:
-        scene_path = PH.path_system_simulation_template()
+        scene_path = PH.file_blend_system_simulation_template()
     else:
-        scene_path = PH.path_file_system_simulation_blend(forest_id)
+        scene_path = PH.file_blend_system_simulation(forest_id)
 
     blender_args = _get_base_blender_args(
         script_name="bs_configuration.py", scene_path=scene_path, runtime=runtime
@@ -318,7 +318,7 @@ def setup_forest(runtime: RuntimeEnvironment, forest_id: str, leaf_name_list=Non
 
     blender_args = _get_base_blender_args(
         script_name="bs_setup_forest.py",
-        scene_path=PH.path_file_system_simulation_blend(forest_id),
+        scene_path=PH.file_blend_system_simulation(forest_id),
         runtime=runtime,
     )
 
@@ -351,7 +351,7 @@ def render_forest(runtime: RuntimeEnvironment, forest_id: str, render_mode: str)
 
     logging.info(f"Calling Blender for system simulation rendering.")
 
-    scene_path = PH.path_file_system_simulation_blend(forest_id)
+    scene_path = PH.file_blend_system_simulation(forest_id)
     blender_args = _get_base_blender_args(
         script_name="bs_render_forest", scene_path=scene_path, runtime=runtime
     )

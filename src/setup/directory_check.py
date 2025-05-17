@@ -21,7 +21,7 @@ def check_directory_structure(runtime: RuntimeEnvironment):
 
     logging.info("Checking directory structure")
 
-    def_dir = PH.path_directory_definitions()
+    def_dir = PH.directory_code_definitions()
     filename = C.file_directory_structure
     try:
         struct_toml = TH.read_toml_as_dict(directory=def_dir, filename=filename)
@@ -98,7 +98,7 @@ def _process_dir_struct_sub_entry(sub_dict: dict, dir_list):
 
     # First, check where we are in the directory structure starting from the project root
     # If we are not already at the root, append all entries in the path builder to the current path
-    current_path = PH.path_directory_project_root()
+    current_path = PH.directory_project_root()
     if entry_name != "Root":
         # Ignore the last part of the path builder if we are dealing with a file
         if entry_type == "file":

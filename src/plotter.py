@@ -111,7 +111,7 @@ def plot_default_soil_visualization(
     plt.legend()
 
     if save:
-        folder = PH.path_directory_reflectance_spectra()
+        folder = PH.directory_reflectance_spectra()
         image_name = "default_soils." + image_type
         path = PH.join(folder, image_name)
         logging.info(f"Saving default soil reflectance plot to '{path}'.")
@@ -171,7 +171,7 @@ def plot_blender_soil(
             raise AttributeError(
                 f"Saving soil reflectance requested but no system_simulation id was given to define proper path."
             )
-        directory = PH.path_directory_system_simulation(forest_id=forest_id)
+        directory = PH.directory_system_simulation(system_sim_name=forest_id)
         image_name = f"soil_reflectance_{soil_name}{C.postfix_plot_image_format}"
         path = PH.join(directory, image_name)
         logging.info(f"Saving blender soil plot to '{path}'.")
@@ -315,7 +315,7 @@ def plot_light_data(
 
     if forest_id is not None:
         path = PH.join(
-            PH.path_directory_system_simulation(forest_id),
+            PH.directory_system_simulation(forest_id),
             f"{sun_plot_name.rstrip('.txt')}.png",
         )
         plt.savefig(path, dpi=save_resolution)
@@ -360,7 +360,7 @@ def plot_nn_train_history(
     ax.legend()
 
     if save_thumbnail:
-        folder = PH.path_directory_slab_model(solver_name=solver_name)
+        folder = PH.directory_slab_model(slab_model_name=solver_name)
         image_name = "nn_train_history.png"
         path = PH.join(folder, image_name)
 
@@ -477,7 +477,7 @@ def plot_trained_leaf_models(
             ax.legend()
 
         if save_thumbnail:
-            folder = PH.path_directory_slab_model(solver_name=solver_name)
+            folder = PH.directory_slab_model(slab_model_name=solver_name)
             image_name = f"{set_name}_{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
@@ -563,7 +563,7 @@ def plot_training_data_set(
     ax.legend()
 
     if save:
-        folder = PH.path_directory_slab_model(solver_name=solver_name)
+        folder = PH.directory_slab_model(slab_model_name=solver_name)
         image_name = save_name + C.postfix_plot_image_format
         path = PH.join(folder, image_name)
         logging.info(f"Saving the training data visualization plot to '{path}'.")
@@ -678,7 +678,7 @@ def plot_wl_optimization_history(
     )
 
     if save_thumbnail is not None:
-        folder = PH.path_directory_optimization_result(set_name, sample_id)
+        folder = PH.directory_optimization_result(set_name, sample_id)
         image_name = FN.filename_wl_result_plot(wl)
         path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
@@ -766,7 +766,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     ax_inverted.plot(wls, tm_mean + (tm_std / 2), color="gray", ls="dashed")
 
     if save_thumbnail:
-        path = PH.path_file_slab_sim_result_plot(slab_sim_name=set_name)
+        path = PH.file_slab_sim_result_plot(slab_sim_name=set_name)
         logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution, bbox_inches="tight", pad_inches=0.1)
     if not dont_show:
@@ -835,7 +835,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        path = PH.path_file_slab_sim_error_plot(slab_sim_name=set_name)
+        path = PH.file_slab_sim_error_plot(slab_sim_name=set_name)
         logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
@@ -893,7 +893,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         )
 
         if save_thumbnail:
-            folder = PH.path_directory_target(set_name=set_name)
+            folder = PH.directory_top_target(slab_sim_name=set_name)
             image_name = FN.filename_resample_plot(sample_id=sample_id)
             path = PH.join(folder, image_name)
             logging.info(f"Saving resampling plot to '{path}'.")
@@ -977,9 +977,7 @@ def plot_sample_result(
         invert_tran=True,
     )
     if save_thumbnail:
-        path = PH.path_file_signal_result_plot(
-            slab_sim_name=set_name, signal_id=sample_id
-        )
+        path = PH.file_signal_result_plot(slab_sim_name=set_name, signal_id=sample_id)
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
@@ -1028,7 +1026,7 @@ def _plot_starting_guess_coeffs_fitting(
     plt.scatter(a_list, ai_list, label="Scattering anisotropy", color=color_ai, s=ms)
     plt.scatter(a_list, mf_list, label="Mix factor", color=color_mf, s=ms)
 
-    coeffs = TH.read_starting_guess_coeffs(solver_name=solver_name)
+    coeffs = TH.read_starting_guess_coeffs(slab_model_name=solver_name)
     for _, key in enumerate(coeffs):
         coeff = coeffs[key]
         y = np.array(
@@ -1044,7 +1042,7 @@ def _plot_starting_guess_coeffs_fitting(
     plt.legend()
 
     if save_thumbnail:
-        p = PH.path_directory_slab_simulation(slab_sim_name=set_name)
+        p = PH.directory_slab_simulation(slab_sim_name=set_name)
         image_name = f"variable_fitting.png"
         path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")

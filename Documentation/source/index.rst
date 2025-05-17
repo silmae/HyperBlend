@@ -25,6 +25,7 @@ The documentation is organized as follows:
    code/**
    license
    contributing
+   glossary
 
 Readme
 =========

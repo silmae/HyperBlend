@@ -1,9 +1,5 @@
 """
-All filepaths are handled here. Offers some basic operations, such as, creating
-the default folder structure, clearing certain folders and searchin for a certain
-wavelength subresults.
-
-Path getters are named like path_directory_xxx or path_file_xxx.
+TODO docs
 
 """
 
@@ -21,11 +17,10 @@ CSV_NEWLINE = ""
 CSV_DELIMITER = " "
 
 
-def copy_target(from_set: str, to_set: str):
-    """Copy leaf targets and sampling data as a new measurement set.
+def copy_slab_simulation_target(from_set: str, to_set: str):
+    """Copy slab simulation targets and sampling data as a new slab simulation.
 
-    This is mainly useful in debugging and comparing leaf simulation speed of
-    different methods.
+    See also :term:`Slab simulation`.
 
     :param from_set:
         Set name of the measurement set to copy from.
@@ -40,28 +35,28 @@ def copy_target(from_set: str, to_set: str):
     sample_ids = list_target_ids(from_set)
     for sample_id in sample_ids:
 
-        path_src_target = PH.path_file_target(
-            set_name=from_set, sample_id=sample_id, resampled=False
+        path_src_target = PH.file_slab_target(
+            slab_sim_name=from_set, signal_id=sample_id, resampled=False
         )
-        path_dst_target = PH.path_file_target(
-            set_name=to_set, sample_id=sample_id, resampled=False
+        path_dst_target = PH.file_slab_target(
+            slab_sim_name=to_set, signal_id=sample_id, resampled=False
         )
         if os.path.exists(path_src_target):
             shutil.copy2(path_src_target, path_dst_target)
 
-        path_src_target_resampled = PH.path_file_target(
-            set_name=from_set, sample_id=sample_id, resampled=True
+        path_src_target_resampled = PH.file_slab_target(
+            slab_sim_name=from_set, signal_id=sample_id, resampled=True
         )
-        path_dst_target_resampled = PH.path_file_target(
-            set_name=to_set, sample_id=sample_id, resampled=True
+        path_dst_target_resampled = PH.file_slab_target(
+            slab_sim_name=to_set, signal_id=sample_id, resampled=True
         )
         if os.path.exists(path_src_target_resampled):
             shutil.copy2(path_src_target_resampled, path_dst_target_resampled)
 
     # Copy sampling
-    src_sampling = PH.path_file_spectral_sampling(from_set)
+    src_sampling = PH.file_spectral_sampling(from_set)
     if os.path.exists(src_sampling):
-        dst_sampling = PH.path_file_spectral_sampling(to_set)
+        dst_sampling = PH.file_spectral_sampling(to_set)
         shutil.copy2(src_sampling, dst_sampling)
 
 
@@ -73,12 +68,12 @@ def create_top_level_slab_sim_directories(slab_simu_name: str):
     :param slab_simu_name: Name of the slab simulation.
     """
 
-    if not os.path.exists(PH.path_directory_slab_simulation_top()):
-        os.makedirs(PH.path_directory_slab_simulation_top())
-    if not os.path.exists(PH.path_directory_target(slab_simu_name)):
-        os.makedirs(PH.path_directory_target(slab_simu_name))
-    if not os.path.exists(PH.path_directory_result_signal_top(slab_simu_name)):
-        os.makedirs(PH.path_directory_result_signal_top(slab_simu_name))
+    if not os.path.exists(PH.directory_top_slab_simulation()):
+        os.makedirs(PH.directory_top_slab_simulation())
+    if not os.path.exists(PH.directory_top_target(slab_simu_name)):
+        os.makedirs(PH.directory_top_target(slab_simu_name))
+    if not os.path.exists(PH.directory_top_result_signal(slab_simu_name)):
+        os.makedirs(PH.directory_top_result_signal(slab_simu_name))
     # if not os.path.exists(PH.path_directory_set_result(set_name)):
     #     os.makedirs(PH.path_directory_set_result(set_name))
 
@@ -88,52 +83,44 @@ def create_signal_optimization_directories(slab_sim_name: str, signal_id: int):
 
     sample_folder_name = f"{C.signal_directory_prefix}_{signal_id}"
     sample_path = PH.join(
-        PH.path_directory_result_signal_top(slab_sim_name), sample_folder_name
+        PH.directory_top_result_signal(slab_sim_name), sample_folder_name
     )
 
     if not os.path.exists(sample_path):
         os.makedirs(sample_path)
 
     if not os.path.exists(
-        PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
+        PH.directory_slab_optimization_working(slab_sim_name, signal_id)
     ):
-        os.makedirs(
-            PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
-        )
-    if not os.path.exists(PH.path_directory_slab_temp_rend(slab_sim_name, signal_id)):
-        os.makedirs(PH.path_directory_slab_temp_rend(slab_sim_name, signal_id))
+        os.makedirs(PH.directory_slab_optimization_working(slab_sim_name, signal_id))
+    if not os.path.exists(PH.directory_slab_working_rend(slab_sim_name, signal_id)):
+        os.makedirs(PH.directory_slab_working_rend(slab_sim_name, signal_id))
     if not os.path.exists(
-        PH.path_directory_slab_rend_reference(
+        PH.directory_slab_rend_reference(
             C.imaging_type_refl,
-            PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id),
+            PH.directory_slab_optimization_working(slab_sim_name, signal_id),
         )
     ):
         os.makedirs(
-            PH.path_directory_slab_rend_reference(
+            PH.directory_slab_rend_reference(
                 C.imaging_type_refl,
-                PH.path_directory_slab_optimization_working_temp(
-                    slab_sim_name, signal_id
-                ),
+                PH.directory_slab_optimization_working(slab_sim_name, signal_id),
             )
         )
     if not os.path.exists(
-        PH.path_directory_slab_rend_reference(
+        PH.directory_slab_rend_reference(
             C.imaging_type_tran,
-            PH.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id),
+            PH.directory_slab_optimization_working(slab_sim_name, signal_id),
         )
     ):
         os.makedirs(
-            PH.path_directory_slab_rend_reference(
+            PH.directory_slab_rend_reference(
                 C.imaging_type_tran,
-                PH.path_directory_slab_optimization_working_temp(
-                    slab_sim_name, signal_id
-                ),
+                PH.directory_slab_optimization_working(slab_sim_name, signal_id),
             )
         )
-    if not os.path.exists(
-        PH.path_directory_optimization_result(slab_sim_name, signal_id)
-    ):
-        os.makedirs(PH.path_directory_optimization_result(slab_sim_name, signal_id))
+    if not os.path.exists(PH.directory_optimization_result(slab_sim_name, signal_id)):
+        os.makedirs(PH.directory_optimization_result(slab_sim_name, signal_id))
 
 
 def list_target_ids(set_name: str):
@@ -148,7 +135,7 @@ def list_target_ids(set_name: str):
     """
 
     ids = []
-    for filename in os.listdir(PH.path_directory_target(set_name)):
+    for filename in os.listdir(PH.directory_top_target(set_name)):
         if re.match(r"target_[0-9]+\.toml", filename):
             ids.append(FN.parse_sample_id(filename))
     return ids
@@ -164,8 +151,8 @@ def list_finished_sample_ids(set_name: str):
     """
 
     ids = []
-    for sample_folder_name in os.listdir(PH.path_directory_result_signal_top(set_name)):
-        p = PH.join(PH.path_directory_result_signal_top(set_name), sample_folder_name)
+    for sample_folder_name in os.listdir(PH.directory_top_result_signal(set_name)):
+        p = PH.join(PH.directory_top_result_signal(set_name), sample_folder_name)
         for filename in os.listdir(p):
             if filename.startswith(C.filename_result_signal) and filename.endswith(
                 C.postfix_text_data_format
@@ -189,7 +176,7 @@ def subresult_exists(set_name: str, wl: float, sample_id: int) -> bool:
         True, if the subresult file was found, False otherwise.
     """
 
-    p = PH.path_file_wl_result(set_name, wl, sample_id)
+    p = PH.file_wl_result(set_name, sample_id, wl)
     res = os.path.exists(p)
     return res
 
@@ -206,22 +193,22 @@ def clear_all_rendered_images(set_name: str) -> None:
 def clear_rend_leaf(set_name: str, sample_id: int) -> None:
     """Clears leaf render folder of given set, but leave reference renders untouched."""
 
-    clear_folder(PH.path_directory_slab_temp_rend(set_name, sample_id))
+    clear_folder(PH.directory_slab_working_rend(set_name, sample_id))
 
 
 def clear_rend_refs(set_name: str, sample_id: int) -> None:
     """Clears reference render folders of given set but leave leaf renders untouched."""
 
     clear_folder(
-        PH.path_directory_slab_rend_reference(
+        PH.directory_slab_rend_reference(
             C.imaging_type_refl,
-            PH.path_directory_slab_optimization_working_temp(set_name, sample_id),
+            PH.directory_slab_optimization_working(set_name, sample_id),
         )
     )
     clear_folder(
-        PH.path_directory_slab_rend_reference(
+        PH.directory_slab_rend_reference(
             C.imaging_type_tran,
-            PH.path_directory_slab_optimization_working_temp(set_name, sample_id),
+            PH.directory_slab_optimization_working(set_name, sample_id),
         )
     )
 
@@ -234,42 +221,6 @@ def clear_folder(path: str) -> None:
         list(map(os.unlink, (PH.join(norm_path, f) for f in os.listdir(norm_path))))
     else:
         logging.warning(f"No files to delete in '{norm_path}'.")
-
-
-def search_by_wl(target_type: str, imaging_type: str, wl: float, base_path: str) -> str:
-    """Search a folder for an image of given wavelength.
-
-    A path to the image is returned.
-
-    :param target_type: String either 'leaf' or 'reference'. Use the ones listed in
-        constants.py.
-    :param imaging_type: String either 'refl' for reflectance or 'tran' for
-        transmittance. Use the ones listed in constants.py.
-    :param wl: Wavelength.
-    :param base_path: Path to the image folder. Usually the one returned by
-        get_image_file_path() is correct and other paths should only be used f
-        or testing and debugging.
-
-    :returns: Returns absolute path to the image.
-
-    :raises FileNotFoundError: if not found
-    """
-
-    def almost_equals(f1: float, f2: float, epsilon=0.01):
-        """Custom float equality for our desired 2 decimal accuracy."""
-
-        res = abs(f1 - f2) <= epsilon
-        return res
-
-    folder = PH.path_directory_slab_working_refl_or_trans(
-        target_type, imaging_type, base_path
-    )
-    for filename in os.listdir(folder):
-        image_wl = FN.parse_wl_from_filename(filename)
-        if almost_equals(wl, image_wl):
-            return PH.path_file_rendered_image(target_type, imaging_type, wl, base_path)
-
-    raise FileNotFoundError(f"Could not find {wl} nm image from {folder}.")
 
 
 def expand(set_name: str) -> None:
@@ -312,7 +263,7 @@ def reduce(set_name: str) -> None:
     sample_ids = list_finished_sample_ids(set_name)
     logging.info(f"Removing generated plots from set '{set_name}'.")
     for sample_id in sample_ids:
-        p = PH.path_directory_optimization_result(set_name, sample_id)
+        p = PH.directory_optimization_result(set_name, sample_id)
         file_list = os.listdir(p)
         if len(file_list) == 0:
             logging.info(f"Nothing to remove. Directory '{p}' already empty.")
@@ -326,57 +277,62 @@ def reduce(set_name: str) -> None:
                 # print(plot_path)
 
 
-def duplicate_forest_scene(copy_forest_id=None, custom_forest_id: str = None) -> str:
-    """Creates a uniquely named copy of a system_simulation scene and returns its id.
+def duplicate_system_simulation_scene(
+    system_sim_to_duplicate: str = None, new_system_sim_name: str = None
+) -> str:
+    """Creates a duplicate of a system simulation Blender scene.
 
-    :param copy_forest_id: If provided, a system_simulation with this id is copied. If
-        `None`, the default template system_simulation is copied.
-    :param custom_forest_id: If given, this will be the identifier for the new
-        system_simulation instead of the standard generated id.
+    Creates the necessary directory structure.
 
-    :return: Returns custom_forest_id if it was given. Otherwise, an id
-        will be generated for the scene.
+    :param system_sim_to_duplicate: If provided, a system_simulation scene with this
+        name is duplicated. If not provided, the default template system_simulation is
+        used. See also :term:`system_sim_name`.
+    :param new_system_sim_name: If given, this will be the name of the new system
+        simulation scene. If not provided, a name based on date time will be generated.
+
+    :return: If new_system_sim_name is not provided, a name based on date time will
+        be returned.
+
+    :raises FileNotFoundError: If the system simulation scene to duplicate does not exist.
     """
 
-    now = datetime.datetime.now()
-    if custom_forest_id is not None:
-        dst_forest_id = custom_forest_id
+    if new_system_sim_name is not None:
+        dst_system_sim_name = new_system_sim_name
     else:
-        dst_forest_id = (
+        now = datetime.datetime.now()
+        dst_system_sim_name = (
             f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
         )
 
-    if copy_forest_id is not None:
-        source_path = PH.path_file_system_simulation_blend(copy_forest_id)
+    if system_sim_to_duplicate is not None:
+        source_path = PH.file_blend_system_simulation(system_sim_to_duplicate)
     else:
-        source_path = PH.path_system_simulation_template()
+        source_path = PH.file_blend_system_simulation_template()
 
     if os.path.exists(source_path):
-        if not os.path.exists(PH.path_directory_system_simulation(dst_forest_id)):
-            os.makedirs(PH.path_directory_system_simulation(dst_forest_id))
+        if not os.path.exists(PH.directory_system_simulation(dst_system_sim_name)):
+            os.makedirs(PH.directory_system_simulation(dst_system_sim_name))
 
-        shutil.copy2(source_path, PH.path_file_system_simulation_blend(dst_forest_id))
+        shutil.copy2(source_path, PH.file_blend_system_simulation(dst_system_sim_name))
 
-        if not os.path.exists(PH.path_directory_forest_rend(dst_forest_id)):
-            os.makedirs(PH.path_directory_forest_rend(dst_forest_id))
-        if not os.path.exists(PH.path_directory_system_rend_spectral(dst_forest_id)):
-            os.makedirs(PH.path_directory_system_rend_spectral(dst_forest_id))
+        if not os.path.exists(PH.directory_system_sim_rend(dst_system_sim_name)):
+            os.makedirs(PH.directory_system_sim_rend(dst_system_sim_name))
+        if not os.path.exists(PH.directory_system_rend_spectral(dst_system_sim_name)):
+            os.makedirs(PH.directory_system_rend_spectral(dst_system_sim_name))
         if not os.path.exists(
-            PH.path_directory_system_rend_visibility_maps(dst_forest_id)
+            PH.directory_system_rend_visibility_maps(dst_system_sim_name)
         ):
-            os.makedirs(PH.path_directory_system_rend_visibility_maps(dst_forest_id))
+            os.makedirs(PH.directory_system_rend_visibility_maps(dst_system_sim_name))
     else:
-        raise RuntimeError(
-            f"Forest scene not found for duplication from '{source_path}'. "
-            f"If you tried to duplicate from template system_simulation, check git repository "
-            f"to restore the template to root directory. Otherwise check that system_simulation "
-            f"id is correct."
+        raise FileNotFoundError(
+            f"System simulation scene not found for duplication from '{source_path}'. "
         )
     logging.info(
-        f"Forest scene copied with id '{dst_forest_id}' to '{PH.path_directory_system_simulation(dst_forest_id)}'."
+        f"System simulation scene copied with id '{dst_system_sim_name}' to "
+        f"'{PH.directory_system_simulation(dst_system_sim_name)}'."
     )
 
-    return dst_forest_id
+    return dst_system_sim_name
 
 
 def copy_leaf_material_parameters(
@@ -410,7 +366,7 @@ def copy_leaf_material_parameters(
         ai = result_dict[C.key_set_result_wl_ai_mean]
         mf = result_dict[C.key_set_result_wl_mf_mean]
 
-        plot_path = PH.path_file_slab_sim_result_plot(slab_sim_name=source_set_name)
+        plot_path = PH.file_slab_sim_result_plot(slab_sim_name=source_set_name)
 
     else:
         result_dict = TH.read_sample_result(
@@ -422,12 +378,12 @@ def copy_leaf_material_parameters(
         ai = result_dict[C.key_sample_result_ai]
         mf = result_dict[C.key_sample_result_mf]
 
-        folder = PH.path_directory_target(set_name=source_set_name)
+        folder = PH.directory_top_target(slab_sim_name=source_set_name)
         image_name = FN.filename_resample_plot(sample_id=sample_id)
         plot_path = PH.join(folder, image_name)
 
     # Copy leaf plot to scene dir for convenience
-    folder = PH.path_directory_system_simulation(forest_id=forest_id)
+    folder = PH.directory_system_simulation(system_sim_name=forest_id)
     image_name = f"leaf_spectrum_plot{leaf_id}{C.postfix_plot_image_format}"
     dst_plot_path = PH.join(folder, image_name)
     try:
@@ -438,7 +394,7 @@ def copy_leaf_material_parameters(
         )
 
     with open(
-        PH.path_file_system_slab_csv(forest_id, leaf_id), "w+", newline=CSV_NEWLINE
+        PH.file_system_slab_csv(forest_id, leaf_id), "w+", newline=CSV_NEWLINE
     ) as csvfile:
 
         writer = csv.writer(
@@ -475,9 +431,9 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
     """
 
     if lighting_type == "sun":
-        p = PH.path_file_system_forest_sun_spectra_csv(forest_id)
+        p = PH.file_system_sim_light_spectra_csv(forest_id)
     elif lighting_type == "sky":
-        p = PH.path_file_forest_sky_csv(forest_id)
+        p = PH.file_forest_sky_csv(forest_id)
     else:
         raise ValueError(
             f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'."
@@ -510,9 +466,9 @@ def read_blender_light_spectra(forest_id: str, lighting_type="sun"):
     """
 
     if lighting_type == "sun":
-        p = PH.path_file_system_forest_sun_spectra_csv(forest_id)
+        p = PH.file_system_sim_light_spectra_csv(forest_id)
     elif lighting_type == "sky":
-        p = PH.path_file_forest_sky_csv(forest_id)
+        p = PH.file_forest_sky_csv(forest_id)
     else:
         raise ValueError(
             f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'."
@@ -538,7 +494,7 @@ def read_blender_light_spectra(forest_id: str, lighting_type="sun"):
 
 def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
 
-    p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
+    p = PH.file_system_sim_rgb_colors_csv(system_sim_name=forest_id)
 
     with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 
@@ -566,7 +522,7 @@ def write_blender_soil(forest_id: str, wls, reflectances):
         List of sun irradiances to be written.
     """
 
-    p = PH.path_file_forest_soil_csv(forest_id=forest_id)
+    p = PH.file_forest_soil_csv(system_sim_name=forest_id)
 
     with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 

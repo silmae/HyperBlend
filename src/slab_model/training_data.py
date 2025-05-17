@@ -32,7 +32,9 @@ b1 = 0.02
 b2 = -0.035
 
 
-def visualize_training_data_pruning(set_name="training_data", show=False, save=True, solver_name=None):
+def visualize_training_data_pruning(
+    set_name="training_data", show=False, save=True, solver_name=None
+):
     """Visualizes training data. Can be saved to disk or shown directly (or both).
 
     :param solver_name:
@@ -55,15 +57,39 @@ def visualize_training_data_pruning(set_name="training_data", show=False, save=T
     t = np.array(result[C.key_sample_result_tm])
     re = np.array(result[C.key_sample_result_re])
     te = np.array(result[C.key_sample_result_te])
-    _, _, _, _, r_bad, t_bad = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=True)
-    _, _, _, _, r_good, t_good = prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
-    plotter.plot_training_data_set(r_good=r_good, t_good=t_good, r_bad=r_bad, t_bad=t_bad, k1=k1, b1=b1, k2=k2, b2=b2,
-                                   show=show, save=save, save_name=set_name, solver_name=solver_name)
+    _, _, _, _, r_bad, t_bad = prune_training_data(
+        ad, sd, ai, mf, r, t, re, te, invereted=True
+    )
+    _, _, _, _, r_good, t_good = prune_training_data(
+        ad, sd, ai, mf, r, t, re, te, invereted=False
+    )
+    plotter.plot_training_data_set(
+        r_good=r_good,
+        t_good=t_good,
+        r_bad=r_bad,
+        t_bad=t_bad,
+        k1=k1,
+        b1=b1,
+        k2=k2,
+        b2=b2,
+        show=show,
+        save=save,
+        save_name=set_name,
+        solver_name=solver_name,
+    )
 
 
-def generate_train_data(runtime: RuntimeEnvironment, set_name='training_data', dry_run=True, cuts_per_dim=10, similarity_rt=0.25,
-                        starting_guess_type='curve', data_generation_diff_step=0.01,
-                        solver_name_to_use: str = None, solver_name_to_save: str = None):
+def generate_train_data(
+    runtime: RuntimeEnvironment,
+    set_name="training_data",
+    dry_run=True,
+    cuts_per_dim=10,
+    similarity_rt=0.25,
+    starting_guess_type="curve",
+    data_generation_diff_step=0.01,
+    solver_name_to_use: str = None,
+    solver_name_to_save: str = None,
+):
     """Generate reflectance-transmittance pairs as training data for surface fitting and neural network.
 
     Generated data will have fake wavelengths attached to them. They run from 1 to the number of
@@ -103,7 +129,9 @@ def generate_train_data(runtime: RuntimeEnvironment, set_name='training_data', d
     FH.create_top_level_slab_sim_directories(set_name)
 
     data = []
-    fake_wl = 1  # Set dummy wavelengths so that the rest of the code is ok with the files
+    fake_wl = (
+        1  # Set dummy wavelengths so that the rest of the code is ok with the files
+    )
     R = np.linspace(0, 1.0, cuts_per_dim, endpoint=True)
     T = np.linspace(0, 1.0, cuts_per_dim, endpoint=True)
     for i, r in enumerate(R):
@@ -127,22 +155,39 @@ def generate_train_data(runtime: RuntimeEnvironment, set_name='training_data', d
             fake_wl += 1
 
     if not dry_run:
-        logging.info(f"Generated {len(data)} evenly spaced reflectance transmittance targets.")
+        logging.info(
+            f"Generated {len(data)} evenly spaced reflectance transmittance targets."
+        )
 
-        p_solver_dir = PH.path_directory_slab_model(solver_name=solver_name_to_save)
+        p_solver_dir = PH.directory_slab_model(slab_model_name=solver_name_to_save)
         if not os.path.exists(p_solver_dir):
             os.makedirs(p_solver_dir)
 
         TH.write_target(set_name, data, sample_id=0)
-        o = Optimization(runtime=runtime, set_name=set_name, diffstep=data_generation_diff_step, starting_guess_type=starting_guess_type, solver_name=solver_name_to_use)
+        o = Optimization(
+            runtime=runtime,
+            set_name=set_name,
+            diffstep=data_generation_diff_step,
+            starting_guess_type=starting_guess_type,
+            solver_name=solver_name_to_use,
+        )
         o.run_optimization(resampled=False)
-        visualize_training_data_pruning(set_name=set_name, show=False, save=True, solver_name=solver_name_to_save)
+        visualize_training_data_pruning(
+            set_name=set_name, show=False, save=True, solver_name=solver_name_to_save
+        )
     else:
-        logging.info(f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
-                     f"but this was just a dry run..")
+        logging.info(
+            f"Would have generated {len(data)} evenly spaced reflectance transmittance pairs"
+            f"but this was just a dry run.."
+        )
 
 
-def generate_starting_guess(runtime: RuntimeEnvironment, slab_sim_name: str = None, solver_name: str = None, step=None):
+def generate_starting_guess(
+    runtime: RuntimeEnvironment,
+    slab_sim_name: str = None,
+    solver_name: str = None,
+    step=None,
+):
     """Generates starting guess to be used later on real data.
 
     Starting guess is generated by running the optimization procedure on a test target
@@ -162,14 +207,25 @@ def generate_starting_guess(runtime: RuntimeEnvironment, slab_sim_name: str = No
         slab_sim_name = C.starting_guess_set_name
 
     FH.create_top_level_slab_sim_directories(slab_simu_name=slab_sim_name)
-    o = Optimization(runtime=runtime, set_name=slab_sim_name, starting_guess_type='hard-coded', solver_name=solver_name)
+    o = Optimization(
+        runtime=runtime,
+        set_name=slab_sim_name,
+        starting_guess_type="hard-coded",
+        solver_name=solver_name,
+    )
     make_linear_test_target(set_name=slab_sim_name, step=step)
     o.run_optimization(use_threads=True, use_basin_hopping=False, resampled=False)
-    fit_starting_guess_coefficients(slab_sim_name=slab_sim_name, solver_name=solver_name)
-    plotter._plot_starting_guess_coeffs_fitting(set_name=slab_sim_name,solver_name=solver_name)
+    fit_starting_guess_coefficients(
+        slab_sim_name=slab_sim_name, solver_name=solver_name
+    )
+    plotter._plot_starting_guess_coeffs_fitting(
+        set_name=slab_sim_name, solver_name=solver_name
+    )
 
 
-def fit_starting_guess_coefficients(degree=4, slab_sim_name: str = None, solver_name: str = None):
+def fit_starting_guess_coefficients(
+    degree=4, slab_sim_name: str = None, solver_name: str = None
+):
     """Fits polynomial coefficients to linear test run that are used as a starting guess for the optimization.
 
     NOTE: One run of this is already stored in the code repo, so this only needs to be done if they corrupt somehow.
@@ -185,13 +241,17 @@ def fit_starting_guess_coefficients(degree=4, slab_sim_name: str = None, solver_
 
     if slab_sim_name is None:
         slab_sim_name = C.starting_guess_set_name
-    a_list, ad_list, sd_list, ai_list, mf_list = get_starting_guess_points(set_name=slab_sim_name)
+    a_list, ad_list, sd_list, ai_list, mf_list = get_starting_guess_points(
+        set_name=slab_sim_name
+    )
 
     ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree)
     sd_coeffs = GU.fit_poly(a_list, sd_list, degree=degree)
     ai_coeffs = GU.fit_poly(a_list, ai_list, degree=degree)
     mf_coeffs = GU.fit_poly(a_list, mf_list, degree=degree)
-    TH.write_starting_guess_coeffs(ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs, solver_name=solver_name)
+    TH.write_starting_guess_coeffs(
+        ad_coeffs, sd_coeffs, ai_coeffs, mf_coeffs, solver_name=solver_name
+    )
 
 
 def make_linear_test_target(set_name: str, step: int = None):
@@ -212,9 +272,9 @@ def make_linear_test_target(set_name: str, step: int = None):
 
     start_wl = 400
     end_wl = 2500
-    wls = np.arange(start_wl,end_wl+1, step=step)
-    r_m = np.linspace(0,0.5,len(wls))
-    t_m = np.linspace(0,0.5,len(wls))
+    wls = np.arange(start_wl, end_wl + 1, step=step)
+    r_m = np.linspace(0, 0.5, len(wls))
+    t_m = np.linspace(0, 0.5, len(wls))
     _make_target(set_name, wls, r_m, t_m)
 
 
@@ -234,7 +294,9 @@ def _make_target(set_name: str, wls, r_m, t_m, sample_id=None):
     """
 
     if len(wls) != len(r_m) or len(wls) != len(t_m):
-        raise ValueError(f'Length of the lists of wavelengths ({len(wls)}), reflectances ({len(r_m)}) or transmittances ({len(t_m)}) did not match.')
+        raise ValueError(
+            f"Length of the lists of wavelengths ({len(wls)}), reflectances ({len(r_m)}) or transmittances ({len(t_m)}) did not match."
+        )
     if sample_id is None:
         sample_id = 0
     FH.create_signal_optimization_directories(set_name, sample_id)

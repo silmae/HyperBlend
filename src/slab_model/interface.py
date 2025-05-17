@@ -117,7 +117,7 @@ def solve_leaf_material_parameters(
     """
 
     if copyof:
-        FH.copy_target(from_set=copyof, to_set=set_name)
+        FH.copy_slab_simulation_target(from_set=copyof, to_set=set_name)
     else:
         LC.initialize_directories(
             slab_sim_name=set_name, clear_old_results=clear_old_results

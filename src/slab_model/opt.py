@@ -304,9 +304,7 @@ def optimize_single_wl(
 
         B.run_render_single(
             runtime=runtime,
-            rend_base_path=P.path_directory_slab_optimization_working_temp(
-                set_name, sample_id
-            ),
+            rend_base_path=P.directory_slab_optimization_working(set_name, sample_id),
             wl=wl,
             ad=ad,
             sd=sd,
@@ -321,16 +319,12 @@ def optimize_single_wl(
         r = DU.get_relative_refl_or_tran(
             C.imaging_type_refl,
             wl,
-            base_path=P.path_directory_slab_optimization_working_temp(
-                set_name, sample_id
-            ),
+            base_path=P.directory_slab_optimization_working(set_name, sample_id),
         )
         t = DU.get_relative_refl_or_tran(
             C.imaging_type_tran,
             wl,
-            base_path=P.path_directory_slab_optimization_working_temp(
-                set_name, sample_id
-            ),
+            base_path=P.directory_slab_optimization_working(set_name, sample_id),
         )
 
         # Debug print
@@ -361,9 +355,7 @@ def optimize_single_wl(
     # Render references here as it only needs to be done once per wavelength
     B.run_render_single(
         runtime=runtime,
-        rend_base_path=P.path_directory_slab_optimization_working_temp(
-            set_name, sample_id
-        ),
+        rend_base_path=P.directory_slab_optimization_working(set_name, sample_id),
         wl=wl,
         ad=0,
         sd=0,
@@ -492,9 +484,7 @@ def optimize_single_wl(
     # Render one more time with best values (in case it was not the last run)
     B.run_render_single(
         runtime=runtime,
-        rend_base_path=P.path_directory_slab_optimization_working_temp(
-            set_name, sample_id
-        ),
+        rend_base_path=P.directory_slab_optimization_working(set_name, sample_id),
         wl=wl,
         ad=ad,
         sd=sd,
@@ -509,12 +499,12 @@ def optimize_single_wl(
     r_best = DU.get_relative_refl_or_tran(
         C.imaging_type_refl,
         wl,
-        base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
+        base_path=P.directory_slab_optimization_working(set_name, sample_id),
     )
     t_best = DU.get_relative_refl_or_tran(
         C.imaging_type_tran,
         wl,
-        base_path=P.path_directory_slab_optimization_working_temp(set_name, sample_id),
+        base_path=P.directory_slab_optimization_working(set_name, sample_id),
     )
 
     # Create wavelength result dictionary to be saved on disk.
@@ -583,7 +573,7 @@ def get_starting_guess(absorption: float, solver_name: str = None) -> tuple:
             res = ub
         return res
 
-    coeff_dict = TH.read_starting_guess_coeffs(solver_name=solver_name)
+    coeff_dict = TH.read_starting_guess_coeffs(slab_model_name=solver_name)
     absorption_density = f(coeff_dict[C.ad_coeffs], LOWER_BOUND[0], UPPER_BOUND[0])
     scattering_density = f(coeff_dict[C.sd_coeffs], LOWER_BOUND[1], UPPER_BOUND[1])
     scattering_anisotropy = f(coeff_dict[C.ai_coeffs], LOWER_BOUND[2], UPPER_BOUND[2])

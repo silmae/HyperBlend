@@ -96,9 +96,9 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
     if forest_id is not None:
         logging.info(
             f"Trying to find lighting data from system_simulation scene directory "
-            f"'{PH.path_directory_system_simulation(forest_id)}'."
+            f"'{PH.directory_system_simulation(forest_id)}'."
         )
-        p = PH.join(PH.path_directory_system_simulation(forest_id), file_name)
+        p = PH.join(PH.directory_system_simulation(forest_id), file_name)
         if os.path.exists(p):
             logging.info(f"Light data found.")
             return p
@@ -107,7 +107,7 @@ def _find_lighting_file(file_name: str, forest_id: str = None) -> str:
                 f"Could not find sun data from scene directory. Now searching default directory."
             )
 
-    p_dir = PH.path_directory_light_spectra()
+    p_dir = PH.directory_light_spectra()
 
     p = PH.join(p_dir, file_name)
     if os.path.exists(p):

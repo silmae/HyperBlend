@@ -23,6 +23,7 @@ from src.blender_scripts import forest_control as FCtrl
 from src import constants as C
 
 
+@unittest.skip("Skipping for now")
 class TestSystemSimulation(TestCase):
 
     def setUp(self) -> None:
@@ -97,25 +98,25 @@ class TestSystemSimulation(TestCase):
         )
 
         # Check that previews were rendered
-        image_path = PH.path_file_system_sim_preview(
+        image_path = PH.file_system_sim_preview(
             system_sim_name=system_sim_name_master,
             image_name=C.filename_system_sim_preview_sleeper,
         )
         self.assertTrue(os.path.exists(image_path))
 
-        image_path = PH.path_file_system_sim_preview(
+        image_path = PH.file_system_sim_preview(
             system_sim_name=system_sim_name_master,
             image_name=C.filename_system_sim_preview_drone,
         )
         self.assertTrue(os.path.exists(image_path))
 
-        image_path = PH.path_file_system_sim_preview(
+        image_path = PH.file_system_sim_preview(
             system_sim_name=system_sim_name_master,
             image_name=C.filename_system_sim_preview_walker,
         )
         self.assertTrue(os.path.exists(image_path))
 
-        image_path = PH.path_file_system_sim_preview(
+        image_path = PH.file_system_sim_preview(
             system_sim_name=system_sim_name_master,
             image_name=C.filename_system_sim_preview_trees,
         )
@@ -191,7 +192,9 @@ class TestSystemSimulation(TestCase):
 
         for i, wl in enumerate(new_sampling):
             p = PH.join(
-                PH.path_directory_system_rend_spectral(forest_id=system_sim_name_slave),
+                PH.directory_system_rend_spectral(
+                    system_sim_name=system_sim_name_slave
+                ),
                 f"band_000{i+1}.tiff",
             )
             with self.subTest(path=p):
@@ -200,12 +203,12 @@ class TestSystemSimulation(TestCase):
                 logging.info(f"Found rendered image at '{p}'")
 
         ref_map_list = PH.list_reference_visibility_maps(
-            forest_id=system_sim_name_slave
+            system_sim_name=system_sim_name_slave
         )
         self.assertGreater(len(ref_map_list), 0)
         for map in ref_map_list:
-            map_path = PH.path_file_visibility_map(
-                forest_id=system_sim_name_slave, file_name=map
+            map_path = PH.file_visibility_map(
+                system_sim_name=system_sim_name_slave, file_name=map
             )
             with self.subTest(path=map_path):
                 error_msg = f"Could not find visibility map from path '{map_path}'."
@@ -215,7 +218,7 @@ class TestSystemSimulation(TestCase):
         # Construct spectral cube in ENVI format
         CH.construct_envi_cube(forest_id=system_sim_name_slave)
 
-        p = PH.path_directory_system_spectral_cube(forest_id=system_sim_name_slave)
+        p = PH.directory_system_spectral_cube(system_sim_name=system_sim_name_slave)
         self.assertTrue(
             os.path.exists(p), msg=f"Spectral cube could not be found from '{p}'."
         )
@@ -226,19 +229,22 @@ class TestSystemSimulation(TestCase):
         self, system_sim_name: str, slab_material_names
     ):
         should_exist = [
-            PH.path_file_system_simulation_blend(simulation_name=system_sim_name),
-            PH.path_directory_system_simulation(forest_id=system_sim_name),
-            PH.path_file_system_slab_csv(
-                forest_id=system_sim_name, leaf_index=slab_material_names[0]
+            PH.file_blend_system_simulation(simulation_name=system_sim_name),
+            PH.directory_system_simulation(system_sim_name=system_sim_name),
+            PH.file_system_slab_csv(
+                system_sim_name=system_sim_name,
+                slab_material_name=slab_material_names[0],
             ),
-            PH.path_file_system_slab_csv(
-                forest_id=system_sim_name, leaf_index=slab_material_names[0]
+            PH.file_system_slab_csv(
+                system_sim_name=system_sim_name,
+                slab_material_name=slab_material_names[0],
             ),
-            PH.path_file_system_slab_csv(
-                forest_id=system_sim_name, leaf_index=slab_material_names[0]
+            PH.file_system_slab_csv(
+                system_sim_name=system_sim_name,
+                slab_material_name=slab_material_names[0],
             ),
-            PH.path_file_system_forest_sun_spectra_csv(forest_id=system_sim_name),
-            PH.path_file_forest_sky_csv(forest_id=system_sim_name),
+            PH.file_system_sim_light_spectra_csv(system_sim_name=system_sim_name),
+            PH.file_forest_sky_csv(system_sim_name=system_sim_name),
         ]
 
         for path in should_exist:

@@ -15,7 +15,7 @@ from src.slab_model import surface_functions as FF
 
 def predict(target_refl, target_tran, solver_dirname: str):
     """Predicts the surface model parameters for given r_m and t_m.
-    
+
     :param target_refl: Target reflectance.
     :param target_tran: Target transmittance.
     :param solver_dirname: Name of the (directory of the) surface model to be used. If None, the default
@@ -25,18 +25,26 @@ def predict(target_refl, target_tran, solver_dirname: str):
     """
 
     param_dict = TH.read_surface_model_parameters(solver_dirname)
-    ad_p = param_dict['ad']
-    sd_p = param_dict['sd']
-    ai_p = param_dict['ai']
-    mf_p = param_dict['mf']
-    ad_raw = np.clip(FF.function_exp(np.array([target_refl, target_tran]), *ad_p), 0.0, 1.0)
-    sd_raw = np.clip(FF.function_log(np.array([target_refl, target_tran]), *sd_p), 0.0, 1.0)
-    ai_raw = np.clip(FF.function_polynomial(np.array([target_refl, target_tran]), *ai_p), 0.0, 1.0)
-    mf_raw = np.clip(FF.function_exp(np.array([target_refl, target_tran]), *mf_p), 0.0, 1.0)
+    ad_p = param_dict["ad"]
+    sd_p = param_dict["sd"]
+    ai_p = param_dict["ai"]
+    mf_p = param_dict["mf"]
+    ad_raw = np.clip(
+        FF.function_exp(np.array([target_refl, target_tran]), *ad_p), 0.0, 1.0
+    )
+    sd_raw = np.clip(
+        FF.function_log(np.array([target_refl, target_tran]), *sd_p), 0.0, 1.0
+    )
+    ai_raw = np.clip(
+        FF.function_polynomial(np.array([target_refl, target_tran]), *ai_p), 0.0, 1.0
+    )
+    mf_raw = np.clip(
+        FF.function_exp(np.array([target_refl, target_tran]), *mf_p), 0.0, 1.0
+    )
     return ad_raw, sd_raw, ai_raw, mf_raw
 
 
-def train(training_sim_name='training_data', solver_save_name: str = None):
+def train(training_sim_name="training_data", solver_save_name: str = None):
     """Train surface model.
 
     :param training_sim_name:
@@ -48,14 +56,18 @@ def train(training_sim_name='training_data', solver_save_name: str = None):
     """
 
     logging.info(f"Starting surface model training.")
-    ad, sd, ai, mf, r, t, re, te = TU.get_training_data(training_sim_name=training_sim_name)
-    ad, sd, ai, mf, r, t = TU.prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False)
+    ad, sd, ai, mf, r, t, re, te = TU.get_training_data(
+        training_sim_name=training_sim_name
+    )
+    ad, sd, ai, mf, r, t = TU.prune_training_data(
+        ad, sd, ai, mf, r, t, re, te, invereted=False
+    )
 
     surface_param_dict = {
-        'ad': curve_fit(FF.function_exp, [r, t], ad, p0=FF.get_x0())[0],
-        'sd': curve_fit(FF.function_log, [r, t], sd, p0=FF.get_x0())[0],
-        'ai': curve_fit(FF.function_polynomial, [r, t], ai, p0=FF.get_x0())[0],
-        'mf': curve_fit(FF.function_exp, [r, t], mf, p0=FF.get_x0())[0],
+        "ad": curve_fit(FF.function_exp, [r, t], ad, p0=FF.get_x0())[0],
+        "sd": curve_fit(FF.function_log, [r, t], sd, p0=FF.get_x0())[0],
+        "ai": curve_fit(FF.function_polynomial, [r, t], ai, p0=FF.get_x0())[0],
+        "mf": curve_fit(FF.function_exp, [r, t], mf, p0=FF.get_x0())[0],
     }
 
     # file_name = FN.get_surface_model_save_name(training_set_name=training_sim_name)
@@ -71,5 +83,5 @@ def exists(solver_dirname=None):
         Returns True if surface model parameters exist, False otherwise.
     """
 
-    p = PH.path_file_surface_model_parameters(solver_dirname=solver_dirname)
+    p = PH.file_surface_model_parameters(slab_model_name=solver_dirname)
     return os.path.exists(p)

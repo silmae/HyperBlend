@@ -63,17 +63,17 @@ class TestTraining(TestCase):
         for i in range(3):
             model_name = f"{model_name_base}{i+1}"
 
-            p = PH.path_directory_slab_model(model_name)
+            p = PH.directory_slab_model(model_name)
             self.assertTrue(
                 os.path.exists(p), msg=f"Model directory {p} does not exist."
             )
 
-            p = PH.join(PH.path_directory_slab_model(model_name), C.slab_surf_name)
+            p = PH.join(PH.directory_slab_model(model_name), C.slab_surf_name)
             self.assertTrue(os.path.exists(p), msg=f"Model file {p} does not exist.")
 
             if i == 2:
                 # Check if the nn model exists only for the last iteration
-                p = PH.join(PH.path_directory_slab_model(model_name), C.slab_nn_name)
+                p = PH.join(PH.directory_slab_model(model_name), C.slab_nn_name)
                 self.assertTrue(
                     os.path.exists(p), msg=f"Model file {p} does not exist."
                 )

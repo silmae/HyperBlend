@@ -61,8 +61,8 @@ def simulate_gsv_soil(c1: float, c2: float, c3: float, cSM: float):
 
     GSV = np.vstack(
         [
-            np.loadtxt(PH.path_file_soil_dry_vector()),
-            np.loadtxt(PH.path_file_soil_humid_vector()),
+            np.loadtxt(PH.file_gsv_soil_dry_vector()),
+            np.loadtxt(PH.file_gsv_soil_humid_vector()),
         ]
     )
     """The general spectral vectors derived in the manuscript"""
@@ -146,6 +146,6 @@ def write_soil_spectra(wls, reflectance_spectra, filename):
         Filename used for saving. Directory is fixed to root/soil_data/.
     """
 
-    p = PH.join(PH.path_directory_reflectance_spectra(), filename)
+    p = PH.join(PH.directory_reflectance_spectra(), filename)
     stacked = np.vstack((wls, reflectance_spectra)).transpose()
     np.savetxt(p, stacked, delimiter=" ", fmt=("%.1f", "%.9f"))

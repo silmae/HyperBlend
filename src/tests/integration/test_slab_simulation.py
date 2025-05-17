@@ -14,7 +14,7 @@ from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 
 
-@unittest.skip("Skipping test_slab_simulation for now")
+# @unittest.skip("Skipping test_slab_simulation for now")
 class TestSlabs(TestCase):
 
     def setUp(self):
@@ -23,213 +23,13 @@ class TestSlabs(TestCase):
     def tearDown(self):
         logging.shutdown()
 
-    def check_existence_of_common_files(self, slab_sim_name):
-        """Check that required result files exist after running the slab simulation.
-
-        Files common to optimizer, surface fitting and NN are checked here. Files specific to
-        each solver are checked in their respective tests.
-        """
-
-        print(
-            f"Checking existence of common files in {PH.path_directory_slab_simulation(slab_sim_name)} directory."
-        )
-
-        path_slab_sim_result = PH.path_file_slab_sim_result(slab_sim_name=slab_sim_name)
-        fail_msg = (
-            f"Could not find the slab simulation result file at {path_slab_sim_result}."
-        )
-        self.assertTrue(os.path.exists(path_slab_sim_result), msg=fail_msg)
-        print(f"Found slab simulation result file at {path_slab_sim_result}.")
-
-        path_slab_sim_result_plot = PH.path_file_slab_sim_result_plot(
-            slab_sim_name=slab_sim_name
-        )
-        fail_msg = f"Could not find the slab simulation result plot file at {path_slab_sim_result_plot}."
-        self.assertTrue(os.path.exists(path_slab_sim_result_plot), msg=fail_msg)
-        print(f"Found slab simulation result plot file at {path_slab_sim_result_plot}.")
-
-        path_slab_sim_error_plot = PH.path_file_slab_sim_error_plot(
-            slab_sim_name=slab_sim_name
-        )
-        fail_msg = f"Could not find the slab simulation error plot file at {path_slab_sim_error_plot}."
-        self.assertTrue(os.path.exists(path_slab_sim_error_plot), msg=fail_msg)
-        print(f"Found slab simulation error plot file at {path_slab_sim_error_plot}.")
-
-    def check_existance_of_signal_result_files(self, slab_sim_name, signal_ids):
-        """Check that the result files for the signals exist.
-
-        :param slab_sim_name: Name of the slab simulation.
-        :param signal_ids: List of signal IDs (int) to check.
-        """
-
-        for signal_id in signal_ids:
-            p = PH.path_file_signal_result(
-                slab_sim_name=slab_sim_name, signal_id=signal_id
-            )
-            with self.subTest(p=p):
-                error_msg = (
-                    f"Result file for signal {signal_id} does not exist at path {p}."
-                )
-                self.assertTrue(os.path.exists(p), msg=error_msg)
-                print(f"Found result file for signal at {p}.")
-
-            p = PH.path_file_signal_result_plot(
-                slab_sim_name=slab_sim_name, signal_id=signal_id
-            )
-            with self.subTest(p=p):
-                error_msg = (
-                    f"Result plot for signal {signal_id} does not exist at path {p}."
-                )
-                self.assertTrue(os.path.exists(p), msg=error_msg)
-                print(f"Found result plot for signal at {p}.")
-
-    def check_nn_and_surf_result_files(self, solver: str, solver_dirname: str = None):
-        """Check that the result files for the neural network and surface fitting solvers exist.
-
-        :param solver: Solver to check. Either 'nn' or 'surf'.
-        """
-
-        if solver == "nn":
-            slab_sim_name = "integration_test_nn_slabs"
-        elif solver == "surf":
-            slab_sim_name = "integration_test_surf_slabs"
-        else:
-            raise ValueError(f"Unknown solver {solver}.")
-
-        path_slab_sim_top = PH.path_directory_slab_simulation(
-            slab_sim_name=slab_sim_name
-        )
-
-        # Remove the old test directory if it exists
-        if os.path.exists(path_slab_sim_top):
-            rmtree(path_slab_sim_top)
-
-        p1 = PH.path_file_target(set_name=slab_sim_name, sample_id=0, resampled=False)
-        p2 = PH.path_file_target(set_name=slab_sim_name, sample_id=1, resampled=False)
-        p3 = PH.path_file_target(set_name=slab_sim_name, sample_id=3, resampled=False)
-
-        # Check that the target files do not exist before generating them. If they do, the test tells nothing.
-        self.assertFalse(os.path.exists(p1))
-        self.assertFalse(os.path.exists(p2))
-        self.assertFalse(os.path.exists(p3))
-
-        # Generate some random PROSPECT leaves to use for testing
-        SMI.generate_prospect_leaf_random(set_name=slab_sim_name, leaf_count=2)
-        SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
-
-        # Check that the target files exist after generating them
-        self.assertTrue(os.path.exists(p1))
-        self.assertTrue(os.path.exists(p2))
-        self.assertTrue(os.path.exists(p3))
-
-        # Reduce the number of bands to four for quick testing
-        new_sampling = [450, 500, 550, 1930]
-        SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
-
-        # Find resampled target files and check they exist
-        p1 = PH.path_file_target(set_name=slab_sim_name, sample_id=0, resampled=True)
-        p2 = PH.path_file_target(set_name=slab_sim_name, sample_id=1, resampled=True)
-        p3 = PH.path_file_target(set_name=slab_sim_name, sample_id=3, resampled=True)
-
-        self.assertTrue(os.path.exists(p1))
-        self.assertTrue(os.path.exists(p2))
-        self.assertTrue(os.path.exists(p3))
-
-        SMI.solve_leaf_material_parameters(
-            runtime=self.runtime,
-            set_name=slab_sim_name,
-            clear_old_results=True,
-            resolution=None,
-            use_dumb_sampling=False,
-            solver=solver,
-            copyof=None,
-            plot_resampling=False,
-            solver_dirname=solver_dirname,
-        )
-
-        self.check_existance_of_signal_result_files(
-            slab_sim_name=slab_sim_name, signal_ids=[0, 1, 3]
-        )
-        self.check_existence_of_common_files(slab_sim_name=slab_sim_name)
-
-        # We could check also the file contents, but if the program is so broken that the content
-        # is not correct, we are in trouble anyway.
-
     # @unittest.skip("Temporarily skipping test_slab_simulation.")
     def test_advanced_solvers(self):
         self.run_advanced_solvers()
 
-    def run_advanced_solvers(self, solver_dirname: str = None):
-        """Tests that the slab simulation run with the advanced solvers works as expected.
-
-        The advanced solvers are the neural network and surface fitting solvers.
-        """
-
-        self.check_nn_and_surf_result_files(solver="nn", solver_dirname=solver_dirname)
-        self.check_nn_and_surf_result_files(
-            solver="surf", solver_dirname=solver_dirname
-        )
-
-    # @unittest.skip("Skipping test_slab_optimization. Just construct and test the common test quicker.")
+    # @unittest.skip("Skipping test_slab_optimization.")
     def test_slab_optimization(self):
         self.run_slab_optimization()
-
-    def run_slab_optimization(self, solver_dirname: str = None):
-        """Tests that the slab simulation run with the optimization solver works as expected.
-
-        The optimizer is run mainly when training the nn model, so it is important to be tested.
-        """
-
-        slab_sim_opt_name = "integration_test_opt_slabs"
-        path_slab_sim_top = PH.path_directory_slab_simulation(
-            slab_sim_name=slab_sim_opt_name
-        )
-
-        # Remove the old test directory if it exists
-        if os.path.exists(path_slab_sim_top):
-            rmtree(path_slab_sim_top)
-
-        p1 = PH.path_file_target(
-            set_name=slab_sim_opt_name, sample_id=0, resampled=False
-        )
-
-        self.assertFalse(os.path.exists(p1))
-        SMI.generate_prospect_leaf_random(set_name=slab_sim_opt_name, leaf_count=1)
-        self.assertTrue(os.path.exists(p1))
-
-        # Reduce the number of channels to four for quick testing
-        new_sampling = [550, 650]
-        SMI.resample_leaf_targets(set_name=slab_sim_opt_name, new_sampling=new_sampling)
-
-        SMI.solve_leaf_material_parameters(
-            runtime=self.runtime,
-            set_name=slab_sim_opt_name,
-            clear_old_results=True,
-            resolution=None,
-            use_dumb_sampling=False,
-            solver="opt",
-            copyof=None,
-            plot_resampling=False,
-            solver_dirname=solver_dirname,
-        )
-
-        # Check that for all wavelengths, there exists a subresult file. This check is done only for the optimizer.
-        signal_id = 0
-        for wl in new_sampling:
-            p = PH.path_file_wl_result(
-                set_name=slab_sim_opt_name, sample_id=signal_id, wl=wl
-            )
-            with self.subTest(p=p):
-                error_msg = (
-                    f"Result file for signal {signal_id} and wavelength {wl} does not exist "
-                    f"at path {p}."
-                )
-                self.assertTrue(os.path.exists(p), msg=error_msg)
-
-        self.check_existance_of_signal_result_files(
-            slab_sim_name=slab_sim_opt_name, signal_ids=[0]
-        )
-        self.check_existence_of_common_files(slab_sim_name=slab_sim_opt_name)
 
     def test_custom_solver(self):
         """Tests that the slab simulation run with a custom solver works as expected."""
@@ -237,9 +37,9 @@ class TestSlabs(TestCase):
         print("Testing custom solver.")
 
         fake_solver_name = "Integration test custom solver"
-        path_default_slab_model = PH.path_directory_slab_model()
-        path_custom_slab_model = PH.path_directory_slab_model(
-            solver_name=fake_solver_name
+        path_default_slab_model = PH.directory_slab_model()
+        path_custom_slab_model = PH.directory_slab_model(
+            slab_model_name=fake_solver_name
         )
 
         # os.rename(path_custom_slab_model, path_default_slab_model)
@@ -275,3 +75,211 @@ class TestSlabs(TestCase):
 
         # In case we did not run into an exception earlier, revert the name change here
         os.rename(path_custom_slab_model, path_default_slab_model)
+
+    def check_existence_of_common_files(self, slab_sim_name):
+        """Check that required result files exist after running the slab simulation.
+
+        Files common to optimizer, surface fitting and NN are checked here. Files specific to
+        each solver are checked in their respective tests.
+        """
+
+        print(
+            f"Checking existence of common files in {PH.directory_slab_simulation(slab_sim_name)} directory."
+        )
+
+        path_slab_sim_result = PH.file_slab_sim_result(slab_sim_name=slab_sim_name)
+        fail_msg = (
+            f"Could not find the slab simulation result file at {path_slab_sim_result}."
+        )
+        self.assertTrue(os.path.exists(path_slab_sim_result), msg=fail_msg)
+        print(f"Found slab simulation result file at {path_slab_sim_result}.")
+
+        path_slab_sim_result_plot = PH.file_slab_sim_result_plot(
+            slab_sim_name=slab_sim_name
+        )
+        fail_msg = f"Could not find the slab simulation result plot file at {path_slab_sim_result_plot}."
+        self.assertTrue(os.path.exists(path_slab_sim_result_plot), msg=fail_msg)
+        print(f"Found slab simulation result plot file at {path_slab_sim_result_plot}.")
+
+        path_slab_sim_error_plot = PH.file_slab_sim_error_plot(
+            slab_sim_name=slab_sim_name
+        )
+        fail_msg = f"Could not find the slab simulation error plot file at {path_slab_sim_error_plot}."
+        self.assertTrue(os.path.exists(path_slab_sim_error_plot), msg=fail_msg)
+        print(f"Found slab simulation error plot file at {path_slab_sim_error_plot}.")
+
+    def check_existance_of_signal_result_files(self, slab_sim_name, signal_ids):
+        """Check that the result files for the signals exist.
+
+        :param slab_sim_name: Name of the slab simulation.
+        :param signal_ids: List of signal IDs (int) to check.
+        """
+
+        for signal_id in signal_ids:
+            p = PH.file_signal_result(slab_sim_name=slab_sim_name, signal_id=signal_id)
+            with self.subTest(p=p):
+                error_msg = (
+                    f"Result file for signal {signal_id} does not exist at path {p}."
+                )
+                self.assertTrue(os.path.exists(p), msg=error_msg)
+                print(f"Found result file for signal at {p}.")
+
+            p = PH.file_signal_result_plot(
+                slab_sim_name=slab_sim_name, signal_id=signal_id
+            )
+            with self.subTest(p=p):
+                error_msg = (
+                    f"Result plot for signal {signal_id} does not exist at path {p}."
+                )
+                self.assertTrue(os.path.exists(p), msg=error_msg)
+                print(f"Found result plot for signal at {p}.")
+
+    def check_nn_and_surf_result_files(self, solver: str, solver_dirname: str = None):
+        """Check that the result files for the neural network and surface fitting solvers exist.
+
+        :param solver: Solver to check. Either 'nn' or 'surf'.
+        """
+
+        if solver == "nn":
+            slab_sim_name = "integration_test_nn_slabs"
+        elif solver == "surf":
+            slab_sim_name = "integration_test_surf_slabs"
+        else:
+            raise ValueError(f"Unknown solver {solver}.")
+
+        path_slab_sim_top = PH.directory_slab_simulation(slab_sim_name=slab_sim_name)
+
+        # Remove the old test directory if it exists
+        if os.path.exists(path_slab_sim_top):
+            rmtree(path_slab_sim_top)
+
+        p1 = PH.file_slab_target(
+            slab_sim_name=slab_sim_name, signal_id=0, resampled=False
+        )
+        p2 = PH.file_slab_target(
+            slab_sim_name=slab_sim_name, signal_id=1, resampled=False
+        )
+        p3 = PH.file_slab_target(
+            slab_sim_name=slab_sim_name, signal_id=3, resampled=False
+        )
+
+        # Check that the target files do not exist before generating them. If they do, the test tells nothing.
+        self.assertFalse(os.path.exists(p1))
+        self.assertFalse(os.path.exists(p2))
+        self.assertFalse(os.path.exists(p3))
+
+        # Generate some random PROSPECT leaves to use for testing
+        SMI.generate_prospect_leaf_random(set_name=slab_sim_name, leaf_count=2)
+        SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
+
+        # Check that the target files exist after generating them
+        self.assertTrue(os.path.exists(p1))
+        self.assertTrue(os.path.exists(p2))
+        self.assertTrue(os.path.exists(p3))
+
+        # Reduce the number of bands to four for quick testing
+        new_sampling = [450, 500, 550, 1930]
+        SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
+
+        # Find resampled target files and check they exist
+        p1 = PH.file_slab_target(
+            slab_sim_name=slab_sim_name, signal_id=0, resampled=True
+        )
+        p2 = PH.file_slab_target(
+            slab_sim_name=slab_sim_name, signal_id=1, resampled=True
+        )
+        p3 = PH.file_slab_target(
+            slab_sim_name=slab_sim_name, signal_id=3, resampled=True
+        )
+
+        self.assertTrue(os.path.exists(p1))
+        self.assertTrue(os.path.exists(p2))
+        self.assertTrue(os.path.exists(p3))
+
+        SMI.solve_leaf_material_parameters(
+            runtime=self.runtime,
+            set_name=slab_sim_name,
+            clear_old_results=True,
+            resolution=None,
+            use_dumb_sampling=False,
+            solver=solver,
+            copyof=None,
+            plot_resampling=False,
+            solver_dirname=solver_dirname,
+        )
+
+        self.check_existance_of_signal_result_files(
+            slab_sim_name=slab_sim_name, signal_ids=[0, 1, 3]
+        )
+        self.check_existence_of_common_files(slab_sim_name=slab_sim_name)
+
+        # We could check also the file contents, but if the program is so broken that the content
+        # is not correct, we are in trouble anyway.
+
+    def run_advanced_solvers(self, solver_dirname: str = None):
+        """Tests that the slab simulation run with the advanced solvers works as expected.
+
+        The advanced solvers are the neural network and surface fitting solvers.
+        """
+
+        self.check_nn_and_surf_result_files(solver="nn", solver_dirname=solver_dirname)
+        self.check_nn_and_surf_result_files(
+            solver="surf", solver_dirname=solver_dirname
+        )
+
+    def run_slab_optimization(self, solver_dirname: str = None):
+        """Tests that the slab simulation run with the optimization solver works as expected.
+
+        The optimizer is run mainly when training the nn model, so it is important to be tested.
+        """
+
+        slab_sim_opt_name = "integration_test_opt_slabs"
+        path_slab_sim_top = PH.directory_slab_simulation(
+            slab_sim_name=slab_sim_opt_name
+        )
+
+        # Remove the old test directory if it exists
+        if os.path.exists(path_slab_sim_top):
+            rmtree(path_slab_sim_top)
+
+        p1 = PH.file_slab_target(
+            slab_sim_name=slab_sim_opt_name, signal_id=0, resampled=False
+        )
+
+        self.assertFalse(os.path.exists(p1))
+        SMI.generate_prospect_leaf_random(set_name=slab_sim_opt_name, leaf_count=1)
+        self.assertTrue(os.path.exists(p1))
+
+        # Reduce the number of channels to four for quick testing
+        new_sampling = [550, 650]
+        SMI.resample_leaf_targets(set_name=slab_sim_opt_name, new_sampling=new_sampling)
+
+        SMI.solve_leaf_material_parameters(
+            runtime=self.runtime,
+            set_name=slab_sim_opt_name,
+            clear_old_results=True,
+            resolution=None,
+            use_dumb_sampling=False,
+            solver="opt",
+            copyof=None,
+            plot_resampling=False,
+            solver_dirname=solver_dirname,
+        )
+
+        # Check that for all wavelengths, there exists a subresult file. This check is done only for the optimizer.
+        signal_id = 0
+        for wl in new_sampling:
+            p = PH.file_wl_result(
+                slab_sim_name=slab_sim_opt_name, signal_id=signal_id, wl=wl
+            )
+            with self.subTest(p=p):
+                error_msg = (
+                    f"Result file for signal {signal_id} and wavelength {wl} does not exist "
+                    f"at path {p}."
+                )
+                self.assertTrue(os.path.exists(p), msg=error_msg)
+
+        self.check_existance_of_signal_result_files(
+            slab_sim_name=slab_sim_opt_name, signal_ids=[0]
+        )
+        self.check_existence_of_common_files(slab_sim_name=slab_sim_opt_name)

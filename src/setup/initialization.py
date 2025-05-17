@@ -77,7 +77,7 @@ def _load_app_info(runtime: RuntimeEnvironment):
 
     logging.info("Loading app info")
 
-    def_dir = PH.path_directory_definitions()
+    def_dir = PH.directory_code_definitions()
     filename = C.file_app_info
     try:
         app_info_dict = TH.read_toml_as_dict(directory=def_dir, filename=filename)

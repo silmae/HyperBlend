@@ -67,16 +67,18 @@ def init(
     """
 
     if copy_forest_id is not None:
-        forest_id = FH.duplicate_forest_scene(
-            copy_forest_id=copy_forest_id, custom_forest_id=custom_forest_id
+        forest_id = FH.duplicate_system_simulation_scene(
+            system_sim_to_duplicate=copy_forest_id, new_system_sim_name=custom_forest_id
         )
     else:
-        forest_id = FH.duplicate_forest_scene(custom_forest_id=custom_forest_id)
+        forest_id = FH.duplicate_system_simulation_scene(
+            new_system_sim_name=custom_forest_id
+        )
 
     if copy_forest_id is not None:
-        source_path = PH.path_directory_system_simulation(forest_id=copy_forest_id)
+        source_path = PH.directory_system_simulation(system_sim_name=copy_forest_id)
     else:
-        source_path = PH.path_directory_internal()
+        source_path = PH.directory_internal()
 
     # Config file
     if conf_type is None or conf_type == "m2m":

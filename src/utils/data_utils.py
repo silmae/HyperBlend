@@ -7,7 +7,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.data import file_handling as FH
+import data.path_handling
+from src.data import file_handling as FH, path_handling as PH
 from src import constants as C
 
 
@@ -21,10 +22,10 @@ def get_relative_refl_or_tran(imaging_type: str, wl: float, base_path: str) -> f
     """
 
     leaf_mean = get_rend_as_mean(
-        FH.search_by_wl(C.target_type_slab, imaging_type, wl, base_path)
+        PH.find_by_wl(wl, C.target_type_slab, imaging_type, base_path)
     )
     reference_mean = get_rend_as_mean(
-        FH.search_by_wl(C.target_type_ref, imaging_type, wl, base_path)
+        PH.find_by_wl(wl, C.target_type_ref, imaging_type, base_path)
     )
     relative = leaf_mean / reference_mean
     return relative

@@ -24,7 +24,7 @@ def construct_envi_cube(forest_id: str):
     :return:
     """
 
-    p = PH.path_directory_system_rend_spectral(forest_id=forest_id)
+    p = PH.directory_system_rend_spectral(system_sim_name=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(
             f"Rend directory for system_simulation '{forest_id}' not found."
@@ -49,7 +49,7 @@ def construct_envi_cube(forest_id: str):
 
     # Find available reflectance plate reflectivity based on visibility map file names.
     reflectivities = []
-    map_names = PH.list_reference_visibility_maps(forest_id=forest_id)
+    map_names = PH.list_reference_visibility_maps(system_sim_name=forest_id)
     for map_name in map_names:
         splitted = map_name.split(" ")
         reflectivity = float(splitted[1])
@@ -63,7 +63,7 @@ def construct_envi_cube(forest_id: str):
     for reflectivity in reflectivities:
         accepted_reflectivity = reflectivity
         mask_path = PH.find_reference_visibility_map(
-            forest_id=forest_id, reflectivity=reflectivity
+            system_sim_name=forest_id, reflectivity=reflectivity
         )
         mask = plt.imread(mask_path)
         mask = mask > 0
@@ -88,7 +88,7 @@ def construct_envi_cube(forest_id: str):
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 2)
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 1)
 
-    p = PH.path_file_system_forest_sun_spectra_csv(forest_id=forest_id)
+    p = PH.file_system_sim_light_spectra_csv(system_sim_name=forest_id)
     if not os.path.exists(p):
         logging.warning(
             f"Could not find sun data for wavelength info. "
@@ -132,11 +132,11 @@ def construct_envi_cube(forest_id: str):
         "wavelength units": "nm",
     }
 
-    cube_dir_path = PH.path_directory_system_spectral_cube(forest_id)
+    cube_dir_path = PH.directory_system_spectral_cube(forest_id)
     if not os.path.exists(cube_dir_path):
         os.makedirs(cube_dir_path)
 
-    p_hdr = PH.path_file_system_sim_reflectance_header(forest_id=forest_id)
+    p_hdr = PH.file_cube_header(system_sim_name=forest_id)
     # SPy wants to know only the path to the header. It will find the image file automatically from the same dir.
     spectral.envi.save_image(
         hdr_file=p_hdr,
@@ -159,7 +159,7 @@ def show_cube(forest_id: str):
     :raises FileNotFoundError: if the cube does not exist.
     """
 
-    p_cube = PH.path_file_system_sim_reflectance_header(forest_id=forest_id)
+    p_cube = PH.file_cube_header(system_sim_name=forest_id)
     if not os.path.exists(p_cube):
         raise FileNotFoundError(
             f"Cannot find spectral cube file from '{p_cube}'. "

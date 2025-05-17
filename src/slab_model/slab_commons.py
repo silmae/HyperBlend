@@ -54,7 +54,7 @@ def _render(args):
     runtime = args[0]
     slab_sim_name = args[1]
     signal_id = args[2]
-    p = P.path_directory_slab_optimization_working_temp(slab_sim_name, signal_id)
+    p = P.directory_slab_optimization_working(slab_sim_name, signal_id)
 
     if not os.path.exists(p):
         raise FileNotFoundError(
@@ -116,16 +116,12 @@ def _material_params_to_RT(
         r_wl = DU.get_relative_refl_or_tran(
             C.imaging_type_refl,
             wl,
-            base_path=P.path_directory_slab_optimization_working_temp(
-                slab_sim_name, signal_id
-            ),
+            base_path=P.directory_slab_optimization_working(slab_sim_name, signal_id),
         )
         t_wl = DU.get_relative_refl_or_tran(
             C.imaging_type_tran,
             wl,
-            base_path=P.path_directory_slab_optimization_working_temp(
-                slab_sim_name, signal_id
-            ),
+            base_path=P.directory_slab_optimization_working(slab_sim_name, signal_id),
         )
         r.append(r_wl)
         t.append(t_wl)
@@ -206,6 +202,4 @@ def initialize_directories(slab_sim_name, clear_old_results=False):
         FH.clear_rend_leaf(slab_sim_name, signal_id)
         FH.clear_rend_refs(slab_sim_name, signal_id)
         if clear_old_results:
-            FH.clear_folder(
-                P.path_directory_optimization_result(slab_sim_name, signal_id)
-            )
+            FH.clear_folder(P.directory_optimization_result(slab_sim_name, signal_id))

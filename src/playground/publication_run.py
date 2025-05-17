@@ -5,14 +5,14 @@ from slab_model import interface as LI
 def write_forest_control(forest_id: str, control_dict: dict):
     TH.write_dict_as_toml(
         dictionary=control_dict,
-        directory=PH.path_directory_system_simulation(forest_id=forest_id),
+        directory=PH.directory_system_simulation(system_sim_name=forest_id),
         filename="forest_control",
     )
 
 
 def read_forest_control(forest_id: str) -> dict:
     return TH.read_toml_as_dict(
-        directory=PH.path_directory_system_simulation(forest_id=forest_id),
+        directory=PH.directory_system_simulation(system_sim_name=forest_id),
         filename="forest_control",
     )
 

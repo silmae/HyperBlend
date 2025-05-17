@@ -30,7 +30,7 @@ def make_random_leaf_targets(set_name, count=1):
         src.slab_model.training_data._make_target(
             set_name, wls=wls, r_m=r, t_m=t, sample_id=i
         )  # sample directories are now created
-        dict_dir = PH.path_directory_result_signal(set_name, sample_id=i)
+        dict_dir = PH.directory_result_signal(set_name, signal_id=i)
         dict_name = f"prospect_params_{i}"
         TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
 
@@ -89,7 +89,7 @@ def make_leaf_target(
     src.slab_model.training_data._make_target(
         set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id
     )  # sample directory is now created
-    dict_dir = PH.path_directory_result_signal(set_name, sample_id=sample_id)
+    dict_dir = PH.directory_result_signal(set_name, signal_id=sample_id)
     dict_name = f"prospect_params_{sample_id}"  # save used prospect parameters
     TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
     return wls, r, t

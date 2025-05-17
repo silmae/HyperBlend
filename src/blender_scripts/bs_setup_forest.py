@@ -53,7 +53,7 @@ def _set_leaf_rgb(leaf_material_name: str):
 
     # logging.error(f"Setting rgb color for '{leaf_material_name}'")
 
-    p = PH.path_file_forest_rgb_csv(forest_id=forest_id)
+    p = PH.file_system_sim_rgb_colors_csv(system_sim_name=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(
             f"Leaf RGB color file '{p}' not found. Have you removed it? Try rerunning system_simulation initialization."
@@ -81,9 +81,9 @@ def read_leaf_material_csv(file_name: str):
          band_list, wl_list, ad_list, sd_list, ai_list, mf_list
     """
 
-    file_name = FN.filename_leaf_material_csv(file_name.rstrip(".csv"))
+    file_name = FN.filename_slab_material_csv(file_name.rstrip(".csv"))
 
-    p = PH.join(PH.path_directory_system_simulation(forest_id), file_name)
+    p = PH.join(PH.directory_system_simulation(forest_id), file_name)
 
     if not os.path.exists(p):
         raise FileNotFoundError(
@@ -199,7 +199,7 @@ def insert_soil_data():
 
     logging.error(f"Inserting spectral soil reflectance to Blender material keyframes.")
 
-    p = PH.path_file_forest_soil_csv(forest_id=forest_id)
+    p = PH.file_forest_soil_csv(system_sim_name=forest_id)
     if not os.path.exists(p):
         raise FileNotFoundError(
             f"Soil csv file '{p}' not found. Try rerunning system_simulation initialization."
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     leaf_material_names = vars(args)[key_leaf_ids[1]]
 
     logging.error(
-        f"Running scene setup for '{PH.path_directory_system_simulation(forest_id)}'"
+        f"Running scene setup for '{PH.directory_system_simulation(forest_id)}'"
     )
 
     insert_leaf_data(leaf_material_names=leaf_material_names)
@@ -350,8 +350,6 @@ if __name__ == "__main__":
     # FU.print_materials()
 
     # Save changes to the Blender file
-    bpy.ops.wm.save_as_mainfile(
-        filepath=PH.path_file_system_simulation_blend(forest_id)
-    )
+    bpy.ops.wm.save_as_mainfile(filepath=PH.file_blend_system_simulation(forest_id))
 
     # TODO how to disable using User preferences?
