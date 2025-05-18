@@ -8,6 +8,8 @@ Welcome to HyperBlend's documentation!
 
 This documentation is still work in progress. We will get it done eventually!
 
+
+
 The documentation is organized as follows:
 
 .. The toctree defines the structure of the documentation on the top level.
@@ -22,10 +24,11 @@ The documentation is organized as follows:
    install
    slab_sim
    system_sim
-   code/**
+   code/src
    license
    contributing
    glossary
+   references
 
 Readme
 =========

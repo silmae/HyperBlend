@@ -1,7 +1,6 @@
 """
 General Spectral Vectors (GSV) soil model. The code in this script is
-based on the code written by authors of
-"GSV: a general model for hyperspectral soil reflectance simulation", 2019.
+based on the code written by authors of :cite:`gsv19`.
 """
 
 import numpy as np

@@ -3,14 +3,12 @@ Source Code
 
 .. This toctree defines in which order the modules are displayed.
 
-.. saödlfkölskaj
-    toctree::
+.. toctree::
    :maxdepth: 2
    :name: sourcetoc
    :hidden:
    :caption: Contents:
 
-..
    src_root
    setup
    slab_model

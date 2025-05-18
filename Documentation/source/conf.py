@@ -28,7 +28,10 @@ extensions = [
     "sphinx.ext.autodoc",
     "myst_parser",
     "sphinx.ext.mathjax",  # for Latex math
+    "sphinxcontrib.bibtex",  # bibtex style citations
 ]
+
+bibtex_bibfiles = ["references.bib"]  # tells bibtex which file to use
 
 templates_path = ["_templates"]
 exclude_patterns = []
