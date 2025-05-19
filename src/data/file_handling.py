@@ -1,6 +1,10 @@
 """
 TODO docs
 
+
+TODO: there are lots of methods that could be replaced if we could use a
+    python version that includes a toml reader. It is available at least in
+    Blender 4.4.
 """
 
 import logging
@@ -9,6 +13,7 @@ import datetime
 import shutil
 import csv
 import re  # regular expressions
+from typing import Tuple, List
 
 from src import plotter, constants as C
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
@@ -17,142 +22,188 @@ CSV_NEWLINE = ""
 CSV_DELIMITER = " "
 
 
-def copy_slab_simulation_target(from_set: str, to_set: str):
+def copy_slab_simulation_target(src_slab_sim_name: str, dst_slab_sim_name: str) -> None:
     """Copy slab simulation targets and sampling data as a new slab simulation.
 
     See also :term:`Slab simulation`.
 
-    :param from_set:
-        Set name of the measurement set to copy from.
-    :param to_set:
-        Set name of the measurement set to copy to.
+    :param src_slab_sim_name: The name of the slab simulation to copy from.
+    :param dst_slab_sim_name: The name of the slab simulation to copy to.
     """
 
     # Initialize new set with proper directories
-    create_top_level_slab_sim_directories(slab_simu_name=to_set)
+    create_top_level_slab_sim_directories(slab_sim_name=dst_slab_sim_name)
 
     # Copy all targets and resampled targets if they exist
-    sample_ids = list_target_ids(from_set)
+    sample_ids = list_target_ids(src_slab_sim_name)
     for sample_id in sample_ids:
 
         path_src_target = PH.file_slab_target(
-            slab_sim_name=from_set, signal_id=sample_id, resampled=False
+            slab_sim_name=src_slab_sim_name, signal_id=sample_id, resampled=False
         )
         path_dst_target = PH.file_slab_target(
-            slab_sim_name=to_set, signal_id=sample_id, resampled=False
+            slab_sim_name=dst_slab_sim_name, signal_id=sample_id, resampled=False
         )
         if os.path.exists(path_src_target):
             shutil.copy2(path_src_target, path_dst_target)
 
         path_src_target_resampled = PH.file_slab_target(
-            slab_sim_name=from_set, signal_id=sample_id, resampled=True
+            slab_sim_name=src_slab_sim_name, signal_id=sample_id, resampled=True
         )
         path_dst_target_resampled = PH.file_slab_target(
-            slab_sim_name=to_set, signal_id=sample_id, resampled=True
+            slab_sim_name=dst_slab_sim_name, signal_id=sample_id, resampled=True
         )
         if os.path.exists(path_src_target_resampled):
             shutil.copy2(path_src_target_resampled, path_dst_target_resampled)
 
     # Copy sampling
-    src_sampling = PH.file_spectral_sampling(from_set)
+    src_sampling = PH.file_spectral_sampling(src_slab_sim_name)
     if os.path.exists(src_sampling):
-        dst_sampling = PH.file_spectral_sampling(to_set)
+        dst_sampling = PH.file_spectral_sampling(dst_slab_sim_name)
         shutil.copy2(src_sampling, dst_sampling)
+    else:
+        logging.warning(
+            f"File '{src_sampling}' not found. Sampling data not copied to '{dst_slab_sim_name}'."
+            f"You should copy the files manually."
+        )
 
 
-def create_top_level_slab_sim_directories(slab_simu_name: str):
+def create_top_level_slab_sim_directories(slab_sim_name: str) -> None:
     """Create top level directories for slab simulation.
 
-    Should be called when a new leaf measurement set is created.
+    The creation of the directories for a certain signal is covered
+    by :func:`create_slab_sim_signal_directories()`.
 
-    :param slab_simu_name: Name of the slab simulation.
+    The creation of the directories needed by the optimizer
+    are covered by :func:`create_signal_optimization_directories()`.
+
+    These are separate methods because the others need also the signal id.
+
+    :param slab_sim_name: Name of the slab simulation.
     """
 
-    if not os.path.exists(PH.directory_top_slab_simulation()):
-        os.makedirs(PH.directory_top_slab_simulation())
-    if not os.path.exists(PH.directory_top_target(slab_simu_name)):
-        os.makedirs(PH.directory_top_target(slab_simu_name))
-    if not os.path.exists(PH.directory_top_result_signal(slab_simu_name)):
-        os.makedirs(PH.directory_top_result_signal(slab_simu_name))
-    # if not os.path.exists(PH.path_directory_set_result(set_name)):
-    #     os.makedirs(PH.path_directory_set_result(set_name))
+    dirs_to_create = [
+        PH.directory_top_slab_simulation(),
+        PH.directory_top_target(slab_sim_name),
+        PH.directory_top_result_signal(slab_sim_name),
+    ]
+
+    for path in dirs_to_create:
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+    logging.info(f"Top level slab simulation directories created.")
+    printable_list = "\n".join(dirs_to_create)
+    logging.debug(f"Created directories: {printable_list}")
+
+    # if not os.path.exists(PH.directory_top_slab_simulation()):
+    #     os.makedirs(PH.directory_top_slab_simulation())
+    # if not os.path.exists(PH.directory_top_target(slab_sim_name)):
+    #     os.makedirs(PH.directory_top_target(slab_sim_name))
+    # if not os.path.exists(PH.directory_top_result_signal(slab_sim_name)):
+    #     os.makedirs(PH.directory_top_result_signal(slab_sim_name))
 
 
-def create_signal_optimization_directories(slab_sim_name: str, signal_id: int):
-    """Create directories for slab simulation signal optimization."""
+def create_top_level_system_sim_directories(system_sim_name: str) -> None:
+    """Create top level directories for system simulation."""
 
-    sample_folder_name = f"{C.signal_directory_prefix}_{signal_id}"
-    sample_path = PH.join(
-        PH.directory_top_result_signal(slab_sim_name), sample_folder_name
-    )
+    dirs_to_create = [
+        PH.directory_system_simulation(system_sim_name),
+        PH.directory_system_sim_rend(system_sim_name),
+        PH.directory_system_rend_spectral(system_sim_name),
+        PH.directory_system_rend_visibility_maps(system_sim_name),
+    ]
 
-    if not os.path.exists(sample_path):
-        os.makedirs(sample_path)
+    for path in dirs_to_create:
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-    if not os.path.exists(
-        PH.directory_slab_optimization_working(slab_sim_name, signal_id)
-    ):
-        os.makedirs(PH.directory_slab_optimization_working(slab_sim_name, signal_id))
-    if not os.path.exists(PH.directory_slab_working_rend(slab_sim_name, signal_id)):
-        os.makedirs(PH.directory_slab_working_rend(slab_sim_name, signal_id))
-    if not os.path.exists(
-        PH.directory_slab_rend_reference(
-            C.imaging_type_refl,
-            PH.directory_slab_optimization_working(slab_sim_name, signal_id),
-        )
-    ):
-        os.makedirs(
-            PH.directory_slab_rend_reference(
-                C.imaging_type_refl,
-                PH.directory_slab_optimization_working(slab_sim_name, signal_id),
-            )
-        )
-    if not os.path.exists(
-        PH.directory_slab_rend_reference(
-            C.imaging_type_tran,
-            PH.directory_slab_optimization_working(slab_sim_name, signal_id),
-        )
-    ):
-        os.makedirs(
-            PH.directory_slab_rend_reference(
-                C.imaging_type_tran,
-                PH.directory_slab_optimization_working(slab_sim_name, signal_id),
-            )
-        )
-    if not os.path.exists(PH.directory_optimization_result(slab_sim_name, signal_id)):
-        os.makedirs(PH.directory_optimization_result(slab_sim_name, signal_id))
+    logging.info(f"Top level system simulation directories created.")
+    printable_list = "\n".join(dirs_to_create)
+    logging.debug(f"Created directories: {printable_list}")
 
 
-def list_target_ids(set_name: str):
-    """Lists available leaf measurement targets by their id.
+def create_slab_sim_signal_directories(slab_sim_name: str, signal_id: int) -> None:
+    """Create directories for slab simulation result signal.
+
+    This is needed regardless of the used solver for storing the results.
+    """
+
+    dirs_to_create = [
+        PH.directory_result_signal(slab_sim_name=slab_sim_name, signal_id=signal_id),
+    ]
+
+    for path in dirs_to_create:
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+    logging.info(f"Slab simulation's signal directories created.")
+    printable_list = "\n".join(dirs_to_create)
+    logging.debug(f"Created directories: {printable_list}")
+
+
+def create_signal_optimization_directories(slab_sim_name: str, signal_id: int) -> None:
+    """Create directories for slab simulation signal optimization solver."""
+
+    p_working = PH.directory_slab_optimization_working(slab_sim_name, signal_id)
+    dirs_to_create = [
+        PH.directory_slab_working_rend(slab_sim_name, signal_id),
+        PH.directory_slab_rend_reference(C.imaging_type_refl, p_working),
+        PH.directory_slab_rend_reference(C.imaging_type_tran, p_working),
+        PH.directory_optimization_result(slab_sim_name, signal_id),
+    ]
+
+    for path in dirs_to_create:
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+    logging.info(f"Slab simulation's signal directories for optimization created.")
+    printable_list = "\n".join(dirs_to_create)
+    logging.debug(f"Created directories: {printable_list}")
+
+    # if not os.path.exists(p_working):
+    #     os.makedirs(p_working)
+    #
+    # p = PH.directory_slab_working_rend(slab_sim_name, signal_id)
+    # if not os.path.exists(p):
+    #     os.makedirs(p)
+    #
+    # p = PH.directory_slab_rend_reference(C.imaging_type_refl, p_working)
+    # if not os.path.exists(p):
+    #     os.makedirs(p)
+    #
+    # p = PH.directory_slab_rend_reference(C.imaging_type_tran, p_working)
+    # if not os.path.exists(p):
+    #     os.makedirs(p)
+    #
+    # p = PH.directory_optimization_result(slab_sim_name, signal_id)
+    # if not os.path.exists(p):
+    #     os.makedirs(p)
+
+
+def list_target_ids(slab_sim_name: str) -> list[int]:
+    """Lists available signal targets by their id.
 
     Targets must be named 'target_X.toml' where X is a number that can be cast into int.
 
-    :param set_name:
-        Set name.
-    :return:
-        List of ids (int) that were found from target folder.
+    :param slab_sim_name: Name of the slab simulation.
+
+    :return: List of target ids (int) that were found from target folder.
     """
 
     ids = []
-    for filename in os.listdir(PH.directory_top_target(set_name)):
+    for filename in os.listdir(PH.directory_top_target(slab_sim_name)):
         if re.match(r"target_[0-9]+\.toml", filename):
             ids.append(FN.parse_sample_id(filename))
     return ids
 
 
-def list_finished_sample_ids(set_name: str):
-    """Lists leaf measurement samples that have their renderable leaf material parameters solved.
-
-    :param set_name:
-        Name of the leaf measurement set.
-    :return:
-        List of sample ids (int) that have an existing result in sample results folder.
-    """
+def list_finished_result_signal_ids(slab_sim_name: str) -> list[int]:
+    """Lists signal ids that have an existing result in the slab simulation's results directory."""
 
     ids = []
-    for sample_folder_name in os.listdir(PH.directory_top_result_signal(set_name)):
-        p = PH.join(PH.directory_top_result_signal(set_name), sample_folder_name)
+    for signal_dir_name in os.listdir(PH.directory_top_result_signal(slab_sim_name)):
+        p = PH.join(PH.directory_top_result_signal(slab_sim_name), signal_dir_name)
         for filename in os.listdir(p):
             if filename.startswith(C.filename_result_signal) and filename.endswith(
                 C.postfix_text_data_format
@@ -161,60 +212,62 @@ def list_finished_sample_ids(set_name: str):
     return ids
 
 
-def subresult_exists(set_name: str, wl: float, sample_id: int) -> bool:
-    """Tells whether a certain subresult exists within given set and sample.
+def optimization_wl_result_exists(
+    slab_sim_name: str, wl: float, signal_id: int
+) -> bool:
+    """Tells whether a result exists for a given wavelength within given signal and slab simulation.
 
     This is used to skip optimization of wavelengths that already have a result.
 
-    :param set_name:
-        Set name.
-    :param sample_id:
-        Sample id.
-    :param wl:
-        Wavelength to be found. Has to be accurate to 2 decimals to be found.
-    :return:
-        True, if the subresult file was found, False otherwise.
+    :param slab_sim_name: Name of the slab simulation.
+    :param signal_id: The id of the signal.
+    :param wl: Wavelength to be searched for. Has to be accurate to 2 decimals to be found.
+
+    :returns: True if the result exists, False otherwise.
     """
 
-    p = PH.file_wl_result(set_name, sample_id, wl)
+    p = PH.file_wl_result(slab_sim_name, signal_id, wl)
     res = os.path.exists(p)
     return res
 
 
-def clear_all_rendered_images(set_name: str) -> None:
-    """Clear all rendered images of finished samples."""
+def clear_all_rendered_images(slab_sim_name: str) -> None:
+    """Clear all rendered images that have their optimization result ready."""
 
-    ids = list_finished_sample_ids(set_name)
+    ids = list_finished_result_signal_ids(slab_sim_name)
     for _, sample_id in enumerate(ids):
-        clear_rend_leaf(set_name, sample_id)
-        clear_rend_refs(set_name, sample_id)
+        clear_rend_slab(slab_sim_name, sample_id)
+        clear_rend_refs(slab_sim_name, sample_id)
 
 
-def clear_rend_leaf(set_name: str, sample_id: int) -> None:
-    """Clears leaf render folder of given set, but leave reference renders untouched."""
+def clear_rend_slab(slab_sim_name: str, signal_id: int) -> None:
+    """Clears slab render directory of the given simulation.
 
-    clear_folder(PH.directory_slab_working_rend(set_name, sample_id))
+    Leaves the slab reference renders untouched.
+    """
+
+    clear_directory(PH.directory_slab_working_rend(slab_sim_name, signal_id))
 
 
-def clear_rend_refs(set_name: str, sample_id: int) -> None:
-    """Clears reference render folders of given set but leave leaf renders untouched."""
+def clear_rend_refs(slab_sim_name: str, signal_id: int) -> None:
+    """Clears the slab **reference** renders but leaves the slab renders untouched."""
 
-    clear_folder(
+    clear_directory(
         PH.directory_slab_rend_reference(
             C.imaging_type_refl,
-            PH.directory_slab_optimization_working(set_name, sample_id),
+            PH.directory_slab_optimization_working(slab_sim_name, signal_id),
         )
     )
-    clear_folder(
+    clear_directory(
         PH.directory_slab_rend_reference(
             C.imaging_type_tran,
-            PH.directory_slab_optimization_working(set_name, sample_id),
+            PH.directory_slab_optimization_working(slab_sim_name, signal_id),
         )
     )
 
 
-def clear_folder(path: str) -> None:
-    """Clears the folder in given path."""
+def clear_directory(path: str) -> None:
+    """Clears all files from the directory in given path."""
 
     norm_path = os.path.abspath(path)
     if os.path.exists(norm_path):
@@ -223,154 +276,148 @@ def clear_folder(path: str) -> None:
         logging.warning(f"No files to delete in '{norm_path}'.")
 
 
-def expand(set_name: str) -> None:
-    """Generate back files removed by reduce().
+def expand(slab_sim_name: str) -> None:
+    """Re-generate files removed by :func:`reduce()`.
 
-    Does not do anything for sets modeled with 'surf' or 'nn' models.
+    Doesn't do anything for slab simulations solved with :mod:`slab_model.surf`
+    or :mod:`slab_model.nn` models.
 
-    NOTE: Can not generate rendered images.
+    .. note::
+        Can not re-generate rendered images but will generate optimization history.
+        This takes quite a bit of time, so only use if you really need it.
     """
 
-    sample_ids = list_target_ids(set_name)
+    signal_ids = list_target_ids(slab_sim_name)
 
-    for sample_id in sample_ids:
-        TH.make_sample_result(set_name, sample_id)
-        plotter.plot_sample_result(
-            set_name, sample_id, dont_show=True, save_thumbnail=True
+    for signal_id in signal_ids:
+        TH.make_signal_result(slab_sim_name, signal_id)
+        plotter.plot_signal_result(
+            slab_sim_name, signal_id, dont_show=True, save_thumbnail=True
         )
 
-    TH.write_set_result(set_name)
-    plotter.replot_wl_results(set_name)
-    plotter.plot_set_result(set_name, dont_show=True, save_thumbnail=True)
-    plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
+    TH.write_slab_sim_result(slab_sim_name)
+    plotter.replot_wl_results(slab_sim_name)
+    plotter.plot_slab_sim_result(slab_sim_name, dont_show=True, save_thumbnail=True)
+    plotter.plot_slab_sim_errors(slab_sim_name, dont_show=True, save_thumbnail=True)
 
 
-def reduce(set_name: str) -> None:
-    """Removes wavelength-wise optimization history plots and cleans temp working directories.
+def reduce(slab_sim_name: str) -> None:
+    """Removes wavelength-wise optimization history plots and cleans up temp working directories.
 
-    Does not do anything for sets modeled with 'surf' or 'nn' models.
+    Doesn't do anything for slab simulations solved with :mod:`slab_model.surf`
+    or :mod:`slab_model.nn` models.
 
     Useful for reducing file size when sharing over internet, for example.
-    Use expand() method to generate files as they were.
+    Use :func:`expand()` method to re-generate most of the files as they were.
 
     Reduced size is about 1/10 of original size.
 
-    NOTE: rendered images can not be generated back after they are deleted.
+    .. note::
+        Rendered images can not be generated back after they are deleted.
     """
 
-    clear_all_rendered_images(set_name)
+    clear_all_rendered_images(slab_sim_name)
 
-    sample_ids = list_finished_sample_ids(set_name)
-    logging.info(f"Removing generated plots from set '{set_name}'.")
+    sample_ids = list_finished_result_signal_ids(slab_sim_name)
+    logging.info(f"Removing generated plots from slab simulation '{slab_sim_name}'.")
     for sample_id in sample_ids:
-        p = PH.directory_optimization_result(set_name, sample_id)
+        p = PH.directory_optimization_result(slab_sim_name, sample_id)
         file_list = os.listdir(p)
         if len(file_list) == 0:
             logging.info(f"Nothing to remove. Directory '{p}' already empty.")
             continue
         else:
-            logging.info(f"Cleaning subresult '{sample_id}'.")
+            logging.info(f"Cleaning wavelength results of sample '{sample_id}'.")
         for plot in file_list:
             plot_path = PH.join(p, plot)
             if plot_path.endswith(C.postfix_plot_image_format):
                 os.unlink(plot_path)
-                # print(plot_path)
 
 
 def duplicate_system_simulation_scene(
-    system_sim_to_duplicate: str = None, new_system_sim_name: str = None
+    src_system_sim_name: str = None, dst_system_sim_name: str = None
 ) -> str:
     """Creates a duplicate of a system simulation Blender scene.
 
     Creates the necessary directory structure.
 
-    :param system_sim_to_duplicate: If provided, a system_simulation scene with this
-        name is duplicated. If not provided, the default template system_simulation is
+    :param src_system_sim_name: If provided, a system_simulation scene with this
+        name is duplicated. If not provided, the default template system simulation is
         used. See also :term:`system_sim_name`.
-    :param new_system_sim_name: If given, this will be the name of the new system
+    :param dst_system_sim_name: If given, this will be the name of the new system
         simulation scene. If not provided, a name based on date time will be generated.
 
-    :return: If new_system_sim_name is not provided, a name based on date time will
-        be returned.
+    :return: The name of the duplicated system simulation scene. If `dst_system_sim_name`
+        was provided, the same name is returned. Otherwise, a generated name is returned.
 
     :raises FileNotFoundError: If the system simulation scene to duplicate does not exist.
     """
 
-    if new_system_sim_name is not None:
-        dst_system_sim_name = new_system_sim_name
+    if dst_system_sim_name is not None:
+        dst_system_sim_name = dst_system_sim_name
     else:
         now = datetime.datetime.now()
         dst_system_sim_name = (
             f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
         )
 
-    if system_sim_to_duplicate is not None:
-        source_path = PH.file_blend_system_simulation(system_sim_to_duplicate)
-    else:
-        source_path = PH.file_blend_system_simulation_template()
+    source_path = PH.file_blend_system_simulation_template(src_system_sim_name)
 
     if os.path.exists(source_path):
-        if not os.path.exists(PH.directory_system_simulation(dst_system_sim_name)):
-            os.makedirs(PH.directory_system_simulation(dst_system_sim_name))
-
+        create_top_level_system_sim_directories(system_sim_name=dst_system_sim_name)
         shutil.copy2(source_path, PH.file_blend_system_simulation(dst_system_sim_name))
-
-        if not os.path.exists(PH.directory_system_sim_rend(dst_system_sim_name)):
-            os.makedirs(PH.directory_system_sim_rend(dst_system_sim_name))
-        if not os.path.exists(PH.directory_system_rend_spectral(dst_system_sim_name)):
-            os.makedirs(PH.directory_system_rend_spectral(dst_system_sim_name))
-        if not os.path.exists(
-            PH.directory_system_rend_visibility_maps(dst_system_sim_name)
-        ):
-            os.makedirs(PH.directory_system_rend_visibility_maps(dst_system_sim_name))
+        logging.info(
+            f"System simulation scene copied with id '{dst_system_sim_name}' to "
+            f"'{PH.directory_system_simulation(dst_system_sim_name)}'."
+        )
     else:
         raise FileNotFoundError(
             f"System simulation scene not found for duplication from '{source_path}'. "
         )
-    logging.info(
-        f"System simulation scene copied with id '{dst_system_sim_name}' to "
-        f"'{PH.directory_system_simulation(dst_system_sim_name)}'."
-    )
 
     return dst_system_sim_name
 
 
-def copy_leaf_material_parameters(
-    forest_id: str, leaf_id: str, source_set_name: str, sample_id: int = None
+def copy_slab_material_parameters(
+    system_sim_name: str,
+    slab_material_name: str,
+    src_slab_sim_name: str,
+    signal_id: int = None,
 ):
-    """Reads spectral leaf simulation result and copies it as a leaf material parameter file
-    to be consumed by system_simulation setup.
+    """Reads slab simulation result and copies it as a slab material parameter file
+    to be consumed by :mod:`blender_scripts.bs_setup_forest`.
 
-    Leaf material parameters are written as a csv file to give to specified system_simulation scene.
+    Slab material parameters are written as a csv file to give to specified system_simulation scene.
     We use csv file instead of toml files because importing external packages, such as toml,
-    into Blender's own Python environment is bit of a hassle. Csv files work just as well and
+    into Blender's own Python environment is a bit of a hassle. Csv files work just as well and
     they can be read with tools already included by default.
 
-    :param forest_id:
-        Forest id to be set the leaf material parameters to.
-    :param source_set_name:
-        Source set name that must be found from HyperBlend/leaf_measurement_sets/ directory.
-    :param leaf_id:
-        An id to be assigned to the leaf for later referencing. This will be put into the
-        name of the file written.
-    :param sample_id:
-        Sample id (int) of the leaf measurement set. If `None`, set's average values will be used instead
-        of a specific sample.
+    TODO: check how this is actually used. The material names should be generalized at some point
+
+    .. note::
+        This may change as new Python version with included toml is in use in HyperBlend.
+
+    :param system_sim_name: Name of the system simulation.
+    :param src_slab_sim_name: Name of the slab simulation to copy from.
+    :param slab_material_name: Name of the slab material. This will be put into the
+        name of the file written and is used by the scripts in :mod:`blender_scripts`.
+    :param signal_id: Signal id of the slab simulation. If `None`, slab simulation's
+        average values will be used instead of a specific signal.
     """
 
-    if sample_id is None:
-        result_dict = TH.read_set_result(source_set_name)
+    if signal_id is None:
+        result_dict = TH.read_set_result(src_slab_sim_name)
         wls = result_dict[C.key_set_result_wls]
         ad = result_dict[C.key_set_result_wl_ad_mean]
         sd = result_dict[C.key_set_result_wl_sd_mean]
         ai = result_dict[C.key_set_result_wl_ai_mean]
         mf = result_dict[C.key_set_result_wl_mf_mean]
 
-        plot_path = PH.file_slab_sim_result_plot(slab_sim_name=source_set_name)
+        plot_path = PH.file_slab_sim_result_plot(slab_sim_name=src_slab_sim_name)
 
     else:
         result_dict = TH.read_sample_result(
-            set_name=source_set_name, sample_id=sample_id
+            set_name=src_slab_sim_name, sample_id=signal_id
         )
         wls = result_dict[C.key_sample_result_wls]
         ad = result_dict[C.key_sample_result_ad]
@@ -378,13 +425,16 @@ def copy_leaf_material_parameters(
         ai = result_dict[C.key_sample_result_ai]
         mf = result_dict[C.key_sample_result_mf]
 
-        folder = PH.directory_top_target(slab_sim_name=source_set_name)
-        image_name = FN.filename_resample_plot(sample_id=sample_id)
+        folder = PH.directory_top_target(slab_sim_name=src_slab_sim_name)
+        image_name = FN.filename_resample_plot(sample_id=signal_id)
         plot_path = PH.join(folder, image_name)
 
-    # Copy leaf plot to scene dir for convenience
-    folder = PH.directory_system_simulation(system_sim_name=forest_id)
-    image_name = f"leaf_spectrum_plot{leaf_id}{C.postfix_plot_image_format}"
+    # Copy slab result plot to scene dir for convenience
+    folder = PH.directory_system_simulation(system_sim_name=system_sim_name)
+
+    # TODO: move to filenames and use consistently
+    image_name = f"leaf_spectrum_plot{slab_material_name}{C.postfix_plot_image_format}"
+
     dst_plot_path = PH.join(folder, image_name)
     try:
         shutil.copy2(plot_path, dst_plot_path)
@@ -393,14 +443,10 @@ def copy_leaf_material_parameters(
             f"Could not find resampled target plot for copying from '{plot_path}'."
         )
 
-    with open(
-        PH.file_system_slab_csv(forest_id, leaf_id), "w+", newline=CSV_NEWLINE
-    ) as csvfile:
+    p = PH.file_system_slab_csv(system_sim_name, slab_material_name)
+    with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 
-        writer = csv.writer(
-            csvfile,
-            delimiter=CSV_DELIMITER,
-        )
+        writer = csv.writer(csvfile, delimiter=CSV_DELIMITER)
 
         header = [
             "band",
@@ -417,23 +463,28 @@ def copy_leaf_material_parameters(
             writer.writerow(row)
 
 
-def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type="sun"):
+def write_blender_light_spectra(
+    system_sim_name: str, wls: list[float], irradiances, lighting_type="sun"
+):
     """Write light spectra to a csv file that can be read by Blender script.
 
-    :param forest_id:
-        Id of the system_simulation scene to write to.
-    :param wls:
-        List of wavelengths to be written.
-    :param irradiances:
-        List of sun irradiances to be written.
-    :param lighting_type:
-         String - either 'sun' or 'sky'.
+    TODO: accept any general light source name. Sun and sky can be in a separate
+        method if needed, but really, maybe not necessary.
+
+    :param system_sim_name: Name of the system_simulation scene to write to.
+    :param wls: List of wavelengths to be written.
+    :param irradiances: List of light irradiances to be written.
+    :param lighting_type: Either 'sun' or 'sky'.
     """
 
     if lighting_type == "sun":
-        p = PH.file_system_sim_light_spectra_csv(forest_id)
+        p = PH.file_system_sim_light_spectra_csv(
+            system_sim_name=system_sim_name, light_file_name="blender_sun"
+        )
     elif lighting_type == "sky":
-        p = PH.file_forest_sky_csv(forest_id)
+        p = PH.file_system_sim_light_spectra_csv(
+            system_sim_name=system_sim_name, light_file_name="blender_sky.csv"
+        )
     else:
         raise ValueError(
             f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'."
@@ -454,47 +505,58 @@ def write_blender_light_spectra(forest_id: str, wls, irradiances, lighting_type=
             writer.writerow(row)
 
 
-def read_blender_light_spectra(forest_id: str, lighting_type="sun"):
-    """Read light spectra csv from a Blender script.
+# def read_blender_light_spectra(
+#     system_sim_name: str, lighting_type="sun"
+# ) -> tuple[list[float], list[float], list[float]]:
+#     """Read light spectra csv from a Blender script.
+#
+#     :param system_sim_name: Name of the system simulation to read the light file from.
+#     :param lighting_type: String either 'sun' or 'sky'.
+#
+#     :returns: bands, wls, irradiances - each is a list of floats.
+#     """
+#
+#     if lighting_type == "sun":
+#         p = PH.file_system_sim_light_spectra_csv(
+#             system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sun
+#         )
+#     elif lighting_type == "sky":
+#         p = PH.file_system_sim_light_spectra_csv(
+#             system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sky
+#         )
+#     else:
+#         raise ValueError(
+#             f"Light type not recognized. Expected file type either 'sun' or 'sky', "
+#             f"was '{lighting_type}'."
+#         )
+#
+#     with open(p, "r", newline=CSV_NEWLINE) as csvfile:
+#
+#         reader = csv.reader(
+#             csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC
+#         )
+#         next(reader, None)  # skip the headers
+#
+#         bands = []
+#         wls = []
+#         irradiances = []
+#         for row in reader:
+#             bands.append(row[0])
+#             wls.append(row[1])
+#             irradiances.append(row[2])
+#
+#         return bands, wls, irradiances
 
-    :param forest_id:
-        Id of the system_simulation scene to read from.
-    :param lighting_type:
-         String either 'sun' or 'sky'.
-    :return:
-        bands, wls, irradiances - each is a list of floats.
+
+def write_blender_rgb_colors(system_sim_name: str, rgb_dict: dict) -> None:
+    """Write RGB colors to a csv file that can be read by :mod:`blender_scripts`.
+
+    :param system_sim_name Name of the system simulation.
+    :param rgb_dict: Dictionary of RGB colors to be written. The keys are the
+        names of the colors
     """
 
-    if lighting_type == "sun":
-        p = PH.file_system_sim_light_spectra_csv(forest_id)
-    elif lighting_type == "sky":
-        p = PH.file_forest_sky_csv(forest_id)
-    else:
-        raise ValueError(
-            f"Wrong lighting type. Expected file type either 'sun' or 'sky', was '{lighting_type}'."
-        )
-
-    with open(p, "r", newline=CSV_NEWLINE) as csvfile:
-
-        reader = csv.reader(
-            csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC
-        )
-        next(reader, None)  # skip the headers
-
-        bands = []
-        wls = []
-        irradiances = []
-        for row in reader:
-            bands.append(row[0])
-            wls.append(row[1])
-            irradiances.append(row[2])
-
-        return bands, wls, irradiances
-
-
-def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
-
-    p = PH.file_system_sim_rgb_colors_csv(system_sim_name=forest_id)
+    p = PH.file_system_sim_rgb_colors_csv(system_sim_name=system_sim_name)
 
     with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 
@@ -511,18 +573,17 @@ def write_blender_rgb_colors(forest_id: str, rgb_dict: dict):
             writer.writerow(row)
 
 
-def write_blender_soil(forest_id: str, wls, reflectances):
+def write_blender_soil(
+    system_sim_name: str, wls: list[float], reflectances: list[float]
+) -> None:
     """Write soil reflectance spectra to a csv file that can be read by Blender script.
 
-    :param forest_id:
-        Id of the system_simulation scene to write to.
-    :param wls:
-        List of wavelengths to be written.
-    :param reflectances:
-        List of sun irradiances to be written.
+    :param system_sim_name: Name of the system simulation.
+    :param wls: List of wavelengths to be written.
+    :param reflectances: List of reflectances to be written.
     """
 
-    p = PH.file_forest_soil_csv(system_sim_name=forest_id)
+    p = PH.file_forest_soil_csv(system_sim_name=system_sim_name)
 
     with open(p, "w+", newline=CSV_NEWLINE) as csvfile:
 

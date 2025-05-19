@@ -198,16 +198,16 @@ class Optimization:
                 f"Finished optimizing of all wavelengths of sample {sample_id}. Saving sample result"
             )
             elapsed_min = (time.perf_counter() - total_time_start) / 60.0
-            TH.make_sample_result(
+            TH.make_signal_result(
                 self.set_name, sample_id, wall_clock_time_min=elapsed_min
             )
-            plotter.plot_sample_result(
+            plotter.plot_signal_result(
                 self.set_name, sample_id, dont_show=True, save_thumbnail=True
             )
 
-        TH.write_set_result(self.set_name)
-        plotter.plot_set_result(self.set_name, dont_show=True, save_thumbnail=True)
-        plotter.plot_set_errors(self.set_name, dont_show=True, save_thumbnail=True)
+        TH.write_slab_sim_result(self.set_name)
+        plotter.plot_slab_sim_result(self.set_name, dont_show=True, save_thumbnail=True)
+        plotter.plot_slab_sim_errors(self.set_name, dont_show=True, save_thumbnail=True)
 
 
 def optimize_single_wl_threaded(args):
@@ -279,7 +279,7 @@ def optimize_single_wl(
     """
 
     print(f"Optimizing wavelength {wl} nm started.", flush=True)
-    if FH.subresult_exists(set_name, wl, sample_id):
+    if FH.optimization_wl_result_exists(set_name, wl, sample_id):
         print(
             f"Subresult for sample {sample_id} wl {wl:.2f} already exists. Skipping optimization.",
             flush=True,

@@ -11,7 +11,6 @@ from unittest import TestCase
 import logging
 import numpy as np
 
-import constants
 from src.setup import initialization
 from src.slab_model import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
@@ -23,7 +22,7 @@ from src.blender_scripts import forest_control as FCtrl
 from src import constants as C
 
 
-@unittest.skip("Skipping for now")
+# @unittest.skip("Skipping for now")
 class TestSystemSimulation(TestCase):
 
     def setUp(self) -> None:
@@ -59,7 +58,7 @@ class TestSystemSimulation(TestCase):
         new_sampling = [450, 550, 650, 1930]
         SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
         SMI.solve_leaf_material_parameters(
-            set_name=slab_sim_name, clear_old_results=True, runtime=self.runtime
+            slab_sim_name=slab_sim_name, clear_old_results=True, runtime=self.runtime
         )
 
         # Pack leaf data for system_simulation scene initialization.
@@ -243,8 +242,14 @@ class TestSystemSimulation(TestCase):
                 system_sim_name=system_sim_name,
                 slab_material_name=slab_material_names[0],
             ),
-            PH.file_system_sim_light_spectra_csv(system_sim_name=system_sim_name),
-            PH.file_forest_sky_csv(system_sim_name=system_sim_name),
+            PH.file_system_sim_light_spectra_csv(
+                system_sim_name=system_sim_name,
+                light_file_name=C.file_blender_default_sun,
+            ),
+            PH.file_system_sim_light_spectra_csv(
+                system_sim_name=system_sim_name,
+                light_file_name=C.file_blender_default_sky,
+            ),
         ]
 
         for path in should_exist:

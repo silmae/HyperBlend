@@ -199,7 +199,9 @@ def initialize_directories(slab_sim_name, clear_old_results=False):
 
     ids = FH.list_target_ids(slab_sim_name)
     for _, signal_id in enumerate(ids):
-        FH.clear_rend_leaf(slab_sim_name, signal_id)
+        FH.clear_rend_slab(slab_sim_name, signal_id)
         FH.clear_rend_refs(slab_sim_name, signal_id)
         if clear_old_results:
-            FH.clear_folder(P.directory_optimization_result(slab_sim_name, signal_id))
+            FH.clear_directory(
+                P.directory_optimization_result(slab_sim_name, signal_id)
+            )

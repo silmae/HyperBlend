@@ -198,7 +198,7 @@ class TestSlabs(TestCase):
 
         SMI.solve_leaf_material_parameters(
             runtime=self.runtime,
-            set_name=slab_sim_name,
+            slab_sim_name=slab_sim_name,
             clear_old_results=True,
             resolution=None,
             use_dumb_sampling=False,
@@ -256,7 +256,7 @@ class TestSlabs(TestCase):
 
         SMI.solve_leaf_material_parameters(
             runtime=self.runtime,
-            set_name=slab_sim_opt_name,
+            slab_sim_name=slab_sim_opt_name,
             clear_old_results=True,
             resolution=None,
             use_dumb_sampling=False,

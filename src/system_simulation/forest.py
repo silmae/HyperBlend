@@ -68,11 +68,11 @@ def init(
 
     if copy_forest_id is not None:
         forest_id = FH.duplicate_system_simulation_scene(
-            system_sim_to_duplicate=copy_forest_id, new_system_sim_name=custom_forest_id
+            src_system_sim_name=copy_forest_id, dst_system_sim_name=custom_forest_id
         )
     else:
         forest_id = FH.duplicate_system_simulation_scene(
-            new_system_sim_name=custom_forest_id
+            dst_system_sim_name=custom_forest_id
         )
 
     if copy_forest_id is not None:
@@ -159,11 +159,11 @@ def init(
         set_name = leaf[0]
         sample_id = leaf[1]
         leaf_id = leaf[2]
-        FH.copy_leaf_material_parameters(
-            forest_id=forest_id,
-            leaf_id=leaf_id,
-            source_set_name=set_name,
-            sample_id=sample_id,
+        FH.copy_slab_material_parameters(
+            system_sim_name=forest_id,
+            slab_material_name=leaf_id,
+            src_slab_sim_name=set_name,
+            signal_id=sample_id,
         )
 
     ################ Leaf RGB ################
@@ -181,7 +181,7 @@ def init(
         rgb_dict[dict_key] = rgb
 
     # print(f"RGB dict '{rgb_dict}'.")
-    FH.write_blender_rgb_colors(forest_id=forest_id, rgb_dict=rgb_dict)
+    FH.write_blender_rgb_colors(system_sim_name=forest_id, rgb_dict=rgb_dict)
 
     ################ Sun ################
 
@@ -200,7 +200,7 @@ def init(
     sun_irr_max = np.max(sun_irradiance)
     sun_irradiance = sun_irradiance / sun_irr_max
     FH.write_blender_light_spectra(
-        forest_id=forest_id,
+        system_sim_name=forest_id,
         wls=sun_wls,
         irradiances=sun_irradiance,
         lighting_type="sun",
@@ -230,7 +230,7 @@ def init(
     # Normalize with maximum SUN irradiance
     sky_irradiance = sky_irradiance / sun_irr_max
     FH.write_blender_light_spectra(
-        forest_id=forest_id,
+        system_sim_name=forest_id,
         wls=sky_wls,
         irradiances=sky_irradiance,
         lighting_type="sky",
@@ -258,7 +258,9 @@ def init(
         forest_id=forest_id, soil_name=soil_name, sampling=sampling
     )
     FH.write_blender_soil(
-        forest_id=forest_id, wls=soil_wls_resampled, reflectances=soil_refls_resampled
+        system_sim_name=forest_id,
+        wls=soil_wls_resampled,
+        reflectances=soil_refls_resampled,
     )
     plotter.plot_blender_soil(
         wls=soil_wls,

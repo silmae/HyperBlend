@@ -41,7 +41,7 @@ def check_sampling(set_name: str) -> bool:
         )
         return False
 
-    ids = FH.list_finished_sample_ids(set_name=set_name)
+    ids = FH.list_finished_result_signal_ids(slab_sim_name=set_name)
     for sample_id in ids:
         sample_result = TH.read_sample_result(set_name=set_name, sample_id=sample_id)
         sample_wls = sample_result[C.key_sample_result_wls]

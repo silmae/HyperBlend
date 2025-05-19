@@ -42,6 +42,8 @@ autodoc_default_options = {
     "private-members": True,
 }
 
+add_module_names = False  # clear module names out of function signatures
+
 autodoc_mock_imports = [
     "bpy",  # Do not try to truly import Blender's bpy
 ]

@@ -692,7 +692,7 @@ def plot_wl_optimization_history(
     plt.close(fig)
 
 
-def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
+def plot_slab_sim_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     """Plot average of sample results as the set result.
 
     :param set_name:
@@ -773,7 +773,7 @@ def plot_set_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         plt.show()
 
 
-def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
+def plot_slab_sim_errors(set_name: str, dont_show=True, save_thumbnail=True):
     """Plots averaged optimization errors of a sample."""
 
     plt.close("all")
@@ -783,7 +783,7 @@ def plot_set_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
     ax.set_ylabel("RMSE", fontsize=axis_label_font_size)
 
-    ids = FH.list_finished_sample_ids(set_name)
+    ids = FH.list_finished_result_signal_ids(set_name)
     wls = []
     refl_errs = []
     tran_errs = []
@@ -855,7 +855,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     """
 
     plt.close("all")
-    target_ids = FH.list_target_ids(set_name=set_name)
+    target_ids = FH.list_target_ids(slab_sim_name=set_name)
 
     for sample_id in target_ids:
         target_original = TH.read_target(
@@ -902,7 +902,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
             plt.show()
 
 
-def plot_sample_result(
+def plot_signal_result(
     set_name: str, sample_id: int, dont_show=True, save_thumbnail=True
 ) -> None:
     """Plots sample result.
@@ -990,7 +990,7 @@ def replot_wl_results(set_name: str):
     Overwrites existing plots.
     """
 
-    sample_ids = FH.list_finished_sample_ids(set_name)
+    sample_ids = FH.list_finished_result_signal_ids(set_name)
     for sample_id in sample_ids:
         d = TH.read_sample_result(set_name, sample_id=sample_id)
         wls = d[C.key_sample_result_wls]

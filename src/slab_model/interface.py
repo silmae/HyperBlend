@@ -81,7 +81,7 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
 
 def solve_leaf_material_parameters(
     runtime: RuntimeEnvironment,
-    set_name: str,
+    slab_sim_name: str,
     resolution=None,
     use_dumb_sampling=False,
     solver="nn",
@@ -98,7 +98,7 @@ def solve_leaf_material_parameters(
     in the Git repository, but you can train your own using ``train_models()`` method. Solver 'opt'
     does not need training.
 
-    :param set_name: Name of the measurement set.
+    :param slab_sim_name: Name of the measurement set.
     :param resolution: If resolution is None (default), spectral sampling defined
         in `sampling.toml` will be used. If resolution is provided and can be interpreted
         as an int, new sampling is written from 400 nm to 2500 nm with given `resolution` nm intervals.
@@ -117,44 +117,54 @@ def solve_leaf_material_parameters(
     """
 
     if copyof:
-        FH.copy_slab_simulation_target(from_set=copyof, to_set=set_name)
+        FH.copy_slab_simulation_target(
+            src_slab_sim_name=copyof, dst_slab_sim_name=slab_sim_name
+        )
     else:
         LC.initialize_directories(
-            slab_sim_name=set_name, clear_old_results=clear_old_results
+            slab_sim_name=slab_sim_name, clear_old_results=clear_old_results
         )
 
     if resolution is not None:
         step = int(resolution)  # let it fail if cannot be cast to int
         target = TH.read_target(
-            set_name=set_name, sample_id=0
+            set_name=slab_sim_name, sample_id=0
         )  # raises error if target not found
         wls, _, _ = DU.unpack_target(target=target)
         wls = np.array(wls)
         sampling_start = max(np.min(wls), 400)
         sampling_end = min(np.max(wls) + 1, 2501)
         sampling_even = np.arange(sampling_start, sampling_end, step=step)
-        TH.write_sampling(set_name=set_name, sampling=sampling_even, overwrite=True)
+        TH.write_sampling(
+            set_name=slab_sim_name, sampling=sampling_even, overwrite=True
+        )
     else:
         # If given resolution is None, i.e., we expect proper sampling to exist but it does not
-        if sampling.sampling_empty(set_name=set_name) and not use_dumb_sampling:
+        if sampling.sampling_empty(set_name=slab_sim_name) and not use_dumb_sampling:
             raise RuntimeError(
-                f"Sampling has not been defined for set '{set_name}'. "
+                f"Sampling has not been defined for set '{slab_sim_name}'. "
                 f"Cannot solve leaf material parameters."
             )
 
     if not use_dumb_sampling:
-        sampling.resample(set_name=set_name, plot_resampling=plot_resampling)
+        sampling.resample(set_name=slab_sim_name, plot_resampling=plot_resampling)
 
-    ids = FH.list_target_ids(set_name)
+    ids = FH.list_target_ids(slab_sim_name)
     ids.sort()
 
     if len(ids) < 1:
-        raise RuntimeError(f'Could not find any targets for set "{set_name}".')
+        raise RuntimeError(
+            f"Could not find any target signals for slab simulation '{slab_sim_name}''."
+        )
 
-    for _, sample_id in enumerate(ids):
-        FH.create_signal_optimization_directories(set_name, sample_id)
-        logging.info(f"Starting optimization of sample {sample_id}")
-        targets = TH.read_target(set_name, sample_id, resampled=not use_dumb_sampling)
+    for _, signal_id in enumerate(ids):
+        FH.create_slab_sim_signal_directories(
+            slab_sim_name=slab_sim_name, signal_id=signal_id
+        )
+        logging.info(f"Solving slab parameters of Signal {signal_id}")
+        targets = TH.read_target(
+            slab_sim_name, signal_id, resampled=not use_dumb_sampling
+        )
 
         # TODO the sampling is now a problem as the new sampling cannot properly handle the
         #    5 nm resolution used in the published tests.
@@ -163,8 +173,9 @@ def solve_leaf_material_parameters(
             targets = targets[::resolution]
 
         if solver == "opt":
+            FH.create_signal_optimization_directories(slab_sim_name, signal_id)
             o = Optimization(
-                runtime=runtime, set_name=set_name, solver_name=solver_dirname
+                runtime=runtime, set_name=slab_sim_name, solver_name=solver_dirname
             )
             o.run_optimization(resampled=not use_dumb_sampling)
         elif solver == "surf" or solver == "nn":
@@ -191,8 +202,8 @@ def solve_leaf_material_parameters(
 
             r, t = LC._material_params_to_RT(
                 runtime=runtime,
-                slab_sim_name=set_name,
-                signal_id=sample_id,
+                slab_sim_name=slab_sim_name,
+                signal_id=signal_id,
                 wls=wls,
                 ad=ad,
                 sd=sd,
@@ -221,19 +232,19 @@ def solve_leaf_material_parameters(
                 time_wall_clock_min,
             )
 
-            TH.write_sample_result(set_name, sample_result_dict, sample_id)
+            TH.write_sample_result(slab_sim_name, sample_result_dict, signal_id)
 
-            plotter.plot_sample_result(
-                set_name, sample_id, dont_show=True, save_thumbnail=True
+            plotter.plot_signal_result(
+                slab_sim_name, signal_id, dont_show=True, save_thumbnail=True
             )
         else:
             raise AttributeError(
                 f"Unknown solver '{solver}'. Use one of ['nn','surf','opt']."
             )
 
-    TH.write_set_result(set_name)
-    plotter.plot_set_result(set_name, dont_show=True, save_thumbnail=True)
-    plotter.plot_set_errors(set_name, dont_show=True, save_thumbnail=True)
+    TH.write_slab_sim_result(slab_sim_name)
+    plotter.plot_slab_sim_result(slab_sim_name, dont_show=True, save_thumbnail=True)
+    plotter.plot_slab_sim_errors(slab_sim_name, dont_show=True, save_thumbnail=True)
 
 
 def iterative_train(

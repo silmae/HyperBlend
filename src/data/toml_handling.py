@@ -106,7 +106,7 @@ def write_surface_model_parameters(parameter_dict, solver_name=None):
         toml.dump(parameter_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def write_set_result(set_name: str):
+def write_slab_sim_result(set_name: str):
     """Collect sample results and write final result to a toml file."""
 
     result_dict = {}
@@ -288,7 +288,7 @@ def read_set_result(set_name: str):
 
     p = PH.file_slab_sim_result(slab_sim_name=set_name)
     if not os.path.exists(p):
-        write_set_result(set_name)
+        write_slab_sim_result(set_name)
     with open(p, "r") as file:
         result = toml.load(file)
 
@@ -304,7 +304,7 @@ def collect_sample_results(set_name: str):
         List of sample result dictionaries.
     """
 
-    ids = FH.list_finished_sample_ids(set_name)
+    ids = FH.list_finished_result_signal_ids(set_name)
     collected_results = []
     for _, sample_id in enumerate(ids):
         sample_result_dict = read_sample_result(set_name, sample_id)
@@ -574,7 +574,7 @@ def read_starting_guess_coeffs(slab_model_name: str = None) -> dict:
         return data
 
 
-def make_sample_result(set_name: str, sample_id: int, wall_clock_time_min=0.0):
+def make_signal_result(set_name: str, sample_id: int, wall_clock_time_min=0.0):
     """Creates the sample result by collecting the data from wavelength results.
 
     Saves the result as numerical data and plots.

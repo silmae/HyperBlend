@@ -179,7 +179,7 @@ set_name = "try_random_p_leaves"
 LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
 
 # Solve renderable leaf material parameters that produce target reflectance and transmittance
-LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
+LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
 
 # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_random_p_leaves\set_result
 ```
@@ -202,7 +202,7 @@ LI.generate_prospect_leaf(set_name=set_name, sample_id=0, n=1.5, ab=32, ar=8, br
 LI.generate_prospect_leaf(set_name=set_name, sample_id=1, w=0.001, m=0.03)
 
 # Solve renderable leaf material parameters as before
-LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
+LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
 
 # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_p_leaves\set_result
 ```
@@ -216,7 +216,7 @@ in `\HyperBlend\leaf_measurement_sets\try_copying_set\set_result`
 from src.slab_model import interface as LI
 
 copy_set = "try_copying_set"
-LI.solve_leaf_material_parameters(set_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
+LI.solve_leaf_material_parameters(slab_sim_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
 ```
 
 
@@ -239,7 +239,7 @@ data = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
 TH.write_target(set_name, data, sample_id=0)
 
 # Solve as before
-LI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver='nn')
+LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
 ```
 
 The same workflow we have seen in earlier examples applies here. We just have to have some data to work with.

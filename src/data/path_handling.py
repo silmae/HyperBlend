@@ -461,35 +461,13 @@ def file_system_sim_light_spectra_csv(
     """Path to the light spectra csv file that is used for rendering.
 
     Specific for system_simulation type system simulation.
-
-    TODO: make this into a general function for any system simulation light file
-        that might be needed in the future.
     """
-
-    if light_file_name is None:
-        light_file_name = "blender_sun.csv"
 
     if not light_file_name.endswith(".csv"):
         light_file_name = light_file_name + ".csv"
 
     p = join(directory_system_simulation(system_sim_name), light_file_name)
     return p
-
-
-def file_forest_sky_csv(system_sim_name: str) -> str:
-    """Path to the sky spectra csv file that is used for rendering.
-
-    This is a shortcut to call :func:`file_system_sim_light_spectra_csv()` with the
-    name of the sky file.
-
-    TODO replace the logic so that it is not dependent on this specific file name.
-        This is now specific for the forest simulation.
-    """
-
-    filename = "blender_sky.csv"
-    return file_system_sim_light_spectra_csv(
-        system_sim_name=system_sim_name, light_file_name=filename
-    )
 
 
 def file_forest_soil_csv(system_sim_name: str) -> str:

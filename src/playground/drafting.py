@@ -57,7 +57,7 @@ if __name__ == "__main__":
     SI.generate_prospect_leaf_random(set_name=set_name, count=3)
     # Solve renderable leaf material parameters that produce target reflectance and transmittance
     SI.solve_leaf_material_parameters(
-        set_name=set_name, solver="nn", clear_old_results=True
+        slab_sim_name=set_name, solver="nn", clear_old_results=True
     )
     # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_random_p_leaves\set_result
 
@@ -88,14 +88,16 @@ if __name__ == "__main__":
     # Remember to give new sample_id so that the previously created leaf is not overwritten.
     SI.generate_prospect_leaf(set_name=set_name, sample_id=1, w=0.001, m=0.03)
     # Solve renderable leaf material parameters as before
-    SI.solve_leaf_material_parameters(set_name=set_name, resolution=10, solver="nn")
+    SI.solve_leaf_material_parameters(
+        slab_sim_name=set_name, resolution=10, solver="nn"
+    )
     # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_p_leaves\set_result
 
     # We can also copy existing set and solve it with a different solver for example. Let's try that with
     #   surface fitting solver called 'surf'
     copy_set = "try_copying_set"
     SI.solve_leaf_material_parameters(
-        set_name=copy_set, resolution=10, solver="surf", copyof="try_p_leaves"
+        slab_sim_name=copy_set, resolution=10, solver="surf", copyof="try_p_leaves"
     )
 
     # Let's try manually creating some data to work with
@@ -106,5 +108,5 @@ if __name__ == "__main__":
     TH.write_target(set_name, data, sample_id=0, resampled=False)
     # Solve as before
     SI.solve_leaf_material_parameters(
-        set_name=set_name, resolution=1, solver="opt", clear_old_results=True
+        slab_sim_name=set_name, resolution=1, solver="opt", clear_old_results=True
     )

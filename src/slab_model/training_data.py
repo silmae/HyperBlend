@@ -206,7 +206,7 @@ def generate_starting_guess(
     if slab_sim_name is None:
         slab_sim_name = C.starting_guess_set_name
 
-    FH.create_top_level_slab_sim_directories(slab_simu_name=slab_sim_name)
+    FH.create_top_level_slab_sim_directories(slab_sim_name=slab_sim_name)
     o = Optimization(
         runtime=runtime,
         set_name=slab_sim_name,

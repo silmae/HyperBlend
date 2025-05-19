@@ -145,6 +145,10 @@ file_default_sun = "default_sun.txt"
 file_default_sky = "default_sky.txt"
 """Default sky spectrum file name that is included in the repository."""
 
+file_blender_default_sun = "blender_sun"
+
+file_blender_default_sky = "blender_sky"
+
 file_sampling_data = "sampling"
 """Toml formatted file storing wavelengths for resampling."""
 

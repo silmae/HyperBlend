@@ -26,7 +26,7 @@ def run_paper_tests():
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
-        set_name="iterative_specchio_nn",
+        slab_sim_name="iterative_specchio_nn",
         copyof="specchio",
         solver="nn",
         solver_dirname=nn_name,
@@ -36,7 +36,7 @@ def run_paper_tests():
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
-        set_name="iterative_specchio_surf",
+        slab_sim_name="iterative_specchio_surf",
         copyof="specchio",
         solver="surf",
         plot_resampling=False,
@@ -47,7 +47,7 @@ def run_paper_tests():
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
-        set_name="iterative_prospect_nn",
+        slab_sim_name="iterative_prospect_nn",
         copyof="prospect_randoms",
         solver="nn",
         solver_dirname=nn_name,
@@ -57,7 +57,7 @@ def run_paper_tests():
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
-        set_name="iterative_prospect_surf",
+        slab_sim_name="iterative_prospect_surf",
         copyof="prospect_randoms",
         solver="surf",
         plot_resampling=False,
@@ -92,7 +92,7 @@ def asym_test(smthng="const_r_var_t"):
     # o = Optimization(set_name=set_name, diffstep=0.01)
     # o.run_optimization(resampled=False, use_threads=True)
     LI.solve_leaf_material_parameters(
-        set_name=set_name,
+        slab_sim_name=set_name,
         use_dumb_sampling=True,
         solver="nn",
         clear_old_results=True,

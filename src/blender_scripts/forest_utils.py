@@ -20,13 +20,18 @@ blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 if "System simulation" in blend_dir:
     # We are in a copied blend file in HyperBlend/System simulation/scene_12345
     script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
+    src_dir = os.path.abspath(blend_dir + "../../../src/")
 else:
     # We are in the template system_simulation blend file
     script_dir = os.path.abspath(blend_dir + "../src/blender_scripts")
+    src_dir = os.path.abspath(blend_dir + "../src")
 
 # After this is set, any script in /blender_scripts can be imported
 if script_dir not in sys.path:
     sys.path.append(script_dir)
+
+if src_dir not in sys.path:
+    sys.path.append(src_dir)
 
 # This is needed for at least Blender 4.4, which cannot
 #   find the HyperBLend modules otherwise.
@@ -38,6 +43,7 @@ if pythonpath_env:
 
 import forest_constants as FC
 from src.data import path_handling as PH
+from src import constants as C
 import forest_control as control
 
 import importlib
@@ -142,9 +148,13 @@ def set_sun_or_sky_power_hsi(scene_id: str, for_sun=True):
     """
 
     if for_sun:
-        p = PH.file_system_sim_light_spectra_csv(system_sim_name=scene_id)
+        p = PH.file_system_sim_light_spectra_csv(
+            system_sim_name=scene_id, light_file_name=C.file_blender_default_sun
+        )
     else:
-        p = PH.file_forest_sky_csv(system_sim_name=scene_id)
+        p = PH.file_system_sim_light_spectra_csv(
+            system_sim_name=scene_id, light_file_name=C.file_blender_default_sky
+        )
     if not os.path.exists(p):
         raise FileNotFoundError(
             f"Sun or sky csv file '{p}' not found. Try rerunning system_simulation initialization."

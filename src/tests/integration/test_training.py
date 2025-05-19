@@ -27,7 +27,7 @@ from src.setup import initialization
 from src import constants as C
 
 
-@unittest.skip("Skipping training test for now")
+# @unittest.skip("Skipping training test for now")
 class TestTraining(TestCase):
 
     def setUp(self):
