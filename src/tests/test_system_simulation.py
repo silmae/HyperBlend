@@ -6,18 +6,16 @@ This module test the system simulation functionality.
 
 import os
 import unittest  # needed for skipping tests
-from shutil import rmtree
 from unittest import TestCase
 import logging
 import numpy as np
 
 from src.setup import initialization
 from src.slab_model import interface as SMI
-from src.data import path_handling as PH, toml_handling as TH
+from src.data import path_handling as PH
 from src.data import cube_handling as CH
 from src.system_simulation import forest
 from src.rendering import blender_control as BC
-from src.setup.runtime_environment import RuntimeEnvironment
 from src.blender_scripts import forest_control as FCtrl
 from src import constants as C
 

@@ -88,7 +88,9 @@ def construct_envi_cube(forest_id: str):
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 2)
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 1)
 
-    p = PH.file_system_sim_light_spectra_csv(system_sim_name=forest_id)
+    p = PH.file_system_sim_light_spectra_csv(
+        system_sim_name=forest_id, light_file_name=C.file_blender_default_sun
+    )
     if not os.path.exists(p):
         logging.warning(
             f"Could not find sun data for wavelength info. "

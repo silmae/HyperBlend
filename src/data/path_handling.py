@@ -360,6 +360,11 @@ def file_blend_system_simulation_template(
 
     The .blend extension is added automatically if not given.
 
+    TODO: this doesn't make any sense anymore as there can be only one template...
+        no! There can be other templates. But currently there is only one. So the
+        caller must take care if they actually want a template or some other
+        scene file.
+
     :param template_name: Name of the template file. If None given,
         the default template is used.
     """

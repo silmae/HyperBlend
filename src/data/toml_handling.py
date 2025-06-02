@@ -550,7 +550,7 @@ def write_starting_guess_coeffs(
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-    path = PH.file_starting_guess(solver_name=solver_name)
+    path = PH.file_starting_guess(slab_model_name=solver_name)
     coeff_dict = {
         C.ad_coeffs: ad_coeffs,
         C.sd_coeffs: sd_coeffs,

@@ -11,7 +11,7 @@ import logging
 
 from src.setup import initialization
 from src.slab_model import interface as SMI
-from src.data import path_handling as PH, toml_handling as TH
+from src.data import path_handling as PH
 
 
 # @unittest.skip("Skipping test_slab_simulation for now")

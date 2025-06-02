@@ -16,12 +16,11 @@ Test plan:
 
 import os
 import unittest  # needed for skipping tests
-from shutil import rmtree
 from unittest import TestCase
 import logging
 
 from src.slab_model import interface as SMI
-from src.data import path_handling as PH, toml_handling as TH
+from src.data import path_handling as PH
 from src.slab_model import training_data as TD
 from src.setup import initialization
 from src import constants as C

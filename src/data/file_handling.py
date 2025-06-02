@@ -361,7 +361,10 @@ def duplicate_system_simulation_scene(
             f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
         )
 
-    source_path = PH.file_blend_system_simulation_template(src_system_sim_name)
+    if src_system_sim_name is None:
+        source_path = PH.file_blend_system_simulation_template(src_system_sim_name)
+    else:
+        source_path = PH.file_blend_system_simulation(src_system_sim_name)
 
     if os.path.exists(source_path):
         create_top_level_system_sim_directories(system_sim_name=dst_system_sim_name)
@@ -479,11 +482,11 @@ def write_blender_light_spectra(
 
     if lighting_type == "sun":
         p = PH.file_system_sim_light_spectra_csv(
-            system_sim_name=system_sim_name, light_file_name="blender_sun"
+            system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sun
         )
     elif lighting_type == "sky":
         p = PH.file_system_sim_light_spectra_csv(
-            system_sim_name=system_sim_name, light_file_name="blender_sky.csv"
+            system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sky
         )
     else:
         raise ValueError(
