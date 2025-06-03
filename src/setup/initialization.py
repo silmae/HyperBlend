@@ -10,6 +10,7 @@ in there are not supposed to be changed.
 import logging
 import os
 import datetime
+import sys
 from sys import platform
 
 import numpy as np
@@ -58,7 +59,7 @@ def _init_logging():
         force=True,
         handlers=[
             logging.FileHandler(log_path, mode="w"),
-            logging.StreamHandler(),
+            logging.StreamHandler(sys.stdout),
         ],
     )
 
