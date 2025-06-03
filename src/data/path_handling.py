@@ -34,6 +34,13 @@ def directory_project_root() -> str:
     return p
 
 
+def directory_log() -> str:
+    """Path to logging directory."""
+
+    p = join(C.path_project_root, C.dirname_log)
+    return p
+
+
 def directory_internal() -> str:
     """Path to directory containing HyperBlend internal files."""
 

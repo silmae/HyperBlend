@@ -58,6 +58,9 @@ path_project_root = "../"
 # Names of the directories
 # NOTE do not change render folder names as they are used by Blender script
 
+
+dirname_log = "log"
+
 dirname_internal = "Internal"
 
 dirname_system_sim = "System simulation"

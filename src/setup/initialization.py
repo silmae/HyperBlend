@@ -40,9 +40,7 @@ def initialize():
 
 def _init_logging():
 
-    # log to stdout instead of stderr for nice coloring
-    # logging.basicConfig(stream=sys.stdout, level='INFO')
-    path_dir_logs = "../log"
+    path_dir_logs = PH.directory_log()
     if not os.path.exists(path_dir_logs):
         os.makedirs(path_dir_logs)
 
