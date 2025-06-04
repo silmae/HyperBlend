@@ -5,42 +5,12 @@ Parsing and generating file names.
 from src import constants as C
 
 
-# def get_nn_save_name(layer_count: int, layer_width: int, batch_size: int, lr: float, split:float, training_set:str) -> str:
-#     """Generate filename for neural network.
-#
-#     This is used for the NN models and training history plot with according postfix.
-#
-#     :param layer_count:
-#         Hidden layer count.
-#     :param layer_width:
-#         Width of hidden layers.
-#     :param batch_size:
-#         Batch size
-#     :param lr:
-#         Learning rate
-#     :param split:
-#         Persentage of data reserved to testing.
-#     :return:
-#         Returns generated name.
-#     """
-#
-#     name = f"lc{layer_count}_lw{layer_width}_b{batch_size}_lr{lr:.3f}_split{split:.2f}.pt"
-#     return name
+def parse_target_signal_id(filename: str) -> int:
+    """Parses target signal id of a slab simulation from a given filename.
 
-
-# def get_surface_model_save_name(training_set_name: str) -> str:
-#
-#     file_name = f"surface_params_{training_set_name}{C.postfix_text_data_format}"
-#     return file_name
-
-
-def parse_sample_id(filename: str) -> int:
-    """Parse sample id from given filename as listed by os.listdir().
-
-    :param filename:
-        File name.
-    :return:
-        Parsed sample id.
+    :param filename: Filename in the format where the target id is an int
+        at the end of the name, e.g. `target_123.toml`.
+    :return: Parsed sample id.
     """
 
     sample_id = int(filename.rstrip(C.postfix_text_data_format).split("_")[-1])
@@ -48,9 +18,14 @@ def parse_sample_id(filename: str) -> int:
 
 
 def parse_wl_from_filename(filename: str):
-    """Parse the wavelength from result toml or plot file's name.
+    """Parse the wavelength from result signal toml or plot file's name.
 
-    The name must be formed [refl|tran]_wl[0-9]+.[0-9]+/.*
+    This is only used by the optimization slab simulation material parameter solver.
+
+    :param filename: The filename must be formatted so that the wavelength is the
+        last item in the name, separated by `_wl_` and the wavelength itself can
+        be cast to float, such as `result_wl_1.00.toml`.
+    :return: Wavelength as float.
     """
 
     tail = filename.split("_wl_", 1)[1]
@@ -58,32 +33,29 @@ def parse_wl_from_filename(filename: str):
     return float(wl_s)
 
 
-def filename_wl_result(wl: float) -> str:
-    """Generate name of a wavelength result toml file of given wavelength.
+def filename_wl_result(wl: float, file_type="data") -> str:
+    """Generate name of a wavelength result file of given wavelength.
 
-    :param wl:
-        Wavelength as float. Must be accurate to 2 decimals.
+    Used only by slab simulation **optimizer** material parameter solver.
+
+    :param wl: Wavelength as float. Must be accurate to 2 decimals.
+    :param file_type: Type of file to generate, either "data" for toml file
+        or "plot" for png.
+    :return: Filename as string in format `result_wl_1.00.toml` or `result_wl_1.00.png`.
     """
 
-    filename = f"/result_wl_{wl:.2f}" + C.postfix_text_data_format
+    if file_type == "data":
+        filename = f"result_wl_{wl:.2f}" + C.postfix_text_data_format
+    elif file_type == "plot":
+        filename = f"result_wl_{wl:.2f}" + C.postfix_plot_image_format
+    else:
+        raise ValueError(f"Unknown file type: {file_type}. Use 'data' or 'plot'.")
+
     return filename
 
 
-def filename_wl_result_plot(wl: float) -> str:
-    """File name of wavelength result plot.
-
-    :param wl:
-        Wavelength.
-    :return:
-        Filename as string.
-    """
-
-    filename = f"result_wl_{wl:.2f}{C.postfix_plot_image_format}"
-    return filename
-
-
-def filename_target(signal_id: int, resampled=False) -> str:
-    """Generate filename of a toml file where target measurements are stored.
+def filename_target_signal(signal_id: int, resampled=False) -> str:
+    """Generate filename of a target signal toml file.
 
     :param signal_id: Signal id.
     :param resampled: If True, file name of corresponding resampled file is
@@ -100,26 +72,23 @@ def filename_target(signal_id: int, resampled=False) -> str:
 
 
 def filename_resample_plot(sample_id: int) -> str:
-    """Generate filename resampling plot.
-
-    :param sample_id:
-        Sample id.
-    """
+    """Generate filename for resampling plot."""
 
     filename = f"target_{sample_id}_resampling{C.postfix_plot_image_format}"
     return filename
 
 
-def filename_rendered_image(imaging_type: str, wl: float) -> str:
-    """Generates a name for a rendered image based on given wavelength.
+def filename_slab_sim_render_refl_or_tran(imaging_type: str, wl: float) -> str:
+    """Returns a name for a reflectance or transmittance image of slab optimizer.
 
-    :param imaging_type:
-        String either 'refl' for reflectance or 'tran' for
-        transmittance. Use the ones listed in constants.py.
-    :param wl:
-        Wavelength.
-    :return:
-        Image name in the format that other parts of the code can understand.
+    .. warning::
+        This name must match the one the rendering script uses. So if any changes
+        are made in rendering, they must be reflected here as well.
+
+    :param imaging_type: String either 'refl' for reflectance or 'tran' for
+        transmittance. Use the ones listed in :mod:`src.constants`.
+    :param wl: Wavelength.
+    :return: The name of the image.
     """
 
     image_name = f"{imaging_type}_wl_{wl:.2f}{C.postfix_render_image_format}"
@@ -140,20 +109,27 @@ def filename_signal_result_plot(signal_id: int) -> str:
     return filename
 
 
-def filename_forest_reflectance_cube(scene_id):
+def filename_system_sim_spectral_cube(system_sim_name: str, file_type="data") -> str:
+    """Filename of the spectral image cube of a system simulation.
 
-    filename = f"reflectance_cube_{scene_id}.img"
+    :param system_sim_name: Scene id of the system simulation.
+    :param file_type: Either "data" for the image data file or "header" for the header file.
+    :return: Filename of the image cube itself or the name of the header file.
+    """
+
+    if file_type == "data":
+        postfix = "img"
+    elif file_type == "header":
+        postfix = "hdr"
+    else:
+        raise ValueError(f"Unknown file type: {file_type}. Use 'data' or 'header'.")
+
+    filename = f"spectral_cube_{system_sim_name}.{postfix}"
     return filename
 
 
-def filename_system_sim_reflectance_header(scene_id):
+def filename_slab_material_csv(slab_material_name: str) -> str:
+    """Spectral slab material parameters csv file name."""
 
-    filename = f"reflectance_cube_{scene_id}.hdr"
-    return filename
-
-
-def filename_slab_material_csv(leaf_material_name: str) -> str:
-    """Spectral leaf material parameters csv file name."""
-
-    filename = f"LM_{leaf_material_name}.csv"
+    filename = f"SM_{slab_material_name}.csv"
     return filename

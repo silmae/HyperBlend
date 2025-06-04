@@ -333,7 +333,7 @@ def file_slab_target(slab_sim_name: str, signal_id: int, resampled=False) -> str
 
     p = join(
         directory_top_target(slab_sim_name=slab_sim_name),
-        FN.filename_target(signal_id=signal_id, resampled=resampled),
+        FN.filename_target_signal(signal_id=signal_id, resampled=resampled),
     )
     return p
 
@@ -433,7 +433,7 @@ def file_cube_header(system_sim_name: str) -> str:
 
     p = join(
         directory_system_spectral_cube(system_sim_name),
-        FN.filename_system_sim_reflectance_header(system_sim_name),
+        FN.filename_system_sim_spectral_cube(system_sim_name, file_type="header"),
     )
     return p
 
@@ -688,7 +688,7 @@ def find_by_wl(wl: float, mode: str, imaging_type: str, base_path: str) -> str:
         image_wl = FN.parse_wl_from_filename(filename)
 
         if almost_equals(wl, image_wl):
-            image_name = FN.filename_rendered_image(imaging_type, wl)
+            image_name = FN.filename_slab_sim_render_refl_or_tran(imaging_type, wl)
 
             if mode == C.target_type_slab:
                 return join(base_path, C.dirname_slab_sim_rend, image_name)

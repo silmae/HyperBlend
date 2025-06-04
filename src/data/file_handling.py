@@ -194,7 +194,7 @@ def list_target_ids(slab_sim_name: str) -> list[int]:
     ids = []
     for filename in os.listdir(PH.directory_top_target(slab_sim_name)):
         if re.match(r"target_[0-9]+\.toml", filename):
-            ids.append(FN.parse_sample_id(filename))
+            ids.append(FN.parse_target_signal_id(filename))
     return ids
 
 
@@ -208,7 +208,7 @@ def list_finished_result_signal_ids(slab_sim_name: str) -> list[int]:
             if filename.startswith(C.filename_result_signal) and filename.endswith(
                 C.postfix_text_data_format
             ):
-                ids.append(FN.parse_sample_id(filename))
+                ids.append(FN.parse_target_signal_id(filename))
     return ids
 
 

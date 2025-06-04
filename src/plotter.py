@@ -679,7 +679,7 @@ def plot_wl_optimization_history(
 
     if save_thumbnail is not None:
         folder = PH.directory_optimization_result(set_name, sample_id)
-        image_name = FN.filename_wl_result_plot(wl)
+        image_name = FN.filename_wl_result(wl, file_type="plot")
         path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
         plt.savefig(
