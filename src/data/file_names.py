@@ -1,5 +1,11 @@
 """
-Parsing and generating file names.
+This module handles such file names that are not directly contained in
+:mod`src.constants`. Such file names include rendered images that depend on the wavelength,
+target signal toml files, and result files of slab simulations.
+
+As the project relies largely on file names, the parsers for such names are also
+found here. Some file names are dictated by the rendering scripts and Blender files, so
+care nust be taken that they stay in sync when refactoring the code or the Blender files.
 """
 
 from src import constants as C

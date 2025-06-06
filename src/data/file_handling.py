@@ -12,8 +12,7 @@ import os
 import datetime
 import shutil
 import csv
-import re  # regular expressions
-from typing import Tuple, List
+import re  # for regular expressions
 
 from src import plotter, constants as C
 from src.data import file_names as FN, toml_handling as TH, path_handling as PH
@@ -78,8 +77,6 @@ def create_top_level_slab_sim_directories(slab_sim_name: str) -> None:
     are covered by :func:`create_signal_optimization_directories()`.
 
     These are separate methods because the others need also the signal id.
-
-    :param slab_sim_name: Name of the slab simulation.
     """
 
     dirs_to_create = [
@@ -95,13 +92,6 @@ def create_top_level_slab_sim_directories(slab_sim_name: str) -> None:
     logging.info(f"Top level slab simulation directories created.")
     printable_list = "\n".join(dirs_to_create)
     logging.debug(f"Created directories: {printable_list}")
-
-    # if not os.path.exists(PH.directory_top_slab_simulation()):
-    #     os.makedirs(PH.directory_top_slab_simulation())
-    # if not os.path.exists(PH.directory_top_target(slab_sim_name)):
-    #     os.makedirs(PH.directory_top_target(slab_sim_name))
-    # if not os.path.exists(PH.directory_top_result_signal(slab_sim_name)):
-    #     os.makedirs(PH.directory_top_result_signal(slab_sim_name))
 
 
 def create_top_level_system_sim_directories(system_sim_name: str) -> None:
@@ -160,25 +150,6 @@ def create_signal_optimization_directories(slab_sim_name: str, signal_id: int) -
     logging.info(f"Slab simulation's signal directories for optimization created.")
     printable_list = "\n".join(dirs_to_create)
     logging.debug(f"Created directories: {printable_list}")
-
-    # if not os.path.exists(p_working):
-    #     os.makedirs(p_working)
-    #
-    # p = PH.directory_slab_working_rend(slab_sim_name, signal_id)
-    # if not os.path.exists(p):
-    #     os.makedirs(p)
-    #
-    # p = PH.directory_slab_rend_reference(C.imaging_type_refl, p_working)
-    # if not os.path.exists(p):
-    #     os.makedirs(p)
-    #
-    # p = PH.directory_slab_rend_reference(C.imaging_type_tran, p_working)
-    # if not os.path.exists(p):
-    #     os.makedirs(p)
-    #
-    # p = PH.directory_optimization_result(slab_sim_name, signal_id)
-    # if not os.path.exists(p):
-    #     os.makedirs(p)
 
 
 def list_target_ids(slab_sim_name: str) -> list[int]:
@@ -506,49 +477,6 @@ def write_blender_light_spectra(
         for i, wl in enumerate(wls):
             row = [i + 1, wl, irradiances[i]]
             writer.writerow(row)
-
-
-# def read_blender_light_spectra(
-#     system_sim_name: str, lighting_type="sun"
-# ) -> tuple[list[float], list[float], list[float]]:
-#     """Read light spectra csv from a Blender script.
-#
-#     :param system_sim_name: Name of the system simulation to read the light file from.
-#     :param lighting_type: String either 'sun' or 'sky'.
-#
-#     :returns: bands, wls, irradiances - each is a list of floats.
-#     """
-#
-#     if lighting_type == "sun":
-#         p = PH.file_system_sim_light_spectra_csv(
-#             system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sun
-#         )
-#     elif lighting_type == "sky":
-#         p = PH.file_system_sim_light_spectra_csv(
-#             system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sky
-#         )
-#     else:
-#         raise ValueError(
-#             f"Light type not recognized. Expected file type either 'sun' or 'sky', "
-#             f"was '{lighting_type}'."
-#         )
-#
-#     with open(p, "r", newline=CSV_NEWLINE) as csvfile:
-#
-#         reader = csv.reader(
-#             csvfile, delimiter=CSV_DELIMITER, quoting=csv.QUOTE_NONNUMERIC
-#         )
-#         next(reader, None)  # skip the headers
-#
-#         bands = []
-#         wls = []
-#         irradiances = []
-#         for row in reader:
-#             bands.append(row[0])
-#             wls.append(row[1])
-#             irradiances.append(row[2])
-#
-#         return bands, wls, irradiances
 
 
 def write_blender_rgb_colors(system_sim_name: str, rgb_dict: dict) -> None:
