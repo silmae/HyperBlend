@@ -35,7 +35,7 @@ def run(runtime: RuntimeEnvironment, data_exits=False):
             )
         vals = []
         for value in HSV_values:
-            p = PH.find_by_wl(
+            p = PH.find_slab_opt_render_by_wl(
                 wl=value,
                 mode=C.target_type_slab,
                 imaging_type=C.imaging_type_refl,

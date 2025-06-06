@@ -187,12 +187,12 @@ def init(
 
     logging.info(f"Normalizing, resampling and writing sun data.")
     sun_wls_org, sun_irradiance_org = lighting.load_light(
-        file_name=sun_file_name, scene_id=forest_id, lighting_type="sun"
+        file_name=sun_file_name, system_sim_name=forest_id, lighting_type="sun"
     )
     logging.info(f"Reloading sun with new sampling.")
     sun_wls, sun_irradiance = lighting.load_light(
         file_name=sun_file_name,
-        scene_id=forest_id,
+        system_sim_name=forest_id,
         sampling=sampling,
         lighting_type="sun",
     )
@@ -219,11 +219,11 @@ def init(
     ################ Sky ################
 
     sky_wls_org, sky_irradiance_org = lighting.load_light(
-        file_name=sky_file_name, scene_id=forest_id, lighting_type="sky"
+        file_name=sky_file_name, system_sim_name=forest_id, lighting_type="sky"
     )
     sky_wls, sky_irradiance = lighting.load_light(
         file_name=sky_file_name,
-        scene_id=forest_id,
+        system_sim_name=forest_id,
         sampling=sampling,
         lighting_type="sky",
     )

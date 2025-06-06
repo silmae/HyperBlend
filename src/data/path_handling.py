@@ -9,6 +9,7 @@ word 'code' in their name.
 
 """
 
+import logging
 import os
 from typing import List
 
@@ -652,7 +653,31 @@ def path_nn_model(slab_model_name: str = None) -> str:
     return model_path
 
 
-def find_by_wl(wl: float, mode: str, imaging_type: str, base_path: str) -> str:
+def directory_slab_rend_reference(imaging_type: str, base_path: str) -> str:
+    """Returns the path to reflectance or transmittance reference folder of the slab simulation.
+
+    :param imaging_type: String either 'refl' for reflectance or 'tran' for transmittance.
+        Use the ones listed in constants.py.
+    :param base_path: Path to  the working folder. Usually the one returned by
+        path_directory_slab_optimization_working_temp() is correct and other paths
+        should only be used for testing and debugging.
+    """
+
+    if imaging_type == C.imaging_type_refl:
+        p = join(base_path, C.folder_rend_ref_refl)
+    elif imaging_type == C.imaging_type_tran:
+        p = join(base_path, C.folder_rend_ref_tran)
+    else:
+        raise Exception(
+            f"Imaging type {imaging_type} not recognized. Use "
+            f"{C.imaging_type_refl} or {C.imaging_type_tran}."
+        )
+    return p
+
+
+def find_slab_opt_render_by_wl(
+    wl: float, mode: str, imaging_type: str, base_path: str
+) -> str:
     """Search for slab simulation optimization render by wavelength.
 
     :param wl: Wavelength to be searched. Must match the image name with two decimals.
@@ -705,23 +730,37 @@ def find_by_wl(wl: float, mode: str, imaging_type: str, base_path: str) -> str:
     raise FileNotFoundError(f"Could not find '{wl}' nm image from '{directory}'.")
 
 
-def directory_slab_rend_reference(imaging_type: str, base_path: str) -> str:
-    """Returns the path to reflectance or transmittance reference folder of the slab simulation.
+def find_light_file(file_name: str, system_sim_name: str = None) -> str:
+    """Attempts to find a light file with given filename.
 
-    :param imaging_type: String either 'refl' for reflectance or 'tran' for transmittance.
-        Use the ones listed in constants.py.
-    :param base_path: Path to  the working folder. Usually the one returned by
-        path_directory_slab_optimization_working_temp() is correct and other paths
-        should only be used for testing and debugging.
+    :param file_name: A file with this name is searched from `Light spectra` directory. If
+        also ``system_sim_name`` is given, the system simulation directory is searched before
+        extending the search to `Light spectra` directory.
+    :param system_sim_name: Optional. If not given, system_simulation scene directory is
+        not searched.
+    :return: Path to found file.
+    :raises FileNotFoundError: If the file is not found.
     """
 
-    if imaging_type == C.imaging_type_refl:
-        p = join(base_path, C.folder_rend_ref_refl)
-    elif imaging_type == C.imaging_type_tran:
-        p = join(base_path, C.folder_rend_ref_tran)
-    else:
-        raise Exception(
-            f"Imaging type {imaging_type} not recognized. Use "
-            f"{C.imaging_type_refl} or {C.imaging_type_tran}."
+    if system_sim_name is not None:
+        logging.info(
+            f"Trying to find lighting data from system_simulation scene directory "
+            f"'{directory_system_simulation(system_sim_name)}'."
         )
-    return p
+        p = join(directory_system_simulation(system_sim_name), file_name)
+        if os.path.exists(p):
+            logging.info(f"Light data found.")
+            return p
+        else:
+            logging.debug(
+                f"Could not find light data from scene directory '{p}'. "
+                f"Now searching default directory."
+            )
+
+    p_dir = directory_light_spectra()
+
+    p = join(p_dir, file_name)
+    if os.path.exists(p):
+        return p
+
+    raise FileNotFoundError(f"Could not find light file from '{p}'.")

@@ -22,10 +22,10 @@ def get_relative_refl_or_tran(imaging_type: str, wl: float, base_path: str) -> f
     """
 
     leaf_mean = get_rend_as_mean(
-        PH.find_by_wl(wl, C.target_type_slab, imaging_type, base_path)
+        PH.find_slab_opt_render_by_wl(wl, C.target_type_slab, imaging_type, base_path)
     )
     reference_mean = get_rend_as_mean(
-        PH.find_by_wl(wl, C.target_type_ref, imaging_type, base_path)
+        PH.find_slab_opt_render_by_wl(wl, C.target_type_ref, imaging_type, base_path)
     )
     relative = leaf_mean / reference_mean
     return relative
