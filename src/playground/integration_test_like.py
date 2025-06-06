@@ -79,4 +79,4 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     BC.render_forest(forest_id=forest_id, render_mode="spectral", runtime=runtime)
 
     # Construct spectral cube in ENVI format
-    CH.construct_envi_cube(forest_id=forest_id)
+    CH.construct_envi_cube(system_sim_name=forest_id)

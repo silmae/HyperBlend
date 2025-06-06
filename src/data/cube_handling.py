@@ -10,24 +10,28 @@ from src.utils import spectra_utils as SU
 from src import constants as C
 
 
-def construct_envi_cube(forest_id: str):
+def construct_envi_cube(system_sim_name: str):
     """Constructs an ENVI style hyperspectral image cube out of rendered images.
 
     Can be used after the scene has been rendered (at least spectral and visibility maps).
 
     White reference for reflectance calculation is searched automatically from
-    available visibility maps. Note that the maps must be named like "Reference 0.00 material...".
+    available visibility maps. Note that the maps must be named like
+    `Reference 0.00 material_0001.tif`.
+
+    TODO how this should behave if there are no visibility maps?
 
     Default RGB bands for ENVI metadata are inferred if in visible range.
     Otherwise first, middle, and last bands are used.
 
-    :return:
+    :raises FileNotFoundError: if the rendered frames directory does not exist or is
+        empty. Also if the sun data file does not exist, which is needed for wavelength info.
     """
 
-    p = PH.directory_system_rend_spectral(system_sim_name=forest_id)
+    p = PH.directory_system_rend_spectral(system_sim_name=system_sim_name)
     if not os.path.exists(p):
         raise FileNotFoundError(
-            f"Rend directory for system_simulation '{forest_id}' not found."
+            f"Rend directory for system simulation '{system_sim_name}' not found."
         )
 
     frame_name_list = os.listdir(p)
@@ -49,7 +53,7 @@ def construct_envi_cube(forest_id: str):
 
     # Find available reflectance plate reflectivity based on visibility map file names.
     reflectivities = []
-    map_names = PH.list_reference_visibility_maps(system_sim_name=forest_id)
+    map_names = PH.list_reference_visibility_maps(system_sim_name=system_sim_name)
     for map_name in map_names:
         splitted = map_name.split(" ")
         reflectivity = float(splitted[1])
@@ -58,43 +62,41 @@ def construct_envi_cube(forest_id: str):
 
     reflectivities.sort(reverse=True)
 
-    logging.info(f"Searching for good white reference plate..")
+    logging.info(f"Searching for a good white reference plate..")
     accepted_reflectivity = None
     for reflectivity in reflectivities:
         accepted_reflectivity = reflectivity
         mask_path = PH.find_reference_visibility_map(
-            system_sim_name=forest_id, reflectivity=reflectivity
+            system_sim_name=system_sim_name, reflectivity=reflectivity
         )
         mask = plt.imread(mask_path)
         mask = mask > 0
-        white_cube = raw_cube[:, mask]  # Flattens the reference plate area pixels..
-        white_mean = np.mean(
-            white_cube, axis=(1)
-        )  # .. so we take the mean only on one axis.
+        # Flattens the reference plate area pixels
+        white_cube = raw_cube[:, mask]
+        # so we take the mean only on one axis.
+        white_mean = np.mean(white_cube, axis=(1))
         white_mean_max = white_mean.max()
         if white_mean_max < max_burn:
+            logging.info(
+                f"Accepted white reference with {accepted_reflectivity:.2f} reflectivity "
+                f"producing maximum mean reflectance {white_mean_max:.1f}."
+            )
             break
-
-    logging.info(
-        f"Accepted white reference with {accepted_reflectivity:.2f} reflectivity "
-        f"producing maximum mean reflectance {white_mean_max:.1f}."
-    )
 
     white_mean = np.expand_dims(white_mean, axis=(1, 2))
     reflectance_cube = np.divide(raw_cube, white_mean, dtype=np.float32)
-    # refl_max = np.max(reflectance_cube)
 
     # Swap axis to arrange the array as expected by spectral.envi
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 2)
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 1)
 
     p = PH.file_system_sim_light_spectra_csv(
-        system_sim_name=forest_id, light_file_name=C.file_blender_default_sun
+        system_sim_name=system_sim_name, light_file_name=C.file_blender_default_sun
     )
     if not os.path.exists(p):
-        logging.warning(
-            f"Could not find sun data for wavelength info. "
-            f"The image cube will be saved without it."
+        raise FileNotFoundError(
+            f"Could not find sun data for wavelength info from `{p}`. "
+            f"There is no point saving the cube without bands and wavelengths."
         )
 
     # Retrieve band and wavelength info from the sun file.
@@ -112,17 +114,15 @@ def construct_envi_cube(forest_id: str):
 
     # Define default RGB bands.
     if SU.is_in_visible(wls=wls):
-        nearest_R_idx = SU.find_nearest_idx(wls, C.default_R_wl)
-        nearest_G_idx = SU.find_nearest_idx(wls, C.default_G_wl)
-        nearest_B_idx = SU.find_nearest_idx(wls, C.default_B_wl)
         default_bands = [
-            bands[nearest_R_idx],
-            bands[nearest_G_idx],
-            bands[nearest_B_idx],
+            bands[SU.find_nearest_idx(wls, C.default_R_wl)],
+            bands[SU.find_nearest_idx(wls, C.default_G_wl)],
+            bands[SU.find_nearest_idx(wls, C.default_B_wl)],
         ]
     else:
         default_bands = [bands[-1], bands[int(len(bands) / 2)], bands[0]]
 
+    # TODO Perhaps the extra ENVI header keys should be defined in constants.py
     header_dict = {
         "bands": reflectance_cube.shape[0],
         "lines": reflectance_cube.shape[1],
@@ -134,12 +134,13 @@ def construct_envi_cube(forest_id: str):
         "wavelength units": "nm",
     }
 
-    cube_dir_path = PH.directory_system_spectral_cube(forest_id)
+    cube_dir_path = PH.directory_system_spectral_cube(system_sim_name=system_sim_name)
     if not os.path.exists(cube_dir_path):
         os.makedirs(cube_dir_path)
 
-    p_hdr = PH.file_cube_header(system_sim_name=forest_id)
-    # SPy wants to know only the path to the header. It will find the image file automatically from the same dir.
+    p_hdr = PH.file_spectral_cube(system_sim_name=system_sim_name, file_type="header")
+    # SPy wants to know only the path to the header. It will find
+    #   the image file automatically from the same directory.
     spectral.envi.save_image(
         hdr_file=p_hdr,
         image=reflectance_cube,
@@ -149,24 +150,22 @@ def construct_envi_cube(forest_id: str):
     )
 
 
-def show_cube(forest_id: str):
+def show_cube(system_sim_name: str):
     """Shows the hyperspectral image cube.
 
-    Use construct_envi_cube() to generate it.
-
-    :param forest_id: Forest scene id.
-
-    :return: None
+    This is mainly for debugging purposes, to quickly visualize the cube.
+    For any real needs, use a dedicated ENVI viewer, such as the CubeInspector
+    found at `github.com/silmae/CubeInspector <https://github.com/silmae/cubeinspector>`_.
+    CubeInspector is a sister project of HyperBlend.
 
     :raises FileNotFoundError: if the cube does not exist.
     """
 
-    p_cube = PH.file_cube_header(system_sim_name=forest_id)
+    p_cube = PH.file_spectral_cube(system_sim_name=system_sim_name, file_type="header")
+
     if not os.path.exists(p_cube):
-        raise FileNotFoundError(
-            f"Cannot find spectral cube file from '{p_cube}'. "
-            f"Use construct_envi_cube() to generate the cube from rendered images."
-        )
+        raise FileNotFoundError(f"Cannot find spectral cube file from '{p_cube}'. ")
+
     data = spectral.open_image(p_cube)
 
     # Minus 1 because spectral is zero-based and ENVI standard one-based.. apparently.
@@ -177,6 +176,3 @@ def show_cube(forest_id: str):
     plt.figure(figsize=(10, 10))
     plt.imshow(rgb)
     plt.show()
-
-    # TODO Would be nice if this worked, but it just flashes on the screen
-    # view = spectral.imshow(data, bands=default_bands)

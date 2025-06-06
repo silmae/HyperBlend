@@ -425,15 +425,18 @@ def file_blend_system_simulation(simulation_name: str) -> str:
     return p
 
 
-def file_cube_header(system_sim_name: str) -> str:
+def file_spectral_cube(system_sim_name: str, file_type: str) -> str:
     """Path to simulated spectral image cube header file.
 
     The header file is ENVI format convention that contains the metadata of the cube.
+
+    File type parameter as accepted by
+    :func:`data.file_names.filename_system_sim_spectral_cube()`
     """
 
     p = join(
         directory_system_spectral_cube(system_sim_name),
-        FN.filename_system_sim_spectral_cube(system_sim_name, file_type="header"),
+        FN.filename_system_sim_spectral_cube(system_sim_name, file_type=file_type),
     )
     return p
 

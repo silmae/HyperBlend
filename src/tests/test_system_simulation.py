@@ -213,7 +213,7 @@ class TestSystemSimulation(TestCase):
                 logging.info(f"Found visibility map at '{map_path}'")
 
         # Construct spectral cube in ENVI format
-        CH.construct_envi_cube(forest_id=system_sim_name_slave)
+        CH.construct_envi_cube(system_sim_name=system_sim_name_slave)
 
         p = PH.directory_system_spectral_cube(system_sim_name=system_sim_name_slave)
         self.assertTrue(
