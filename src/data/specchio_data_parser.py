@@ -1,9 +1,9 @@
 """
-This file contains methods to attempt to parse horrible Specchio data into some coherent format.
+This module contains methods to attempt to parse Specchio data into some coherent format.
 
 This is only used in the case that reflectance and transmittance measurements have to be
-loaded in separate files in separate folders one by one from specchio.ch web interface. The code is
-a mess but one should not have to use this often.
+loaded in separate files in separate folders one by one from `specchio.ch <https://specchio.ch/>`_
+web interface. The code is a mess but one should not have to use this often.
 
 """
 
@@ -13,7 +13,7 @@ import numpy as np
 import toml
 
 
-main_folder = os.path.normpath("../../../SpeccioData")
+main_folder = os.path.normpath("../../../SpecchioData")
 
 
 def make_target(wls, r_m, t_m, path, sample_idx):
