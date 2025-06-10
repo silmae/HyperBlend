@@ -1,3 +1,10 @@
+"""
+TODO this whole thing should be reworked to solve reflective diffuse materials.
+    If not already implemented elswhere. Otherwise, this can be destroyed or
+    moved under drafting.
+
+"""
+
 import data.path_handling
 from src import plotter, constants as C
 from src.rendering import blender_control as BC
