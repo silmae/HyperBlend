@@ -105,7 +105,7 @@ if __name__ == "__main__":
     # Example data list of lists where inner list holds the data ordered as [wavelength, reflectance, transmittance]
     data = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
     # Write data to disk in a format the HyperBlend can understand
-    TH.write_target(set_name, data, sample_id=0, resampled=False)
+    TH.write_target(set_name, data, signal_id=0, resampled=False)
     # Solve as before
     SI.solve_leaf_material_parameters(
         slab_sim_name=set_name, resolution=1, solver="opt", clear_old_results=True

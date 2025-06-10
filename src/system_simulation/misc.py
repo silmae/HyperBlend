@@ -116,7 +116,7 @@ def load_into_cube(scene_id):
 def maxdiff(set_name="prospect_randoms"):
 
     # Find maximum r t difference of sample.
-    res = TH.read_sample_result(set_name, 0)
+    res = TH.read_signal_result(set_name, 0)
     r = np.array(res["refls_modeled"])
     t = np.array(res["trans_modeled"])
     diff = np.abs(r - t)

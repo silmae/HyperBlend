@@ -1,8 +1,5 @@
 """
-Methods in this module handle writing and reading of various toml formatted txt files.
-
-Hierarchy of the results: final result is mean of sample results,
-which is collected from wavelength results.
+Methods in this module handle writing and reading of various toml formatted files.
 """
 
 import os
@@ -20,17 +17,14 @@ from src.data import path_handling as PH
 def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
     """General purpose dictionary saving method.
 
-    :param dictionary:
-        Dictionary to be written as toml.
-    :param directory:
-        Path to the directory where the toml should be written.
-    :param filename:
-        Name of the file to be written. Postfix '.toml' will be added if necessary.
+    :param dictionary: Dictionary to be written as toml.
+    :param directory: Path to the directory where the toml should be written.
+    :param filename: Name of the file to be written. Postfix '.toml' will be added if necessary.
     """
 
     if not os.path.exists(os.path.abspath(directory)):
         raise RuntimeError(
-            f"Cannot write given dictionary to path '{os.path.abspath(directory)}' "
+            f"Cannot write given dictionary to directory '{os.path.abspath(directory)}' "
             f"because it does not exist."
         )
 
@@ -45,14 +39,12 @@ def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
 def read_toml_as_dict(directory: str, filename: str):
     """General purpose toml reading method.
 
-    :param directory:
-        Path to the directory where the toml file is.
-    :param filename:
-        Name of the file to be read. Postfix '.toml' will be added if necessary.
-    :return dictionary:
-        Returns read toml file as a dictionary.
-    :raises FileNotFoundError:
-        Raises FileNotFoundError if the file does not exist.
+    :param directory: Path to the directory where the toml file is.
+    :param filename: Name of the file to be read. Postfix '.toml' will be added if necessary.
+
+    :return dictionary: Returns read toml file as a dictionary.
+
+    :raises FileNotFoundError: Raises FileNotFoundError if the file does not exist.
     """
 
     if not filename.endswith(".toml"):
@@ -62,7 +54,7 @@ def read_toml_as_dict(directory: str, filename: str):
 
     if not os.path.exists(os.path.abspath(p)):
         raise FileNotFoundError(
-            f"Cannot read from file '{os.path.abspath(p)}' "
+            f"Cannot read toml file '{os.path.abspath(p)}' "
             f"because it does not exist."
         )
 
@@ -71,13 +63,14 @@ def read_toml_as_dict(directory: str, filename: str):
     return result
 
 
-def read_surface_model_parameters(solver_dirname: str = None):
+def read_surface_model_parameters(solver_name: str = None):
     """Reads surface model parameters from a file and returns them as a dictionary.
 
-    :param solver_dirname: Name of the solver directory. If none given, the default is used
+    :param solver_name: Name of the solver (directory). If none given, the default
+        solver is used.
     """
 
-    p = PH.file_surface_model_parameters(slab_model_name=solver_dirname)
+    p = PH.file_surface_model_parameters(slab_model_name=solver_name)
     logging.info(f"Reading surface model parameters from '{p}'.")
 
     if not os.path.exists(p):
@@ -88,12 +81,10 @@ def read_surface_model_parameters(solver_dirname: str = None):
 
 
 def write_surface_model_parameters(parameter_dict, solver_name=None):
-    """Writes surface model parameters to a file
+    """Writes surface model parameters to a file.
 
-    :param parameter_dict:
-        Parameter dictionary to be saved.
-    :param solver_name:
-        Solver name used for saving the surface model parameters.
+    :param parameter_dict: Parameter dictionary to be saved.
+    :param solver_name: Solver name used for saving the surface model parameters.
     """
 
     p_dir = PH.directory_slab_model(slab_model_name=solver_name)
@@ -106,11 +97,11 @@ def write_surface_model_parameters(parameter_dict, solver_name=None):
         toml.dump(parameter_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def write_slab_sim_result(set_name: str):
-    """Collect sample results and write final result to a toml file."""
+def write_slab_sim_result(slab_sim_name: str):
+    """Collects slab simulation results and writes the final result to a toml file."""
 
     result_dict = {}
-    r = collect_sample_results(set_name)
+    r = collect_signal_results(slab_sim_name)
     sample_count = len(r)
     result_dict[C.key_set_result_sample_count] = sample_count
     result_dict[C.key_set_result_total_time_hours] = (
@@ -171,7 +162,8 @@ def write_slab_sim_result(set_name: str):
             [sr[C.key_sample_result_te] for sr in r]
         )
     else:
-        # Standard deviation not defined for only one sample. Set to zero so that plots can still use it.
+        # Standard deviation not defined for only one sample.
+        #   Set to zero so that plots can still use it.
         result_dict[C.key_set_result_r_std] = 0.0
         result_dict[C.key_set_result_t_std] = 0.0
         result_dict[C.key_set_result_rm_std] = 0.0
@@ -246,7 +238,8 @@ def write_slab_sim_result(set_name: str):
             [sr[C.key_sample_result_mf] for sr in r], axis=0
         )
     else:
-        # Standard deviation not defined for only one sample. Set to zero so that plots can still use it.
+        # Standard deviation not defined for only one sample.
+        #   Set to zero so that plots can still use it.
         result_dict[C.key_set_result_wl_r_std] = np.zeros_like(
             r[0][C.key_sample_result_wls]
         )
@@ -278,89 +271,68 @@ def write_slab_sim_result(set_name: str):
             r[0][C.key_sample_result_wls]
         )
 
-    p = PH.file_slab_sim_result(slab_sim_name=set_name)
+    p = PH.file_slab_sim_result(slab_sim_name=slab_sim_name)
     with open(p, "w+") as file:
         toml.dump(result_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_set_result(set_name: str):
-    """Reads the set result file. Created if does not exist."""
+def read_slab_sim_result(slab_sim_name: str):
+    """Reads the slab simulation result file. Created if does not exist.
 
-    p = PH.file_slab_sim_result(slab_sim_name=set_name)
+    :return: Result file content as a dict.
+    """
+
+    p = PH.file_slab_sim_result(slab_sim_name=slab_sim_name)
     if not os.path.exists(p):
-        write_slab_sim_result(set_name)
+        write_slab_sim_result(slab_sim_name)
     with open(p, "r") as file:
         result = toml.load(file)
 
     return result
 
 
-def collect_sample_results(set_name: str):
-    """Collect results of finished samples in a list of dictionaries.
+def collect_signal_results(slab_sim_name: str):
+    """Collect results of simulated signals in a list of dictionaries."""
 
-    :param set_name:
-        Set name
-    :return:
-        List of sample result dictionaries.
-    """
-
-    ids = FH.list_finished_result_signal_ids(set_name)
+    ids = FH.list_finished_result_signal_ids(slab_sim_name)
     collected_results = []
     for _, sample_id in enumerate(ids):
-        sample_result_dict = read_sample_result(set_name, sample_id)
+        sample_result_dict = read_signal_result(slab_sim_name, sample_id)
         collected_results.append(sample_result_dict)
     return collected_results
 
 
-def read_sample_result(set_name: str, sample_id: int):
+def read_signal_result(slab_sim_name: str, signal_id: int):
     """Reads sample result file into a dict and returns it.
 
-    :param set_name:
-        Set name.
-    :param sample_id:
-        Sample id.
-    :return:
-        Result file content as a dict.
+    :return: Result file content as a dict.
     """
 
-    p = PH.file_signal_result(slab_sim_name=set_name, signal_id=sample_id)
+    p = PH.file_signal_result(slab_sim_name=slab_sim_name, signal_id=signal_id)
     with open(p, "r") as file:
         subres_dict = toml.load(file)
 
     return subres_dict
 
 
-def write_sample_result(set_name: str, res_dict: dict, sample_id: int) -> None:
-    """Writes sample result dictionary into a file.
-
-    :param set_name:
-        Set name.
-    :param res_dict:
-        Sample results as a dictionary to be written to disk.
-    :param sample_id:
-        Sample id.
-    """
+def write_signal_result(slab_sim_name: str, signal_id: int, res_dict: dict) -> None:
+    """Writes given signal result dictionary into a file."""
 
     p = PH.join(
-        PH.directory_result_signal(set_name, sample_id),
-        FN.filename_sample_result(sample_id),
+        PH.directory_result_signal(slab_sim_name, signal_id),
+        FN.filename_sample_result(signal_id),
     )
     with open(p, "w+") as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def collect_wavelength_result(set_name: str, sample_id: int):
+def collect_wavelength_result(slab_sim_name: str, signal_id: int):
     """Collects wavelength result dictionaries in to a list and returns it.
 
-    :param set_name:
-        Set name.
-    :param sample_id:
-        Sample id.
-    :return:
-        A list of wavelength result dictionaries.
+    :return: A list of wavelength result dictionaries.
     """
 
-    p = PH.directory_optimization_result(set_name, sample_id)
+    p = PH.directory_optimization_result(slab_sim_name, signal_id)
     subres_list = []
     for filename in os.listdir(p):
         if filename.endswith(C.postfix_text_data_format):
@@ -369,77 +341,61 @@ def collect_wavelength_result(set_name: str, sample_id: int):
     return subres_list
 
 
-def write_wavelength_result(set_name: str, res_dict: dict, sample_id: int) -> None:
-    """Writes wavelength result of optimization into a file.
-
-    :param set_name:
-        Set name.
-    :param res_dict:
-        Subresult dictionary.
-    :param sample_id:
-        Sample id.
-    """
+def write_wavelength_result(slab_sim_name: str, signal_id: int, res_dict: dict) -> None:
+    """Writes wavelength result of optimization into a file."""
 
     wl = res_dict[C.key_wl_result_wl]
-    p = PH.file_wl_result(set_name, sample_id, wl)
+    p = PH.file_wl_result(slab_sim_name, signal_id, wl)
     with open(p, "w+") as file:
         toml.dump(res_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_wavelength_result(set_name: str, wl: float, sample_id: int):
+def read_wavelength_result(slab_sim_name: str, signal_id: int, wl: float):
     """Reads a wavelength result file into a dictionary and returns it.
 
-    :param set_name:
-        Set name.
-    :param wl:
-        Wavelength of the subresult.
-    :param sample_id:
-        Sample id.
-    :return:
-        Subresult as a dictionary.
+    :return: Wavelength result as a dictionary.
     """
 
-    p = PH.file_wl_result(set_name, sample_id, wl)
+    p = PH.file_wl_result(slab_sim_name, signal_id, wl)
     with open(p, "r") as file:
         subres_dict = toml.load(file)
 
     return subres_dict
 
 
-def write_target(set_name: str, data, sample_id=0, resampled=False) -> None:
+def write_target(slab_sim_name: str, data, signal_id=0, resampled=False) -> None:
     """Writes given list of reflectance and transmittance data to toml formatted file.
 
-    Writes also empty sampling file to the target directory.
+    Writes also an empty sampling file to the target directory.
 
-    :param set_name:
-        Set name.
-    :param data:
-        List of lists or list of tuples [[wl, r, t], ...]
-        Do not use numpy arrays as they may break the toml writer.
-    :param sample_id:
-        Sample id. Default is 0, which is used for sets with only one sample.
-    :param resampled:
-        If True, data is written to a file with 'resampled' in the name. Default is False.
+    :param slab_sim_name: Name of the slab simulation.
+    :param data: List of lists, or list of tuples like [[wl, r, t], ...]
+
+        .. warning::
+            Do not use numpy arrays as they may break the toml writer.
+    :param signal_id: Default is 0, which is used for slab simulations with only one signal.
+    :param resampled: If True, data is written to a file with the word 'resampled' in its
+        name. Default is False.
     """
 
     floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
     res = {"wlrt": floated_list}
-    p = PH.file_slab_target(set_name, sample_id, resampled=resampled)
+    p = PH.file_slab_target(slab_sim_name, signal_id, resampled=resampled)
     if not os.path.exists(p):
-        FH.create_top_level_slab_sim_directories(set_name)
-        FH.create_signal_optimization_directories(set_name, signal_id=0)
+        FH.create_top_level_slab_sim_directories(slab_sim_name)
+        FH.create_signal_optimization_directories(slab_sim_name, signal_id=0)
     with open(p, "w+") as file:
         toml.dump(res, file)
 
-    write_sampling(set_name)
+    write_sampling(slab_sim_name)
 
 
-def read_target(set_name: str, sample_id: int, resampled=False):
-    """Read target values for optimization.
+def read_target(slab_sim_name: str, signal_id: int, resampled=False):
+    """Read target signals for solving slab material parameters.
 
-    :param set_name:
+    :param slab_sim_name:
         Name of the set.
-    :param sample_id:
+    :param signal_id:
         Sample id.
     :param resampled:
         If True, data is read from a corresponding resampled file. Default is False.
@@ -449,44 +405,37 @@ def read_target(set_name: str, sample_id: int, resampled=False):
     :raises OSError: if file could not be opened.
     """
 
-    with open(
-        PH.file_slab_target(set_name, sample_id, resampled=resampled), "r"
-    ) as file:
+    p = PH.file_slab_target(slab_sim_name, signal_id, resampled=resampled)
+    with open(p, "r") as file:
         data = toml.load(file)
         data = data["wlrt"]
         data = np.array(data)
         return data
 
 
-def write_sampling(set_name: str, sampling: list = None, overwrite=False):
-    """Write resampling data file for given leaf measurement set.
+def write_sampling(slab_sim_name: str, sampling: list = None, overwrite=False):
+    """Write sampling data file for a given slab simulation.
 
     Preferred workflow is to NOT provide a list of wavelengths here,
     which will result an empty file where you can copy and paste desired
     wavelengths. Providing a wavelengths list here is good for debugging
     or quick experiments though.
 
-    If the resampling file already exits, does nothing.
+    .. note::
+        If the sampling file already exits, this method does nothing unless
+        ``overwrite = True``.
 
-    :param set_name:
-        Name of the leaf measurement set.
-    :param sampling:
-        You can give a list of wavelengths here. If none is given, an
+    :param slab_sim_name: Name of the slab simulation.
+    :param sampling: You can give a list of wavelengths here. If none is given, an
         empty wavelength dictionary is written to the file. You can
         later copy paste wavelengths from an ENVI file, for example.
-    :param overwrite:
-        If True, overwrite existing sampling with the new one. Default is False.
+    :param overwrite: If True, overwrites existing sampling with the new one. Default is False.
     """
 
-    p = PH.file_spectral_sampling(set_name)
+    p = PH.file_spectral_sampling(slab_sim_name)
 
-    # Escape if the file exists already
+    # Escape if the file exists already and overwrite was not requested.
     if os.path.exists(p) and not overwrite:
-        logging.info(
-            f"Halting write_sampling() in toml_handling.py because sampling already exits "
-            f"in '{p}' an no overwrite was requested. Call with overwrite=True if you want to overwrite "
-            f"existing sampling."
-        )
         return
 
     if sampling is None:
@@ -503,16 +452,16 @@ def write_sampling(set_name: str, sampling: list = None, overwrite=False):
         toml.dump(sampling_dict, file, encoder=toml.encoder.TomlNumpyEncoder())
 
 
-def read_sampling(set_name: str):
-    """Read resampling wavelengths from a file.
+def read_sampling(slab_sim_name: str):
+    """Read sampling wavelengths from a file.
 
-    :param set_name: Name of the leaf measurement set.
+    :param slab_sim_name: Name of the leaf measurement set.
 
     :return: Return resampling wavelengths as 1D numpy array.
 
     :raises RuntimeError: in case some of the entries could not be interpreted as a float.
     """
-    p = PH.file_spectral_sampling(set_name)
+    p = PH.file_spectral_sampling(slab_sim_name)
 
     if not os.path.exists(p):
         raise RuntimeError(f"Sampling not found from '{p}'. Write sampling before use.")
@@ -574,31 +523,30 @@ def read_starting_guess_coeffs(slab_model_name: str = None) -> dict:
         return data
 
 
-def make_signal_result(set_name: str, sample_id: int, wall_clock_time_min=0.0):
+def make_signal_result(slab_sim_name: str, signal_id: int, wall_clock_time_minutes=0.0):
     """Creates the sample result by collecting the data from wavelength results.
 
     Saves the result as numerical data and plots.
 
-    :param set_name:
-        Set name.
-    :param sample_id:
-        Sample id.
-    :param wall_clock_time_min:
-        Wall clock time used to optimize this sample.
+    :param slab_sim_name: The name of the slab simulation.
+    :param signal_id: Signal id.
+    :param wall_clock_time_minutes: Wall clock time used to optimize this sample in minutes.
     """
 
     # Collect subresults
-    wl_res_list = collect_wavelength_result(set_name, sample_id)
+    wl_res_list = collect_wavelength_result(slab_sim_name, signal_id)
     sample_result_dict = {}
 
     # Set starting value to which earlier result time is added.
-    sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = wall_clock_time_min
+    sample_result_dict[C.key_sample_result_wall_clock_elapsed_min] = (
+        wall_clock_time_minutes
+    )
 
     # If we already have existing sample result, with sparser resolution, we'll want to take that
     # into account when saving the new result.
     try:
-        previous_result = read_sample_result(
-            set_name, sample_id
+        previous_result = read_signal_result(
+            slab_sim_name, signal_id
         )  # throws OSError upon failure
         this_result_time = sample_result_dict[
             C.key_sample_result_wall_clock_elapsed_min
@@ -689,4 +637,4 @@ def make_signal_result(set_name: str, sample_id: int, wall_clock_time_min=0.0):
     sample_result_dict[C.key_sample_result_ai] = sa
     sample_result_dict[C.key_sample_result_mf] = mf
 
-    write_sample_result(set_name, sample_result_dict, sample_id)
+    write_signal_result(slab_sim_name, signal_id, sample_result_dict)

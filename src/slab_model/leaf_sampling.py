@@ -7,7 +7,7 @@ from src import plotter, constants as C
 
 
 def sampling_empty(set_name: str) -> bool:
-    sampling = TH.read_sampling(set_name=set_name)
+    sampling = TH.read_sampling(slab_sim_name=set_name)
     if len(sampling) < 1:
         return True
     return False
@@ -23,7 +23,7 @@ def check_sampling(set_name: str) -> bool:
         as the sampling information file. Otherwise, return `False`.
     """
 
-    sampling = TH.read_sampling(set_name=set_name)
+    sampling = TH.read_sampling(slab_sim_name=set_name)
 
     if len(sampling) < 1:
         logging.info(
@@ -31,7 +31,7 @@ def check_sampling(set_name: str) -> bool:
         )
         return True
 
-    set_result = TH.read_set_result(set_name=set_name)
+    set_result = TH.read_slab_sim_result(slab_sim_name=set_name)
     set_wls = np.array(set_result[C.key_set_result_wls])
 
     if not np.allclose(sampling, set_wls):
@@ -43,7 +43,9 @@ def check_sampling(set_name: str) -> bool:
 
     ids = FH.list_finished_result_signal_ids(slab_sim_name=set_name)
     for sample_id in ids:
-        sample_result = TH.read_sample_result(set_name=set_name, sample_id=sample_id)
+        sample_result = TH.read_signal_result(
+            slab_sim_name=set_name, signal_id=sample_id
+        )
         sample_wls = sample_result[C.key_sample_result_wls]
         if not np.allclose(sampling, sample_wls):
             logging.warning(
@@ -67,7 +69,7 @@ def resample(set_name: str, plot_resampling=True):
         logging.info(f"No targets to resample. Returning without doing anything.")
         return
 
-    sampling = TH.read_sampling(set_name=set_name)
+    sampling = TH.read_sampling(slab_sim_name=set_name)
 
     if len(sampling) < 1:
         logging.info(f"No resampling defined. Returning without doing anything.")
@@ -75,7 +77,9 @@ def resample(set_name: str, plot_resampling=True):
 
     for _, sample_id in enumerate(ids):
         # Read target in original resolution
-        target = TH.read_target(set_name=set_name, sample_id=sample_id, resampled=False)
+        target = TH.read_target(
+            slab_sim_name=set_name, signal_id=sample_id, resampled=False
+        )
         wls, refls, trans = DU.unpack_target(target=target)
         spectra = np.array((refls, trans))
 
@@ -90,9 +94,9 @@ def resample(set_name: str, plot_resampling=True):
             wls=sampling, refls=resampled[0, :], trans=resampled[1, :]
         )
         TH.write_target(
-            set_name=set_name,
+            slab_sim_name=set_name,
             data=resampled_target,
-            sample_id=sample_id,
+            signal_id=sample_id,
             resampled=True,
         )
 

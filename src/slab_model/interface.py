@@ -75,7 +75,7 @@ def resample_leaf_targets(set_name: str, new_sampling=None):
         an empty sampling file is written that can be modified manually.
     """
 
-    TH.write_sampling(set_name=set_name, sampling=new_sampling, overwrite=True)
+    TH.write_sampling(slab_sim_name=set_name, sampling=new_sampling, overwrite=True)
     sampling.resample(set_name=set_name)
 
 
@@ -128,7 +128,7 @@ def solve_leaf_material_parameters(
     if resolution is not None:
         step = int(resolution)  # let it fail if cannot be cast to int
         target = TH.read_target(
-            set_name=slab_sim_name, sample_id=0
+            slab_sim_name=slab_sim_name, signal_id=0
         )  # raises error if target not found
         wls, _, _ = DU.unpack_target(target=target)
         wls = np.array(wls)
@@ -136,7 +136,7 @@ def solve_leaf_material_parameters(
         sampling_end = min(np.max(wls) + 1, 2501)
         sampling_even = np.arange(sampling_start, sampling_end, step=step)
         TH.write_sampling(
-            set_name=slab_sim_name, sampling=sampling_even, overwrite=True
+            slab_sim_name=slab_sim_name, sampling=sampling_even, overwrite=True
         )
     else:
         # If given resolution is None, i.e., we expect proper sampling to exist but it does not
@@ -232,7 +232,7 @@ def solve_leaf_material_parameters(
                 time_wall_clock_min,
             )
 
-            TH.write_sample_result(slab_sim_name, sample_result_dict, signal_id)
+            TH.write_signal_result(slab_sim_name, signal_id, sample_result_dict)
 
             plotter.plot_signal_result(
                 slab_sim_name, signal_id, dont_show=True, save_thumbnail=True

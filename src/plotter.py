@@ -591,7 +591,7 @@ def plot_wl_optimization_history(
 
     plt.close("all")
     subres_dict = TH.read_wavelength_result(
-        set_name=set_name, wl=wl, sample_id=sample_id
+        slab_sim_name=set_name, signal_id=sample_id, wl=wl
     )
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=figsize_triple_width)
     fig.suptitle(
@@ -709,7 +709,7 @@ def plot_slab_sim_result(set_name: str, dont_show=True, save_thumbnail=True) -> 
     # ax[0].set_title('Variable space')
     # ax[1].set_title('Target space')
 
-    r = TH.read_set_result(set_name)
+    r = TH.read_slab_sim_result(set_name)
     wls = r[C.key_set_result_wls]
     ad_mean = np.array(r[C.key_set_result_wl_ad_mean])
     sd_mean = np.array(r[C.key_set_result_wl_sd_mean])
@@ -788,7 +788,7 @@ def plot_slab_sim_errors(set_name: str, dont_show=True, save_thumbnail=True):
     refl_errs = []
     tran_errs = []
     for _, sample_id in enumerate(ids):
-        result = TH.read_sample_result(set_name, sample_id)
+        result = TH.read_signal_result(set_name, sample_id)
         wls = result[C.key_sample_result_wls]
         refl_errs.append(result[C.key_sample_result_re])
         tran_errs.append(result[C.key_sample_result_te])
@@ -859,10 +859,10 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
 
     for sample_id in target_ids:
         target_original = TH.read_target(
-            set_name=set_name, sample_id=sample_id, resampled=False
+            slab_sim_name=set_name, signal_id=sample_id, resampled=False
         )
         target_resampled = TH.read_target(
-            set_name=set_name, sample_id=sample_id, resampled=True
+            slab_sim_name=set_name, signal_id=sample_id, resampled=True
         )
         wls_org, refl_org, tran_org = DU.unpack_target(target_original)
         wls_resampled, refl_resampled, tran_resampled = DU.unpack_target(
@@ -919,7 +919,7 @@ def plot_signal_result(
     """
 
     plt.close("all")
-    result = TH.read_sample_result(set_name, sample_id)
+    result = TH.read_signal_result(set_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
     ax[0].set_title("Variable space")
@@ -992,7 +992,7 @@ def replot_wl_results(set_name: str):
 
     sample_ids = FH.list_finished_result_signal_ids(set_name)
     for sample_id in sample_ids:
-        d = TH.read_sample_result(set_name, sample_id=sample_id)
+        d = TH.read_signal_result(set_name, signal_id=sample_id)
         wls = d[C.key_sample_result_wls]
         for wl in wls:
             plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)

@@ -3,6 +3,7 @@
 Some common training utilities for the slab model for avoiding circular imports.
 
 """
+
 import logging
 
 import numpy as np
@@ -12,7 +13,7 @@ from src.data import toml_handling as TH, toml_handling as T
 
 
 def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
-    """ Prune bad datapoints from training data.
+    """Prune bad datapoints from training data.
 
     Data point is considered bad if either reflectance or transmittance error is
     more than 1%.
@@ -39,8 +40,10 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
         Pruned ad,sd,ai,mf,r,t corresponding to arguments.
     """
 
-    max_error = 0.02 # 1%
-    logging.info(f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned.")
+    max_error = 0.02  # 1%
+    logging.info(
+        f"Points with error of reflectance or transmittance greater than '{max_error}' will be pruned."
+    )
 
     to_delete = [(a > max_error or b > max_error) for a, b in zip(re, te)]
 
@@ -61,7 +64,9 @@ def prune_training_data(ad, sd, ai, mf, r, t, re, te, invereted=False):
     bad_points_count = initial_count - len(ad)
 
     if not invereted:
-        logging.info(f"Pruned {len(to_delete)} ({(bad_points_count/initial_count)*100:.2}%) points because exceeding error threshold {max_error}.")
+        logging.info(
+            f"Pruned {len(to_delete)} ({(bad_points_count/initial_count)*100:.2}%) points because exceeding error threshold {max_error}."
+        )
         logging.info(f"Point count after pruning {len(ad)}.")
 
     return ad, sd, ai, mf, r, t
@@ -81,7 +86,7 @@ def get_training_data(training_sim_name: str):
     if training_sim_name is None or not isinstance(training_sim_name, str):
         raise AttributeError("Training simulation name must be provided.")
 
-    result = TH.read_sample_result(training_sim_name, sample_id=0)
+    result = TH.read_signal_result(training_sim_name, signal_id=0)
     ad = np.array(result[C.key_sample_result_ad])
     sd = np.array(result[C.key_sample_result_sd])
     ai = np.array(result[C.key_sample_result_ai])
@@ -109,22 +114,38 @@ def get_starting_guess_points(set_name: str = None):
     if set_name is None:
         set_name = C.starting_guess_set_name
 
-    result_dict = T.read_sample_result(set_name, 0)
+    result_dict = T.read_signal_result(set_name, 0)
     wls = result_dict[C.key_sample_result_wls]
 
-    re_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_re]))])
-    te_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_te]))])
+    re_list = np.array(
+        [r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_re]))]
+    )
+    te_list = np.array(
+        [t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_te]))]
+    )
     eps = 0.002
 
-    r_list = np.array([r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))])
-    t_list = np.array([t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))])
-    ad_list = np.array([ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))])
-    sd_list = np.array([sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))])
-    ai_list = np.array([ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))])
-    mf_list = np.array([mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))])
+    r_list = np.array(
+        [r for _, r in sorted(zip(wls, result_dict[C.key_sample_result_r]))]
+    )
+    t_list = np.array(
+        [t for _, t in sorted(zip(wls, result_dict[C.key_sample_result_t]))]
+    )
+    ad_list = np.array(
+        [ad for _, ad in sorted(zip(wls, result_dict[C.key_sample_result_ad]))]
+    )
+    sd_list = np.array(
+        [sd for _, sd in sorted(zip(wls, result_dict[C.key_sample_result_sd]))]
+    )
+    ai_list = np.array(
+        [ai for _, ai in sorted(zip(wls, result_dict[C.key_sample_result_ai]))]
+    )
+    mf_list = np.array(
+        [mf for _, mf in sorted(zip(wls, result_dict[C.key_sample_result_mf]))]
+    )
 
-    r_list  = r_list[(re_list < eps) & (te_list < eps)]
-    t_list  = t_list[(re_list < eps) & (te_list < eps)]
+    r_list = r_list[(re_list < eps) & (te_list < eps)]
+    t_list = t_list[(re_list < eps) & (te_list < eps)]
     ad_list = ad_list[(re_list < eps) & (te_list < eps)]
     sd_list = sd_list[(re_list < eps) & (te_list < eps)]
     ai_list = ai_list[(re_list < eps) & (te_list < eps)]

@@ -380,7 +380,7 @@ def copy_slab_material_parameters(
     """
 
     if signal_id is None:
-        result_dict = TH.read_set_result(src_slab_sim_name)
+        result_dict = TH.read_slab_sim_result(src_slab_sim_name)
         wls = result_dict[C.key_set_result_wls]
         ad = result_dict[C.key_set_result_wl_ad_mean]
         sd = result_dict[C.key_set_result_wl_sd_mean]
@@ -390,8 +390,8 @@ def copy_slab_material_parameters(
         plot_path = PH.file_slab_sim_result_plot(slab_sim_name=src_slab_sim_name)
 
     else:
-        result_dict = TH.read_sample_result(
-            set_name=src_slab_sim_name, sample_id=signal_id
+        result_dict = TH.read_signal_result(
+            slab_sim_name=src_slab_sim_name, signal_id=signal_id
         )
         wls = result_dict[C.key_sample_result_wls]
         ad = result_dict[C.key_sample_result_ad]

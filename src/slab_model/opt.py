@@ -199,7 +199,7 @@ class Optimization:
             )
             elapsed_min = (time.perf_counter() - total_time_start) / 60.0
             TH.make_signal_result(
-                self.set_name, sample_id, wall_clock_time_min=elapsed_min
+                self.set_name, sample_id, wall_clock_time_minutes=elapsed_min
             )
             plotter.plot_signal_result(
                 self.set_name, sample_id, dont_show=True, save_thumbnail=True
@@ -545,7 +545,7 @@ def optimize_single_wl(
         f"Optimizing wavelength {wl} nm finished. Writing wavelength result and plot to disk."
     )
 
-    TH.write_wavelength_result(set_name, res_dict, sample_id)
+    TH.write_wavelength_result(set_name, sample_id, res_dict)
     # Save the plot of optimization history
     # Plotter can re-create the plots from saved toml data, so there's no need to
     # run the whole optimization just to change the images.

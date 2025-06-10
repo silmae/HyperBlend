@@ -122,7 +122,7 @@ def init(
     for leaf in leaves:
         set_name = leaf[0]
         sample_id = leaf[1]
-        sample_res = TH.read_sample_result(set_name=set_name, sample_id=sample_id)
+        sample_res = TH.read_signal_result(slab_sim_name=set_name, signal_id=sample_id)
         sample_list.append(sample_res)
 
     # Check that all leaves have been solved with the same sampling

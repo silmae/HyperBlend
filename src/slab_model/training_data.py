@@ -48,7 +48,7 @@ def visualize_training_data_pruning(
 
     # We do not use get_training_data() here because we want the original measured r and t
     # for evenly spaced grid
-    result = TH.read_sample_result(set_name, sample_id=0)
+    result = TH.read_signal_result(set_name, signal_id=0)
     ad = np.array(result[C.key_sample_result_ad])
     sd = np.array(result[C.key_sample_result_sd])
     ai = np.array(result[C.key_sample_result_ai])
@@ -163,7 +163,7 @@ def generate_train_data(
         if not os.path.exists(p_solver_dir):
             os.makedirs(p_solver_dir)
 
-        TH.write_target(set_name, data, sample_id=0)
+        TH.write_target(set_name, data, signal_id=0)
         o = Optimization(
             runtime=runtime,
             set_name=set_name,
@@ -301,4 +301,4 @@ def _make_target(set_name: str, wls, r_m, t_m, sample_id=None):
         sample_id = 0
     FH.create_signal_optimization_directories(set_name, sample_id)
     target_data = DU.pack_target(wls=wls, refls=r_m, trans=t_m)
-    TH.write_target(set_name=set_name, data=target_data, sample_id=sample_id)
+    TH.write_target(slab_sim_name=set_name, data=target_data, signal_id=sample_id)
