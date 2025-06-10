@@ -40,9 +40,6 @@ blender_executable_path_linux = "/snap/bin/blender"
 blender_scene_slab_simulation_template = "slab_sim_template.blend"
 """Name of the slab simulation template Blender scene."""
 
-blender_script_name = "bs_render_single.py"
-"""Name of the Blender script to be run."""
-
 ramdisk = "/media/ramdisk"
 """Location of the ramdisk if used."""
 
@@ -160,7 +157,9 @@ filename_system_sim_control = "system_sim_control"
 
 filename_system_sim_forest_template = "system_sim_forest_template"
 
-filename_slab_sim_forest_template = "slab_sim_template"
+filename_slab_sim_template = "slab_sim_template"
+
+filename_reflectance_lab = "reflectance_lab"
 
 filename_system_sim_preview_sleeper = "sleeper_preview"
 

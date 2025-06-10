@@ -67,16 +67,18 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     )
 
     # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
-    BC.setup_forest(
-        forest_id=forest_id,
+    BC.setup_system_sim_scene(
+        system_sim_name=forest_id,
         leaf_name_list=["Leaf material 1", "Leaf material 2", "Leaf material 3"],
         runtime=runtime,
     )  # , 'Leaf material 4'])
 
     # Render bands for spectral cube along with additional images
-    BC.render_forest(forest_id=forest_id, render_mode="preview", runtime=runtime)
-    BC.render_forest(forest_id=forest_id, render_mode="visibility", runtime=runtime)
-    BC.render_forest(forest_id=forest_id, render_mode="spectral", runtime=runtime)
+    BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
+    BC.render_forest(
+        runtime=runtime, system_sim_name=forest_id, render_mode="visibility"
+    )
+    BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="spectral")
 
     # Construct spectral cube in ENVI format
     CH.construct_envi_cube(system_sim_name=forest_id)

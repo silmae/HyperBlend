@@ -82,16 +82,16 @@ class TestSystemSimulation(TestCase):
         )
 
         # Setup master and render preview
-        BC.setup_forest(
-            forest_id=system_sim_name_master,
+        BC.setup_system_sim_scene(
+            system_sim_name=system_sim_name_master,
             leaf_name_list=slab_material_names,
             runtime=self.runtime,
         )
 
         BC.render_forest(
-            forest_id=system_sim_name_master,
-            render_mode="preview",
             runtime=self.runtime,
+            system_sim_name=system_sim_name_master,
+            render_mode="preview",
         )
 
         # Check that previews were rendered
@@ -166,25 +166,27 @@ class TestSystemSimulation(TestCase):
 
         # Running system_simulation.init only copies files. Running setup makes the
         #   Blender scene renderable. This also applies the changes in the control file.
-        BC.setup_forest(
-            forest_id=system_sim_name_slave,
+        BC.setup_system_sim_scene(
+            system_sim_name=system_sim_name_slave,
             leaf_name_list=slab_material_names,
             runtime=self.runtime,
         )
 
         # Render spectral cube, visibility maps, and previews
         BC.render_forest(
-            forest_id=system_sim_name_slave, render_mode="preview", runtime=self.runtime
+            runtime=self.runtime,
+            system_sim_name=system_sim_name_slave,
+            render_mode="preview",
         )
         BC.render_forest(
-            forest_id=system_sim_name_slave,
+            runtime=self.runtime,
+            system_sim_name=system_sim_name_slave,
             render_mode="visibility",
-            runtime=self.runtime,
         )
         BC.render_forest(
-            forest_id=system_sim_name_slave,
-            render_mode="spectral",
             runtime=self.runtime,
+            system_sim_name=system_sim_name_slave,
+            render_mode="spectral",
         )
 
         for i, wl in enumerate(new_sampling):

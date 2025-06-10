@@ -302,7 +302,7 @@ def optimize_single_wl(
 
         ad, sd, ai, mf = LC._convert_raw_params_to_renderable(x[0], x[1], x[2], x[3])
 
-        B.run_render_single(
+        B.run_slab_wl_render(
             runtime=runtime,
             rend_base_path=P.directory_slab_optimization_working(set_name, sample_id),
             wl=wl,
@@ -353,7 +353,7 @@ def optimize_single_wl(
         return total_loss
 
     # Render references here as it only needs to be done once per wavelength
-    B.run_render_single(
+    B.run_slab_wl_render(
         runtime=runtime,
         rend_base_path=P.directory_slab_optimization_working(set_name, sample_id),
         wl=wl,
@@ -482,7 +482,7 @@ def optimize_single_wl(
         res.x[0], res.x[1], res.x[2], res.x[3]
     )
     # Render one more time with best values (in case it was not the last run)
-    B.run_render_single(
+    B.run_slab_wl_render(
         runtime=runtime,
         rend_base_path=P.directory_slab_optimization_working(set_name, sample_id),
         wl=wl,

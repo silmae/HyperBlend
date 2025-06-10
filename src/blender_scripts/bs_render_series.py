@@ -207,8 +207,6 @@ def clear_folders(clear_reference=False):
 
 if __name__ == "__main__":
 
-    logging.error("Series render stuff starting...")
-
     # Store arguments passed from blender_control.py
     argv = sys.argv
 

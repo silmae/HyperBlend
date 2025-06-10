@@ -397,12 +397,19 @@ def file_blend_slab_simulation_template(template_name: str = None) -> str:
     """
 
     if template_name is None:
-        template_name = C.filename_slab_sim_forest_template
+        template_name = C.filename_slab_sim_template
 
     if not template_name.endswith(".blend"):
         template_name = template_name + ".blend"
 
     p = join(directory_internal(), template_name)
+    return p
+
+
+def file_blend_reflectance_lab_template() -> str:
+    """Path to slab simulation template Blender file found in directory 'Internal/'."""
+
+    p = join(directory_internal(), C.filename_reflectance_lab)
     return p
 
 

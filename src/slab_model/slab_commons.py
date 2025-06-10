@@ -61,7 +61,7 @@ def _render(args):
             f"File {p} does not exist. Cannot render the slab model."
         )
 
-    BC.run_render_series(
+    BC.run_parallel_slab_wl_render(
         runtime=runtime,
         rend_base_path=p,
         wl=args[3],
