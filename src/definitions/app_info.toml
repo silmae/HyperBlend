@@ -3,4 +3,5 @@ app_title = "HyperBlend"
 app_version = 0.3
 app_author = "Kimmo Riihiaho"
 supported_blender_versions = ["3.6",]
-# 4.4 cannot import toml wchich breaks the system simulation control file logic
+# Blender 3.6 is the only supported version at the moment. Switching to 4.0+
+# will require a complete rewrite of the Blender scripts as the API has changed significantly.
