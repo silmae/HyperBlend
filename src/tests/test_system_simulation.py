@@ -49,12 +49,12 @@ class TestSystemSimulation(TestCase):
 
         # Generating low resolution random leaves.
         # First two random leaves
-        SMI.generate_prospect_leaf_random(set_name=slab_sim_name, leaf_count=2)
+        SMI.generate_prospect_leaf_random(slab_sim_name=slab_sim_name, leaf_count=2)
         # THen one with low water content
         SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
         # Resample to include only a few bands so the test runs in reasonable time
         new_sampling = [450, 550, 650, 1930]
-        SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
+        SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, wls=new_sampling)
         SMI.solve_leaf_material_parameters(
             slab_sim_name=slab_sim_name, clear_old_results=True, runtime=self.runtime
         )

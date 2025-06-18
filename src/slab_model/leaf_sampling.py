@@ -16,6 +16,8 @@ def sampling_empty(set_name: str) -> bool:
 def check_sampling(set_name: str) -> bool:
     """Check that leaf material parameters are solved with current sampling.
 
+    TODO: This is not currently used in anywhere. Check if this is really necessary.
+
     :param set_name:
     :return:
         Returns `True` if either, sampling information file does not contain resampling
@@ -58,18 +60,18 @@ def check_sampling(set_name: str) -> bool:
     return True
 
 
-def resample(set_name: str, plot_resampling=True):
+def resample(slab_sim_name: str, plot_resampling=True):
     """Resamples leaf spectra to lower resolution as defined in /sample_target/sampling.toml.
 
     Only rewrites target data. You must solve renderable leaf parameters again after resampling.
     """
 
-    ids = FH.list_target_ids(set_name)
+    ids = FH.list_target_ids(slab_sim_name)
     if len(ids) < 1:
         logging.info(f"No targets to resample. Returning without doing anything.")
         return
 
-    sampling = TH.read_sampling(slab_sim_name=set_name)
+    sampling = TH.read_sampling(slab_sim_name=slab_sim_name)
 
     if len(sampling) < 1:
         logging.info(f"No resampling defined. Returning without doing anything.")
@@ -78,7 +80,7 @@ def resample(set_name: str, plot_resampling=True):
     for _, sample_id in enumerate(ids):
         # Read target in original resolution
         target = TH.read_target(
-            slab_sim_name=set_name, signal_id=sample_id, resampled=False
+            slab_sim_name=slab_sim_name, signal_id=sample_id, resampled=False
         )
         wls, refls, trans = DU.unpack_target(target=target)
         spectra = np.array((refls, trans))
@@ -94,11 +96,11 @@ def resample(set_name: str, plot_resampling=True):
             wls=sampling, refls=resampled[0, :], trans=resampled[1, :]
         )
         TH.write_target(
-            slab_sim_name=set_name,
+            slab_sim_name=slab_sim_name,
             data=resampled_target,
             signal_id=sample_id,
             resampled=True,
         )
 
     if plot_resampling:
-        plotter.plot_resampling(set_name=set_name)
+        plotter.plot_resampling(set_name=slab_sim_name)

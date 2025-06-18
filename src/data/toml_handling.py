@@ -413,7 +413,9 @@ def read_target(slab_sim_name: str, signal_id: int, resampled=False):
         return data
 
 
-def write_sampling(slab_sim_name: str, sampling: list = None, overwrite=False):
+def write_sampling(
+    slab_sim_name: str, sampling: list | np.ndarray = None, overwrite=False
+):
     """Write sampling data file for a given slab simulation.
 
     Preferred workflow is to NOT provide a list of wavelengths here,

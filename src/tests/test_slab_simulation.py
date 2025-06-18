@@ -8,10 +8,12 @@ import unittest  # needed for skipping tests
 from shutil import rmtree
 from unittest import TestCase
 import logging
+import numpy as np
 
 from src.setup import initialization
 from src.slab_model import interface as SMI
-from src.data import path_handling as PH
+from src.data import path_handling as PH, toml_handling as TH
+from src.utils import data_utils as DU
 
 
 # @unittest.skip("Skipping test_slab_simulation for now")
@@ -31,10 +33,98 @@ class TestSlabs(TestCase):
     def test_slab_optimization(self):
         self.run_slab_optimization()
 
+    def test_sampling(self):
+        """Tests that the slab simulation sampling works as expected."""
+
+        logging.info("Testing slab simulation sampling.")
+
+        # Check that the sampling is empty before running the test
+        slab_sim_name = "integration_test_sampling"
+
+        SMI.generate_prospect_leaf_random(slab_sim_name=slab_sim_name)
+
+        # Missing parameters
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name)
+
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, resolution=5),
+
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, range_start=500),
+
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, range_end=500),
+
+        # Min wl too small
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(
+                slab_sim_name=slab_sim_name, wls=[300, 400, 500]
+            )
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(
+                slab_sim_name=slab_sim_name,
+                range_start=300,
+                range_end=2000,
+                resolution=5,
+            )
+
+        # Max wl too large
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(
+                slab_sim_name=slab_sim_name, wls=[2000, 3000, 4000]
+            )
+        with self.assertRaises(AttributeError):
+            SMI.resample_slab_sim_target(
+                slab_sim_name=slab_sim_name,
+                range_start=400,
+                range_end=3000,
+                resolution=5,
+            )
+
+        resampling_wls = [400, 500, 600]
+        SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, wls=resampling_wls)
+
+        target = TH.read_target(
+            slab_sim_name=slab_sim_name, signal_id=0, resampled=True
+        )
+        target_wls, _, _ = DU.unpack_target(target=target)
+        target_wls = np.array(target_wls)
+        self.assertTrue(np.all(target_wls == resampling_wls))
+
+        start = 400
+        stop = 600
+        resolution = 100
+        SMI.resample_slab_sim_target(
+            slab_sim_name=slab_sim_name,
+            range_start=start,
+            range_end=stop,
+            resolution=resolution,
+        )
+
+        target = TH.read_target(
+            slab_sim_name=slab_sim_name, signal_id=0, resampled=True
+        )
+        target_wls, _, _ = DU.unpack_target(target=target)
+        target_wls = np.array(target_wls)
+        self.assertTrue(np.all(target_wls == resampling_wls))
+
+        # Finally, test uneven sampling
+        resampling_wls = [400, 500, 751]
+        SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, wls=resampling_wls)
+
+        target = TH.read_target(
+            slab_sim_name=slab_sim_name, signal_id=0, resampled=True
+        )
+        target_wls, _, _ = DU.unpack_target(target=target)
+        target_wls = np.array(target_wls)
+        self.assertTrue(np.all(target_wls == resampling_wls))
+
+    # @unittest.skip("Skipping test_custom_solver.")
     def test_custom_solver(self):
         """Tests that the slab simulation run with a custom solver works as expected."""
 
-        print("Testing custom solver.")
+        logging.info("Testing custom solver.")
 
         fake_solver_name = "Integration test custom solver"
         path_default_slab_model = PH.directory_slab_model()
@@ -83,7 +173,7 @@ class TestSlabs(TestCase):
         each solver are checked in their respective tests.
         """
 
-        print(
+        logging.info(
             f"Checking existence of common files in {PH.directory_slab_simulation(slab_sim_name)} directory."
         )
 
@@ -92,21 +182,25 @@ class TestSlabs(TestCase):
             f"Could not find the slab simulation result file at {path_slab_sim_result}."
         )
         self.assertTrue(os.path.exists(path_slab_sim_result), msg=fail_msg)
-        print(f"Found slab simulation result file at {path_slab_sim_result}.")
+        logging.info(f"Found slab simulation result file at {path_slab_sim_result}.")
 
         path_slab_sim_result_plot = PH.file_slab_sim_result_plot(
             slab_sim_name=slab_sim_name
         )
         fail_msg = f"Could not find the slab simulation result plot file at {path_slab_sim_result_plot}."
         self.assertTrue(os.path.exists(path_slab_sim_result_plot), msg=fail_msg)
-        print(f"Found slab simulation result plot file at {path_slab_sim_result_plot}.")
+        logging.info(
+            f"Found slab simulation result plot file at {path_slab_sim_result_plot}."
+        )
 
         path_slab_sim_error_plot = PH.file_slab_sim_error_plot(
             slab_sim_name=slab_sim_name
         )
         fail_msg = f"Could not find the slab simulation error plot file at {path_slab_sim_error_plot}."
         self.assertTrue(os.path.exists(path_slab_sim_error_plot), msg=fail_msg)
-        print(f"Found slab simulation error plot file at {path_slab_sim_error_plot}.")
+        logging.info(
+            f"Found slab simulation error plot file at {path_slab_sim_error_plot}."
+        )
 
     def check_existance_of_signal_result_files(self, slab_sim_name, signal_ids):
         """Check that the result files for the signals exist.
@@ -122,7 +216,7 @@ class TestSlabs(TestCase):
                     f"Result file for signal {signal_id} does not exist at path {p}."
                 )
                 self.assertTrue(os.path.exists(p), msg=error_msg)
-                print(f"Found result file for signal at {p}.")
+                logging.info(f"Found result file for signal at {p}.")
 
             p = PH.file_signal_result_plot(
                 slab_sim_name=slab_sim_name, signal_id=signal_id
@@ -132,7 +226,7 @@ class TestSlabs(TestCase):
                     f"Result plot for signal {signal_id} does not exist at path {p}."
                 )
                 self.assertTrue(os.path.exists(p), msg=error_msg)
-                print(f"Found result plot for signal at {p}.")
+                logging.info(f"Found result plot for signal at {p}.")
 
     def check_nn_and_surf_result_files(self, solver: str, solver_dirname: str = None):
         """Check that the result files for the neural network and surface fitting solvers exist.
@@ -169,7 +263,7 @@ class TestSlabs(TestCase):
         self.assertFalse(os.path.exists(p3))
 
         # Generate some random PROSPECT leaves to use for testing
-        SMI.generate_prospect_leaf_random(set_name=slab_sim_name, leaf_count=2)
+        SMI.generate_prospect_leaf_random(slab_sim_name=slab_sim_name, leaf_count=2)
         SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
 
         # Check that the target files exist after generating them
@@ -179,7 +273,7 @@ class TestSlabs(TestCase):
 
         # Reduce the number of bands to four for quick testing
         new_sampling = [450, 500, 550, 1930]
-        SMI.resample_leaf_targets(set_name=slab_sim_name, new_sampling=new_sampling)
+        SMI.resample_slab_sim_target(slab_sim_name=slab_sim_name, wls=new_sampling)
 
         # Find resampled target files and check they exist
         p1 = PH.file_slab_target(
@@ -200,11 +294,8 @@ class TestSlabs(TestCase):
             runtime=self.runtime,
             slab_sim_name=slab_sim_name,
             clear_old_results=True,
-            resolution=None,
-            use_dumb_sampling=False,
             solver=solver,
             copyof=None,
-            plot_resampling=False,
             solver_dirname=solver_dirname,
         )
 
@@ -247,22 +338,19 @@ class TestSlabs(TestCase):
         )
 
         self.assertFalse(os.path.exists(p1))
-        SMI.generate_prospect_leaf_random(set_name=slab_sim_opt_name, leaf_count=1)
+        SMI.generate_prospect_leaf_random(slab_sim_name=slab_sim_opt_name, leaf_count=1)
         self.assertTrue(os.path.exists(p1))
 
         # Reduce the number of channels to four for quick testing
         new_sampling = [550, 650]
-        SMI.resample_leaf_targets(set_name=slab_sim_opt_name, new_sampling=new_sampling)
+        SMI.resample_slab_sim_target(slab_sim_name=slab_sim_opt_name, wls=new_sampling)
 
         SMI.solve_leaf_material_parameters(
             runtime=self.runtime,
             slab_sim_name=slab_sim_opt_name,
             clear_old_results=True,
-            resolution=None,
-            use_dumb_sampling=False,
             solver="opt",
             copyof=None,
-            plot_resampling=False,
             solver_dirname=solver_dirname,
         )
 

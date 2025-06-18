@@ -176,7 +176,7 @@ from src.slab_model import interface as LI
 set_name = "try_random_p_leaves"
 
 # generates three leaf targets to \HyperBlend\leaf_measurement_sets\try_random_p_leaves\sample_targets
-LI.generate_prospect_leaf_random(set_name=set_name, leaf_count=3)
+LI.generate_prospect_leaf_random(slab_sim_name=set_name, leaf_count=3)
 
 # Solve renderable leaf material parameters that produce target reflectance and transmittance
 LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')

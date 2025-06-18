@@ -2,17 +2,13 @@
 This file contains methods for creating target reflectances and transmittances in
 a form that the rest of the project code can use it.
 
-Some default targets can be created without fetching external data.
-
 """
 
 import numpy as np
 import logging
-
-# SpectRes is used for resampling spectra to lower resolution
+from scipy.interpolate import CubicSpline
 
 from src import constants as C
-from scipy.interpolate import CubicSpline
 
 
 VIS_MIN = 380.0
@@ -121,9 +117,6 @@ def find_nearest_idx(array, value):
 def resample(original_wl, original_val, new_wl):
     """Resample spectra to lower resolution.
 
-    Github page for the SpectRes package: https://github.com/ACCarnall/SpectRes
-    And documentation: https://spectres.readthedocs.io/
-
     :param original_wl: List or 1-D numpy array of wavelengths in the original spectrum.
     :param original_val: List or numpy array of intensities corresponding to `original_wl`.
         If multidimensional numpy array is provided, the last dimension
@@ -138,9 +131,6 @@ def resample(original_wl, original_val, new_wl):
     new_wavs = np.array(new_wl)
     spec_wavs = np.array(original_wl)
     spec_fluxes = np.array(original_val)
-
-    # Disabled spectres resampling because it behaves badly at the ends of data
-    # resampled = spectres.spectres(new_wavs=new_wavs, spec_wavs=spec_wavs, spec_fluxes=spec_fluxes, fill=0.0)
 
     # Instead, use Scipy cubic interpolation
     if len(spec_fluxes.shape) > 1:  # ref and tran given together

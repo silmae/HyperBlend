@@ -23,46 +23,48 @@ def run_paper_tests():
     surf_model_name = FN.get_surface_model_save_name("train_iter_4_v4")
 
     resolution = 5
+    range_start = 400
+    range_end = 2500
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
+        range_start=range_start,
+        range_end=range_end,
         slab_sim_name="iterative_specchio_nn",
         copyof="specchio",
         solver="nn",
         solver_dirname=nn_name,
-        plot_resampling=False,
-        use_dumb_sampling=True,
     )
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
+        range_start=range_start,
+        range_end=range_end,
         slab_sim_name="iterative_specchio_surf",
         copyof="specchio",
         solver="surf",
-        plot_resampling=False,
         solver_dirname=surf_model_name,
-        use_dumb_sampling=True,
     )
 
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
+        range_start=range_start,
+        range_end=range_end,
         slab_sim_name="iterative_prospect_nn",
         copyof="prospect_randoms",
         solver="nn",
         solver_dirname=nn_name,
-        plot_resampling=False,
-        use_dumb_sampling=True,
     )
     LI.solve_leaf_material_parameters(
         clear_old_results=True,
         resolution=resolution,
+        range_start=range_start,
+        range_end=range_end,
         slab_sim_name="iterative_prospect_surf",
         copyof="prospect_randoms",
         solver="surf",
-        plot_resampling=False,
         solver_dirname=surf_model_name,
-        use_dumb_sampling=True,
     )
 
 
@@ -93,10 +95,8 @@ def asym_test(smthng="const_r_var_t"):
     # o.run_optimization(resampled=False, use_threads=True)
     LI.solve_leaf_material_parameters(
         slab_sim_name=set_name,
-        use_dumb_sampling=True,
         solver="nn",
         clear_old_results=True,
-        plot_resampling=False,
     )
     print(f"Done {set_name}")
 
