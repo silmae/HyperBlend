@@ -1,3 +1,11 @@
+"""
+
+This module is used to generate leaves for the dataset paper
+
+"""
+
+import logging
+
 from setup.runtime_environment import RuntimeEnvironment
 from src.slab_model import interface as SI
 from src.system_simulation import forest
@@ -8,7 +16,9 @@ slab_sim_names = ["Crab apple", "Manitoba Maple", "American Elm"]
 def run(runtime: RuntimeEnvironment):
     """Just a little run function to be called from main to keep it neat."""
 
-    print("moi")
+    logging.info("Dataset run started.")
+    generate_leaves()
+    solve_leaves(runtime=runtime)
 
 
 def generate_leaves():
@@ -75,5 +85,10 @@ def solve_leaves(runtime: RuntimeEnvironment):
 
     for slab_sim_name in slab_sim_names:
         SI.solve_leaf_material_parameters(
-            runtime=runtime, slab_sim_name=slab_sim_name, resolution=5, solver="nn"
+            runtime=runtime,
+            slab_sim_name=slab_sim_name,
+            resolution=5,
+            range_start=400,
+            range_end=900,
+            solver="nn",
         )
