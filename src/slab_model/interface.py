@@ -5,14 +5,19 @@ Interface for all leaf material related actions.
 """
 
 import numpy as np
-
 import time
 import logging
+import os
 
 import src.slab_model.training_data as TD
 import src.slab_model.leaf_sampling as sampling
 from src.slab_model.opt import Optimization
-from src.data import file_handling as FH, toml_handling as TH, file_names as FN
+from src.data import (
+    file_handling as FH,
+    toml_handling as TH,
+    file_names as FN,
+    path_handling as PH,
+)
 from src import plotter
 from src.slab_model import nn, surf, slab_commons as LC
 from src.prospect import interface
@@ -52,43 +57,99 @@ def generate_prospect_leaf(
     interface.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
 
 
-def generate_prospect_leaf_random(set_name, leaf_count=1):
+def generate_prospect_leaf_random(slab_sim_name, leaf_count=1):
     """Generate count number of random PROSPECT leaves.
 
     Calling this is the same as calling prospect.make_random_leaf_targets().
 
-    :param set_name: Set name to be used.
+    :param slab_sim_name: Set name to be used.
     :param leaf_count: How many target leaves are generated to the set.
     """
 
-    interface.make_random_leaf_targets(set_name, leaf_count)
+    interface.make_random_leaf_targets(slab_sim_name, leaf_count)
 
 
-def resample_leaf_targets(set_name: str, new_sampling=None):
-    """Resamples leaf targets.
+def resample_slab_sim_target(
+    slab_sim_name: str,
+    wls: list[int] | np.ndarray = None,
+    range_start: int = None,
+    range_end: int = None,
+    resolution: int = None,
+):
+    """Resamples slab simulation targets.
 
     After this, you must solve leaf material parameters (for rendering) again.
     Uses sampling information from `sampling.toml` in `targets` directory.
 
-    :param set_name: Set to be resampled.
-    :param new_sampling: List of new wavelengths. Optional. If not given,
-        an empty sampling file is written that can be modified manually.
+    :param slab_sim_name: Name of the slab simulation.
+    :param range_start: Start of the wavelength range to be resampled (inclusive).
+    :param range_end: End of the wavelength range to be resampled (inclusive).
+    :param resolution: Resolution of the sampling in nm.
+    :param wls: List of new wavelengths. If given this overrides ``range_start``,
+        ``range_end`` and ``resolution``.
+
+    :raises AttributeError: If neither ``wls`` nor ``range_start``, ``range_end``
+        and ``resolution`` are given.
+        This error is also raised if ``range_start`` is less than the minimum wavelength
+        or ``range_end`` is greater than the maximum wavelength in the target data.
     """
 
-    TH.write_sampling(slab_sim_name=set_name, sampling=new_sampling, overwrite=True)
-    sampling.resample(set_name=set_name)
+    if wls is not None:
+
+        target = TH.read_target(slab_sim_name=slab_sim_name, signal_id=0)
+        target_wls, _, _ = DU.unpack_target(target=target)
+        target_wls = np.array(target_wls)
+
+        if np.min(wls) < np.min(target_wls):
+            raise AttributeError(
+                f"Minimum wavelength {np.min(wls)} in 'wls' is less than minimum wavelength "
+                f"{np.min(target_wls)} in target data."
+            )
+        if np.max(wls) > np.max(target_wls):
+            raise AttributeError(
+                f"Maximum wavelength {np.max(wls)} in 'wls' is greater than maximum wavelength "
+                f"{np.max(target_wls)} in target data."
+            )
+        new_sampling = np.array(wls)
+    elif range_start is not None and range_end is not None and resolution is not None:
+
+        target = TH.read_target(slab_sim_name=slab_sim_name, signal_id=0)
+        target_wls, _, _ = DU.unpack_target(target=target)
+        target_wls = np.array(target_wls)
+
+        if range_start < np.min(target_wls):
+            raise AttributeError(
+                f"range_start {range_start} is less than minimum wavelength "
+                f"{np.min(target_wls)} in target data."
+            )
+        if range_end > np.max(target_wls):
+            raise AttributeError(
+                f"range_end {range_end} is greater than maximum wavelength "
+                f"{np.max(target_wls)} in target data."
+            )
+        new_sampling = np.arange(start=range_start, stop=range_end + 1, step=resolution)
+    else:
+        raise AttributeError(
+            f"Either 'wls' or 'range_start', 'range_end' and 'resolution' must be given. "
+        )
+
+    TH.write_sampling(
+        slab_sim_name=slab_sim_name, sampling=new_sampling, overwrite=True
+    )
+    sampling.resample(slab_sim_name=slab_sim_name, plot_resampling=True)
 
 
 def solve_leaf_material_parameters(
     runtime: RuntimeEnvironment,
     slab_sim_name: str,
+    range_start: int = None,
+    range_end: int = None,
     resolution=None,
-    use_dumb_sampling=False,
+    wls: list[int] | np.ndarray = None,
     solver="nn",
     clear_old_results=False,
     solver_dirname: str = None,
     copyof=None,
-    plot_resampling=True,
 ):
     """Solves leaf material parameters for rendering.
 
@@ -102,8 +163,6 @@ def solve_leaf_material_parameters(
     :param resolution: If resolution is None (default), spectral sampling defined
         in `sampling.toml` will be used. If resolution is provided and can be interpreted
         as an int, new sampling is written from 400 nm to 2500 nm with given `resolution` nm intervals.
-    :param use_dumb_sampling:
-
     :param solver: Solving method either 'opt', 'surf' or 'nn'. Opt is slowest and most accurate
         (the original method). Surf is fast but not very accurate. NN is fast and fairly accurate.
         Surf and NN are roughly 200 times faster than opt. Recommended solver is the default 'nn'.
@@ -125,29 +184,22 @@ def solve_leaf_material_parameters(
             slab_sim_name=slab_sim_name, clear_old_results=clear_old_results
         )
 
-    if resolution is not None:
-        step = int(resolution)  # let it fail if cannot be cast to int
-        target = TH.read_target(
-            slab_sim_name=slab_sim_name, signal_id=0
-        )  # raises error if target not found
-        wls, _, _ = DU.unpack_target(target=target)
-        wls = np.array(wls)
-        sampling_start = max(np.min(wls), 400)
-        sampling_end = min(np.max(wls) + 1, 2501)
-        sampling_even = np.arange(sampling_start, sampling_end, step=step)
-        TH.write_sampling(
-            slab_sim_name=slab_sim_name, sampling=sampling_even, overwrite=True
-        )
-    else:
-        # If given resolution is None, i.e., we expect proper sampling to exist but it does not
-        if sampling.sampling_empty(set_name=slab_sim_name) and not use_dumb_sampling:
-            raise RuntimeError(
-                f"Sampling has not been defined for set '{slab_sim_name}'. "
-                f"Cannot solve leaf material parameters."
-            )
+    new_sampling_requested = True
+    if wls is None and range_start is None and range_end is None and resolution is None:
+        new_sampling_requested = False
 
-    if not use_dumb_sampling:
-        sampling.resample(set_name=slab_sim_name, plot_resampling=plot_resampling)
+    if new_sampling_requested:
+        resample_slab_sim_target(
+            slab_sim_name=slab_sim_name,
+            wls=wls,
+            range_start=range_start,
+            range_end=range_end,
+            resolution=resolution,
+        )
+
+    # This will result True if new resampling was written or a previous one already exists.
+    p = PH.file_slab_target(slab_sim_name=slab_sim_name, signal_id=0, resampled=True)
+    use_resampling = os.path.exists(p)
 
     ids = FH.list_target_ids(slab_sim_name)
     ids.sort()
@@ -162,22 +214,14 @@ def solve_leaf_material_parameters(
             slab_sim_name=slab_sim_name, signal_id=signal_id
         )
         logging.info(f"Solving slab parameters of Signal {signal_id}")
-        targets = TH.read_target(
-            slab_sim_name, signal_id, resampled=not use_dumb_sampling
-        )
-
-        # TODO the sampling is now a problem as the new sampling cannot properly handle the
-        #    5 nm resolution used in the published tests.
-        # Spectral resolution
-        if resolution != 1 and use_dumb_sampling:
-            targets = targets[::resolution]
+        targets = TH.read_target(slab_sim_name, signal_id, resampled=use_resampling)
 
         if solver == "opt":
             FH.create_signal_optimization_directories(slab_sim_name, signal_id)
             o = Optimization(
                 runtime=runtime, set_name=slab_sim_name, solver_name=solver_dirname
             )
-            o.run_optimization(resampled=not use_dumb_sampling)
+            o.run_optimization(resampled=use_resampling)
         elif solver == "surf" or solver == "nn":
             start = time.perf_counter()
 
