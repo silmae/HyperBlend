@@ -164,7 +164,7 @@ def insert_leaf_data(leaf_material_names: str):
         single string that looks like a list of strings like so: "['Leaf material 1', 'Leaf material 2',...]".
     """
 
-    logging.error(f"Setting leaf material parameters for: '{leaf_material_names}'")
+    logging.error(f"Setting slab material parameters for: '{leaf_material_names}'")
 
     lmn = [id for id in (leaf_material_names.lstrip("[").rstrip("]")).split(", ")]
 

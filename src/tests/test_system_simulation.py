@@ -45,7 +45,7 @@ class TestSystemSimulation(TestCase):
         sun_name = "default_sun"
         sky_name = "default_sky"
 
-        slab_material_names = ["Leaf material 1", "Leaf material 2", "Leaf material 3"]
+        slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
 
         # Generating low resolution random leaves.
         # First two random leaves
