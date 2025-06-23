@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     SMI.iterative_train(
         runtime=runtime,
-        iterations=10,
-        training_points=1000,
-        dry_run=True,
+        iterations=8,
+        training_points=100,
+        dry_run=False,
     )
