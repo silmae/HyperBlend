@@ -245,11 +245,13 @@ def run_slab_wl_render(
     if dry_run:
         scirpt_args += ["-y"]  # no render
 
-    scirpt_args += ["-wl", f"{wl}"]  # wavelength to be used
-    scirpt_args += ["-da", f"{ad}"]  # absorption density
-    scirpt_args += ["-ds", f"{sd}"]  # scattering density
-    scirpt_args += ["-ai", f"{ai}"]  # scattering anisotropy
-    scirpt_args += ["-mf", f"{mf}"]  # mixing factor
+    scirpt_args += ["-wl", f"{wl:.10f}"]  # wavelength to be used
+    scirpt_args += ["-da", f"{ad:.10f}"]  # absorption density
+    scirpt_args += ["-ds", f"{sd:.10f}"]  # scattering density
+    scirpt_args += ["-ai", f"{ai:.10f}"]  # scattering anisotropy
+    scirpt_args += ["-mf", f"{mf:.10f}"]  # mixing factor
+
+    logging.error(f"Running slab wavelength render with arguments:\n{scirpt_args}")
 
     run_script(
         script_name="bs_render_single.py",
