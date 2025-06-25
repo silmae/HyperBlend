@@ -86,7 +86,7 @@ def set_materials_use_spectral(use_spectral: bool):
     materials_to_set = []
     for material in materials:
         name = material.name
-        if "Leaf" in name or "Trunk" in name or "Ground" in name:
+        if "Slab" in name or "Diffuse" in name:
             materials_to_set.append(name)
 
     for material_name in materials_to_set:
@@ -324,9 +324,7 @@ def get_scene_parameters(as_master=False) -> dict:
         socket_name = input_socket.name
         socket_value = ground_gn[input_socket.identifier]
 
-        if socket_id_numeric == 10:  # Simplified trees
-            continue
-        elif socket_id_numeric == 34:  # Simplified understory
+        if socket_id_numeric == 34:  # Simplified understory
             continue
         elif socket_id_numeric == 18:  # Reference object
             continue
@@ -334,7 +332,18 @@ def get_scene_parameters(as_master=False) -> dict:
             continue
         elif socket_id_numeric == 19:  # Reference height
             continue
-        elif socket_id_numeric in [25, 26, 27]:  # Trees
+        elif socket_id_numeric in [
+            25,
+            26,
+            27,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+        ]:  # Trees
             ground_dict[socket_name] = _get_tree_as_dict(
                 socket_value, is_master=as_master
             )
@@ -536,12 +545,8 @@ def apply_forest_control(forest_id):
 
                 # Tree sub-dictionaries
                 # TODO get rid of hard-coded names at some point
-                elif (
-                    forest_key == "Tree 1"
-                    or forest_key == "Tree 2"
-                    or forest_key == "Tree 3"
-                    or forest_key == "Understory object 1"
-                    or forest_key == "Understory object 2"
+                elif forest_key.startswith("Spawn object ") or forest_key.startswith(
+                    "Understory object "
                 ):
 
                     tree_dict = forest_dict[forest_key]
@@ -600,7 +605,6 @@ def set_forest_parameter(value, parameter_name: str = None, parameter_id: int = 
     Input Input_7 is named Seed
     Input Input_8 is named Size X [m]
     Input Input_9 is named Size Y [m]
-    Input Input_10 is named Simplified trees
     Input Input_34 is named Simplified understory
     Input Input_12 is named Minimum tree separation [m]
     Input Input_13 is named Spawn probability [%]
@@ -675,9 +679,16 @@ def get_visibility_mapping_material_names():
 
     ground_gn = bpy.data.objects["Ground"].modifiers["GeometryNodes"]
     tree_like_objects = [
-        "Tree 1",
-        "Tree 2",
-        "Tree 3",
+        "Spawn object 1",
+        "Spawn object 2",
+        "Spawn object 3",
+        "Spawn object 4",
+        "Spawn object 5",
+        "Spawn object 6",
+        "Spawn object 7",
+        "Spawn object 8",
+        "Spawn object 9",
+        "Spawn object 10",
         "Understory object 1",
         "Understory object 2",
     ]

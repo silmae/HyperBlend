@@ -29,7 +29,6 @@ def set_render_parameters(
     """
 
     # Always render with real objects
-    FU.set_forest_parameter(False, "Simplified trees")
     FU.set_forest_parameter(False, "Simplified understory")
 
     # Load control dict

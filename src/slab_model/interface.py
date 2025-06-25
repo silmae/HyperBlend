@@ -306,7 +306,12 @@ def iterative_train(
     first_run_diffstep = 0.01
     diffstep = 0.001
 
+    logging.info(f"Starting training loop")
+
     for i in range(iterations):
+
+        logging.info(f"Iteration {i}")
+
         current_iteration_slab_sim_name = f"train_iter_{i+1}"
         previous_iteration_slab_sim_name = f"train_iter_{i}"
 

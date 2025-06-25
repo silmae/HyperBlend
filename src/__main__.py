@@ -7,6 +7,7 @@ and run in your favourite IDE.
 
 from src.setup import initialization
 from src.playground import dataset_paper
+from src.slab_model import interface as SMI
 
 
 if __name__ == "__main__":
@@ -14,3 +15,9 @@ if __name__ == "__main__":
     runtime = initialization.initialize()
 
     dataset_paper.run(runtime=runtime)
+    SMI.iterative_train(
+        runtime=runtime,
+        iterations=8,
+        training_points=100,
+        dry_run=False,
+    )
