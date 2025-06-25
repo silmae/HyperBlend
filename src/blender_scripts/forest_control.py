@@ -32,7 +32,7 @@ def write_forest_control(
     if global_master:
         write_dict_as_toml(
             dictionary=control_dict,
-            directory=PH.directory_project_root(),
+            directory=PH.directory_internal(),
             filename=C.filename_system_sim_control,
         )
     else:

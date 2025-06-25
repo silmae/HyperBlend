@@ -5,20 +5,37 @@ This module is used to generate leaves for the dataset paper
 """
 
 import logging
+import numpy as np
 
 from setup.runtime_environment import RuntimeEnvironment
 from src.slab_model import interface as SI
 from src.system_simulation import forest
+from rendering import blender_control as BC
+from src.data import cube_handling as CH
 
-slab_sim_names = ["Crab apple", "Manitoba Maple", "American Elm"]
+
+slab_sim_names = ["Manitoba Maple", "American Elm", "Crab apple"]
+slab_sim_name_pr = "dataset_paper_prospect_leaves"
 
 
 def run(runtime: RuntimeEnvironment):
     """Just a little run function to be called from main to keep it neat."""
 
-    logging.info("Dataset run started.")
-    generate_leaves()
-    solve_leaves(runtime=runtime)
+    # logging.info("Dataset run started.")
+
+    # generate_leaves()
+    # solve_leaves(runtime=runtime, slab_sim_names=slab_sim_names)
+
+    # generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
+    # solve_leaves(runtime=runtime, slab_sim_names=[slab_sim_name_pr])
+
+    rng = np.random.default_rng(1243567)
+    generate_forest_master(runtime=runtime, rng=rng)
+
+
+def generate_random_prospect_leaves(slab_sim_name: str, leaf_count: int = 2):
+
+    SI.generate_prospect_leaf_random(slab_sim_name=slab_sim_name, leaf_count=leaf_count)
 
 
 def generate_leaves():
@@ -80,10 +97,10 @@ def generate_leaves():
     )
 
 
-def solve_leaves(runtime: RuntimeEnvironment):
+def solve_leaves(runtime: RuntimeEnvironment, sims_to_solve_list):
     """Solve leaf parameters."""
 
-    for slab_sim_name in slab_sim_names:
+    for slab_sim_name in sims_to_solve_list:
         SI.solve_leaf_material_parameters(
             runtime=runtime,
             slab_sim_name=slab_sim_name,
@@ -91,4 +108,78 @@ def solve_leaves(runtime: RuntimeEnvironment):
             range_start=400,
             range_end=900,
             solver="nn",
+            solver_dirname="Iterative slab",
         )
+
+
+def generate_forest_master(runtime: RuntimeEnvironment, rng: np.random.Generator):
+
+    slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
+    system_sim_name_master = "dataset_paper_master"
+    system_sim_name_slave = "dataset_paper_slave"
+
+    # Pack leaf data for system_simulation scene initialization.
+    leaves = [
+        (slab_sim_names[0], 0, slab_material_names[0]),
+        (slab_sim_names[1], 0, slab_material_names[1]),
+        (slab_sim_names[2], 0, slab_material_names[2]),
+    ]
+
+    # leaves = [
+    #     (slab_sim_name_pr, 1, slab_material_names[0]),
+    #     (slab_sim_name_pr, 2, slab_material_names[1]),
+    #     (slab_sim_name_pr, 3, slab_material_names[2]),
+    # ]
+
+    # forest.init(
+    #     leaves=leaves,
+    #     conf_type="m2m",
+    #     rng=rng,
+    #     custom_forest_id=system_sim_name_master,
+    #     soil_name="median_humid_clay_reflectance",
+    # )
+
+    # Setup master and render preview
+    # BC.setup_system_sim_scene(
+    #     system_sim_name=system_sim_name_master,
+    #     leaf_name_list=slab_material_names,
+    #     runtime=runtime,
+    # )
+
+    forest.init(
+        leaves=leaves,
+        conf_type="m2s",
+        rng=rng,
+        custom_forest_id=system_sim_name_slave,
+        copy_forest_id=system_sim_name_master,
+        soil_name="median_humid_clay_reflectance",
+    )
+
+    BC.setup_system_sim_scene(
+        runtime=runtime,
+        system_sim_name=system_sim_name_slave,
+        leaf_name_list=slab_material_names,
+    )
+
+    BC.render_forest(
+        runtime=runtime,
+        system_sim_name=system_sim_name_slave,
+        render_mode="preview",
+        silent=False,
+    )
+
+    BC.render_forest(
+        runtime=runtime,
+        system_sim_name=system_sim_name_slave,
+        render_mode="spectral",
+        silent=False,
+    )
+
+    BC.render_forest(
+        runtime=runtime,
+        system_sim_name=system_sim_name_slave,
+        render_mode="visibility",
+        silent=False,
+    )
+
+    CH.construct_envi_cube(system_sim_name=system_sim_name_slave)

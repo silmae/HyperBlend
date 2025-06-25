@@ -345,7 +345,15 @@ if __name__ == "__main__":
 
     FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=True)
     FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=False)
+
     FU.apply_forest_control(forest_id=forest_id)
+
+    # TODO This is how a global master control file is written.
+    # pam = FU.get_scene_parameters(as_master=True)
+    # FCtrl.write_forest_control(
+    #     forest_id=forest_id, control_dict=pam, global_master=True
+    # )
+    # logging.error(pam)
 
     # FU.print_materials()
 

@@ -701,6 +701,11 @@ def get_visibility_mapping_material_names():
     for ground_socket in ground_gn.node_group.inputs:
 
         obj = ground_gn[ground_socket.identifier]
+        if obj is None:
+            logging.warning(
+                f"Skipping socket {ground_socket.name} because it is not set."
+            )
+            continue
         # print(f"Object: {obj.name}")
 
         if ground_socket.name == "Reference object":
@@ -734,8 +739,17 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
         made, so the caller must take care of that.
     """
 
+    if tree_name is None or len(tree_name) == 0:
+        logging.warning(f"Empty tree name given. Cannot set parameter.")
+        return
+
     tree = trees[tree_name]
     tree_mod = tree.modifiers["GeometryNodes"]
+
+    if tree_mod is None:
+        logging.warning(f"Tree '{tree_name}' does not have GeometryNodes modifier.")
+        return
+
     inputs = tree_mod.node_group.inputs
     socket = inputs.get(parameter_name)
     socket_id = socket.identifier
