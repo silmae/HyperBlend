@@ -26,3 +26,4 @@ dependencies:
       - spectres # for resampling spectra
       - Pillow
       - black # for code formatting
+      - "pandas[excel]"

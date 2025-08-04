@@ -5,13 +5,24 @@ This module is used to generate leaves for the dataset paper
 """
 
 import logging
+import os.path
+import pandas as pd
+
 import numpy as np
+import shutil
+from matplotlib import pyplot as plt
 
 from setup.runtime_environment import RuntimeEnvironment
 from src.slab_model import interface as SI
 from src.system_simulation import forest
 from rendering import blender_control as BC
-from src.data import cube_handling as CH
+from src.data import (
+    cube_handling as CH,
+    path_handling as PH,
+    file_handling as FH,
+    toml_handling as TH,
+)
+from src.utils import data_utils as DU
 
 
 slab_sim_names = ["Manitoba Maple", "American Elm", "Crab apple"]
@@ -29,8 +40,120 @@ def run(runtime: RuntimeEnvironment):
     # generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
     # solve_leaves(runtime=runtime, slab_sim_names=[slab_sim_name_pr])
 
-    rng = np.random.default_rng(1243567)
-    generate_forest_master(runtime=runtime, rng=rng)
+    # rng = np.random.default_rng(1243567)
+    # generate_forest_master(runtime=runtime, rng=rng)
+    lotus_to_hb(runtime)
+
+
+def lotus_to_hb(runtime: RuntimeEnvironment):
+
+    # Assume lotus main directory is two levels higher than current working directory
+    lotus_main_dir = os.path.abspath("../../FRDR_dataset/LOTUS")
+    if os.path.exists(lotus_main_dir):
+        logging.info(f"Lotus data found at {lotus_main_dir}.")
+    cary_dir = PH.join(lotus_main_dir, "Hemispherical Data", "Cary 5000")
+    if os.path.exists(cary_dir):
+        logging.info(f"Found Cary 5000 data at {cary_dir}.")
+    image_dir = PH.join(lotus_main_dir, "Images of leaves")
+    if os.path.exists(image_dir):
+        logging.info(f"Found images at {image_dir}.")
+    meta_excel_path = PH.join(lotus_main_dir, "Leaf Information.xlsx")
+    if os.path.exists(meta_excel_path):
+        logging.info(f"Found metadata at {meta_excel_path}.")
+
+    cols = "B:V"
+    # Read the metadata Excel file
+    meta_df = pd.read_excel(meta_excel_path, sheet_name=1, index_col=1, usecols=cols)
+    # print(meta_df)
+
+    common_names = meta_df["Common Name"].unique()
+
+    select_by_common_name = [
+        "Saskatoon berry",
+        "Oak",
+        "Elm",
+        "Mountain ash",
+        "Green ash",
+        "American elm",
+        "Grape",
+        "Purple cherry",
+        "Manitoba maple",
+        "Crab apple",
+    ]
+
+    slab_sim_names = []
+
+    for index, row in meta_df.iterrows():
+
+        # each row is returned as a pandas series
+        common_name = row["Common Name"]
+        if common_name in select_by_common_name:
+
+            file_base_name = row["FileName"]
+
+            # Skip abaxial sides of the leaves
+            if file_base_name.endswith("b"):
+                continue
+
+            print(f"Processing {file_base_name} with common name {common_name}")
+
+            refl_file_name = file_base_name + "_R.txt"
+            tran_file_name = file_base_name + "_T.txt"
+            relf_file_path = PH.join(cary_dir, refl_file_name)
+            tran_file_path = PH.join(cary_dir, tran_file_name)
+
+            # Load csv files into numpy arrays
+            refl = np.loadtxt(relf_file_path)
+            tran = np.loadtxt(tran_file_path)
+
+            # Skip wavelengths below 400 nm. The dataset starts from 200 nm
+            wls = refl[200:, 0]
+            refl = refl[200:, 1]
+            tran = tran[200:, 1]
+
+            # Debug plot
+            # plt.plot(wls, refl, label=f"Reflectance {common_name}")
+            # plt.plot(wls, tran, label=f"Transmittance {common_name}")
+            # plt.show()
+            # print(tran)
+
+            slab_sim_name = "LOTUS " + common_name
+            FH.create_top_level_slab_sim_directories(slab_sim_name=slab_sim_name)
+
+            # Check existing target IDs and create a new one with ID one greater
+            existing_target_ids = FH.list_target_ids(slab_sim_name=slab_sim_name)
+            target_id = len(existing_target_ids)
+            # print(f"Target ID: {target_id} for {slab_sim_name}")
+
+            # They have to be actually created here, so that they can be found later
+            FH.create_signal_optimization_directories(slab_sim_name, target_id)
+            target_data = DU.pack_target(wls, refl, tran)
+            TH.write_target(
+                slab_sim_name=slab_sim_name, data=target_data, signal_id=target_id
+            )
+
+            # Then copy leaf images and metadata
+            src_image_path = PH.join(image_dir, file_base_name + ".JPG")
+            dst_image_path = PH.join(
+                PH.directory_slab_simulation(slab_sim_name), file_base_name + ".JPG"
+            )
+            shutil.copy(src_image_path, dst_image_path)
+
+            meta_file_name = file_base_name + ".toml"
+            meta_dict = row.to_dict()
+            TH.write_dict_as_toml(
+                meta_dict, PH.directory_slab_simulation(slab_sim_name), meta_file_name
+            )
+            slab_sim_names.append(slab_sim_name)
+
+        # Finally, solve material parameters
+        for slab_sim_name in slab_sim_names:
+            SI.solve_leaf_material_parameters(
+                runtime=runtime,
+                slab_sim_name=slab_sim_name,
+                solver="nn",
+                solver_dirname="Iterative slab",
+            )
 
 
 def generate_random_prospect_leaves(slab_sim_name: str, leaf_count: int = 2):
