@@ -146,14 +146,14 @@ def lotus_to_hb(runtime: RuntimeEnvironment):
             )
             slab_sim_names.append(slab_sim_name)
 
-        # Finally, solve material parameters
-        for slab_sim_name in slab_sim_names:
-            SI.solve_leaf_material_parameters(
-                runtime=runtime,
-                slab_sim_name=slab_sim_name,
-                solver="nn",
-                solver_dirname="Iterative slab",
-            )
+    # Finally, solve material parameters
+    for slab_sim_name in slab_sim_names:
+        SI.solve_leaf_material_parameters(
+            runtime=runtime,
+            slab_sim_name=slab_sim_name,
+            solver="nn",
+            solver_dirname="Iterative slab",
+        )
 
 
 def generate_random_prospect_leaves(slab_sim_name: str, leaf_count: int = 2):
