@@ -37,7 +37,7 @@ tree_preview_resolution_x = 1028
 tree_preview_resolution_y = 512
 
 [Forest.Seed]
-Value = 2
+Value = 4
 Type = "INT"
 ID = 7
 
@@ -60,37 +60,100 @@ Type = "VALUE"
 ID = 12
 
 [Forest."Spawn probability [%]"]
-Value = 10
-"Standard deviation" = 1
+Value = 50
+"Standard deviation" = 5
 Type = "INT"
 ID = 13
 
-[Forest."Tree 1 probability [%]"]
-Value = 100
-"Standard deviation" = 10
+[Forest."Object 1 probability [%]"]
+Value = 40
+"Standard deviation" = 4
 Type = "INT"
 ID = 14
 
-[Forest."Tree 2 probability [%]"]
+[Forest."Object 2 probability [%]"]
 Value = 10
 "Standard deviation" = 1
 Type = "INT"
 ID = 15
 
-[Forest."Tree 3 probability [%]"]
-Value = 100
-"Standard deviation" = 10
+[Forest."Object 3 probability [%]"]
+Value = 60
+"Standard deviation" = 6
 Type = "INT"
 ID = 16
 
-[Forest."Tree 1"]
+[Forest."Object 4 probability [%]"]
+Value = 50
+"Standard deviation" = 5
+Type = "INT"
+ID = 37
+
+[Forest."Object 5 probability [%]"]
+Value = 100
+"Standard deviation" = 10
+Type = "INT"
+ID = 38
+
+[Forest."Object 6 probability [%]"]
+Value = 50
+"Standard deviation" = 5
+Type = "INT"
+ID = 39
+
+[Forest."Object 7 probability [%]"]
+Value = 0
+"Standard deviation" = 0
+Type = "INT"
+ID = 40
+
+[Forest."Object 8 probability [%]"]
+Value = 0
+"Standard deviation" = 0
+Type = "INT"
+ID = 41
+
+[Forest."Object 9 probability [%]"]
+Value = 0
+"Standard deviation" = 0
+Type = "INT"
+ID = 42
+
+[Forest."Object 10 probability [%]"]
+Value = 0
+"Standard deviation" = 0
+Type = "INT"
+ID = 43
+
+[Forest."Spawn object 1"]
 Name = "Broadleaf tree"
 
-[Forest."Tree 2"]
-Name = "Small garden tree"
+[Forest."Spawn object 2"]
+Name = "Elm like"
 
-[Forest."Tree 3"]
-Name = "Conifer tree"
+[Forest."Spawn object 3"]
+Name = "Apple tree"
+
+[Forest."Spawn object 4"]
+Name = "Spruce old"
+
+[Forest."Spawn object 5"]
+Name = "Spruce young"
+
+[Forest."Spawn object 6"]
+Name = "Scotch pine"
+
+[Forest."Spawn object 7"]
+Name = "Broadleaf tree"
+
+[Forest."Spawn object 8"]
+Name = "Broadleaf tree"
+
+[Forest."Spawn object 9"]
+Name = "Broadleaf tree"
+
+[Forest."Spawn object 10"]
+Name = "Broadleaf tree"
 
 [Forest."Reference safe distance [m]"]
 Value = 10.0
@@ -132,7 +195,7 @@ Type = "VALUE"
 ID = 32
 
 [Forest."Understory object 2"]
-Name = "Small bush"
+Name = "Big bush"
 
 [Forest."Understory 2 min separation [m]"]
 Value = 0.5
@@ -145,386 +208,1305 @@ Value = "bpy.data.materials['Ground material']"
 Type = "MATERIAL"
 ID = 36
 
-[Forest."Tree 1"."Branch thickness factor"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
-Type = "VALUE"
-ID = 9
-
-[Forest."Tree 1"."Trunk length [m]"]
+[Forest."Spawn object 1"."Trunk length [m]"]
 Value = 20.0
 "Standard deviation" = 2.0
 Type = "VALUE"
 ID = 10
 
-[Forest."Tree 1"."Trunk diameter [m]"]
+[Forest."Spawn object 1"."Trunk diameter [m]"]
 Value = 0.4000000059604645
 "Standard deviation" = 0.04000000059604645
 Type = "VALUE"
 ID = 11
 
-[Forest."Tree 1"."Trunk pruning"]
+[Forest."Spawn object 1"."Trunk pruning"]
 Value = 0.5999999046325684
 "Standard deviation" = 0.05999999046325684
 Type = "VALUE"
 ID = 12
 
-[Forest."Tree 1"."Trunk clear start [%]"]
+[Forest."Spawn object 1"."Trunk clear start [%]"]
 Value = 50
 "Standard deviation" = 5
 Type = "INT"
 ID = 13
 
-[Forest."Tree 1"."Trunk child count"]
+[Forest."Spawn object 1"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 1"."Trunk child count"]
 Value = 150
 "Standard deviation" = 15
 Type = "INT"
 ID = 14
 
-[Forest."Tree 1"."Branch 1 length [m]"]
-Value = 4.0
-"Standard deviation" = 0.4
-Type = "VALUE"
-ID = 16
-
-[Forest."Tree 1"."Branch 1 diameter [m]"]
-Value = 0.05000000074505806
-"Standard deviation" = 0.005000000074505806
-Type = "VALUE"
-ID = 17
-
-[Forest."Tree 1"."Branch 1 scale"]
-Value = 0.5999999046325684
-"Standard deviation" = 0.05999999046325684
-Type = "VALUE"
-ID = 18
-
-[Forest."Tree 1"."Branch 1 child count"]
-Value = 5
-"Standard deviation" = 0
-Type = "INT"
-ID = 19
-
-[Forest."Tree 1"."Branch 1 align"]
-Value = 0.5
-"Standard deviation" = 0.05
-Type = "VALUE"
-ID = 20
-
-[Forest."Tree 1"."Droop angle [deg]"]
-Value = 34.89999771118164
-"Standard deviation" = 3.489999771118164
-Type = "VALUE"
-ID = 21
-
-[Forest."Tree 1"."Branch 2 length [m]"]
-Value = 2.0
-"Standard deviation" = 0.2
-Type = "VALUE"
-ID = 22
-
-[Forest."Tree 1"."Branch 2 child count"]
-Value = 4
-"Standard deviation" = 0
-Type = "INT"
-ID = 23
-
-[Forest."Tree 1"."Branch 2 align"]
-Value = 0.5
-"Standard deviation" = 0.05
-Type = "VALUE"
-ID = 24
-
-[Forest."Tree 1"."Branch 3 length [m]"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
-Type = "VALUE"
-ID = 25
-
-[Forest."Tree 1"."Branch 3 resolution"]
-Value = 10
-"Standard deviation" = 1
-Type = "INT"
-ID = 35
-
-[Forest."Tree 1"."Branch 3 align"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
-Type = "VALUE"
-ID = 26
-
-[Forest."Tree 1"."Leaf density"]
-Value = 1.0
-"Standard deviation" = 0.1
-Type = "VALUE"
-ID = 31
-
-[Forest."Tree 1"."Average leaf angle [deg]"]
-Value = 30.0
-"Standard deviation" = 3.0
-Type = "VALUE"
-ID = 32
-
-[Forest."Tree 1".Seed]
-Value = 22
-Type = "INT"
-ID = 33
-
-[Forest."Tree 2"."Branch thickness factor"]
+[Forest."Spawn object 1"."Branch thickness factor"]
 Value = 0.6000000238418579
 "Standard deviation" = 0.06000000238418579
 Type = "VALUE"
 ID = 9
 
-[Forest."Tree 2"."Trunk length [m]"]
-Value = 5.0
-"Standard deviation" = 0.5
+[Forest."Spawn object 1"."Branch 1 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 1"."Branch 1 diameter [m]"]
+Value = 0.05000000074505806
+"Standard deviation" = 0.005000000074505806
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 1"."Branch 1 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 1"."Branch 1 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 1"."Droop angle [deg]"]
+Value = 34.89999771118164
+"Standard deviation" = 3.489999771118164
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 1"."Branch 2 length [m]"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 1"."Branch 2 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 1"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 1"."Branch 3 length [m]"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 1"."Branch 3 resolution"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 1"."Branch 3 align"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 1"."Leaf density"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 1"."Average leaf angle [deg]"]
+Value = 30.0
+"Standard deviation" = 3.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 1".Seed]
+Value = 22
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 1"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 2"."Trunk length [m]"]
+Value = 18.220001220703125
+"Standard deviation" = 1.8220001220703126
 Type = "VALUE"
 ID = 10
 
-[Forest."Tree 2"."Trunk diameter [m]"]
-Value = 0.10000000149011612
-"Standard deviation" = 0.010000000149011612
+[Forest."Spawn object 2"."Trunk diameter [m]"]
+Value = 0.800000011920929
+"Standard deviation" = 0.0800000011920929
 Type = "VALUE"
 ID = 11
 
-[Forest."Tree 2"."Trunk pruning"]
-Value = 0.1499999761581421
-"Standard deviation" = 0.01499999761581421
+[Forest."Spawn object 2"."Trunk pruning"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
 Type = "VALUE"
 ID = 12
 
-[Forest."Tree 2"."Trunk clear start [%]"]
-Value = 43
-"Standard deviation" = 4
+[Forest."Spawn object 2"."Trunk clear start [%]"]
+Value = 30
+"Standard deviation" = 3
 Type = "INT"
 ID = 13
 
-[Forest."Tree 2"."Trunk child count"]
+[Forest."Spawn object 2"."Branch tapering"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 2"."Trunk child count"]
+Value = 24
+"Standard deviation" = 2
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 2"."Branch thickness factor"]
+Value = 0.6200000047683716
+"Standard deviation" = 0.06200000047683716
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 2"."Branch 1 length [m]"]
+Value = 12.0
+"Standard deviation" = 1.2000000000000002
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 2"."Branch 1 diameter [m]"]
+Value = 0.30000001192092896
+"Standard deviation" = 0.030000001192092896
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 2"."Branch 1 child count"]
+Value = 14
+"Standard deviation" = 1
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 2"."Branch 1 align"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 2"."Droop angle [deg]"]
+Value = 56.07999801635742
+"Standard deviation" = 5.607999801635742
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 2"."Branch 2 length [m]"]
+Value = 5.0
+"Standard deviation" = 0.5
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 2"."Branch 2 child count"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 2"."Branch 2 align"]
+Value = 0.3500000238418579
+"Standard deviation" = 0.03500000238418579
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 2"."Branch 3 length [m]"]
+Value = 3.0
+"Standard deviation" = 0.30000000000000004
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 2"."Branch 3 resolution"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 2"."Branch 3 align"]
+Value = 0.7400000095367432
+"Standard deviation" = 0.07400000095367432
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 2"."Leaf density"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 2"."Average leaf angle [deg]"]
+Value = 30.0
+"Standard deviation" = 3.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 2".Seed]
+Value = 39
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 2"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 3"."Trunk length [m]"]
+Value = 9.0
+"Standard deviation" = 0.9
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 3"."Trunk diameter [m]"]
+Value = 0.23000000417232513
+"Standard deviation" = 0.023000000417232516
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 3"."Trunk pruning"]
+Value = 0.0
+"Standard deviation" = 0.0
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 3"."Trunk clear start [%]"]
+Value = 30
+"Standard deviation" = 3
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 3"."Branch tapering"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 3"."Trunk child count"]
 Value = 36
 "Standard deviation" = 3
 Type = "INT"
 ID = 14
 
-[Forest."Tree 2"."Branch 1 length [m]"]
-Value = 1.600000023841858
-"Standard deviation" = 0.1600000023841858
+[Forest."Spawn object 3"."Branch thickness factor"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 3"."Branch 1 length [m]"]
+Value = 3.0
+"Standard deviation" = 0.30000000000000004
 Type = "VALUE"
 ID = 16
 
-[Forest."Tree 2"."Branch 1 diameter [m]"]
-Value = 0.019999999552965164
-"Standard deviation" = 0.0019999999552965165
+[Forest."Spawn object 3"."Branch 1 diameter [m]"]
+Value = 0.09000000357627869
+"Standard deviation" = 0.00900000035762787
 Type = "VALUE"
 ID = 17
 
-[Forest."Tree 2"."Branch 1 scale"]
-Value = 0.5999999046325684
-"Standard deviation" = 0.05999999046325684
-Type = "VALUE"
-ID = 18
-
-[Forest."Tree 2"."Branch 1 child count"]
+[Forest."Spawn object 3"."Branch 1 child count"]
 Value = 4
 "Standard deviation" = 0
 Type = "INT"
 ID = 19
 
-[Forest."Tree 2"."Branch 1 align"]
-Value = 0.3200000524520874
-"Standard deviation" = 0.03200000524520874
+[Forest."Spawn object 3"."Branch 1 align"]
+Value = 0.49000000953674316
+"Standard deviation" = 0.04900000095367432
 Type = "VALUE"
 ID = 20
 
-[Forest."Tree 2"."Droop angle [deg]"]
-Value = -39.56999969482422
-"Standard deviation" = -3.956999969482422
+[Forest."Spawn object 3"."Droop angle [deg]"]
+Value = 50.0
+"Standard deviation" = 5.0
 Type = "VALUE"
 ID = 21
 
-[Forest."Tree 2"."Branch 2 length [m]"]
-Value = 1.1500000953674316
-"Standard deviation" = 0.11500000953674316
+[Forest."Spawn object 3"."Branch 2 length [m]"]
+Value = 1.8000000715255737
+"Standard deviation" = 0.18000000715255737
 Type = "VALUE"
 ID = 22
 
-[Forest."Tree 2"."Branch 2 child count"]
-Value = 3
+[Forest."Spawn object 3"."Branch 2 child count"]
+Value = 8
 "Standard deviation" = 0
 Type = "INT"
 ID = 23
 
-[Forest."Tree 2"."Branch 2 align"]
+[Forest."Spawn object 3"."Branch 2 align"]
 Value = 0.5
 "Standard deviation" = 0.05
 Type = "VALUE"
 ID = 24
 
-[Forest."Tree 2"."Branch 3 length [m]"]
-Value = 0.4100000262260437
-"Standard deviation" = 0.04100000262260437
+[Forest."Spawn object 3"."Branch 3 length [m]"]
+Value = 0.800000011920929
+"Standard deviation" = 0.0800000011920929
 Type = "VALUE"
 ID = 25
 
-[Forest."Tree 2"."Branch 3 resolution"]
-Value = 6
-"Standard deviation" = 0
+[Forest."Spawn object 3"."Branch 3 resolution"]
+Value = 13
+"Standard deviation" = 1
 Type = "INT"
 ID = 35
 
-[Forest."Tree 2"."Branch 3 align"]
+[Forest."Spawn object 3"."Branch 3 align"]
 Value = 0.6000000238418579
 "Standard deviation" = 0.06000000238418579
 Type = "VALUE"
 ID = 26
 
-[Forest."Tree 2"."Leaf density"]
-Value = 0.40000003576278687
-"Standard deviation" = 0.04000000357627869
+[Forest."Spawn object 3"."Leaf density"]
+Value = 2.0
+"Standard deviation" = 0.2
 Type = "VALUE"
 ID = 31
 
-[Forest."Tree 2"."Average leaf angle [deg]"]
-Value = 30.0
-"Standard deviation" = 3.0
+[Forest."Spawn object 3"."Average leaf angle [deg]"]
+Value = 50.0
+"Standard deviation" = 5.0
 Type = "VALUE"
 ID = 32
 
-[Forest."Tree 2".Seed]
-Value = 23
+[Forest."Spawn object 3".Seed]
+Value = 18
 Type = "INT"
 ID = 33
 
-[Forest."Tree 3"."Branch thickness factor"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
-Type = "VALUE"
-ID = 9
+[Forest."Spawn object 3"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
 
-[Forest."Tree 3"."Trunk length [m]"]
-Value = 20.0
-"Standard deviation" = 2.0
+[Forest."Spawn object 4"."Trunk length [m]"]
+Value = 40.0
+"Standard deviation" = 4.0
 Type = "VALUE"
 ID = 10
 
-[Forest."Tree 3"."Trunk diameter [m]"]
-Value = 0.4000000059604645
-"Standard deviation" = 0.04000000059604645
+[Forest."Spawn object 4"."Trunk diameter [m]"]
+Value = 1.0
+"Standard deviation" = 0.1
 Type = "VALUE"
 ID = 11
 
-[Forest."Tree 3"."Trunk pruning"]
-Value = 0.5999999046325684
-"Standard deviation" = 0.05999999046325684
+[Forest."Spawn object 4"."Trunk pruning"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
 Type = "VALUE"
 ID = 12
 
-[Forest."Tree 3"."Trunk clear start [%]"]
-Value = 50
-"Standard deviation" = 5
+[Forest."Spawn object 4"."Trunk clear start [%]"]
+Value = 8
+"Standard deviation" = 0
 Type = "INT"
 ID = 13
 
-[Forest."Tree 3"."Trunk child count"]
-Value = 100
-"Standard deviation" = 10
-Type = "INT"
-ID = 14
-
-[Forest."Tree 3"."Branch 1 length [m]"]
-Value = 4.0
-"Standard deviation" = 0.4
-Type = "VALUE"
-ID = 16
-
-[Forest."Tree 3"."Branch 1 diameter [m]"]
-Value = 0.05000000074505806
-"Standard deviation" = 0.005000000074505806
-Type = "VALUE"
-ID = 17
-
-[Forest."Tree 3"."Branch 1 scale"]
-Value = 0.5999999046325684
-"Standard deviation" = 0.05999999046325684
+[Forest."Spawn object 4"."Branch tapering"]
+Value = 0.30000001192092896
+"Standard deviation" = 0.030000001192092896
 Type = "VALUE"
 ID = 18
 
-[Forest."Tree 3"."Branch 1 child count"]
+[Forest."Spawn object 4"."Trunk child count"]
+Value = 200
+"Standard deviation" = 20
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 4"."Branch thickness factor"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 4"."Branch 1 length [m]"]
+Value = 10.0
+"Standard deviation" = 1.0
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 4"."Branch 1 diameter [m]"]
+Value = 0.25
+"Standard deviation" = 0.025
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 4"."Branch 1 child count"]
 Value = 5
 "Standard deviation" = 0
 Type = "INT"
 ID = 19
 
-[Forest."Tree 3"."Branch 1 align"]
-Value = -0.1899999976158142
-"Standard deviation" = -0.018999999761581423
+[Forest."Spawn object 4"."Branch 1 align"]
+Value = -0.29999998211860657
+"Standard deviation" = -0.029999998211860657
 Type = "VALUE"
 ID = 20
 
-[Forest."Tree 3"."Droop angle [deg]"]
-Value = 34.89999771118164
-"Standard deviation" = 3.489999771118164
+[Forest."Spawn object 4"."Droop angle [deg]"]
+Value = -39.35000228881836
+"Standard deviation" = -3.935000228881836
 Type = "VALUE"
 ID = 21
 
-[Forest."Tree 3"."Branch 2 length [m]"]
-Value = 2.0
-"Standard deviation" = 0.2
+[Forest."Spawn object 4"."Branch 2 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
 Type = "VALUE"
 ID = 22
 
-[Forest."Tree 3"."Branch 2 child count"]
-Value = 4
+[Forest."Spawn object 4"."Branch 2 child count"]
+Value = 7
 "Standard deviation" = 0
 Type = "INT"
 ID = 23
 
-[Forest."Tree 3"."Branch 2 align"]
+[Forest."Spawn object 4"."Branch 2 align"]
 Value = 0.5
 "Standard deviation" = 0.05
 Type = "VALUE"
 ID = 24
 
-[Forest."Tree 3"."Branch 3 length [m]"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
+[Forest."Spawn object 4"."Branch 3 length [m]"]
+Value = 1.1700000762939453
+"Standard deviation" = 0.11700000762939454
 Type = "VALUE"
 ID = 25
 
-[Forest."Tree 3"."Branch 3 resolution"]
-Value = 10
-"Standard deviation" = 1
+[Forest."Spawn object 4"."Branch 3 resolution"]
+Value = 7
+"Standard deviation" = 0
 Type = "INT"
 ID = 35
 
-[Forest."Tree 3"."Branch 3 align"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
+[Forest."Spawn object 4"."Branch 3 align"]
+Value = 0.800000011920929
+"Standard deviation" = 0.0800000011920929
 Type = "VALUE"
 ID = 26
 
-[Forest."Tree 3"."Leaf density"]
+[Forest."Spawn object 4"."Leaf density"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 4"."Average leaf angle [deg]"]
+Value = 60.0
+"Standard deviation" = 6.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 4".Seed]
+Value = 27
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 4"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 5"."Trunk length [m]"]
+Value = 15.0
+"Standard deviation" = 1.5
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 5"."Trunk diameter [m]"]
+Value = 0.30000001192092896
+"Standard deviation" = 0.030000001192092896
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 5"."Trunk pruning"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 5"."Trunk clear start [%]"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 5"."Branch tapering"]
+Value = 0.10000000149011612
+"Standard deviation" = 0.010000000149011612
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 5"."Trunk child count"]
+Value = 70
+"Standard deviation" = 7
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 5"."Branch thickness factor"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 5"."Branch 1 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 5"."Branch 1 diameter [m]"]
+Value = 0.07000000029802322
+"Standard deviation" = 0.007000000029802323
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 5"."Branch 1 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 5"."Branch 1 align"]
+Value = -0.04999998211860657
+"Standard deviation" = -0.004999998211860657
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 5"."Droop angle [deg]"]
+Value = -58.26000213623047
+"Standard deviation" = -5.826000213623047
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 5"."Branch 2 length [m]"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 5"."Branch 2 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 5"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 5"."Branch 3 length [m]"]
+Value = 0.699999988079071
+"Standard deviation" = 0.06999999880790711
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 5"."Branch 3 resolution"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 5"."Branch 3 align"]
+Value = 0.800000011920929
+"Standard deviation" = 0.0800000011920929
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 5"."Leaf density"]
+Value = 0.30000001192092896
+"Standard deviation" = 0.030000001192092896
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 5"."Average leaf angle [deg]"]
+Value = -50.0
+"Standard deviation" = -5.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 5".Seed]
+Value = 22
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 5"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 6"."Trunk length [m]"]
+Value = 27.0
+"Standard deviation" = 2.7
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 6"."Trunk diameter [m]"]
+Value = 0.699999988079071
+"Standard deviation" = 0.06999999880790711
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 6"."Trunk pruning"]
+Value = 1.7599999904632568
+"Standard deviation" = 0.17599999904632568
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 6"."Trunk clear start [%]"]
+Value = 40
+"Standard deviation" = 4
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 6"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 6"."Trunk child count"]
+Value = 100
+"Standard deviation" = 10
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 6"."Branch thickness factor"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 6"."Branch 1 length [m]"]
+Value = 6.0
+"Standard deviation" = 0.6000000000000001
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 6"."Branch 1 diameter [m]"]
+Value = 0.15000000596046448
+"Standard deviation" = 0.015000000596046448
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 6"."Branch 1 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 6"."Branch 1 align"]
+Value = 0.2199999988079071
+"Standard deviation" = 0.02199999988079071
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 6"."Droop angle [deg]"]
+Value = 34.89999771118164
+"Standard deviation" = 3.489999771118164
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 6"."Branch 2 length [m]"]
+Value = 3.440000057220459
+"Standard deviation" = 0.3440000057220459
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 6"."Branch 2 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 6"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 6"."Branch 3 length [m]"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 6"."Branch 3 resolution"]
+Value = 7
+"Standard deviation" = 0
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 6"."Branch 3 align"]
+Value = 0.10000002384185791
+"Standard deviation" = 0.010000002384185792
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 6"."Leaf density"]
 Value = 1.0
 "Standard deviation" = 0.1
 Type = "VALUE"
 ID = 31
 
-[Forest."Tree 3"."Average leaf angle [deg]"]
+[Forest."Spawn object 6"."Average leaf angle [deg]"]
+Value = 20.0
+"Standard deviation" = 2.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 6".Seed]
+Value = 17
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 6"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 7"."Trunk length [m]"]
+Value = 20.0
+"Standard deviation" = 2.0
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 7"."Trunk diameter [m]"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 7"."Trunk pruning"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 7"."Trunk clear start [%]"]
+Value = 50
+"Standard deviation" = 5
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 7"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 7"."Trunk child count"]
+Value = 150
+"Standard deviation" = 15
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 7"."Branch thickness factor"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 7"."Branch 1 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 7"."Branch 1 diameter [m]"]
+Value = 0.05000000074505806
+"Standard deviation" = 0.005000000074505806
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 7"."Branch 1 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 7"."Branch 1 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 7"."Droop angle [deg]"]
+Value = 34.89999771118164
+"Standard deviation" = 3.489999771118164
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 7"."Branch 2 length [m]"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 7"."Branch 2 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 7"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 7"."Branch 3 length [m]"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 7"."Branch 3 resolution"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 7"."Branch 3 align"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 7"."Leaf density"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 7"."Average leaf angle [deg]"]
 Value = 30.0
 "Standard deviation" = 3.0
 Type = "VALUE"
 ID = 32
 
-[Forest."Tree 3".Seed]
+[Forest."Spawn object 7".Seed]
 Value = 22
 Type = "INT"
 ID = 33
 
-[Forest."Understory object 1"."Branch thickness factor"]
+[Forest."Spawn object 7"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 8"."Trunk length [m]"]
+Value = 20.0
+"Standard deviation" = 2.0
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 8"."Trunk diameter [m]"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 8"."Trunk pruning"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 8"."Trunk clear start [%]"]
+Value = 50
+"Standard deviation" = 5
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 8"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 8"."Trunk child count"]
+Value = 150
+"Standard deviation" = 15
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 8"."Branch thickness factor"]
 Value = 0.6000000238418579
 "Standard deviation" = 0.06000000238418579
 Type = "VALUE"
 ID = 9
+
+[Forest."Spawn object 8"."Branch 1 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 8"."Branch 1 diameter [m]"]
+Value = 0.05000000074505806
+"Standard deviation" = 0.005000000074505806
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 8"."Branch 1 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 8"."Branch 1 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 8"."Droop angle [deg]"]
+Value = 34.89999771118164
+"Standard deviation" = 3.489999771118164
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 8"."Branch 2 length [m]"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 8"."Branch 2 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 8"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 8"."Branch 3 length [m]"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 8"."Branch 3 resolution"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 8"."Branch 3 align"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 8"."Leaf density"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 8"."Average leaf angle [deg]"]
+Value = 30.0
+"Standard deviation" = 3.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 8".Seed]
+Value = 22
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 8"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 9"."Trunk length [m]"]
+Value = 20.0
+"Standard deviation" = 2.0
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 9"."Trunk diameter [m]"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 9"."Trunk pruning"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 9"."Trunk clear start [%]"]
+Value = 50
+"Standard deviation" = 5
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 9"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 9"."Trunk child count"]
+Value = 150
+"Standard deviation" = 15
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 9"."Branch thickness factor"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 9"."Branch 1 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 9"."Branch 1 diameter [m]"]
+Value = 0.05000000074505806
+"Standard deviation" = 0.005000000074505806
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 9"."Branch 1 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 9"."Branch 1 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 9"."Droop angle [deg]"]
+Value = 34.89999771118164
+"Standard deviation" = 3.489999771118164
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 9"."Branch 2 length [m]"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 9"."Branch 2 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 9"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 9"."Branch 3 length [m]"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 9"."Branch 3 resolution"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 9"."Branch 3 align"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 9"."Leaf density"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 9"."Average leaf angle [deg]"]
+Value = 30.0
+"Standard deviation" = 3.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 9".Seed]
+Value = 22
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 9"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
+
+[Forest."Spawn object 10"."Trunk length [m]"]
+Value = 20.0
+"Standard deviation" = 2.0
+Type = "VALUE"
+ID = 10
+
+[Forest."Spawn object 10"."Trunk diameter [m]"]
+Value = 0.4000000059604645
+"Standard deviation" = 0.04000000059604645
+Type = "VALUE"
+ID = 11
+
+[Forest."Spawn object 10"."Trunk pruning"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 12
+
+[Forest."Spawn object 10"."Trunk clear start [%]"]
+Value = 50
+"Standard deviation" = 5
+Type = "INT"
+ID = 13
+
+[Forest."Spawn object 10"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
+[Forest."Spawn object 10"."Trunk child count"]
+Value = 150
+"Standard deviation" = 15
+Type = "INT"
+ID = 14
+
+[Forest."Spawn object 10"."Branch thickness factor"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 9
+
+[Forest."Spawn object 10"."Branch 1 length [m]"]
+Value = 4.0
+"Standard deviation" = 0.4
+Type = "VALUE"
+ID = 16
+
+[Forest."Spawn object 10"."Branch 1 diameter [m]"]
+Value = 0.05000000074505806
+"Standard deviation" = 0.005000000074505806
+Type = "VALUE"
+ID = 17
+
+[Forest."Spawn object 10"."Branch 1 child count"]
+Value = 5
+"Standard deviation" = 0
+Type = "INT"
+ID = 19
+
+[Forest."Spawn object 10"."Branch 1 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 20
+
+[Forest."Spawn object 10"."Droop angle [deg]"]
+Value = 34.89999771118164
+"Standard deviation" = 3.489999771118164
+Type = "VALUE"
+ID = 21
+
+[Forest."Spawn object 10"."Branch 2 length [m]"]
+Value = 2.0
+"Standard deviation" = 0.2
+Type = "VALUE"
+ID = 22
+
+[Forest."Spawn object 10"."Branch 2 child count"]
+Value = 4
+"Standard deviation" = 0
+Type = "INT"
+ID = 23
+
+[Forest."Spawn object 10"."Branch 2 align"]
+Value = 0.5
+"Standard deviation" = 0.05
+Type = "VALUE"
+ID = 24
+
+[Forest."Spawn object 10"."Branch 3 length [m]"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 25
+
+[Forest."Spawn object 10"."Branch 3 resolution"]
+Value = 10
+"Standard deviation" = 1
+Type = "INT"
+ID = 35
+
+[Forest."Spawn object 10"."Branch 3 align"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 26
+
+[Forest."Spawn object 10"."Leaf density"]
+Value = 1.0
+"Standard deviation" = 0.1
+Type = "VALUE"
+ID = 31
+
+[Forest."Spawn object 10"."Average leaf angle [deg]"]
+Value = 30.0
+"Standard deviation" = 3.0
+Type = "VALUE"
+ID = 32
+
+[Forest."Spawn object 10".Seed]
+Value = 22
+Type = "INT"
+ID = 33
+
+[Forest."Spawn object 10"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
 
 [Forest."Understory object 1"."Trunk length [m]"]
 Value = 1.5
@@ -550,11 +1532,23 @@ Value = 0
 Type = "INT"
 ID = 13
 
+[Forest."Understory object 1"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
 [Forest."Understory object 1"."Trunk child count"]
 Value = 16
 "Standard deviation" = 1
 Type = "INT"
 ID = 14
+
+[Forest."Understory object 1"."Branch thickness factor"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 9
 
 [Forest."Understory object 1"."Branch 1 length [m]"]
 Value = 1.059999942779541
@@ -567,12 +1561,6 @@ Value = 0.00800000037997961
 "Standard deviation" = 0.000800000037997961
 Type = "VALUE"
 ID = 17
-
-[Forest."Understory object 1"."Branch 1 scale"]
-Value = 0.5999999046325684
-"Standard deviation" = 0.05999999046325684
-Type = "VALUE"
-ID = 18
 
 [Forest."Understory object 1"."Branch 1 child count"]
 Value = 3
@@ -645,27 +1633,26 @@ Value = 22
 Type = "INT"
 ID = 33
 
-[Forest."Understory object 2"."Branch thickness factor"]
-Value = 0.6000000238418579
-"Standard deviation" = 0.06000000238418579
-Type = "VALUE"
-ID = 9
+[Forest."Understory object 1"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36
 
 [Forest."Understory object 2"."Trunk length [m]"]
-Value = 0.5
-"Standard deviation" = 0.05
+Value = 1.5
+"Standard deviation" = 0.15000000000000002
 Type = "VALUE"
 ID = 10
 
 [Forest."Understory object 2"."Trunk diameter [m]"]
-Value = 0.009999999776482582
-"Standard deviation" = 0.0009999999776482583
+Value = 0.029999999329447746
+"Standard deviation" = 0.002999999932944775
 Type = "VALUE"
 ID = 11
 
 [Forest."Understory object 2"."Trunk pruning"]
-Value = 0.0
-"Standard deviation" = 0.0
+Value = 0.18000000715255737
+"Standard deviation" = 0.01800000071525574
 Type = "VALUE"
 ID = 12
 
@@ -675,69 +1662,75 @@ Value = 0
 Type = "INT"
 ID = 13
 
+[Forest."Understory object 2"."Branch tapering"]
+Value = 0.5999999046325684
+"Standard deviation" = 0.05999999046325684
+Type = "VALUE"
+ID = 18
+
 [Forest."Understory object 2"."Trunk child count"]
-Value = 14
+Value = 16
 "Standard deviation" = 1
 Type = "INT"
 ID = 14
 
+[Forest."Understory object 2"."Branch thickness factor"]
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
+Type = "VALUE"
+ID = 9
+
 [Forest."Understory object 2"."Branch 1 length [m]"]
-Value = 0.35999998450279236
-"Standard deviation" = 0.035999998450279236
+Value = 1.059999942779541
+"Standard deviation" = 0.1059999942779541
 Type = "VALUE"
 ID = 16
 
 [Forest."Understory object 2"."Branch 1 diameter [m]"]
-Value = 0.004999999888241291
-"Standard deviation" = 0.0004999999888241291
+Value = 0.00800000037997961
+"Standard deviation" = 0.000800000037997961
 Type = "VALUE"
 ID = 17
 
-[Forest."Understory object 2"."Branch 1 scale"]
-Value = 0.7599998712539673
-"Standard deviation" = 0.07599998712539674
-Type = "VALUE"
-ID = 18
-
 [Forest."Understory object 2"."Branch 1 child count"]
-Value = 4
+Value = 3
 "Standard deviation" = 0
 Type = "INT"
 ID = 19
 
 [Forest."Understory object 2"."Branch 1 align"]
-Value = 0.12000000476837158
-"Standard deviation" = 0.012000000476837159
+Value = 0.050000011920928955
+"Standard deviation" = 0.005000001192092896
 Type = "VALUE"
 ID = 20
 
 [Forest."Understory object 2"."Droop angle [deg]"]
-Value = -36.56999969482422
-"Standard deviation" = -3.6569999694824222
+Value = -51.09000015258789
+"Standard deviation" = -5.10900001525879
 Type = "VALUE"
 ID = 21
 
 [Forest."Understory object 2"."Branch 2 length [m]"]
-Value = 0.22999998927116394
-"Standard deviation" = 0.022999998927116395
+Value = 0.699999988079071
+"Standard deviation" = 0.06999999880790711
 Type = "VALUE"
 ID = 22
 
 [Forest."Understory object 2"."Branch 2 child count"]
-Value = 3
+Value = 5
 "Standard deviation" = 0
 Type = "INT"
 ID = 23
 
 [Forest."Understory object 2"."Branch 2 align"]
-Value = 0.6499999761581421
-"Standard deviation" = 0.06499999761581421
+Value = 0.5
+"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 24
 
 [Forest."Understory object 2"."Branch 3 length [m]"]
-Value = 0.10000000149011612
-"Standard deviation" = 0.010000000149011612
+Value = 0.30000001192092896
+"Standard deviation" = 0.030000001192092896
 Type = "VALUE"
 ID = 25
 
@@ -748,20 +1741,20 @@ Type = "INT"
 ID = 35
 
 [Forest."Understory object 2"."Branch 3 align"]
-Value = 0.7200000286102295
-"Standard deviation" = 0.07200000286102295
+Value = 0.6000000238418579
+"Standard deviation" = 0.06000000238418579
 Type = "VALUE"
 ID = 26
 
 [Forest."Understory object 2"."Leaf density"]
-Value = 0.2900000214576721
-"Standard deviation" = 0.029000002145767215
+Value = 0.5
+"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 31
 
 [Forest."Understory object 2"."Average leaf angle [deg]"]
-Value = -35.01000213623047
-"Standard deviation" = -3.501000213623047
+Value = 30.0
+"Standard deviation" = 3.0
 Type = "VALUE"
 ID = 32
 
@@ -769,3 +1762,8 @@ ID = 32
 Value = 22
 Type = "INT"
 ID = 33
+
+[Forest."Understory object 2"."Hide trunk data"]
+Value = true
+Type = "BOOLEAN"
+ID = 36

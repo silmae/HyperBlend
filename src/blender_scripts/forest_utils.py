@@ -735,9 +735,17 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
     """
 
     tree = trees[tree_name]
+    if tree is None:
+        logging.error(f"Cannot find tree named '{tree_name}'.")
+        return
     tree_mod = tree.modifiers["GeometryNodes"]
     inputs = tree_mod.node_group.inputs
     socket = inputs.get(parameter_name)
+    if socket is None:
+        logging.error(
+            f"Cannot find parameter '{parameter_name}' in tree '{tree_name}'."
+        )
+        return
     socket_id = socket.identifier
     old_val = tree_mod[socket.identifier]
     tree_mod[socket.identifier] = value
