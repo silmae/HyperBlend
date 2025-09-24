@@ -464,9 +464,9 @@ if __name__ == "__main__":
 
     if "System simulation" in blend_dir:
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-        script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
-        data_dir = os.path.abspath(blend_dir + "../../../src/data")
-        src_dir = os.path.abspath(blend_dir + "../../../src")
+        script_dir = os.path.abspath(blend_dir + "/../../../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/../../../src/data")
+        src_dir = os.path.abspath(blend_dir + "/../../../src")
     else:
         # We are in the template system_simulation blend file
         script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")

@@ -37,48 +37,60 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
 
     # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
     leaves = [
-        (set_name, 0, "Leaf material 1"),
-        (set_name, 1, "Leaf material 2"),
-        (set_name, 3, "Leaf material 3"),
+        (set_name, 2, "Slab material 1"),
+        (set_name, 0, "Slab material 2"),
+        (set_name, 1, "Slab material 3"),
     ]
 
-    # system_simulation.init(leaves=leaves, conf_type='m2m', rng=rng,
-    #             custom_forest_id=forest_id_master, soil_name=soil_name,
-    #             sun_file_name=sun_name, sky_file_name=sky_name)
+    forest.init(
+        leaves=leaves,
+        conf_type="m2m",
+        rng=rng,
+        custom_forest_id=forest_id_master,
+        soil_name=soil_name,
+        sun_file_name=sun_name,
+        sky_file_name=sky_name,
+    )
 
     # # Setup master and render preview
-    # BC.setup_forest(forest_id=forest_id_master, leaf_name_list=['Leaf material 1', 'Leaf material 2', 'Leaf material 3'])
-    # BC.render_forest(forest_id=forest_id_master, render_mode='preview')
+    BC.setup_system_sim_scene(
+        runtime=runtime,
+        system_sim_name=forest_id_master,
+        leaf_name_list=["Slab material 1", "Slab material 2", "Slab material 3"],
+    )
+    BC.render_forest(
+        runtime=runtime, system_sim_name=forest_id_master, render_mode="preview"
+    )
 
     # Stop here. For the first run, everything after this should be commented out
     # Check the master file and make any changes before generating new "slave" system_simulation with random settings.
     # When you are happy with the new settings, uncomment the following (and comment out the previous lines as
     # instructed for second run).
 
-    forest.init(
-        leaves=leaves,
-        conf_type="m2s",
-        rng=rng,
-        custom_forest_id=forest_id,
-        copy_forest_id=forest_id_master,
-        soil_name=soil_name,
-        sun_file_name=sun_name,
-        sky_file_name=sky_name,
-    )
-
-    # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
-    BC.setup_system_sim_scene(
-        system_sim_name=forest_id,
-        leaf_name_list=["Leaf material 1", "Leaf material 2", "Leaf material 3"],
-        runtime=runtime,
-    )  # , 'Leaf material 4'])
-
-    # Render bands for spectral cube along with additional images
-    BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
-    BC.render_forest(
-        runtime=runtime, system_sim_name=forest_id, render_mode="visibility"
-    )
-    BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="spectral")
-
-    # Construct spectral cube in ENVI format
-    CH.construct_envi_cube(system_sim_name=forest_id)
+    # forest.init(
+    #     leaves=leaves,
+    #     conf_type="m2s",
+    #     rng=rng,
+    #     custom_forest_id=forest_id,
+    #     copy_forest_id=forest_id_master,
+    #     soil_name=soil_name,
+    #     sun_file_name=sun_name,
+    #     sky_file_name=sky_name,
+    # )
+    #
+    # # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
+    # BC.setup_system_sim_scene(
+    #     system_sim_name=forest_id,
+    #     leaf_name_list=["Slab material 1", "Slab material 2", "Slab material 3"],
+    #     runtime=runtime,
+    # )  # , 'Leaf material 4'])
+    #
+    # # Render bands for spectral cube along with additional images
+    # # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
+    # BC.render_forest(
+    #     runtime=runtime, system_sim_name=forest_id, render_mode="visibility"
+    # )
+    # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="spectral")
+    #
+    # # Construct spectral cube in ENVI format
+    # CH.construct_envi_cube(system_sim_name=forest_id)

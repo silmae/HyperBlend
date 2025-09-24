@@ -18,14 +18,14 @@ if __name__ == "__main__":
 
     if "System simulation" in blend_dir:
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-        script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
-        data_dir = os.path.abspath(blend_dir + "../../../src/data")
-        forest_dir = os.path.abspath(blend_dir + "../../../src/system_simulation")
+        script_dir = os.path.abspath(blend_dir + "/../../../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/../../../src/data")
+        forest_dir = os.path.abspath(blend_dir + "/../../../src/system_simulation")
     else:
         # We are in the template system_simulation blend file
-        script_dir = os.path.abspath(blend_dir + "/src/blender_scripts")
-        data_dir = os.path.abspath(blend_dir + "/src/data")
-        forest_dir = os.path.abspath(blend_dir + "/src/system_simulation")
+        script_dir = os.path.abspath(blend_dir + "/../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/../src/data")
+        forest_dir = os.path.abspath(blend_dir + "/../src/system_simulation")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
