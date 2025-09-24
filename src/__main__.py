@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
     # BC.generate_forest_control(runtime=runtime, global_master=True)
 
-    rng = np.random.default_rng(123324)
-    ITL.forest_pipe_test(runtime=runtime, rng=rng)
+    # rng = np.random.default_rng(123324)
+    dataset_paper.run(runtime=runtime)
 
     # This can be used to run the iterative training
     # SMI.iterative_train(

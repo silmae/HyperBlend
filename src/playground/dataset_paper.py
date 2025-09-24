@@ -42,7 +42,124 @@ def run(runtime: RuntimeEnvironment):
 
     # rng = np.random.default_rng(1243567)
     # generate_forest_master(runtime=runtime, rng=rng)
-    lotus_to_hb(runtime)
+    # lotus_to_hb(runtime)
+    miu(runtime=runtime)
+
+
+def miu(runtime: RuntimeEnvironment):
+
+    lotus_species_names = [
+        "LOTUS Saskatoon berry",
+        "LOTUS Oak",
+        "LOTUS Elm",
+        "LOTUS Mountain ash",
+        "LOTUS Green ash",
+        "LOTUS American elm",
+        "LOTUS Grape",
+        "LOTUS Purple cherry",
+        "LOTUS Manitoba maple",
+    ]
+
+    # In case you forgot to resample them earlier, they have to be solved again.
+    # Just leaving this snippet for future reference.
+    # for slab_sim_name in lotus_species_names:
+    #     SI.resample_slab_sim_target(
+    #         slab_sim_name=slab_sim_name, range_start=400, range_end=2500, resolution=5
+    #     )  # resample leaf spectra
+    #
+    #     SI.solve_leaf_material_parameters(
+    #         runtime=runtime,
+    #         slab_sim_name=slab_sim_name,
+    #         clear_old_results=True,
+    #         range_start=400,
+    #         range_end=2500,
+    #         resolution=5,
+    #         solver_dirname="Iterative slab",
+    #     )  # run slab simulation
+
+    # Some ID's and names. Can be uncommented all times
+    # Scene IDs
+    forest_id_master = "demo_forest_master"
+    forest_id = "demo_forest"
+
+    # Use pre-calculated soil spectra and default sun and sky spectra. They are automatically
+    # interpolated to match the leaf spectra bands. Can be uncommented all times
+    soil_name = "wet_peat_reflectance"
+    sun_name = "default_sun"
+    sky_name = "default_sky"
+
+    # Here we create a new system_simulation scene from the template. Should be uncommented for the first run.
+    # This creates a new "master" system_simulation you can use to generate other similar forests later.
+
+    # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
+    leaves = [
+        (lotus_species_names[0], 0, "Slab material 1"),
+        (lotus_species_names[1], 0, "Slab material 2"),
+        (lotus_species_names[4], 0, "Slab material 3"),
+        (lotus_species_names[6], 0, "Slab material 4"),
+    ]
+
+    # forest.init(
+    #     leaves=leaves,
+    #     conf_type="m2m",
+    #     custom_forest_id=forest_id_master,
+    #     soil_name=soil_name,
+    #     sun_file_name=sun_name,
+    #     sky_file_name=sky_name,
+    # )
+    #
+    # # Setup master and render preview
+    # BC.setup_system_sim_scene(
+    #     runtime=runtime,
+    #     system_sim_name=forest_id_master,
+    #     leaf_name_list=[
+    #         "Slab material 1",
+    #         "Slab material 2",
+    #         "Slab material 3",
+    #         "Slab material 4",
+    #     ],
+    # )
+
+    # FIXME: fix in dev branch
+    BC.generate_forest_control(
+        runtime=runtime, system_sim_name=forest_id_master, global_master=False
+    )
+    # BC.render_forest(
+    #     runtime=runtime, system_sim_name=forest_id_master, render_mode="preview"
+    # )
+
+    # Stop here. For the first run, everything after this should be commented out
+    # Check the master file and make any changes before generating new "slave" system_simulation with random settings.
+    # When you are happy with the new settings, uncomment the following (and comment out the previous lines as
+    # instructed for second run).
+
+    # forest.init(
+    #     leaves=leaves,
+    #     conf_type="m2s",
+    #     rng=rng,
+    #     custom_forest_id=forest_id,
+    #     copy_forest_id=forest_id_master,
+    #     soil_name=soil_name,
+    #     sun_file_name=sun_name,
+    #     sky_file_name=sky_name,
+    # )
+    #
+    # # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
+    # BC.setup_system_sim_scene(
+    #     system_sim_name=forest_id,
+    #     leaf_name_list=["Slab material 1", "Slab material 2", "Slab material 3"],
+    #     runtime=runtime,
+    # )  # , 'Leaf material 4'])
+    #
+    # # Render bands for spectral cube along with additional images
+    # # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
+    # BC.render_forest(
+    #     runtime=runtime, system_sim_name=forest_id, render_mode="visibility"
+    # )
+    # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="spectral")
+    #
+    # # Construct spectral cube in ENVI format
+    # CH.construct_envi_cube(system_sim_name=forest_id)
 
 
 def lotus_to_hb(runtime: RuntimeEnvironment):
@@ -153,6 +270,9 @@ def lotus_to_hb(runtime: RuntimeEnvironment):
             slab_sim_name=slab_sim_name,
             solver="nn",
             solver_dirname="Iterative slab",
+            range_start=400,
+            range_end=2500,
+            resolution=5,
         )
 
 
