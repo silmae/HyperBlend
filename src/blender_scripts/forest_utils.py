@@ -701,6 +701,11 @@ def get_visibility_mapping_material_names():
     for ground_socket in ground_gn.node_group.inputs:
 
         obj = ground_gn[ground_socket.identifier]
+        if obj is None:
+            logging.warning(
+                f"Ground socket returned None for '{ground_socket.identifier}'. Continuing to next one"
+            )
+            continue
         # print(f"Object: {obj.name}")
 
         if ground_socket.name == "Reference object":

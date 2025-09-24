@@ -37,9 +37,9 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
 
     # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
     leaves = [
-        ("LOTUS American elm", 2, "Slab material 1"),
-        ("LOTUS Grape", 0, "Slab material 2"),
-        ("LOTUS Oak", 1, "Slab material 3"),
+        (set_name, 2, "Slab material 1"),
+        (set_name, 0, "Slab material 2"),
+        (set_name, 1, "Slab material 3"),
     ]
 
     forest.init(
@@ -81,12 +81,12 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     # # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
     # BC.setup_system_sim_scene(
     #     system_sim_name=forest_id,
-    #     leaf_name_list=["Leaf material 1", "Leaf material 2", "Leaf material 3"],
+    #     leaf_name_list=["Slab material 1", "Slab material 2", "Slab material 3"],
     #     runtime=runtime,
     # )  # , 'Leaf material 4'])
     #
     # # Render bands for spectral cube along with additional images
-    # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
+    # # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
     # BC.render_forest(
     #     runtime=runtime, system_sim_name=forest_id, render_mode="visibility"
     # )
