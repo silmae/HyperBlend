@@ -26,7 +26,7 @@ release = "0.3"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "myst_parser",
+    #    "myst_parser",
     "sphinx.ext.mathjax",  # for Latex math
     "sphinxcontrib.bibtex",  # bibtex style citations
 ]
