@@ -417,13 +417,16 @@ def _get_tree_as_dict(tree_object, is_master=False) -> dict:
     """Parses tree parameters from a tree object into a dict.
 
     :param tree_object:
-        Tree object to be used.
+        Tree object to be used. If None, empty dict is returned.
     :param is_master:
         If True, default standard deviations will be added to parameters
         that will be randomized.
     :return:
         Tree parameters as a dictionary.
     """
+
+    if tree_object is None:
+        return {}
 
     tree_dict = {"Name": tree_object.name}
 
