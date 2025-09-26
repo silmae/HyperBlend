@@ -479,9 +479,9 @@ if __name__ == "__main__":
         sys.path.append(data_dir)
         sys.path.append(src_dir)
 
-    import forest_constants as FC
-    import forest_utils as FU
-    import forest_control as control
+    from src.blender_scripts import forest_constants as FC
+    from src.blender_scripts import forest_utils as FU
+    from src.blender_scripts import forest_control as control
     from src.data import file_names as FN
     from src.data import path_handling as PH
     from src import constants as C
