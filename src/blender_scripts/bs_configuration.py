@@ -35,9 +35,9 @@ if __name__ == "__main__":
     if forest_dir not in sys.path:
         sys.path.append(forest_dir)
 
-    import forest_constants as FC
-    import forest_utils as FU
-    import forest_control
+    from src.blender_scripts import forest_constants as FC
+    from src.blender_scripts import forest_utils as FU
+    from src.blender_scripts import forest_control
 
     importlib.reload(FC)
     importlib.reload(FU)

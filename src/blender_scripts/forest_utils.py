@@ -41,10 +41,10 @@ if pythonpath_env:
         if path not in sys.path:
             sys.path.append(path)
 
-import forest_constants as FC
+from src.blender_scripts import forest_constants as FC
+from src.blender_scripts import forest_control as control
 from src.data import path_handling as PH
 from src import constants as C
-import forest_control as control
 
 import importlib
 

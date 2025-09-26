@@ -271,9 +271,9 @@ if __name__ == "__main__":
     # help("modules")
 
     from src.data import file_names as FN, path_handling as PH
-    import forest_constants as FC
-    import forest_control as FCtrl
-    import forest_utils as FU
+    from src.blender_scripts import forest_constants as FC
+    from src.blender_scripts import forest_control as FCtrl
+    from src.blender_scripts import forest_utils as FU
 
     importlib.reload(FC)
     importlib.reload(FU)
