@@ -16,8 +16,8 @@ build:
 sphinx:
    configuration: Documentation/source/conf.py
 
-conda:
-  environment: hb_env.yml
+#conda:
+#  environment: hb_env.yml
 
 # Optionally, but recommended,
 # declare the Python requirements required to build your documentation
