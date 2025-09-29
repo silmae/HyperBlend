@@ -79,8 +79,7 @@ def miu(runtime: RuntimeEnvironment):
 
     # Some ID's and names. Can be uncommented all times
     # Scene IDs
-    forest_id_master = "demo_forest_master"
-    forest_id = "demo_forest"
+    forest_id_master = "dataset_forest_TEST"
 
     # Use pre-calculated soil spectra and default sun and sky spectra. They are automatically
     # interpolated to match the leaf spectra bands. Can be uncommented all times
@@ -93,12 +92,72 @@ def miu(runtime: RuntimeEnvironment):
 
     # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
     leaves = [
-        (lotus_species_names[0], 0, "Slab material 1"),
-        (lotus_species_names[1], 0, "Slab material 2"),
-        (lotus_species_names[4], 0, "Slab material 3"),
-        (lotus_species_names[6], 0, "Slab material 4"),
+        (lotus_species_names[4], 2, "Slab material 1"),
+        (lotus_species_names[4], 4, "Slab material 2"),
+        (lotus_species_names[5], 0, "Slab material 3"),
+        (lotus_species_names[5], 2, "Slab material 4"),
+        (lotus_species_names[5], 0, "Slab material 5"),
+        (lotus_species_names[5], 2, "Slab material 6"),
     ]
 
+    def run_next_resolution(
+        scene_id: int,
+        resolution: int,
+        do_copy=False,
+        run_setup_and_render: bool = False,
+    ):
+
+        current_level_name = f"dataset_{resolution}_{scene_id}"
+
+        if do_copy:
+            forest.init(
+                leaves=leaves,
+                conf_type="m2m",
+                copy_forest_id=high_level_name,
+                custom_forest_id=current_level_name,
+                soil_name=soil_name,
+                sun_file_name=sun_name,
+                sky_file_name=sky_name,
+            )
+
+        if run_setup_and_render:
+            BC.setup_system_sim_scene(
+                runtime=runtime,
+                system_sim_name=current_level_name,
+                leaf_name_list=[
+                    "Slab material 1",
+                    "Slab material 2",
+                    "Slab material 3",
+                    "Slab material 4",
+                    "Slab material 5",
+                    "Slab material 6",
+                ],
+            )
+
+            BC.render_forest(
+                runtime=runtime,
+                system_sim_name=current_level_name,
+                render_mode="preview",
+            )
+
+            # Visibility maps only for the high res cube. The rest are calculated manually.
+            if resolution >= 1024:
+                BC.render_forest(
+                    runtime=runtime,
+                    system_sim_name=current_level_name,
+                    render_mode="visibility",
+                )
+
+            BC.render_forest(
+                runtime=runtime,
+                system_sim_name=current_level_name,
+                render_mode="spectral",
+            )
+
+            # Construct spectral cube in ENVI format
+            CH.construct_envi_cube(system_sim_name=current_level_name)
+
+    # This is the master master that is used to spawn the highest resolution forests
     # forest.init(
     #     leaves=leaves,
     #     conf_type="m2m",
@@ -107,7 +166,11 @@ def miu(runtime: RuntimeEnvironment):
     #     sun_file_name=sun_name,
     #     sky_file_name=sky_name,
     # )
-    #
+
+    # BC.generate_forest_control(
+    #     runtime=runtime, system_sim_name=forest_id_master, global_master=False
+    # )
+
     # # Setup master and render preview
     # BC.setup_system_sim_scene(
     #     runtime=runtime,
@@ -120,46 +183,57 @@ def miu(runtime: RuntimeEnvironment):
     #     ],
     # )
 
-    # FIXME: fix in dev branch
-    BC.generate_forest_control(
-        runtime=runtime, system_sim_name=forest_id_master, global_master=False
-    )
-    # BC.render_forest(
-    #     runtime=runtime, system_sim_name=forest_id_master, render_mode="preview"
-    # )
+    high_level_name = "dataset_1024_1"
 
-    # Stop here. For the first run, everything after this should be commented out
-    # Check the master file and make any changes before generating new "slave" system_simulation with random settings.
-    # When you are happy with the new settings, uncomment the following (and comment out the previous lines as
-    # instructed for second run).
+    run_next_resolution(
+        scene_id=1, resolution=256, do_copy=False, run_setup_and_render=True
+    )
+    run_next_resolution(
+        scene_id=1, resolution=64, do_copy=False, run_setup_and_render=True
+    )
+    run_next_resolution(
+        scene_id=1, resolution=16, do_copy=False, run_setup_and_render=True
+    )
+    run_next_resolution(
+        scene_id=1, resolution=4, do_copy=False, run_setup_and_render=True
+    )
 
     # forest.init(
     #     leaves=leaves,
-    #     conf_type="m2s",
-    #     rng=rng,
-    #     custom_forest_id=forest_id,
+    #     conf_type="m2m",
     #     copy_forest_id=forest_id_master,
+    #     custom_forest_id=high_level_name,
     #     soil_name=soil_name,
     #     sun_file_name=sun_name,
     #     sky_file_name=sky_name,
     # )
     #
-    # # Running system_simulation.init only copies files. Running setup makes the Blender scene renderable.
+    # # # Setup the high level forest scene
     # BC.setup_system_sim_scene(
-    #     system_sim_name=forest_id,
-    #     leaf_name_list=["Slab material 1", "Slab material 2", "Slab material 3"],
     #     runtime=runtime,
-    # )  # , 'Leaf material 4'])
-    #
-    # # Render bands for spectral cube along with additional images
-    # # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="preview")
-    # BC.render_forest(
-    #     runtime=runtime, system_sim_name=forest_id, render_mode="visibility"
+    #     system_sim_name=high_level_name,
+    #     leaf_name_list=[
+    #         "Slab material 1",
+    #         "Slab material 2",
+    #         "Slab material 3",
+    #         "Slab material 4",
+    #         "Slab material 5",
+    #         "Slab material 6",
+    #     ],
     # )
-    # BC.render_forest(runtime=runtime, system_sim_name=forest_id, render_mode="spectral")
-    #
-    # # Construct spectral cube in ENVI format
-    # CH.construct_envi_cube(system_sim_name=forest_id)
+
+    # BC.render_forest(
+    #     runtime=runtime, system_sim_name=high_level_name, render_mode="preview"
+    # )
+    # BC.render_forest(
+    #     runtime=runtime, system_sim_name=high_level_name, render_mode="visibility"
+    # )
+    # BC.render_forest(
+    #     runtime=runtime, system_sim_name=high_level_name, render_mode="spectral"
+    # )
+
+    # Construct spectral cube in ENVI format
+    # CH.construct_envi_cube(system_sim_name=high_level_name)
 
 
 def lotus_to_hb(runtime: RuntimeEnvironment):
