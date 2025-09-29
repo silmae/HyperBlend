@@ -221,6 +221,15 @@ def insert_soil_data():
 
 
 def insert_trunk_data():
+    """
+    TODO: Implement trunk data insertion.
+    1. Find the correct trunk csv file. This can be a general reflectance only file.
+    2. Read it
+    3. Find the tree it's supposed to go with
+    4. Find the trunk material of that tree
+    5. Insert the data for each frame
+    6. Set the RGB color of the trunk material to match the csv file.
+    """
     logging.error(f"insert_trunk_data() called, but I am missing the implementation...")
 
 
