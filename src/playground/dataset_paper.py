@@ -28,6 +28,112 @@ from src.utils import data_utils as DU
 slab_sim_names = ["Manitoba Maple", "American Elm", "Crab apple"]
 slab_sim_name_pr = "dataset_paper_prospect_leaves"
 
+# Define the LOTUS dataset sample names for fetching data
+lotus_saskatoon_berry = {
+    "slab_sim_name": "LOTUS Saskatoon berry",
+    "lotus_codes": [
+        "MARTN",
+        "SMOKY",
+    ],
+    "common_name": "Saskatoon berry",
+    "signal_count": 2,
+}
+lotus_oak = {
+    "slab_sim_name": "LOTUS Oak",
+    "lotus_codes": [
+        "OAKDK",
+        "OAKLT",
+    ],
+    "common_name": "Oak",
+    "signal_count": 2,
+}
+lotus_elm = {
+    "slab_sim_name": "LOTUS Elm",
+    "lotus_codes": [
+        "ELMDK",
+    ],
+    "common_name": "Elm",
+    "signal_count": 1,
+}
+lotus_american_elm = {
+    "slab_sim_name": "LOTUS American elm",
+    "lotus_codes": [
+        "AELM1",
+        "AELM2",
+        "AELM3",
+        "AELM4",
+    ],
+    "common_name": "American elm",
+    "signal_count": 4,
+}
+lotus_mountain_ash = {
+    "slab_sim_name": "LOTUS Mountain ash",
+    "lotus_codes": [
+        "ASHDK",
+    ],
+    "common_name": "Mountain ash",
+    "signal_count": 1,
+}
+lotus_green_ash = {
+    "slab_sim_name": "LOTUS Green ash",
+    "lotus_codes": [
+        "GASH1",
+        "GASH2",
+        "GASH3",
+        "GASH4",
+        "GASH5",
+    ],
+    "common_name": "Green ash",
+    "signal_count": 5,
+}
+lotus_grape = {
+    "slab_sim_name": "LOTUS Grape",
+    "lotus_codes": [
+        "YGRPE",
+    ],
+    "common_name": "Grape",
+    "signal_count": 1,
+}
+lotus_purple_cherry = {
+    "slab_sim_name": "LOTUS Purple cherry",
+    "lotus_codes": [
+        "PCHRA",
+        "PCHRB",
+        "PCHRC",
+        "PCHRD",
+        "PCHRE",
+        "PCHRF",
+        "PCHRG",
+        "PCHRH",
+        "PCHRI",
+    ],
+    "common_name": "Purple cherry",
+    "signal_count": 9,
+}
+lotus_manitoba_maple = {
+    "slab_sim_name": "LOTUS Manitoba maple",
+    "lotus_codes": [
+        "CCAN1",
+        "CCAN2",
+    ],
+    "common_name": "Manitoba maple",
+    "signal_count": 2,
+}
+
+# Collect all LOTUS dicts for looping
+lotus_sample_dicts = [
+    lotus_saskatoon_berry,
+    lotus_oak,
+    lotus_elm,
+    lotus_american_elm,
+    lotus_mountain_ash,
+    lotus_green_ash,
+    lotus_grape,
+    lotus_green_ash,
+    lotus_purple_cherry,
+    lotus_manitoba_maple,
+]
+
 
 def run(runtime: RuntimeEnvironment):
     """Just a little run function to be called from main to keep it neat."""
@@ -48,17 +154,17 @@ def run(runtime: RuntimeEnvironment):
 
 def miu(runtime: RuntimeEnvironment):
 
-    lotus_species_names = [
-        "LOTUS Saskatoon berry",
-        "LOTUS Oak",
-        "LOTUS Elm",
-        "LOTUS Mountain ash",
-        "LOTUS Green ash",
-        "LOTUS American elm",
-        "LOTUS Grape",
-        "LOTUS Purple cherry",
-        "LOTUS Manitoba maple",
-    ]
+    # lotus_species_names = [
+    #     "LOTUS Saskatoon berry",
+    #     "LOTUS Oak",
+    #     "LOTUS Elm",
+    #     "LOTUS Mountain ash",
+    #     "LOTUS Green ash",
+    #     "LOTUS American elm",
+    #     "LOTUS Grape",
+    #     "LOTUS Purple cherry",
+    #     "LOTUS Manitoba maple",
+    # ]
 
     # In case you forgot to resample them earlier, they have to be solved again.
     # Just leaving this snippet for future reference.
@@ -90,14 +196,17 @@ def miu(runtime: RuntimeEnvironment):
     # Here we create a new system_simulation scene from the template. Should be uncommented for the first run.
     # This creates a new "master" system_simulation you can use to generate other similar forests later.
 
+    # TODO: use the dicts to fetch leaf images, chemical analysis data, and perhaps the leaf simulation
+    #   error and simulation result as well
+
     # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
     leaves = [
-        (lotus_species_names[4], 2, "Slab material 1"),
-        (lotus_species_names[4], 4, "Slab material 2"),
-        (lotus_species_names[5], 0, "Slab material 3"),
-        (lotus_species_names[5], 2, "Slab material 4"),
-        (lotus_species_names[5], 0, "Slab material 5"),
-        (lotus_species_names[5], 2, "Slab material 6"),
+        (lotus_green_ash["slab_sim_name"], 2, "Slab material 1"),
+        (lotus_green_ash["slab_sim_name"], 4, "Slab material 2"),
+        (lotus_american_elm["slab_sim_name"], 0, "Slab material 3"),
+        (lotus_american_elm["slab_sim_name"], 2, "Slab material 4"),
+        (lotus_american_elm["slab_sim_name"], 0, "Slab material 5"),
+        (lotus_american_elm["slab_sim_name"], 2, "Slab material 6"),
     ]
 
     def run_next_resolution(
