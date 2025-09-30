@@ -155,7 +155,10 @@ def miu(runtime: RuntimeEnvironment):
             )
 
             # Construct spectral cube in ENVI format
-            CH.construct_envi_cube(system_sim_name=current_level_name)
+            CH.construct_envi_cube(
+                system_sim_name=current_level_name,
+                system_sim_name_for_white_signal=high_level_name,
+            )
 
     # This is the master master that is used to spawn the highest resolution forests
     # forest.init(
@@ -185,9 +188,9 @@ def miu(runtime: RuntimeEnvironment):
 
     high_level_name = "dataset_1024_1"
 
-    run_next_resolution(
-        scene_id=1, resolution=256, do_copy=False, run_setup_and_render=True
-    )
+    # run_next_resolution(
+    #     scene_id=1, resolution=256, do_copy=False, run_setup_and_render=True
+    # )
     run_next_resolution(
         scene_id=1, resolution=64, do_copy=False, run_setup_and_render=True
     )
