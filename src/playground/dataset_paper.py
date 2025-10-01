@@ -129,7 +129,6 @@ lotus_sample_dicts = [
     lotus_mountain_ash,
     lotus_green_ash,
     lotus_grape,
-    lotus_green_ash,
     lotus_purple_cherry,
     lotus_manitoba_maple,
 ]
@@ -140,31 +139,66 @@ def run(runtime: RuntimeEnvironment):
 
     # logging.info("Dataset run started.")
 
-    generate_leaves()
-    solve_leaves(runtime=runtime, sims_to_solve_list=slab_sim_names)
-
-    generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
-    solve_leaves(runtime=runtime, sims_to_solve_list=[slab_sim_name_pr])
+    # generate_leaves()
+    # solve_leaves(runtime=runtime, sims_to_solve_list=slab_sim_names)
+    #
+    # generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
+    # solve_leaves(runtime=runtime, sims_to_solve_list=[slab_sim_name_pr])
 
     # rng = np.random.default_rng(1243567)
     # generate_forest_master(runtime=runtime, rng=rng)
     # lotus_to_hb(runtime)
-    miu(runtime=runtime)
 
+    FWP1 = {
+        "theme": "FWP1",
+        "signals": [
+            (lotus_elm, [0]),
+            (lotus_manitoba_maple, [0,1]),
+            (lotus_green_ash, [0,2,4]),
+        ]
+    }
+    FWP2 = {
+        "theme": "FWP2",
+        "signals": [
+            (lotus_oak, [0,1]),
+            (lotus_saskatoon_berry, [0, 1]),
+            (lotus_american_elm, [0, 1, 2]),
+        ]
+    }
+    IWP1 = {
+        "theme": "IWP1",
+        "signals": [
+            (lotus_oak, [0,1]),
+            (lotus_manitoba_maple, [0,1]),
+            (lotus_american_elm, [2, 3]),
+            (lotus_mountain_ash, [0]),
+        ]
+    }
+    OWP1 = {
+        "theme": "OWP1",
+        "signals": [
+            (lotus_purple_cherry, [0,1,2,3,4,5,6,7,8]),
+        ]
+    }
+    OWP2 = {
+        "theme": "OWP2",
+        "signals": [
+            (lotus_grape, [0,]),
+        ]
+    }
 
-def miu(runtime: RuntimeEnvironment):
+    scenes_and_signals = [
+        FWP1, # general forest with wet peat
+        FWP2,  # general forest with wet peat
+        IWP1,  # inclined forest with wet peat
+        OWP1,  # grape orchard with wet peat
+        OWP2,  # cherry orchard with wet peat
+    ]
 
-    # lotus_species_names = [
-    #     "LOTUS Saskatoon berry",
-    #     "LOTUS Oak",
-    #     "LOTUS Elm",
-    #     "LOTUS Mountain ash",
-    #     "LOTUS Green ash",
-    #     "LOTUS American elm",
-    #     "LOTUS Grape",
-    #     "LOTUS Purple cherry",
-    #     "LOTUS Manitoba maple",
-    # ]
+    for ss in scenes_and_signals:
+        soil_type = "wet_peat_reflectance"
+        generate_forest_variants(runtime=runtime, soil_name=soil_type, scene_and_signals=ss, generate_master=False)
+
 
     # In case you forgot to resample them earlier, they have to be solved again.
     # Just leaving this snippet for future reference.
@@ -183,169 +217,174 @@ def miu(runtime: RuntimeEnvironment):
     #         solver_dirname="Iterative slab",
     #     )  # run slab simulation
 
-    # Some ID's and names. Can be uncommented all times
-    # Scene IDs
-    forest_id_master = "dataset_forest_TEST"
+
+def generate_forest_variants(runtime: RuntimeEnvironment, soil_name:str, scene_and_signals:dict, generate_master=False, generate_resolutions=False):
+
 
     # Use pre-calculated soil spectra and default sun and sky spectra. They are automatically
     # interpolated to match the leaf spectra bands. Can be uncommented all times
-    soil_name = "wet_peat_reflectance"
+    # soil_name = "wet_peat_reflectance"
     sun_name = "default_sun"
     sky_name = "default_sky"
-
-    # Here we create a new system_simulation scene from the template. Should be uncommented for the first run.
-    # This creates a new "master" system_simulation you can use to generate other similar forests later.
 
     # TODO: use the dicts to fetch leaf images, chemical analysis data, and perhaps the leaf simulation
     #   error and simulation result as well
 
     # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
-    leaves = [
-        (lotus_green_ash["slab_sim_name"], 2, "Slab material 1"),
-        (lotus_green_ash["slab_sim_name"], 4, "Slab material 2"),
-        (lotus_american_elm["slab_sim_name"], 0, "Slab material 3"),
-        (lotus_american_elm["slab_sim_name"], 2, "Slab material 4"),
-        (lotus_american_elm["slab_sim_name"], 0, "Slab material 5"),
-        (lotus_american_elm["slab_sim_name"], 2, "Slab material 6"),
-    ]
+    # leaves = [
+    #     (lotus_green_ash["slab_sim_name"], 2, "Slab material 1"),
+    #     (lotus_green_ash["slab_sim_name"], 4, "Slab material 2"),
+    #     (lotus_american_elm["slab_sim_name"], 0, "Slab material 3"),
+    #     (lotus_american_elm["slab_sim_name"], 2, "Slab material 4"),
+    #     (lotus_american_elm["slab_sim_name"], 0, "Slab material 5"),
+    #     (lotus_american_elm["slab_sim_name"], 2, "Slab material 6"),
+    # ]
 
-    def run_next_resolution(
+    theme = scene_and_signals["theme"]
+    signal_tuples = scene_and_signals["signals"]
+    leaves = []
+    slab_mat_id = 1
+    for signal_tuple in signal_tuples:
+        set_dict = signal_tuple[0]
+        signal_ids = signal_tuple[1]
+        for signal_id in signal_ids:
+            leaves.append((set_dict["slab_sim_name"], signal_id, slab_mat_id))
+            slab_mat_id += 1
+
+    if generate_master:
+        # This is the master master that is used to spawn the highest resolution forests
+        forest.init(
+            leaves=leaves,
+            conf_type="m2m",
+            custom_forest_id=theme,
+            soil_name=soil_name,
+            sun_file_name=sun_name,
+            sky_file_name=sky_name,
+        )
+
+        BC.generate_forest_control(
+            runtime=runtime, system_sim_name=theme, global_master=False
+        )
+
+    if generate_resolutions:
+        high_level_name = run_next_resolution(
+            runtime=runtime,
+            scene_id=1, resolution=1024, high_level_name=theme, leaves=leaves,
+            soil_name = soil_name,
+            sun_name = sun_name,
+            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
+            signal_tuples=signal_tuples
+        )
+        run_next_resolution(
+            runtime=runtime,
+            scene_id=1, resolution=256, high_level_name=high_level_name, leaves=leaves,
+            soil_name = soil_name,
+            sun_name = sun_name,
+            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
+            signal_tuples=signal_tuples
+        )
+        run_next_resolution(
+            runtime=runtime,
+            scene_id=1, resolution=64, high_level_name=high_level_name,  leaves=leaves,
+            soil_name = soil_name,
+            sun_name = sun_name,
+            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
+            signal_tuples=signal_tuples
+        )
+        run_next_resolution(
+            runtime=runtime,
+            scene_id=1, resolution=16, high_level_name=high_level_name,  leaves=leaves,
+            soil_name = soil_name,
+            sun_name = sun_name,
+            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
+            signal_tuples=signal_tuples
+        )
+        run_next_resolution(
+            runtime=runtime,
+            scene_id=1, resolution=4, high_level_name=high_level_name,  leaves=leaves,
+            soil_name = soil_name,
+            sun_name = sun_name,
+            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
+            signal_tuples=signal_tuples
+        )
+
+
+def run_next_resolution(
+        runtime,
         scene_id: int,
         resolution: int,
+        high_level_name: str,
+        leaves,
+        soil_name: str,
+        sun_name: str,
+        sky_name: str,
+        signal_tuples,
         do_copy=False,
         run_setup_and_render: bool = False,
     ):
 
-        current_level_name = f"dataset_{resolution}_{scene_id}"
+    theme = high_level_name.split(sep='_')[0]
+    current_level_name = f"{theme}_{resolution}_{scene_id}"
 
-        if do_copy:
-            forest.init(
-                leaves=leaves,
-                conf_type="m2m",
-                copy_forest_id=high_level_name,
-                custom_forest_id=current_level_name,
-                soil_name=soil_name,
-                sun_file_name=sun_name,
-                sky_file_name=sky_name,
-            )
+    if do_copy:
+        forest.init(
+            leaves=leaves,
+            conf_type="m2m",
+            copy_forest_id=high_level_name,
+            custom_forest_id=current_level_name,
+            soil_name=soil_name,
+            sun_file_name=sun_name,
+            sky_file_name=sky_name,
+        )
 
-        if run_setup_and_render:
-            BC.setup_system_sim_scene(
-                runtime=runtime,
-                system_sim_name=current_level_name,
-                leaf_name_list=[
-                    "Slab material 1",
-                    "Slab material 2",
-                    "Slab material 3",
-                    "Slab material 4",
-                    "Slab material 5",
-                    "Slab material 6",
-                ],
-            )
+        for signal_tuple in signal_tuples:
+            set_dict = signal_tuple[0]
+            set_dict["slab_sim_name"]
+            signal_ids = signal_tuple[1]
+            for signal_id in signal_ids:
+                #TODO fetch data
+                raise NotImplementedError("Implement lotus data fetching before running")
 
+    if run_setup_and_render:
+        BC.setup_system_sim_scene(
+            runtime=runtime,
+            system_sim_name=current_level_name,
+            leaf_name_list=[
+                "Slab material 1",
+                "Slab material 2",
+                "Slab material 3",
+                "Slab material 4",
+                "Slab material 5",
+                "Slab material 6",
+            ],
+        )
+
+        BC.render_forest(
+            runtime=runtime,
+            system_sim_name=current_level_name,
+            render_mode="preview",
+        )
+
+        # Visibility maps only for the high res cube. The rest are calculated manually.
+        if resolution >= 1024:
             BC.render_forest(
                 runtime=runtime,
                 system_sim_name=current_level_name,
-                render_mode="preview",
+                render_mode="visibility",
             )
 
-            # Visibility maps only for the high res cube. The rest are calculated manually.
-            if resolution >= 1024:
-                BC.render_forest(
-                    runtime=runtime,
-                    system_sim_name=current_level_name,
-                    render_mode="visibility",
-                )
+        BC.render_forest(
+            runtime=runtime,
+            system_sim_name=current_level_name,
+            render_mode="spectral",
+        )
 
-            BC.render_forest(
-                runtime=runtime,
-                system_sim_name=current_level_name,
-                render_mode="spectral",
-            )
-
-            # Construct spectral cube in ENVI format
-            CH.construct_envi_cube(
-                system_sim_name=current_level_name,
-                system_sim_name_for_white_signal=high_level_name,
-            )
-
-    # This is the master master that is used to spawn the highest resolution forests
-    # forest.init(
-    #     leaves=leaves,
-    #     conf_type="m2m",
-    #     custom_forest_id=forest_id_master,
-    #     soil_name=soil_name,
-    #     sun_file_name=sun_name,
-    #     sky_file_name=sky_name,
-    # )
-
-    # BC.generate_forest_control(
-    #     runtime=runtime, system_sim_name=forest_id_master, global_master=False
-    # )
-
-    # # Setup master and render preview
-    # BC.setup_system_sim_scene(
-    #     runtime=runtime,
-    #     system_sim_name=forest_id_master,
-    #     leaf_name_list=[
-    #         "Slab material 1",
-    #         "Slab material 2",
-    #         "Slab material 3",
-    #         "Slab material 4",
-    #     ],
-    # )
-
-    high_level_name = "dataset_1024_1"
-
-    # run_next_resolution(
-    #     scene_id=1, resolution=256, do_copy=False, run_setup_and_render=True
-    # )
-    run_next_resolution(
-        scene_id=1, resolution=64, do_copy=False, run_setup_and_render=True
-    )
-    run_next_resolution(
-        scene_id=1, resolution=16, do_copy=False, run_setup_and_render=True
-    )
-    run_next_resolution(
-        scene_id=1, resolution=4, do_copy=False, run_setup_and_render=True
-    )
-
-    # forest.init(
-    #     leaves=leaves,
-    #     conf_type="m2m",
-    #     copy_forest_id=forest_id_master,
-    #     custom_forest_id=high_level_name,
-    #     soil_name=soil_name,
-    #     sun_file_name=sun_name,
-    #     sky_file_name=sky_name,
-    # )
-    #
-    # # # Setup the high level forest scene
-    # BC.setup_system_sim_scene(
-    #     runtime=runtime,
-    #     system_sim_name=high_level_name,
-    #     leaf_name_list=[
-    #         "Slab material 1",
-    #         "Slab material 2",
-    #         "Slab material 3",
-    #         "Slab material 4",
-    #         "Slab material 5",
-    #         "Slab material 6",
-    #     ],
-    # )
-
-    # BC.render_forest(
-    #     runtime=runtime, system_sim_name=high_level_name, render_mode="preview"
-    # )
-    # BC.render_forest(
-    #     runtime=runtime, system_sim_name=high_level_name, render_mode="visibility"
-    # )
-    # BC.render_forest(
-    #     runtime=runtime, system_sim_name=high_level_name, render_mode="spectral"
-    # )
-
-    # Construct spectral cube in ENVI format
-    # CH.construct_envi_cube(system_sim_name=high_level_name)
+        # Construct spectral cube in ENVI format
+        CH.construct_envi_cube(
+            system_sim_name=current_level_name,
+            system_sim_name_for_white_signal=high_level_name,
+        )
+        return current_level_name
 
 
 def lotus_to_hb(runtime: RuntimeEnvironment):
