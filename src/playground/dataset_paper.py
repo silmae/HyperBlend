@@ -23,11 +23,11 @@ def run(runtime: RuntimeEnvironment):
 
     # logging.info("Dataset run started.")
 
-    # generate_leaves()
-    # solve_leaves(runtime=runtime, slab_sim_names=slab_sim_names)
+    generate_leaves()
+    solve_leaves(runtime=runtime, sims_to_solve_list=slab_sim_names)
 
-    # generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
-    # solve_leaves(runtime=runtime, slab_sim_names=[slab_sim_name_pr])
+    generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
+    solve_leaves(runtime=runtime, sims_to_solve_list=[slab_sim_name_pr])
 
     rng = np.random.default_rng(1243567)
     generate_forest_master(runtime=runtime, rng=rng)
@@ -161,25 +161,25 @@ def generate_forest_master(runtime: RuntimeEnvironment, rng: np.random.Generator
         leaf_name_list=slab_material_names,
     )
 
-    BC.render_forest(
-        runtime=runtime,
-        system_sim_name=system_sim_name_slave,
-        render_mode="preview",
-        silent=False,
-    )
-
-    BC.render_forest(
-        runtime=runtime,
-        system_sim_name=system_sim_name_slave,
-        render_mode="spectral",
-        silent=False,
-    )
-
-    BC.render_forest(
-        runtime=runtime,
-        system_sim_name=system_sim_name_slave,
-        render_mode="visibility",
-        silent=False,
-    )
-
-    CH.construct_envi_cube(system_sim_name=system_sim_name_slave)
+    # BC.render_forest(
+    #     runtime=runtime,
+    #     system_sim_name=system_sim_name_slave,
+    #     render_mode="preview",
+    #     silent=False,
+    # )
+    #
+    # BC.render_forest(
+    #     runtime=runtime,
+    #     system_sim_name=system_sim_name_slave,
+    #     render_mode="spectral",
+    #     silent=False,
+    # )
+    #
+    # BC.render_forest(
+    #     runtime=runtime,
+    #     system_sim_name=system_sim_name_slave,
+    #     render_mode="visibility",
+    #     silent=False,
+    # )
+    #
+    # CH.construct_envi_cube(system_sim_name=system_sim_name_slave)

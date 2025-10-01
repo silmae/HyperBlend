@@ -13,8 +13,6 @@ import logging
 import os
 from typing import List
 
-import constants as C
-from data import file_names as FN
 
 from src import constants as C
 from src.data import file_names as FN
