@@ -221,6 +221,15 @@ def insert_soil_data():
 
 
 def insert_trunk_data():
+    """
+    TODO: Implement trunk data insertion.
+    1. Find the correct trunk csv file. This can be a general reflectance only file.
+    2. Read it
+    3. Find the tree it's supposed to go with
+    4. Find the trunk material of that tree
+    5. Insert the data for each frame
+    6. Set the RGB color of the trunk material to match the csv file.
+    """
     logging.error(f"insert_trunk_data() called, but I am missing the implementation...")
 
 
@@ -241,14 +250,14 @@ if __name__ == "__main__":
 
     if "System simulation" in blend_dir:
         # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-        script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
-        data_dir = os.path.abspath(blend_dir + "../../../src/data")
-        forest_dir = os.path.abspath(blend_dir + "../../../src/system_simulation")
+        script_dir = os.path.abspath(blend_dir + "/../../../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/../../../src/data")
+        forest_dir = os.path.abspath(blend_dir + "/../../../src/system_simulation")
     else:
         # We are in the template system_simulation blend file
-        script_dir = os.path.abspath(blend_dir + "../src/blender_scripts")
-        data_dir = os.path.abspath(blend_dir + "../src/data")
-        forest_dir = os.path.abspath(blend_dir + "../src/system_simulation")
+        script_dir = os.path.abspath(blend_dir + "/../src/blender_scripts")
+        data_dir = os.path.abspath(blend_dir + "/../src/data")
+        forest_dir = os.path.abspath(blend_dir + "/../src/system_simulation")
 
     # After this is set, any script in /blender_scripts can be imported
     if script_dir not in sys.path:
@@ -271,9 +280,9 @@ if __name__ == "__main__":
     # help("modules")
 
     from src.data import file_names as FN, path_handling as PH
-    import forest_constants as FC
-    import forest_control as FCtrl
-    import forest_utils as FU
+    from src.blender_scripts import forest_constants as FC
+    from src.blender_scripts import forest_control as FCtrl
+    from src.blender_scripts import forest_utils as FU
 
     importlib.reload(FC)
     importlib.reload(FU)

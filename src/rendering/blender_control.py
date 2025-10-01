@@ -301,7 +301,7 @@ def run_reflectance_lab(
 
 def generate_forest_control(
     runtime: RuntimeEnvironment,
-    system_sim_name: str,
+    system_sim_name: str = None,
     global_master: bool = False,
 ):
     """Generates a system_simulation control file for forest simulation by reading
@@ -313,6 +313,7 @@ def generate_forest_control(
 
     :param runtime: Runtime environment object that contains the Blender executable path.
     :param system_sim_name: ID of the system_simulation to create the control file for.
+        Can be None only if ``global_master == True``.
     :param global_master: If True, the global master control file is updated based on the parameters
         in system_simulation template file. The result is saved to the project root directory.
     :raises AttributeError: if either ``global_master == False`` and ``scene_id == None``,
@@ -326,14 +327,25 @@ def generate_forest_control(
             f"If global_master == False, a scene_id must be provided. Was None."
         )
 
+    if global_master:
+        system_sim_name_to_use = C.filename_system_sim_forest_template
+        scene_path = PH.file_blend_system_simulation_template()
+    else:
+        if system_sim_name is None:
+            raise AttributeError(
+                f"If global_master == False, scene_id must be provided."
+            )
+        system_sim_name_to_use = system_sim_name
+        scene_path = PH.file_blend_system_simulation(system_sim_name_to_use)
+
     scirpt_args = ["--"]
-    scirpt_args += ["-id", f"{system_sim_name}"]
+    scirpt_args += ["-id", f"{system_sim_name_to_use}"]
     if global_master:
         scirpt_args += ["-g"]
 
     run_script(
         script_name="bs_configuration.py",
-        scene_path=PH.file_blend_system_simulation(system_sim_name),
+        scene_path=scene_path,
         runtime=runtime,
         script_args=scirpt_args,
         silent=False,

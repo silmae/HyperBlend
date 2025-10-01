@@ -5,86 +5,48 @@ import matplotlib.pyplot as plt
 import logging
 import csv
 
-from src.data import path_handling as PH
+from fontTools.feaLib.ast import asFea
+
+from src.data import path_handling as PH, toml_handling as TH
 from src.utils import spectra_utils as SU
-from src import constants as C
+from src import constants as C, plotter
 
 
-def construct_envi_cube(system_sim_name: str):
+def construct_envi_cube(system_sim_name: str, system_sim_name_for_white_signal=None):
     """Constructs an ENVI style hyperspectral image cube out of rendered images.
 
-    Can be used after the scene has been rendered (at least spectral and visibility maps).
+    Can be used after the scene has been rendered (at least spectral).
 
     White reference for reflectance calculation is searched automatically from
-    available visibility maps. Note that the maps must be named like
-    `Reference 0.00 material_0001.tif`.
+    available visibility maps if `system_sim_name_for_white_signal` is not given .
+    Note that the maps must be named like `Reference 0.00 material_0001.tif`.
 
-    TODO how this should behave if there are no visibility maps?
+    Saves white signal used in reflectance calculation as a toml file.
 
     Default RGB bands for ENVI metadata are inferred if in visible range.
     Otherwise first, middle, and last bands are used.
 
+    :param system_sim_name: Name of the system simulation to process.
+    :param system_sim_name_for_white_signal: Optionally, give system simulation name
+        from where to fetch the white signal. If None, it is inferred from the data.
+        If there are no visibility maps in the current system simulation, this will fail
+        and raise an error.
     :raises FileNotFoundError: if the rendered frames directory does not exist or is
         empty. Also if the sun data file does not exist, which is needed for wavelength info.
     """
 
-    p = PH.directory_system_rend_spectral(system_sim_name=system_sim_name)
-    if not os.path.exists(p):
-        raise FileNotFoundError(
-            f"Rend directory for system simulation '{system_sim_name}' not found."
+    raw_cube = get_raw_cube(system_sim_name=system_sim_name)
+
+    if system_sim_name_for_white_signal is None:
+        logging.info(f"Inferring white signal from data in '{system_sim_name}'.")
+        white_signal = infer_white_ref_from_data(system_sim_name=system_sim_name)
+    else:
+        logging.info(f"Using white signal from '{system_sim_name_for_white_signal}'.")
+        white_signal = read_white_signal(
+            system_sim_name=system_sim_name_for_white_signal
         )
 
-    frame_name_list = os.listdir(p)
-    if len(frame_name_list) < 1:
-        raise FileNotFoundError(f"No rendered frames were found from '{p}'.")
-
-    frame_list = []
-    for thing in frame_name_list:
-        file_path = PH.join(p, thing)
-        image_as_array = plt.imread(file_path)
-        frame_list.append(image_as_array)
-
-    raw_cube = np.array(frame_list)
-
-    # Burnt areas have values around 65535
-    # Loop white references until the image is not burned
-    max_burn = 65000.0
-    white_mean = max_burn
-
-    # Find available reflectance plate reflectivity based on visibility map file names.
-    reflectivities = []
-    map_names = PH.list_reference_visibility_maps(system_sim_name=system_sim_name)
-    for map_name in map_names:
-        splitted = map_name.split(" ")
-        reflectivity = float(splitted[1])
-        if reflectivity > 0.0:
-            reflectivities.append(reflectivity)
-
-    reflectivities.sort(reverse=True)
-
-    logging.info(f"Searching for a good white reference plate..")
-    accepted_reflectivity = None
-    for reflectivity in reflectivities:
-        accepted_reflectivity = reflectivity
-        mask_path = PH.find_reference_visibility_map(
-            system_sim_name=system_sim_name, reflectivity=reflectivity
-        )
-        mask = plt.imread(mask_path)
-        mask = mask > 0
-        # Flattens the reference plate area pixels
-        white_cube = raw_cube[:, mask]
-        # so we take the mean only on one axis.
-        white_mean = np.mean(white_cube, axis=(1))
-        white_mean_max = white_mean.max()
-        if white_mean_max < max_burn:
-            logging.info(
-                f"Accepted white reference with {accepted_reflectivity:.2f} reflectivity "
-                f"producing maximum mean reflectance {white_mean_max:.1f}."
-            )
-            break
-
-    white_mean = np.expand_dims(white_mean, axis=(1, 2))
-    reflectance_cube = np.divide(raw_cube, white_mean, dtype=np.float32)
+    reflectance_cube = np.divide(raw_cube, white_signal, dtype=np.float32)
 
     # Swap axis to arrange the array as expected by spectral.envi
     reflectance_cube = np.swapaxes(reflectance_cube, 0, 2)
@@ -128,7 +90,6 @@ def construct_envi_cube(system_sim_name: str):
         "lines": reflectance_cube.shape[1],
         "samples": reflectance_cube.shape[2],
         "data_type": 4,
-        "reference reflectivity": accepted_reflectivity,
         "default bands": default_bands,
         "wavelength": wls,
         "wavelength units": "nm",
@@ -148,6 +109,133 @@ def construct_envi_cube(system_sim_name: str):
         force=True,
         metadata=header_dict,
     )
+    logging.info(f"Reflectance cube saved for system simulation '{system_sim_name}'.")
+
+
+def get_raw_cube(system_sim_name: str):
+    """Reads rendered spectral frames into a raw hyperspectral image cube.
+
+    :param system_sim_name: Name of the system simulation.
+    :return: Raw hyperspectral image cube as a 3D numpy array with shape (bands, height, width).
+    :raises FileNotFoundError: if the rendered frames directory does not exist or is empty.
+    """
+
+    p = PH.directory_system_rend_spectral(system_sim_name=system_sim_name)
+    if not os.path.exists(p):
+        raise FileNotFoundError(
+            f"Rend directory for system simulation '{system_sim_name}' not found."
+        )
+
+    frame_name_list = os.listdir(p)
+    if len(frame_name_list) < 1:
+        raise FileNotFoundError(f"No rendered frames were found from '{p}'.")
+
+    frame_list = []
+    for thing in frame_name_list:
+        file_path = PH.join(p, thing)
+        image_as_array = plt.imread(file_path)
+        frame_list.append(image_as_array)
+
+    raw_cube = np.array(frame_list)
+    return raw_cube
+
+
+def infer_white_ref_from_data(system_sim_name: str):
+    """
+    Infers a good white reference signal from available visibility maps.
+
+    :param system_sim_name: Name of the system simulation.
+    :return: White reference signal as a 3D numpy array with shape (bands, 1, 1).
+    :raises FileNotFoundError: if no visibility maps are found.
+    """
+
+    # Burnt areas have values around 65535
+    # Loop white references until the image is not burned
+    max_burn = 65000.0
+    white_mean = max_burn
+
+    # Find available reflectance plate reflectivity based on visibility map file names.
+    reflectivities = []
+    map_names = PH.list_reference_visibility_maps(system_sim_name=system_sim_name)
+
+    if len(map_names) < 1:
+        raise FileNotFoundError(
+            f"No reference visibility maps were found for system simulation '{system_sim_name}'. "
+            f"Cannot construct reflectance cube without a white reference."
+        )
+
+    for map_name in map_names:
+        splitted = map_name.split(" ")
+        reflectivity = float(splitted[1])
+        if reflectivity > 0.0:
+            reflectivities.append(reflectivity)
+
+    reflectivities.sort(reverse=True)
+
+    logging.info(f"Searching for a good white reference plate..")
+    for reflectivity in reflectivities:
+        accepted_reference_plate_reflectivity = reflectivity
+        mask_path = PH.find_reference_visibility_map(
+            system_sim_name=system_sim_name, reflectivity=reflectivity
+        )
+        mask = plt.imread(mask_path)
+        mask = mask > 0
+
+        # Flattens the reference plate area pixels
+        raw_cube = get_raw_cube(system_sim_name=system_sim_name)
+        white_cube = raw_cube[:, mask]
+        # so we take the mean only on one axis.
+        white_mean = np.mean(white_cube, axis=(1))
+        white_mean_max = white_mean.max()
+        if white_mean_max < max_burn:
+            logging.info(
+                f"Accepted white reference with {accepted_reference_plate_reflectivity:.2f} reflectivity "
+                f"producing maximum mean reflectance {white_mean_max:.1f}."
+            )
+            break
+
+    save_white_signal(system_sim_name=system_sim_name, white_signal=white_mean)
+
+    # Expand dimensions to match the raw cube shape for reflectance calculation.
+    white_mean = np.expand_dims(white_mean, axis=(1, 2))
+    return white_mean
+
+
+def save_white_signal(system_sim_name: str, white_signal: np.ndarray):
+    """Saves the white signal used in reflectance calculation as a toml file.
+
+    :param system_sim_name: Name of the system simulation.
+    :param white_signal: White signal as a 1D numpy array with shape (bands,).
+    """
+
+    white_dict = {"white_signal": white_signal}
+
+    write_dir = PH.directory_system_simulation(system_sim_name=system_sim_name)
+    TH.write_dict_as_toml(
+        dictionary=white_dict, directory=write_dir, filename="white_signal"
+    )
+    logging.info(f"Saved white signal for system simulation '{system_sim_name}'.")
+
+
+def read_white_signal(system_sim_name: str) -> np.ndarray:
+    """Reads the white signal used in reflectance calculation from a toml file.
+
+    :param system_sim_name: Name of the system simulation.
+    :return: White signal as a 3D numpy array with shape (bands, 1, 1).
+    :raises FileNotFoundError: if the white signal file does not exist.
+    """
+
+    logging.info(f"Reading white signal for system simulation '{system_sim_name}'.")
+    read_dir = PH.directory_system_simulation(system_sim_name=system_sim_name)
+    if not os.path.exists(read_dir):
+        raise FileNotFoundError(
+            f"Cannot find system simulation directory from '{read_dir}'. "
+            f"Cannot read white signal."
+        )
+    white_dict = TH.read_toml_as_dict(directory=read_dir, filename="white_signal")
+    white_signal = np.array(white_dict["white_signal"])
+    white_signal = np.expand_dims(white_signal, axis=(1, 2))
+    return white_signal
 
 
 def show_cube(system_sim_name: str):

@@ -19,12 +19,12 @@ blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
 
 if "System simulation" in blend_dir:
     # We are in a copied blend file in HyperBlend/System simulation/scene_12345
-    script_dir = os.path.abspath(blend_dir + "../../../src/blender_scripts")
-    src_dir = os.path.abspath(blend_dir + "../../../src/")
+    script_dir = os.path.abspath(blend_dir + "/../../../src/blender_scripts")
+    src_dir = os.path.abspath(blend_dir + "/../../../src/")
 else:
     # We are in the template system_simulation blend file
-    script_dir = os.path.abspath(blend_dir + "../src/blender_scripts")
-    src_dir = os.path.abspath(blend_dir + "../src")
+    script_dir = os.path.abspath(blend_dir + "/../src/blender_scripts")
+    src_dir = os.path.abspath(blend_dir + "/../src")
 
 # After this is set, any script in /blender_scripts can be imported
 if script_dir not in sys.path:
@@ -41,10 +41,10 @@ if pythonpath_env:
         if path not in sys.path:
             sys.path.append(path)
 
-import forest_constants as FC
+from src.blender_scripts import forest_constants as FC
+from src.blender_scripts import forest_control as control
 from src.data import path_handling as PH
 from src import constants as C
-import forest_control as control
 
 import importlib
 
@@ -417,13 +417,16 @@ def _get_tree_as_dict(tree_object, is_master=False) -> dict:
     """Parses tree parameters from a tree object into a dict.
 
     :param tree_object:
-        Tree object to be used.
+        Tree object to be used. If None, empty dict is returned.
     :param is_master:
         If True, default standard deviations will be added to parameters
         that will be randomized.
     :return:
         Tree parameters as a dictionary.
     """
+
+    if tree_object is None:
+        return {}
 
     tree_dict = {"Name": tree_object.name}
 
@@ -703,7 +706,7 @@ def get_visibility_mapping_material_names():
         obj = ground_gn[ground_socket.identifier]
         if obj is None:
             logging.warning(
-                f"Skipping socket {ground_socket.name} because it is not set."
+                f"Ground socket returned None for '{ground_socket.identifier}'. Continuing to next one"
             )
             continue
         # print(f"Object: {obj.name}")
@@ -744,6 +747,9 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
         return
 
     tree = trees[tree_name]
+    if tree is None:
+        logging.error(f"Cannot find tree named '{tree_name}'.")
+        return
     tree_mod = tree.modifiers["GeometryNodes"]
 
     if tree_mod is None:
@@ -752,6 +758,11 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
 
     inputs = tree_mod.node_group.inputs
     socket = inputs.get(parameter_name)
+    if socket is None:
+        logging.error(
+            f"Cannot find parameter '{parameter_name}' in tree '{tree_name}'."
+        )
+        return
     socket_id = socket.identifier
     old_val = tree_mod[socket.identifier]
     tree_mod[socket.identifier] = value
