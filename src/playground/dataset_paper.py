@@ -204,6 +204,8 @@ def run(runtime: RuntimeEnvironment):
     # Simulate lighting at Grenoble centrum coordinates at the last day of June at 13:00 local time
     # lighting.load_light(file_name="grenoble.txt")
 
+    # For wet peat soil. Run this loop first and when the scenes are ok,
+    # run the next one for dry sand
     for ss in scenes_and_signals:
         soil_type = "wet_peat_reflectance"
         generate_forest_variants(
@@ -213,6 +215,17 @@ def run(runtime: RuntimeEnvironment):
             generate_master=True,
             run_simulations=False,
         )
+
+    # For dry sand soil
+    # for ss in scenes_and_signals:
+    #     soil_type = "dry_sand_reflectance"
+    #     generate_forest_variants(
+    #         runtime=runtime,
+    #         soil_name=soil_type,
+    #         scene_and_signals=ss,
+    #         generate_master=True,
+    #         run_simulations=False,
+    #     )
 
     # In case you forgot to resample them earlier, they have to be solved again.
     # Just leaving this snippet for future reference.
@@ -241,24 +254,8 @@ def generate_forest_variants(
     run_simulations=False,
 ):
 
-    # Use pre-calculated soil spectra and default sun and sky spectra. They are automatically
-    # interpolated to match the leaf spectra bands. Can be uncommented all times
-    # soil_name = "wet_peat_reflectance"
     sun_name = "grenoble_sun"
     sky_name = "grenoble_sky"
-
-    # TODO: use the dicts to fetch leaf images, chemical analysis data, and perhaps the leaf simulation
-    #   error and simulation result as well
-
-    # Pack leaf data for system_simulation scene initialization. This can be uncommented all times
-    # leaves = [
-    #     (lotus_green_ash["slab_sim_name"], 2, "Slab material 1"),
-    #     (lotus_green_ash["slab_sim_name"], 4, "Slab material 2"),
-    #     (lotus_american_elm["slab_sim_name"], 0, "Slab material 3"),
-    #     (lotus_american_elm["slab_sim_name"], 2, "Slab material 4"),
-    #     (lotus_american_elm["slab_sim_name"], 0, "Slab material 5"),
-    #     (lotus_american_elm["slab_sim_name"], 2, "Slab material 6"),
-    # ]
 
     theme = scene_and_signals["theme"]
     signal_tuples = scene_and_signals["signals"]
@@ -272,21 +269,42 @@ def generate_forest_variants(
             slab_mat_id += 1
 
     if generate_master:
-        # This is the master master that is used to spawn the highest resolution forests
-        forest.init(
-            leaves=leaves,
-            conf_type="m2m",
-            custom_forest_id=theme,
-            soil_name=soil_name,
-            sun_file_name=sun_name,
-            sky_file_name=sky_name,
-        )
+
+        if soil_name == "wet_peat_reflectance":
+            # This is the master master that is used to spawn the highest resolution forests
+            forest.init(
+                leaves=leaves,
+                conf_type="m2m",
+                custom_forest_id=theme,
+                soil_name=soil_name,
+                sun_file_name=sun_name,
+                sky_file_name=sky_name,
+            )
+        elif soil_name == "dry_sand_reflectance":
+            # Instead of generating the dry sand version from scratch, we copy the wet peat version
+            dry_theme = theme.replace("WP", "DS")
+            forest.init(
+                leaves=leaves,
+                conf_type="m2m",
+                copy_forest_id=theme,
+                custom_forest_id=dry_theme,
+                soil_name=soil_name,
+                sun_file_name=sun_name,
+                sky_file_name=sky_name,
+            )
+        else:
+            raise ValueError(f"Unknown soil type {soil_name}.")
 
         BC.generate_forest_control(
             runtime=runtime, system_sim_name=theme, global_master=False
         )
 
-        copy_lotus_data(signal_tuples, dst_sys_sim_name=theme)
+        material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=theme)
+        TH.write_dict_as_toml(
+            material_dict,
+            PH.directory_system_simulation(theme),
+            filename="leaf_material_map",
+        )
 
     if generate_resolutions:
         high_level_name = run_next_resolution(
@@ -373,6 +391,9 @@ def run_next_resolution(
     theme = high_level_name.split(sep="_")[0]
     current_level_name = f"{theme}_{resolution}_{scene_id}"
 
+    material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=current_level_name)
+    leaf_name_list = material_dict["slab_material_names"]
+
     if do_copy:
         forest.init(
             leaves=leaves,
@@ -383,21 +404,17 @@ def run_next_resolution(
             sun_file_name=sun_name,
             sky_file_name=sky_name,
         )
-
-    copy_lotus_data(signal_tuples, dst_sys_sim_name=current_level_name)
+        TH.write_dict_as_toml(
+            material_dict,
+            PH.directory_system_simulation(current_level_name),
+            filename="leaf_material_map",
+        )
 
     if run_setup_and_render:
         BC.setup_system_sim_scene(
             runtime=runtime,
             system_sim_name=current_level_name,
-            leaf_name_list=[
-                "Slab material 1",
-                "Slab material 2",
-                "Slab material 3",
-                "Slab material 4",
-                "Slab material 5",
-                "Slab material 6",
-            ],
+            leaf_name_list=leaf_name_list,
         )
 
         BC.render_forest(
@@ -432,6 +449,12 @@ def run_next_resolution(
 def copy_lotus_data(signal_tuples, dst_sys_sim_name: str):
     # Copy original LOTUS leaf data and slab simulation results so that the system
     #   simulation directory is self-contained
+
+    # Slab materials in a list of tuples (slab_material_name, lotus_code)
+    slab_material_names = []
+    lotus_codes = []
+
+    slab_material_index = 1
     for signal_tuple in signal_tuples:
         set_dict = signal_tuple[0]
         slab_sim_name = set_dict["slab_sim_name"]
@@ -445,6 +468,11 @@ def copy_lotus_data(signal_tuples, dst_sys_sim_name: str):
                 slab_sim_name=slab_sim_name, signal_id=signal_id
             )
             lotus_filename_stump = f"{set_dict['lotus_codes'][signal_id]}"
+
+            slab_material_names.append(f"Slab material {slab_material_index}")
+            lotus_codes.append(f"{lotus_filename_stump}")
+            slab_material_index += 1
+
             lotus_toml_filename = f"{lotus_filename_stump}.toml"
             lotus_jpg_filename = f"{lotus_filename_stump}.JPG"
             lotus_analysis_toml_src = PH.join(slab_sim_dir, lotus_toml_filename)
@@ -492,6 +520,12 @@ def copy_lotus_data(signal_tuples, dst_sys_sim_name: str):
                     lotus_jpg_filename,
                 ),
             )
+
+    material_dict = {
+        "slab_material_names": slab_material_names,
+        "lotus_codes": lotus_codes,
+    }
+    return material_dict
 
 
 def lotus_to_hb(runtime: RuntimeEnvironment):
