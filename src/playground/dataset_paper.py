@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 
 from setup.runtime_environment import RuntimeEnvironment
 from src.slab_model import interface as SI
-from src.system_simulation import forest
+from src.system_simulation import forest, lighting
 from rendering import blender_control as BC
 from src.data import (
     cube_handling as CH,
@@ -134,6 +134,58 @@ lotus_sample_dicts = [
 ]
 
 
+FWP1 = {
+    "theme": "FWP1",
+    "signals": [
+        (lotus_elm, [0]),
+        (lotus_manitoba_maple, [0, 1]),
+        (lotus_green_ash, [0, 2, 4]),
+    ],
+}
+FWP2 = {
+    "theme": "FWP2",
+    "signals": [
+        (lotus_oak, [0, 1]),
+        (lotus_saskatoon_berry, [0, 1]),
+        (lotus_american_elm, [0, 1, 2]),
+    ],
+}
+IWP1 = {
+    "theme": "IWP1",
+    "signals": [
+        (lotus_oak, [0, 1]),
+        (lotus_manitoba_maple, [0, 1]),
+        (lotus_american_elm, [2, 3]),
+        (lotus_mountain_ash, [0]),
+    ],
+}
+OWP1 = {
+    "theme": "OWP1",
+    "signals": [
+        (lotus_purple_cherry, [0, 1, 2, 3, 4, 5, 6, 7, 8]),
+    ],
+}
+OWP2 = {
+    "theme": "OWP2",
+    "signals": [
+        (
+            lotus_grape,
+            [
+                0,
+            ],
+        ),
+    ],
+}
+
+scenes_and_signals = [
+    FWP1,  # general forest with wet peat
+    FWP2,  # general forest with wet peat
+    IWP1,  # inclined forest with wet peat
+    OWP1,  # grape orchard with wet peat
+    OWP2,  # cherry orchard with wet peat
+]
+
+
 def run(runtime: RuntimeEnvironment):
     """Just a little run function to be called from main to keep it neat."""
 
@@ -149,56 +201,18 @@ def run(runtime: RuntimeEnvironment):
     # generate_forest_master(runtime=runtime, rng=rng)
     # lotus_to_hb(runtime)
 
-    FWP1 = {
-        "theme": "FWP1",
-        "signals": [
-            (lotus_elm, [0]),
-            (lotus_manitoba_maple, [0,1]),
-            (lotus_green_ash, [0,2,4]),
-        ]
-    }
-    FWP2 = {
-        "theme": "FWP2",
-        "signals": [
-            (lotus_oak, [0,1]),
-            (lotus_saskatoon_berry, [0, 1]),
-            (lotus_american_elm, [0, 1, 2]),
-        ]
-    }
-    IWP1 = {
-        "theme": "IWP1",
-        "signals": [
-            (lotus_oak, [0,1]),
-            (lotus_manitoba_maple, [0,1]),
-            (lotus_american_elm, [2, 3]),
-            (lotus_mountain_ash, [0]),
-        ]
-    }
-    OWP1 = {
-        "theme": "OWP1",
-        "signals": [
-            (lotus_purple_cherry, [0,1,2,3,4,5,6,7,8]),
-        ]
-    }
-    OWP2 = {
-        "theme": "OWP2",
-        "signals": [
-            (lotus_grape, [0,]),
-        ]
-    }
-
-    scenes_and_signals = [
-        FWP1, # general forest with wet peat
-        FWP2,  # general forest with wet peat
-        IWP1,  # inclined forest with wet peat
-        OWP1,  # grape orchard with wet peat
-        OWP2,  # cherry orchard with wet peat
-    ]
+    # Simulate lighting at Grenoble centrum coordinates at the last day of June at 13:00 local time
+    # lighting.load_light(file_name="grenoble.txt")
 
     for ss in scenes_and_signals:
         soil_type = "wet_peat_reflectance"
-        generate_forest_variants(runtime=runtime, soil_name=soil_type, scene_and_signals=ss, generate_master=False)
-
+        generate_forest_variants(
+            runtime=runtime,
+            soil_name=soil_type,
+            scene_and_signals=ss,
+            generate_master=True,
+            run_simulations=False,
+        )
 
     # In case you forgot to resample them earlier, they have to be solved again.
     # Just leaving this snippet for future reference.
@@ -218,14 +232,20 @@ def run(runtime: RuntimeEnvironment):
     #     )  # run slab simulation
 
 
-def generate_forest_variants(runtime: RuntimeEnvironment, soil_name:str, scene_and_signals:dict, generate_master=False, generate_resolutions=False):
-
+def generate_forest_variants(
+    runtime: RuntimeEnvironment,
+    soil_name: str,
+    scene_and_signals: dict,
+    generate_master=False,
+    generate_resolutions=False,
+    run_simulations=False,
+):
 
     # Use pre-calculated soil spectra and default sun and sky spectra. They are automatically
     # interpolated to match the leaf spectra bands. Can be uncommented all times
     # soil_name = "wet_peat_reflectance"
-    sun_name = "default_sun"
-    sky_name = "default_sky"
+    sun_name = "grenoble_sun"
+    sky_name = "grenoble_sky"
 
     # TODO: use the dicts to fetch leaf images, chemical analysis data, and perhaps the leaf simulation
     #   error and simulation result as well
@@ -266,64 +286,91 @@ def generate_forest_variants(runtime: RuntimeEnvironment, soil_name:str, scene_a
             runtime=runtime, system_sim_name=theme, global_master=False
         )
 
+        copy_lotus_data(signal_tuples, dst_sys_sim_name=theme)
+
     if generate_resolutions:
         high_level_name = run_next_resolution(
             runtime=runtime,
-            scene_id=1, resolution=1024, high_level_name=theme, leaves=leaves,
-            soil_name = soil_name,
-            sun_name = sun_name,
-            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
-            signal_tuples=signal_tuples
+            scene_id=1,
+            resolution=1024,
+            high_level_name=theme,
+            leaves=leaves,
+            soil_name=soil_name,
+            sun_name=sun_name,
+            sky_name=sky_name,
+            do_copy=True,
+            run_setup_and_render=run_simulations,
+            signal_tuples=signal_tuples,
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1, resolution=256, high_level_name=high_level_name, leaves=leaves,
-            soil_name = soil_name,
-            sun_name = sun_name,
-            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
-            signal_tuples=signal_tuples
+            scene_id=1,
+            resolution=256,
+            high_level_name=high_level_name,
+            leaves=leaves,
+            soil_name=soil_name,
+            sun_name=sun_name,
+            sky_name=sky_name,
+            do_copy=True,
+            run_setup_and_render=run_simulations,
+            signal_tuples=signal_tuples,
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1, resolution=64, high_level_name=high_level_name,  leaves=leaves,
-            soil_name = soil_name,
-            sun_name = sun_name,
-            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
-            signal_tuples=signal_tuples
+            scene_id=1,
+            resolution=64,
+            high_level_name=high_level_name,
+            leaves=leaves,
+            soil_name=soil_name,
+            sun_name=sun_name,
+            sky_name=sky_name,
+            do_copy=True,
+            run_setup_and_render=run_simulations,
+            signal_tuples=signal_tuples,
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1, resolution=16, high_level_name=high_level_name,  leaves=leaves,
-            soil_name = soil_name,
-            sun_name = sun_name,
-            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
-            signal_tuples=signal_tuples
+            scene_id=1,
+            resolution=16,
+            high_level_name=high_level_name,
+            leaves=leaves,
+            soil_name=soil_name,
+            sun_name=sun_name,
+            sky_name=sky_name,
+            do_copy=True,
+            run_setup_and_render=run_simulations,
+            signal_tuples=signal_tuples,
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1, resolution=4, high_level_name=high_level_name,  leaves=leaves,
-            soil_name = soil_name,
-            sun_name = sun_name,
-            sky_name=sky_name, do_copy=False, run_setup_and_render=False,
-            signal_tuples=signal_tuples
+            scene_id=1,
+            resolution=4,
+            high_level_name=high_level_name,
+            leaves=leaves,
+            soil_name=soil_name,
+            sun_name=sun_name,
+            sky_name=sky_name,
+            do_copy=True,
+            run_setup_and_render=run_simulations,
+            signal_tuples=signal_tuples,
         )
 
 
 def run_next_resolution(
-        runtime,
-        scene_id: int,
-        resolution: int,
-        high_level_name: str,
-        leaves,
-        soil_name: str,
-        sun_name: str,
-        sky_name: str,
-        signal_tuples,
-        do_copy=False,
-        run_setup_and_render: bool = False,
-    ):
+    runtime,
+    scene_id: int,
+    resolution: int,
+    high_level_name: str,
+    leaves,
+    soil_name: str,
+    sun_name: str,
+    sky_name: str,
+    signal_tuples,
+    do_copy=False,
+    run_setup_and_render: bool = False,
+):
 
-    theme = high_level_name.split(sep='_')[0]
+    theme = high_level_name.split(sep="_")[0]
     current_level_name = f"{theme}_{resolution}_{scene_id}"
 
     if do_copy:
@@ -337,13 +384,7 @@ def run_next_resolution(
             sky_file_name=sky_name,
         )
 
-        for signal_tuple in signal_tuples:
-            set_dict = signal_tuple[0]
-            set_dict["slab_sim_name"]
-            signal_ids = signal_tuple[1]
-            for signal_id in signal_ids:
-                #TODO fetch data
-                raise NotImplementedError("Implement lotus data fetching before running")
+    copy_lotus_data(signal_tuples, dst_sys_sim_name=current_level_name)
 
     if run_setup_and_render:
         BC.setup_system_sim_scene(
@@ -384,7 +425,73 @@ def run_next_resolution(
             system_sim_name=current_level_name,
             system_sim_name_for_white_signal=high_level_name,
         )
-        return current_level_name
+
+    return current_level_name
+
+
+def copy_lotus_data(signal_tuples, dst_sys_sim_name: str):
+    # Copy original LOTUS leaf data and slab simulation results so that the system
+    #   simulation directory is self-contained
+    for signal_tuple in signal_tuples:
+        set_dict = signal_tuple[0]
+        slab_sim_name = set_dict["slab_sim_name"]
+        signal_ids = signal_tuple[1]
+        for signal_id in signal_ids:
+            slab_sim_dir = PH.directory_slab_simulation(slab_sim_name=slab_sim_name)
+            signal_res_plot_src = PH.file_signal_result_plot(
+                slab_sim_name=slab_sim_name, signal_id=signal_id
+            )
+            signal_res_toml_src = PH.file_signal_result(
+                slab_sim_name=slab_sim_name, signal_id=signal_id
+            )
+            lotus_filename_stump = f"{set_dict['lotus_codes'][signal_id]}"
+            lotus_toml_filename = f"{lotus_filename_stump}.toml"
+            lotus_jpg_filename = f"{lotus_filename_stump}.JPG"
+            lotus_analysis_toml_src = PH.join(slab_sim_dir, lotus_toml_filename)
+            lotus_analysis_jpg_src = PH.join(slab_sim_dir, lotus_jpg_filename)
+            if (
+                not os.path.exists(signal_res_plot_src)
+                or not os.path.exists(signal_res_toml_src)
+                or not os.path.exists(lotus_analysis_toml_src)
+                or not os.path.exists(lotus_analysis_jpg_src)
+            ):
+                raise FileNotFoundError(
+                    f"Missing some data files of slab simulation {slab_sim_name} signal ID {signal_id}."
+                )
+            new_signal_result_toml_name = (
+                f"{lotus_filename_stump}_{signal_id}_slab_sim_result.toml"
+            )
+            new_signal_result_plot_name = (
+                f"{lotus_filename_stump}_{signal_id}_slab_sim_result.png"
+            )
+            shutil.copy(
+                signal_res_toml_src,
+                PH.join(
+                    PH.directory_system_simulation(dst_sys_sim_name),
+                    new_signal_result_toml_name,
+                ),
+            )
+            shutil.copy(
+                signal_res_plot_src,
+                PH.join(
+                    PH.directory_system_simulation(dst_sys_sim_name),
+                    new_signal_result_plot_name,
+                ),
+            )
+            shutil.copy(
+                lotus_analysis_toml_src,
+                PH.join(
+                    PH.directory_system_simulation(dst_sys_sim_name),
+                    lotus_toml_filename,
+                ),
+            )
+            shutil.copy(
+                lotus_analysis_jpg_src,
+                PH.join(
+                    PH.directory_system_simulation(dst_sys_sim_name),
+                    lotus_jpg_filename,
+                ),
+            )
 
 
 def lotus_to_hb(runtime: RuntimeEnvironment):
