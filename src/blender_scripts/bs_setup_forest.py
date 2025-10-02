@@ -220,7 +220,7 @@ def insert_soil_data():
         material.node_tree.keyframe_insert(dp, frame=band)
 
 
-def insert_trunk_data():
+def insert_diffuse_material_spectra(material_name):
     """
     TODO: Implement trunk data insertion.
     1. Find the correct trunk csv file. This can be a general reflectance only file.
@@ -230,7 +230,28 @@ def insert_trunk_data():
     5. Insert the data for each frame
     6. Set the RGB color of the trunk material to match the csv file.
     """
-    logging.error(f"insert_trunk_data() called, but I am missing the implementation...")
+    constant_diff = 0.25
+    logging.warning(
+        f"insert_diffuse_material_spectra() called for material {material_name}. "
+        f"There is not proper implementation yet, so just setting constant diffuse reflectance of {constant_diff}."
+    )
+
+    p = PH.file_forest_soil_csv(system_sim_name=forest_id)
+    if not os.path.exists(p):
+        raise FileNotFoundError(
+            f"Soil csv file '{p}' not found. Soil bands used as a quick hack for now to get spectral bands."
+        )
+
+    bands, _, _ = FU.read_csv(p)
+
+    for i, band in enumerate(bands):
+        socket_name = "Spectral reflectivity"
+        diffuse_material = bpy.data.materials[f"{material_name}"]
+        dp = f'nodes["Group"].inputs["{socket_name}"].default_value'
+        diffuse_material.node_tree.nodes["Group"].inputs[
+            socket_name
+        ].default_value = constant_diff
+        diffuse_material.node_tree.keyframe_insert(dp, frame=band)
 
 
 def init_cameras():
@@ -350,7 +371,8 @@ if __name__ == "__main__":
 
     insert_leaf_data(leaf_material_names=leaf_material_names)
     insert_soil_data()
-    insert_trunk_data()
+    for i in range(1, 10):
+        insert_diffuse_material_spectra(f"Diffuse material {i}")
 
     FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=True)
     FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=False)
