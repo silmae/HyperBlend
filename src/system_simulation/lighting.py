@@ -102,6 +102,7 @@ def load_light(
         file_name = file_name + ".txt"
 
     path = PH.find_light_file(file_name, system_sim_name)
+    logging.info(f"Searching light file '{file_name}' from '{path}'.")
 
     wls, irradiances = LFH.read_light_file(path)
 
