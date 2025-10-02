@@ -6,6 +6,7 @@
 """
 
 import logging
+import os.path
 
 import numpy as np
 import copy
@@ -65,6 +66,14 @@ def init(
         Note: s2s does not exist as there is no standard deviations present in slave configs.
     :return: Forest id that is generated if custom_forest_id is not given.
     """
+
+    dest_sys_sim = PH.directory_system_simulation(custom_forest_id)
+    if os.path.exists(dest_sys_sim):
+        raise RuntimeError(
+            f"System simulation directory '{dest_sys_sim}' already exists. "
+            f"As a safety measure, I will not overwrite it. You will have to manually "
+            f"delete the directory if you want to proceed."
+        )
 
     if copy_forest_id is not None:
         forest_id = FH.duplicate_system_simulation_scene(
