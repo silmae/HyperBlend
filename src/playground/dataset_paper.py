@@ -265,10 +265,14 @@ def generate_forest_variants(
         set_dict = signal_tuple[0]
         signal_ids = signal_tuple[1]
         for signal_id in signal_ids:
-            leaves.append((set_dict["slab_sim_name"], signal_id, slab_mat_id))
+            leaves.append(
+                (set_dict["slab_sim_name"], signal_id, f"Slab material {slab_mat_id}")
+            )
             slab_mat_id += 1
 
     if generate_master:
+
+        use_theme = theme
 
         if soil_name == "wet_peat_reflectance":
             # This is the master master that is used to spawn the highest resolution forests
@@ -283,6 +287,7 @@ def generate_forest_variants(
         elif soil_name == "dry_sand_reflectance":
             # Instead of generating the dry sand version from scratch, we copy the wet peat version
             dry_theme = theme.replace("WP", "DS")
+            use_theme = dry_theme
             forest.init(
                 leaves=leaves,
                 conf_type="m2m",
@@ -296,14 +301,21 @@ def generate_forest_variants(
             raise ValueError(f"Unknown soil type {soil_name}.")
 
         BC.generate_forest_control(
-            runtime=runtime, system_sim_name=theme, global_master=False
+            runtime=runtime, system_sim_name=use_theme, global_master=False
         )
 
-        material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=theme)
+        material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=use_theme)
         TH.write_dict_as_toml(
             material_dict,
-            PH.directory_system_simulation(theme),
+            PH.directory_system_simulation(use_theme),
             filename="leaf_material_map",
+        )
+
+        leaf_name_list = material_dict["slab_material_names"]
+        BC.setup_system_sim_scene(
+            runtime=runtime,
+            system_sim_name=use_theme,
+            leaf_name_list=leaf_name_list,
         )
 
     if generate_resolutions:
