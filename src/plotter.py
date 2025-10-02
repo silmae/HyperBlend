@@ -230,7 +230,7 @@ def plot_light_data(
     wls_binned=None,
     irradiances_binned=None,
     forest_id=None,
-    sun_plot_name=None,
+    light_plot_name=None,
     show=False,
     lighting_type="sun",
 ):
@@ -255,7 +255,7 @@ def plot_light_data(
         Both must be given so that binned irradiances can be plotted.
     :param forest_id:
         Optional. Forest id for saving the plot to the scene directory.
-    :param sun_plot_name:
+    :param light_plot_name:
         Optional. Sun filename for naming the image file.
     :param show:
         If True, the plot is shown to the user. Default is False.
@@ -308,15 +308,15 @@ def plot_light_data(
 
     plt.legend()
 
-    if sun_plot_name is None and lighting_type == "sun":
-        sun_plot_name = C.file_default_sun
-    if sun_plot_name is None and lighting_type == "sky":
-        sun_plot_name = C.file_default_sky
+    if light_plot_name is None and lighting_type == "sun":
+        light_plot_name = C.file_default_sun
+    if light_plot_name is None and lighting_type == "sky":
+        light_plot_name = C.file_default_sky
 
     if forest_id is not None:
         path = PH.join(
             PH.directory_system_simulation(forest_id),
-            f"{sun_plot_name.rstrip('.txt')}.png",
+            f"{light_plot_name.rstrip('.txt')}.png",
         )
         plt.savefig(path, dpi=save_resolution)
     if show:

@@ -185,17 +185,18 @@ def init(
 
     ################ Sun ################
 
-    logging.info(f"Normalizing, resampling and writing sun data.")
+    logging.info(f"Loading sun data from file '{sun_file_name}'.")
     sun_wls_org, sun_irradiance_org = lighting.load_light(
         file_name=sun_file_name, system_sim_name=forest_id, lighting_type="sun"
     )
-    logging.info(f"Reloading sun with new sampling.")
+    logging.info(f"Reloading sun with new sampling with file '{sun_file_name}'.")
     sun_wls, sun_irradiance = lighting.load_light(
         file_name=sun_file_name,
         system_sim_name=forest_id,
         sampling=sampling,
         lighting_type="sun",
     )
+    logging.info(f"Normalizing sun spectrum.")
     # Normalizing sun
     sun_irr_max = np.max(sun_irradiance)
     sun_irradiance = sun_irradiance / sun_irr_max
@@ -206,7 +207,7 @@ def init(
         lighting_type="sun",
     )
 
-    logging.info(f"Plotting sun data.")
+    logging.info(f"Plotting sun spectrum.")
     plotter.plot_light_data(
         wls=sun_wls_org,
         irradiances=sun_irradiance_org,
@@ -214,19 +215,23 @@ def init(
         irradiances_binned=sun_irradiance,
         forest_id=forest_id,
         lighting_type="sun",
+        light_plot_name=sun_file_name,
     )
 
     ################ Sky ################
 
+    logging.info(f"Loading sky spectrum from file '{sky_file_name}'.")
     sky_wls_org, sky_irradiance_org = lighting.load_light(
         file_name=sky_file_name, system_sim_name=forest_id, lighting_type="sky"
     )
+    logging.info(f"Reloading sky with new sampling with file '{sky_file_name}'.")
     sky_wls, sky_irradiance = lighting.load_light(
         file_name=sky_file_name,
         system_sim_name=forest_id,
         sampling=sampling,
         lighting_type="sky",
     )
+    logging.info(f"Normalizing sky spectrum.")
     # Normalize with maximum SUN irradiance
     sky_irradiance = sky_irradiance / sun_irr_max
     FH.write_blender_light_spectra(
@@ -235,13 +240,14 @@ def init(
         irradiances=sky_irradiance,
         lighting_type="sky",
     )
+    logging.info(f"Plotting sky spectrum.")
     plotter.plot_light_data(
         wls=sky_wls_org,
         irradiances=sky_irradiance_org,
         wls_binned=sky_wls,
         irradiances_binned=sky_irradiance,
         forest_id=forest_id,
-        sun_plot_name=sky_file_name,
+        light_plot_name=sky_file_name,
         lighting_type="sky",
     )
 
