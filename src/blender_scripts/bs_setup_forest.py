@@ -369,13 +369,16 @@ if __name__ == "__main__":
         f"Running scene setup for '{PH.directory_system_simulation(forest_id)}'"
     )
 
-    insert_leaf_data(leaf_material_names=leaf_material_names)
-    insert_soil_data()
-    for i in range(1, 10):
-        insert_diffuse_material_spectra(f"Diffuse material {i}")
+    if leaf_material_names is None or len(leaf_material_names) < 1:
+        logging.warning(f"No leaf material names given to setup script.")
+    else:
+        insert_leaf_data(leaf_material_names=leaf_material_names)
+        insert_soil_data()
+        for i in range(1, 10):
+            insert_diffuse_material_spectra(f"Diffuse material {i}")
 
-    FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=True)
-    FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=False)
+        FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=True)
+        FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=False)
 
     FU.apply_forest_control(forest_id=forest_id)
 
