@@ -268,6 +268,8 @@ def init(
             f"Soil name not provided for system_simulation initialization. Using default soil '{soil_name}'."
         )
 
+    logging.info(f"Loading soil data for soil '{soil_name}'.")
+
     soil_wls, soil_refls = soil.load_soil(forest_id=forest_id, soil_name=soil_name)
     soil_wls_resampled, soil_refls_resampled = soil.load_soil(
         forest_id=forest_id, soil_name=soil_name, sampling=sampling
