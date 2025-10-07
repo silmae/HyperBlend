@@ -28,6 +28,8 @@ from src.utils import data_utils as DU
 slab_sim_names = ["Manitoba Maple", "American Elm", "Crab apple"]
 slab_sim_name_pr = "dataset_paper_prospect_leaves"
 
+ancestor_scene = "dataset_ancestor"
+
 # Define the LOTUS dataset sample names for fetching data
 lotus_saskatoon_berry = {
     "slab_sim_name": "LOTUS Saskatoon berry",
@@ -167,14 +169,7 @@ OWP1 = {
 }
 OWP2 = {
     "theme": "OWP2",
-    "signals": [
-        (
-            lotus_grape,
-            [
-                0,
-            ],
-        ),
-    ],
+    "signals": [(lotus_grape, [0])],
 }
 
 scenes_and_signals = [
@@ -201,6 +196,9 @@ def run(runtime: RuntimeEnvironment):
     # generate_forest_master(runtime=runtime, rng=rng)
     # lotus_to_hb(runtime)
 
+    # Generate one ancestor scene that is used to spawn the rest
+    # generate_ancestor(runtime)
+
     # Simulate lighting at Grenoble centrum coordinates at the last day of June at 13:00 local time
     # lighting.load_light(file_name="grenoble.txt")
 
@@ -213,19 +211,21 @@ def run(runtime: RuntimeEnvironment):
             soil_name=soil_type,
             scene_and_signals=ss,
             generate_master=True,
-            run_simulations=False,
+            run_simulations=True,
+            generate_resolutions=True,
         )
 
     # For dry sand soil
-    # for ss in scenes_and_signals:
-    #     soil_type = "dry_sand_reflectance"
-    #     generate_forest_variants(
-    #         runtime=runtime,
-    #         soil_name=soil_type,
-    #         scene_and_signals=ss,
-    #         generate_master=True,
-    #         run_simulations=False,
-    #     )
+    for ss in scenes_and_signals:
+        soil_type = "dry_sand_reflectance"
+        generate_forest_variants(
+            runtime=runtime,
+            soil_name=soil_type,
+            scene_and_signals=ss,
+            generate_master=True,
+            run_simulations=True,
+            generate_resolutions=True,
+        )
 
     # In case you forgot to resample them earlier, they have to be solved again.
     # Just leaving this snippet for future reference.
@@ -243,6 +243,31 @@ def run(runtime: RuntimeEnvironment):
     #         resolution=5,
     #         solver_dirname="Iterative slab",
     #     )  # run slab simulation
+
+
+# Only for setting the ancestor scene once
+# def generate_ancestor(runtime: RuntimeEnvironment):
+#     sun_name = "grenoble_sun"
+#     sky_name = "grenoble_sky"
+#     soil_name = "wet_peat_reflectance"
+
+# This is the master master that is used to spawn the highest resolution forests
+# forest.init(
+#     # leaves=leaves,
+#     conf_type="m2m",
+#     custom_forest_id=ancestor_scene,
+#     soil_name=soil_name,
+#     sun_file_name=sun_name,
+#     sky_file_name=sky_name,
+# )
+#
+# BC.generate_forest_control(
+#     runtime=runtime, system_sim_name=ancestor_scene, global_master=False
+# )
+
+# BC.setup_system_sim_scene(
+#     runtime=runtime, system_sim_name=ancestor_scene, leaf_name_list=[]
+# )
 
 
 def generate_forest_variants(
@@ -270,60 +295,62 @@ def generate_forest_variants(
             )
             slab_mat_id += 1
 
+    use_theme = theme
+    if soil_name == "dry_sand_reflectance":
+        dry_theme = theme.replace("WP", "DS")
+        use_theme = dry_theme
+
+    # This is the master master that is used to spawn the highest resolution forests
     if generate_master:
-
-        use_theme = theme
-
         if soil_name == "wet_peat_reflectance":
-            # This is the master master that is used to spawn the highest resolution forests
+
             forest.init(
                 leaves=leaves,
                 conf_type="m2m",
-                custom_forest_id=theme,
+                copy_forest_id=ancestor_scene,  # This is a copy of the ancestor
+                custom_forest_id=theme,  # Copied to the theme name
                 soil_name=soil_name,
                 sun_file_name=sun_name,
                 sky_file_name=sky_name,
             )
         elif soil_name == "dry_sand_reflectance":
             # Instead of generating the dry sand version from scratch, we copy the wet peat version
-            dry_theme = theme.replace("WP", "DS")
-            use_theme = dry_theme
             forest.init(
                 leaves=leaves,
                 conf_type="m2m",
-                copy_forest_id=theme,
-                custom_forest_id=dry_theme,
+                copy_forest_id=theme,  # The other soil is copied from the first soil--not from the ancestor
+                custom_forest_id=use_theme,  # And named accordingly
                 soil_name=soil_name,
                 sun_file_name=sun_name,
                 sky_file_name=sky_name,
             )
+
+            material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=use_theme)
+            TH.write_dict_as_toml(
+                material_dict,
+                PH.directory_system_simulation(use_theme),
+                filename="leaf_material_map",
+            )
+
+            leaf_name_list = material_dict["slab_material_names"]
+            BC.setup_system_sim_scene(
+                runtime=runtime,
+                system_sim_name=use_theme,
+                leaf_name_list=leaf_name_list,
+            )
         else:
             raise ValueError(f"Unknown soil type {soil_name}.")
 
+        # Control generated only for the master scenes. For others, it is copied.
         BC.generate_forest_control(
             runtime=runtime, system_sim_name=use_theme, global_master=False
-        )
-
-        material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=use_theme)
-        TH.write_dict_as_toml(
-            material_dict,
-            PH.directory_system_simulation(use_theme),
-            filename="leaf_material_map",
-        )
-
-        leaf_name_list = material_dict["slab_material_names"]
-        BC.setup_system_sim_scene(
-            runtime=runtime,
-            system_sim_name=use_theme,
-            leaf_name_list=leaf_name_list,
         )
 
     if generate_resolutions:
         high_level_name = run_next_resolution(
             runtime=runtime,
-            scene_id=1,
             resolution=1024,
-            high_level_name=theme,
+            high_level_name=use_theme,
             leaves=leaves,
             soil_name=soil_name,
             sun_name=sun_name,
@@ -334,7 +361,6 @@ def generate_forest_variants(
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1,
             resolution=256,
             high_level_name=high_level_name,
             leaves=leaves,
@@ -347,7 +373,6 @@ def generate_forest_variants(
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1,
             resolution=64,
             high_level_name=high_level_name,
             leaves=leaves,
@@ -360,7 +385,6 @@ def generate_forest_variants(
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1,
             resolution=16,
             high_level_name=high_level_name,
             leaves=leaves,
@@ -373,7 +397,6 @@ def generate_forest_variants(
         )
         run_next_resolution(
             runtime=runtime,
-            scene_id=1,
             resolution=4,
             high_level_name=high_level_name,
             leaves=leaves,
@@ -388,7 +411,6 @@ def generate_forest_variants(
 
 def run_next_resolution(
     runtime,
-    scene_id: int,
     resolution: int,
     high_level_name: str,
     leaves,
@@ -401,10 +423,7 @@ def run_next_resolution(
 ):
 
     theme = high_level_name.split(sep="_")[0]
-    current_level_name = f"{theme}_{resolution}_{scene_id}"
-
-    material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=current_level_name)
-    leaf_name_list = material_dict["slab_material_names"]
+    current_level_name = f"{theme}_{resolution}"
 
     if do_copy:
         forest.init(
@@ -416,10 +435,50 @@ def run_next_resolution(
             sun_file_name=sun_name,
             sky_file_name=sky_name,
         )
+
+        material_dict = copy_lotus_data(
+            signal_tuples, dst_sys_sim_name=current_level_name
+        )
+        leaf_name_list = material_dict["slab_material_names"]
         TH.write_dict_as_toml(
             material_dict,
             PH.directory_system_simulation(current_level_name),
             filename="leaf_material_map",
+        )
+
+        sys_sim_path = PH.directory_system_simulation(current_level_name)
+        scene_control = TH.read_toml_as_dict(
+            directory=sys_sim_path, filename="system_sim_control"
+        )
+        scene_control["Images"]["hsi_resolution_x"] = resolution
+        scene_control["Images"]["hsi_resolution_y"] = resolution
+        scene_control["Images"]["rgb_resolution_x"] = resolution
+        scene_control["Images"]["rgb_resolution_y"] = resolution
+
+        scene_control["Images"]["walker_resolution_x"] = 1024
+        scene_control["Images"]["walker_resolution_y"] = 512
+        scene_control["Images"]["sleeper_resolution_x"] = 1024
+        scene_control["Images"]["sleeper_resolution_y"] = 512
+        scene_control["Images"]["tree_preview_resolution_x"] = 1024
+        scene_control["Images"]["tree_preview_resolution_y"] = 512
+
+        sample_count = 32
+        if resolution == 256:
+            sample_count = 128
+        elif resolution == 64:
+            sample_count = 512
+        elif resolution == 16:
+            sample_count = 2048
+        elif resolution == 4:
+            sample_count = 8192
+
+        scene_control["Rendering"]["sample_count_hsi"] = sample_count
+        scene_control["Rendering"]["sample_count_rbg"] = sample_count
+
+        TH.write_dict_as_toml(
+            directory=sys_sim_path,
+            dictionary=scene_control,
+            filename="system_sim_control",
         )
 
     if run_setup_and_render:
@@ -429,14 +488,15 @@ def run_next_resolution(
             leaf_name_list=leaf_name_list,
         )
 
-        BC.render_forest(
-            runtime=runtime,
-            system_sim_name=current_level_name,
-            render_mode="preview",
-        )
-
-        # Visibility maps only for the high res cube. The rest are calculated manually.
+        # Visibility maps and previews only for the high res cube.
         if resolution >= 1024:
+
+            BC.render_forest(
+                runtime=runtime,
+                system_sim_name=current_level_name,
+                render_mode="preview",
+            )
+
             BC.render_forest(
                 runtime=runtime,
                 system_sim_name=current_level_name,
@@ -449,11 +509,15 @@ def run_next_resolution(
             render_mode="spectral",
         )
 
-        # Construct spectral cube in ENVI format
-        CH.construct_envi_cube(
-            system_sim_name=current_level_name,
-            system_sim_name_for_white_signal=high_level_name,
-        )
+        if resolution >= 1024:
+            # For high res, the white is inferred from the data.
+            CH.construct_envi_cube(system_sim_name=current_level_name)
+        else:
+            # For lower res, use the white reference from the high res data.
+            CH.construct_envi_cube(
+                system_sim_name=current_level_name,
+                system_sim_name_for_white_signal=high_level_name,
+            )
 
     return current_level_name
 
