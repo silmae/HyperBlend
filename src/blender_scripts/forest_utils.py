@@ -86,7 +86,7 @@ def set_materials_use_spectral(use_spectral: bool):
     materials_to_set = []
     for material in materials:
         name = material.name
-        if "Slab" in name or "Diffuse" in name:
+        if "Slab" in name or "Diffuse" in name or "Ground" in name:
             materials_to_set.append(name)
 
     for material_name in materials_to_set:
