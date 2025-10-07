@@ -85,7 +85,7 @@ def load_light(
         not either "sun" or "sky".
     """
 
-    logging.info("Loading light data.")
+    # logging.info("Loading light data.")
 
     if file_name is None:
         if lighting_type == "sun":
@@ -102,7 +102,7 @@ def load_light(
         file_name = file_name + ".txt"
 
     path = PH.find_light_file(file_name, system_sim_name)
-    logging.info(f"Searching light file '{file_name}' from '{path}'.")
+    # logging.info(f"Searching light file '{file_name}' from '{path}'.")
 
     wls, irradiances = LFH.read_light_file(path)
 
@@ -113,6 +113,6 @@ def load_light(
         wls = sampling
         irradiances = new_irradiances
 
-    logging.info("Light data loaded.")
+    # logging.info("Light data loaded.")
 
     return np.array(wls), np.array(irradiances)
