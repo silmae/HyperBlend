@@ -341,7 +341,7 @@ def duplicate_system_simulation_scene(
         create_top_level_system_sim_directories(system_sim_name=dst_system_sim_name)
         shutil.copy2(source_path, PH.file_blend_system_simulation(dst_system_sim_name))
         logging.info(
-            f"System simulation scene copied with id '{dst_system_sim_name}' to "
+            f"System simulation scene copied from '{source_path}' to "
             f"'{PH.directory_system_simulation(dst_system_sim_name)}'."
         )
     else:
