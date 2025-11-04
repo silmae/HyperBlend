@@ -301,50 +301,49 @@ def generate_forest_variants(
         use_theme = dry_theme
 
     # This is the master master that is used to spawn the highest resolution forests
-    if generate_master:
-        if soil_name == "wet_peat_reflectance":
+    # if generate_master:
+    #     if soil_name == "wet_peat_reflectance":
+    #         forest.init(
+    #             leaves=leaves,
+    #             conf_type="m2m",
+    #             copy_forest_id=ancestor_scene,  # This is a copy of the ancestor
+    #             custom_forest_id=theme,  # Copied to the theme name
+    #             soil_name=soil_name,
+    #             sun_file_name=sun_name,
+    #             sky_file_name=sky_name,
+    #         )
+    #     elif soil_name == "dry_sand_reflectance":
+    #         # Instead of generating the dry sand version from scratch, we copy the wet peat version
+    #         forest.init(
+    #             leaves=leaves,
+    #             conf_type="m2m",
+    #             copy_forest_id=theme,  # The other soil is copied from the first soil--not from the ancestor
+    #             custom_forest_id=use_theme,  # And named accordingly
+    #             soil_name=soil_name,
+    #             sun_file_name=sun_name,
+    #             sky_file_name=sky_name,
+    #         )
+    #
+    #         material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=use_theme)
+    #         TH.write_dict_as_toml(
+    #             material_dict,
+    #             PH.directory_system_simulation(use_theme),
+    #             filename="leaf_material_map",
+    #         )
+    #
+    #         leaf_name_list = material_dict["slab_material_names"]
+    #         BC.setup_system_sim_scene(
+    #             runtime=runtime,
+    #             system_sim_name=use_theme,
+    #             leaf_name_list=leaf_name_list,
+    #         )
+    #     else:
+    #         raise ValueError(f"Unknown soil type {soil_name}.")
 
-            forest.init(
-                leaves=leaves,
-                conf_type="m2m",
-                copy_forest_id=ancestor_scene,  # This is a copy of the ancestor
-                custom_forest_id=theme,  # Copied to the theme name
-                soil_name=soil_name,
-                sun_file_name=sun_name,
-                sky_file_name=sky_name,
-            )
-        elif soil_name == "dry_sand_reflectance":
-            # Instead of generating the dry sand version from scratch, we copy the wet peat version
-            forest.init(
-                leaves=leaves,
-                conf_type="m2m",
-                copy_forest_id=theme,  # The other soil is copied from the first soil--not from the ancestor
-                custom_forest_id=use_theme,  # And named accordingly
-                soil_name=soil_name,
-                sun_file_name=sun_name,
-                sky_file_name=sky_name,
-            )
-
-            material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=use_theme)
-            TH.write_dict_as_toml(
-                material_dict,
-                PH.directory_system_simulation(use_theme),
-                filename="leaf_material_map",
-            )
-
-            leaf_name_list = material_dict["slab_material_names"]
-            BC.setup_system_sim_scene(
-                runtime=runtime,
-                system_sim_name=use_theme,
-                leaf_name_list=leaf_name_list,
-            )
-        else:
-            raise ValueError(f"Unknown soil type {soil_name}.")
-
-        # Control generated only for the master scenes. For others, it is copied.
-        BC.generate_forest_control(
-            runtime=runtime, system_sim_name=use_theme, global_master=False
-        )
+    # This has to be generated when copying from master
+    BC.generate_forest_control(
+        runtime=runtime, system_sim_name=use_theme, global_master=False
+    )
 
     if generate_resolutions:
         high_level_name = run_next_resolution(
