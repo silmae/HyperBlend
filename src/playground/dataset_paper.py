@@ -182,6 +182,58 @@ scenes_and_signals = [
 ]
 
 
+def separate_spectral_renders(delete_originals=False, do_copy=True):
+    """Rendered spectral bands that are used as a base to construct the spectral
+    cubes are separated to a directory for smaller download size. They are
+    needed only if one wants to reconstruct the spectral cubes again.
+    """
+
+    # Create a directory where to copy the spectral renders.
+    path_root_dir_copy_to = PH.join(
+        PH.directory_project_root(), "..", "Rendered spectral bands"
+    )
+    if not os.path.exists(path_root_dir_copy_to):
+        os.makedirs(path_root_dir_copy_to)
+
+    scene_number = 1
+    for ss in scenes_and_signals:
+        theme_wp = ss["theme"]  # soil: wet peat
+        theme_ds = theme_wp.replace("WP", "DS")  # soil: dry sand
+        for theme in [theme_wp, theme_ds]:
+            for res in [1024, 256, 64, 16, 4]:
+                sys_sim_name = f"{theme}_{res}"
+                path_spectral_rend = PH.directory_system_rend_spectral(
+                    system_sim_name=sys_sim_name
+                )
+                file_count = 0
+                for file in os.listdir(path_spectral_rend):
+                    file_count += 1
+                    path_file_copy_from = PH.join(path_spectral_rend, file)
+                    path_dir_copy_to = PH.join(
+                        path_root_dir_copy_to, sys_sim_name, "rend", "Spectral"
+                    )
+                    if not os.path.exists(path_dir_copy_to):
+                        os.makedirs(path_dir_copy_to)
+                    path_file_copy_to = PH.join(path_dir_copy_to, file)
+
+                    if do_copy:
+                        shutil.copy(path_file_copy_from, path_file_copy_to)
+
+                        print(
+                            f"File copied from '{path_file_copy_from}' to '{path_dir_copy_to}'"
+                        )
+
+                    if delete_originals:
+                        os.remove(path_file_copy_from)
+                        print(f"Original file '{path_file_copy_from}' deleted.")
+
+                    scene_number += 1
+
+                print(
+                    f"Scene {scene_number}: {sys_sim_name} has {file_count} spectral render files."
+                )
+
+
 def calculate_abundances():
     """Calculates abundances for each resolution level.
 

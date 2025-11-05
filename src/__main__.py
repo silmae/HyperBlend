@@ -22,7 +22,9 @@ if __name__ == "__main__":
     # rng = np.random.default_rng(123324)
     # dataset_paper.run(runtime=runtime)
 
-    dataset_paper.calculate_abundances()
+    # dataset_paper.calculate_abundances()
+
+    dataset_paper.separate_spectral_renders(delete_originals=True, do_copy=False)
 
     # This can be used to run the iterative training
     # SMI.iterative_train(
