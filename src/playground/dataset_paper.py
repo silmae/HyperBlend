@@ -23,6 +23,7 @@ from src.data import (
     toml_handling as TH,
 )
 from src.utils import data_utils as DU
+from src.playground import create_dataset as CD
 
 
 slab_sim_names = ["Manitoba Maple", "American Elm", "Crab apple"]
@@ -179,6 +180,131 @@ scenes_and_signals = [
     OWP1,  # grape orchard with wet peat
     OWP2,  # cherry orchard with wet peat
 ]
+
+
+def calculate_abundances():
+    """Calculates abundances for each resolution level.
+
+    Can be called once the dataset has been generated.
+    """
+
+    scene_number = 1
+    for ss in scenes_and_signals:
+        theme_wp = ss["theme"]  # soil: wet peat
+        theme_ds = theme_wp.replace("WP", "DS")  # soil: dry sand
+        for theme in [theme_wp, theme_ds]:
+
+            # Get visibility maps from the full resolution simulation
+            sys_sim_name_full_res = f"{theme}_1024"
+            path_visibility = PH.directory_system_rend_visibility_maps(
+                system_sim_name=sys_sim_name_full_res
+            )
+
+            # Debug print
+            print(sys_sim_name_full_res)
+            # print(path_visibility)
+
+            if not os.path.exists(path_visibility):
+                raise FileNotFoundError(
+                    f"Visibility map directory {path_visibility} does not exist."
+                )
+            vismap_list = PH.list_visibility_maps(system_sim_name=sys_sim_name_full_res)
+            # Exclude possible other files and rgb previews
+            vismap_list = [
+                file_name
+                for file_name in vismap_list
+                if (file_name.endswith(".tif") and not "rgb_preview" in file_name)
+            ]
+            # print(vsm_list)
+
+            # Load leaf material name mapping to rename abundance maps
+            leaf_mat_name_map = TH.read_toml_as_dict(
+                directory=PH.directory_system_simulation(sys_sim_name_full_res),
+                filename="leaf_material_map.toml",
+            )
+            list_slab_name = leaf_mat_name_map["slab_material_names"]
+            list_lotus_code = leaf_mat_name_map["lotus_codes"]
+
+            for res in [1024, 256, 64, 16, 4]:
+                sys_sim_name_for_abund = f"{theme}_{res}"
+                print(
+                    f"Scene {scene_number}: Calculating abundances for {sys_sim_name_for_abund}..."
+                )
+
+                factor = 1
+                if res == 256:
+                    factor = 4
+                elif res == 64:
+                    factor = 16
+                elif res == 16:
+                    factor = 64
+                elif res == 4:
+                    factor = 256
+
+                abundance_map_array = CD.ground_truth_abundances(
+                    factor=factor,
+                    visibility_maps_dir=path_visibility,
+                    visibility_names=vismap_list,
+                )
+
+                # Create directory for abundance maps if it does not exist
+                path_dir_abundances = PH.join(
+                    PH.directory_system_simulation(sys_sim_name_for_abund),
+                    "Abundance maps",
+                )
+                if not os.path.exists(path_dir_abundances):
+                    os.makedirs(path_dir_abundances)
+
+                # Save the full abundance map array as a single numpy file
+                abundance_map_save_path = PH.join(
+                    path_dir_abundances, f"abundances.npy"
+                )
+                np.save(abundance_map_save_path, abundance_map_array)
+
+                map_name_indices = {
+                    "note": "Mapping of abundance map indices to human readable names. "
+                    "When you load the abundance map numpy array, you can find "
+                    "a specific map by its index in this file and use the associated name."
+                }
+
+                # Rename material names to more human readable names and save visualizations
+                for i, vismap in enumerate(vismap_list):
+                    if "Diffuse material" in vismap:
+                        new_name = "Trunk"
+                    elif "Ground material" in vismap:
+                        new_name = "Soil"
+                    elif "Reference" in vismap:
+                        new_name = vismap.split(" material")[0]
+                    elif "Slab material" in vismap:
+                        slab_mat_name = vismap.split("_0001")[0]
+                        leaf_mat_map_idx = list_slab_name.index(slab_mat_name)
+                        new_name = list_lotus_code[leaf_mat_map_idx]
+                    else:
+                        new_name = "ERROR in renaming abundance map"
+
+                    map_name_indices[str(i)] = new_name
+
+                    abundance_map = abundance_map_array[:, :, i]
+                    print(
+                        f"i:{i} = vismap:'{vismap}' renamed to '{new_name}', and ab_map shape is {abundance_map.shape}"
+                    )
+
+                    plt.imshow(abundance_map, cmap="viridis")
+                    plt.title(f"Abundance {new_name}")
+                    # plt.show()
+                    image_name = f"Abundance {new_name}.png"
+                    path = PH.join(path_dir_abundances, image_name)
+                    logging.info(f"Saving abundance map visualization to '{path}'.")
+                    plt.savefig(path, dpi=300)
+                    plt.close()
+
+                TH.write_dict_as_toml(
+                    dictionary=map_name_indices,
+                    directory=path_dir_abundances,
+                    filename="map_name_indices.toml",
+                )
+
+                scene_number += 1
 
 
 def run(runtime: RuntimeEnvironment):
