@@ -20,7 +20,9 @@ if __name__ == "__main__":
     # BC.generate_forest_control(runtime=runtime, global_master=True)
 
     # rng = np.random.default_rng(123324)
-    dataset_paper.run(runtime=runtime)
+    # dataset_paper.run(runtime=runtime)
+
+    dataset_paper.calculate_abundances()
 
     # This can be used to run the iterative training
     # SMI.iterative_train(
