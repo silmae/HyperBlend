@@ -41,7 +41,7 @@ workdir
 # ]
 
 
-def ground_truth_endmembers(spectral_cube, maximum, remove_area):
+def ground_truth_endmembers(spectral_cube, maximum, remove_area, visibility_maps_dir: str, visibility_names):
     """
     Calculate ground truth endmembers from visibility maps.
 
@@ -52,7 +52,11 @@ def ground_truth_endmembers(spectral_cube, maximum, remove_area):
         maximum
             Max value of the spectral cube. Used to scale all values to [0,1]
         remove_area
-            spectral bands to be skipped/removed.
+            List of indices: spectral bands to be skipped/removed.
+        visibility_maps_dir:
+            Path where visibility maps are located.
+        visibility_names:
+            List of visibility map file names without extensions.
     Returns:
         np.ndarray
             L x p -shaped numpy array with ground truth endmembers,
@@ -61,19 +65,23 @@ def ground_truth_endmembers(spectral_cube, maximum, remove_area):
     """
 
     # Create binary masks from visibility maps.
-    binary_mask_arr = []
+    visibility_mask_list = []
     for visibility_name in visibility_names:
-        im = Image.open(f"{visibility_maps_dir}/{visibility_name}.tif")
+        if not visibility_name.endswith(".tif"):
+            visibility_name = f"{visibility_name}.tif"
+        im = Image.open(f"{visibility_maps_dir}/{visibility_name}")
         imarray = np.array(im)
         binary_arr = (imarray > 0).astype(bool)
-        binary_mask_arr.append(binary_arr)
+        visibility_mask_list.append(binary_arr)
 
     # Calculate averages for every band for all endmembers.
     ground_truth_list = []
     num_bands = spectral_cube.shape[2]
 
-    # Skip bands that are included in remove_area
+    # Loop bands
     for band_index in range(num_bands):
+
+        # Skip bands that are included in remove_area
         if band_index in remove_area:
             continue
 
@@ -82,10 +90,10 @@ def ground_truth_endmembers(spectral_cube, maximum, remove_area):
         # Compute averages for each visibility mask
         # Medians work better in some cases
         band_truths = []
-        for binary_mask in binary_mask_arr:
-            avg = float(np.mean(band_image[binary_mask])) / maximum
+        for visibility_mask in visibility_mask_list:
+            avg = float(np.mean(band_image[visibility_mask])) / maximum
             band_truths.append(avg)
-            # median = float(np.median(band_image[binary_mask])) / maximum
+            # median = float(np.median(band_image[visibility_mask])) / maximum
             # band_truths.append(median)
 
         ground_truth_list.append(band_truths)

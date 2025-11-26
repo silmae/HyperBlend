@@ -6,16 +6,17 @@ This module is used to generate leaves for the dataset paper
 
 import logging
 import os.path
-import pandas as pd
+# import pandas as pd
+import spectral
 
 import numpy as np
 import shutil
 from matplotlib import pyplot as plt
 
-from setup.runtime_environment import RuntimeEnvironment
+from src.setup.runtime_environment import RuntimeEnvironment
 from src.slab_model import interface as SI
 from src.system_simulation import forest, lighting
-from rendering import blender_control as BC
+from src.rendering import blender_control as BC
 from src.data import (
     cube_handling as CH,
     path_handling as PH,
@@ -182,6 +183,134 @@ scenes_and_signals = [
 ]
 
 
+def run(runtime: RuntimeEnvironment):
+    """Just a little run function to be called from main to keep the main neat."""
+
+    # logging.info("Dataset run started.")
+
+    # Solve LOTUS leaves material parameters to be used in canopy sim.
+    # lotus_to_hb(runtime)
+
+    # Generate one ancestor scene that is used to spawn the rest
+    # generate_ancestor(runtime)
+
+    # Generate and run all forest simulations. The ancestor has to exist.
+    # run_forest_simulations(runtime)
+
+    # rng = np.random.default_rng(1243567)
+    # generate_forest_master(runtime=runtime, rng=rng)
+
+    sys_sim_name = 'FWP1_1024'
+    # gn_endmembers(sys_sim_name)
+    plot_endmembers(sys_sim_name='FWP1_1024', save_thumbnail=True, dont_show=True)
+
+
+def gn_endmembers(sys_sim_name):
+
+    path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='data')
+    path_to_hdr = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='header')
+
+    # Open cube. This is needed for ground_truth_endmembers function
+    cube = spectral.envi.open(path_to_hdr, path_to_img)
+
+    # Load cube to memory
+    Y_cube = cube.load()
+
+    # Remove bands related to water absorption.
+    # I manually checked what band images looked bad, a professional should also check these.
+    remove = np.concatenate((np.arange(192, 202), np.arange(284, 307)))
+    Y_cube = np.delete(Y_cube, remove, axis=2)
+
+    # Divide by max val to get values from 0 to 1
+    max_val = np.max(Y_cube)
+    Y_cube = Y_cube / max_val
+
+    path_visibility, vismap_list = get_vismaps(sys_sim_name)
+
+    # Get ground truths and abundances
+    E = CD.ground_truth_endmembers(cube, max_val, remove, visibility_maps_dir=path_visibility, visibility_names=vismap_list)
+
+    # Create endbember directory if it does not exist
+    path_dir = path_dir_endmembers(sys_sim_name=sys_sim_name)
+    if not os.path.exists(path_dir):
+        os.makedirs(path_dir)
+
+    # Save endmember array to disk
+    np.save(path_file_endmembers(sys_sim_name), E)
+
+    # Create and save a dict to be saved in toml file for endmember-index mapping
+    endmember_names = {}
+    for i, vismap in enumerate(vismap_list):
+        endmember_names[f"{i}"] = vismap
+
+    TH.write_dict_as_toml(dictionary=endmember_names, directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml")
+
+
+def plot_endmembers(sys_sim_name, save_thumbnail=False, dont_show=False):
+    E = load_endmembers(sys_sim_name)
+    endmember_names = TH.read_toml_as_dict(directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml")
+    leaf_material_map = TH.read_toml_as_dict(PH.directory_system_simulation(sys_sim_name), filename="leaf_material_map.toml")
+    slab_material_names = leaf_material_map["slab_material_names"]
+    lotus_codes = leaf_material_map["lotus_codes"]
+
+    # Decide the line style based on the material name
+    for index, name in endmember_names.items():
+        print(f"{index}: {name}")
+        endmember = E[:,int(index)]
+        plot_label = name
+        if "Reference" in name:
+            line_style = "dashed"
+            splitted = name.split(' ')
+            plot_label = splitted[0] + " " + splitted[1]
+        elif "Diffuse" in name:
+            line_style = "dotted"
+            plot_label = "Trunk"
+        elif "Ground" in name:
+            line_style = "dashdot"
+            plot_label = "Soil"
+        else:
+            for x, slab_material_name in enumerate(slab_material_names):
+                if slab_material_name in name:
+                    plot_label = lotus_codes[x]
+            line_style = "solid"
+
+        plt.rcParams["figure.figsize"] = (15, 9)
+        plt.plot(endmember, label=plot_label, ls=line_style)
+        plt.legend()
+
+    if save_thumbnail:
+        save_resolution = 100
+        p = path_dir_endmembers(sys_sim_name)
+        image_name = f"endmembers.png"
+        save_path = PH.join(p, image_name)
+        logging.info(f"Saving endmember plot to '{save_path}'.")
+        plt.savefig(save_path, dpi=save_resolution)
+
+    if not dont_show:
+        plt.show()
+
+
+def load_endmembers(sys_sim_name):
+    """Load endmembers as a numpy array."""
+    p = path_file_endmembers(sys_sim_name)
+    if not os.path.exists(p):
+        raise RuntimeError(f"Endmember file '{p}' does not exist.")
+    E = np.load(p)
+    return E
+
+
+def path_dir_endmembers(sys_sim_name):
+    """Returns directory where the endmembers are saved. """
+    path_dir_endmembers = PH.join(PH.directory_system_simulation(system_sim_name=sys_sim_name), 'Endmembers')
+    return path_dir_endmembers
+
+
+def path_file_endmembers(sys_sim_name):
+    path_dir = path_dir_endmembers(sys_sim_name)
+    path_file = PH.join(path_dir, "endmembers.npy")
+    return path_file
+
+
 def separate_spectral_renders(delete_originals=False, do_copy=True):
     """Rendered spectral bands that are used as a base to construct the spectral
     cubes are separated to a directory for smaller download size. They are
@@ -248,25 +377,7 @@ def calculate_abundances():
 
             # Get visibility maps from the full resolution simulation
             sys_sim_name_full_res = f"{theme}_1024"
-            path_visibility = PH.directory_system_rend_visibility_maps(
-                system_sim_name=sys_sim_name_full_res
-            )
-
-            # Debug print
-            print(sys_sim_name_full_res)
-            # print(path_visibility)
-
-            if not os.path.exists(path_visibility):
-                raise FileNotFoundError(
-                    f"Visibility map directory {path_visibility} does not exist."
-                )
-            vismap_list = PH.list_visibility_maps(system_sim_name=sys_sim_name_full_res)
-            # Exclude possible other files and rgb previews
-            vismap_list = [
-                file_name
-                for file_name in vismap_list
-                if (file_name.endswith(".tif") and not "rgb_preview" in file_name)
-            ]
+            path_visibility, vismap_list = get_vismaps(sys_sim_name_full_res)
             # print(vsm_list)
 
             # Load leaf material name mapping to rename abundance maps
@@ -359,26 +470,82 @@ def calculate_abundances():
                 scene_number += 1
 
 
-def run(runtime: RuntimeEnvironment):
-    """Just a little run function to be called from main to keep it neat."""
+def get_vismaps(sys_sim_name):
+    """Returns visibility maps for given simulation.
 
-    # logging.info("Dataset run started.")
+    :returns: tuple (path, list), where path is a path to the visibility
+        maps directory, and the list is a list of strings that contain the
+        file names of the visibility maps in that directory.
+    """
 
-    # generate_leaves()
-    # solve_leaves(runtime=runtime, sims_to_solve_list=slab_sim_names)
-    #
-    # generate_random_prospect_leaves(slab_sim_name=slab_sim_name_pr, leaf_count=5)
-    # solve_leaves(runtime=runtime, sims_to_solve_list=[slab_sim_name_pr])
+    path_visibility = PH.directory_system_rend_visibility_maps(
+        system_sim_name=sys_sim_name
+    )
 
-    # rng = np.random.default_rng(1243567)
-    # generate_forest_master(runtime=runtime, rng=rng)
-    # lotus_to_hb(runtime)
+    # Debug print
+    print(sys_sim_name)
+    # print(path_visibility)
 
-    # Generate one ancestor scene that is used to spawn the rest
-    # generate_ancestor(runtime)
+    if not os.path.exists(path_visibility):
+        raise FileNotFoundError(
+            f"Visibility map directory {path_visibility} does not exist."
+        )
+    vismap_list = PH.list_visibility_maps(system_sim_name=sys_sim_name)
+    # Exclude possible other files and rgb previews
+    vismap_list = [
+        file_name
+        for file_name in vismap_list
+        if (file_name.endswith(".tif") and not "rgb_preview" in file_name)
+    ]
+    return path_visibility, vismap_list
 
-    # Simulate lighting at Grenoble centrum coordinates at the last day of June at 13:00 local time
-    # lighting.load_light(file_name="grenoble.txt")
+
+def generate_ancestor(runtime: RuntimeEnvironment):
+    # Only for setting the ancestor scene once
+    sun_name = "grenoble_sun"
+    sky_name = "grenoble_sky"
+    soil_name = "wet_peat_reflectance"
+
+    # This is the master master that is used to spawn the highest resolution forests
+    forest.init(
+        # leaves=leaves,
+        conf_type="m2m",
+        custom_forest_id=ancestor_scene,
+        soil_name=soil_name,
+        sun_file_name=sun_name,
+        sky_file_name=sky_name,
+    )
+
+    BC.generate_forest_control(
+        runtime=runtime, system_sim_name=ancestor_scene, global_master=False
+    )
+
+    BC.setup_system_sim_scene(
+        runtime=runtime, system_sim_name=ancestor_scene, leaf_name_list=[]
+    )
+
+
+def run_late_resampling(runtime: RuntimeEnvironment):
+    # In case you forgot to resample them earlier, they have to be solved again.
+    # Just leaving this snippet for future reference.
+    for lotus_sample_dict in lotus_sample_dicts:
+        slab_sim_name = lotus_sample_dict['slab_sim_name']
+        SI.resample_slab_sim_target(
+            slab_sim_name=slab_sim_name, range_start=400, range_end=2500, resolution=5
+        )  # resample leaf spectra
+
+        SI.solve_leaf_material_parameters(
+            runtime=runtime,
+            slab_sim_name=slab_sim_name,
+            clear_old_results=True,
+            range_start=400,
+            range_end=2500,
+            resolution=5,
+            solver_dirname="Iterative slab",
+        )  # run slab simulation
+
+
+def run_forest_simulations(runtime: RuntimeEnvironment):
 
     # For wet peat soil. Run this loop first and when the scenes are ok,
     # run the next one for dry sand
@@ -404,48 +571,6 @@ def run(runtime: RuntimeEnvironment):
             run_simulations=True,
             generate_resolutions=True,
         )
-
-    # In case you forgot to resample them earlier, they have to be solved again.
-    # Just leaving this snippet for future reference.
-    # for slab_sim_name in lotus_species_names:
-    #     SI.resample_slab_sim_target(
-    #         slab_sim_name=slab_sim_name, range_start=400, range_end=2500, resolution=5
-    #     )  # resample leaf spectra
-    #
-    #     SI.solve_leaf_material_parameters(
-    #         runtime=runtime,
-    #         slab_sim_name=slab_sim_name,
-    #         clear_old_results=True,
-    #         range_start=400,
-    #         range_end=2500,
-    #         resolution=5,
-    #         solver_dirname="Iterative slab",
-    #     )  # run slab simulation
-
-
-# Only for setting the ancestor scene once
-# def generate_ancestor(runtime: RuntimeEnvironment):
-#     sun_name = "grenoble_sun"
-#     sky_name = "grenoble_sky"
-#     soil_name = "wet_peat_reflectance"
-
-# This is the master master that is used to spawn the highest resolution forests
-# forest.init(
-#     # leaves=leaves,
-#     conf_type="m2m",
-#     custom_forest_id=ancestor_scene,
-#     soil_name=soil_name,
-#     sun_file_name=sun_name,
-#     sky_file_name=sky_name,
-# )
-#
-# BC.generate_forest_control(
-#     runtime=runtime, system_sim_name=ancestor_scene, global_master=False
-# )
-
-# BC.setup_system_sim_scene(
-#     runtime=runtime, system_sim_name=ancestor_scene, leaf_name_list=[]
-# )
 
 
 def generate_forest_variants(
