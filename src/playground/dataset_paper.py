@@ -8,6 +8,8 @@ import logging
 import os.path
 # import pandas as pd
 import spectral
+from scipy.io import savemat
+import yaml
 
 import numpy as np
 import shutil
@@ -200,12 +202,122 @@ def run(runtime: RuntimeEnvironment):
     # rng = np.random.default_rng(1243567)
     # generate_forest_master(runtime=runtime, rng=rng)
 
-    sys_sim_name = 'FDS1_1024'
-    gn_endmembers(sys_sim_name)
-    plot_endmembers(sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=False)
+    # sys_sim_name = 'FDS1_1024'
+    # gn_endmembers(sys_sim_name)
+    # plot_endmembers(sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=False)
+
+    hysuppify_all()
+
+
+def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
+
+    if recalculate_abundances:
+        calculate_abundances()
+
+    for ss in scenes_and_signals:
+        theme_wp = ss["theme"]  # soil: wet peat
+        theme_ds = theme_wp.replace("WP", "DS")  # soil: dry sand
+
+        for theme in [theme_wp, theme_ds]:
+
+            sys_sim_name_full_res = f"{theme}_1024"
+            dir_sys_sim_full_res = PH.directory_system_simulation(sys_sim_name_full_res)
+
+            if not os.path.exists(dir_sys_sim_full_res):
+                logging.warning(f"Full resolution system simulation {dir_sys_sim_full_res} does not exist. Skipping low resolution versions too.")
+                continue
+
+            if recalculate_endmembers:
+                gn_endmembers(sys_sim_name_full_res)
+                plot_endmembers(sys_sim_name=sys_sim_name_full_res, save_thumbnail=True, dont_show=True)
+
+            for res in [1024, 256, 64, 16, 4]:
+                sys_sim_name = f"{theme}_{res}"
+                dir_sys_sim = PH.directory_system_simulation(sys_sim_name)
+                if not os.path.exists(dir_sys_sim):
+                    logging.warning(f"System simulation {sys_sim_name} does not exist. Skipping this resolution.")
+                    continue
+
+                E = load_endmembers(sys_sim_name_full_res)
+                A = load_abundances(sys_sim_name)
+                hysuppify(sys_sim_name, E, A)
+
+
+def hysuppify(sys_sim_name, E, A):
+
+    # Transform the data to right dimensions
+    # Checked the right dimensions from DC1.mat data.
+    # TODO rewrite abundance calculation based on endmember count. This may vary. Only matters for supervised unmixing methods.
+    #   Actually, they can just be collected here, so no need to recalculate them. Similar to how the LOTUS codes are fetched.
+    H, W, p = A.shape
+    A = A.reshape(H * W, p).T
+
+    path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='data')
+    path_to_hdr = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='header')
+
+    # Open cube. This is needed for ground_truth_endmembers function
+    cube = spectral.envi.open(path_to_hdr, path_to_img)
+
+    # Load cube to memory
+    Y_cube = cube.load()
+
+    H, W, L = Y_cube.shape
+    N = H * W
+    Y = Y_cube.reshape(H * W, L).T
+    print("Y shape:", Y.shape, ", E shape:", E.shape, ", A shape:", A.shape)
+
+    dataset = {
+        "Y": Y,
+        "H": H,
+        "W": W,
+        "L": L,
+        "N": N,
+        "E": E,  # Ground truth endmembers
+        "A": A,  # Ground truth abundances
+        "p": p,  # Number of endmembers
+    }
+
+    data_class_name = "src.data.base.RealHSI"
+    dataset_name = sys_sim_name
+
+    path_dir_hysuppified = PH.join(PH.directory_project_root(), "Hysuppified")
+    path_dir_hysupp_data = PH.join(path_dir_hysuppified, "data")
+    path_dir_hysupp_config = PH.join(path_dir_hysuppified, "config","data")
+    if not os.path.exists(path_dir_hysuppified):
+        os.makedirs(path_dir_hysuppified)
+    if not os.path.exists(path_dir_hysupp_data):
+        os.makedirs(path_dir_hysupp_data)
+    if not os.path.exists(path_dir_hysupp_config):
+        os.makedirs(path_dir_hysupp_config)
+
+    # Create and save mat and yaml files to right subdirectories.
+    # save_path_mat = "./HySUPP/data/" + dataset_name + ".mat"
+    save_path_mat = PH.join(path_dir_hysupp_data, f"{dataset_name}.mat")
+    savemat(save_path_mat, dataset)
+    print(f"Saved mat to {save_path_mat}")
+
+    # save_path_yaml = "./HySUPP/config/data/" + dataset_name + ".yaml"
+    save_path_yaml = PH.join(path_dir_hysupp_config, f"{dataset_name}.yaml")
+    dataset_yaml = {
+        "name": data_class_name,
+        "dataset": dataset_name,
+        "p": p,
+        "data_dir": "${DATA_dir}",
+        "figs_dir": "${FIGS_dir}",
+    }
+
+    with open(f"{save_path_yaml}", "w") as file:
+        yaml.dump(dataset_yaml, file, sort_keys=False)
+
+    print(f"Saved yaml to {save_path_yaml}")
 
 
 def gn_endmembers(sys_sim_name):
+    """Estimate ground truth endmembers from simulated cubes.
+
+    This should be run only for the full resolution cubes and to use those same
+    endmembers for low res cubes.
+    """
 
     path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='data')
     path_to_hdr = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='header')
@@ -229,9 +341,6 @@ def gn_endmembers(sys_sim_name):
     endmember_count = material_means_array.shape[1] - 5
     endmember_array = np.zeros(shape=(material_means_array.shape[0], endmember_count))
 
-    # figsize= (33, 14)
-    # fig, ax = plt.subplots(nrows=2, ncols=3, figsize=figsize)
-
     # Create and save a dict to be saved in toml file for endmember-index mapping
     endmember_names = {}
 
@@ -240,19 +349,11 @@ def gn_endmembers(sys_sim_name):
         material_name = visibility_names[i]
         if "Reference" in material_name:
             # plot_ax = ax[1,0]
-            # plot_ax.set_title("Reference means")
             pass
         else:
-            # plot_ax = ax[0,0]
-            # plot_ax.set_title("Material means")
             endmember_array[:,endmember_idx] = material_means_array[:,i]
             endmember_names[f"{endmember_idx}"] = visibility_names[i]
             endmember_idx += 1
-
-        # plot_ax.plot(material_means_array[i,:], label=material_name)
-        # plot_ax.legend()
-
-    # plt.show()
 
     # Create endbember directory if it does not exist
     path_dir = path_dir_endmembers(sys_sim_name=sys_sim_name)
@@ -261,9 +362,6 @@ def gn_endmembers(sys_sim_name):
 
     # Save endmember array to disk
     np.save(path_file_endmembers(sys_sim_name), endmember_array)
-
-    # for i, vismap in enumerate(visibility_names):
-    #     endmember_names[f"{i}"] = vismap
 
     TH.write_dict_as_toml(dictionary=endmember_names, directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml")
 
@@ -321,15 +419,35 @@ def load_endmembers(sys_sim_name):
     return E
 
 
+def load_abundances(sys_sim_name):
+    p = path_file_abundances(sys_sim_name)
+    if not os.path.exists(p):
+        raise RuntimeError(f"Abundances file '{p}' does not exist.")
+    A = np.load(p)
+    return A
+
+
 def path_dir_endmembers(sys_sim_name):
     """Returns directory where the endmembers are saved. """
     path_dir_endmembers = PH.join(PH.directory_system_simulation(system_sim_name=sys_sim_name), 'Endmembers')
     return path_dir_endmembers
 
 
+def path_dir_abundances(sys_sim_name):
+    """Returns directory where the endmembers are saved. """
+    path_dir_endmembers = PH.join(PH.directory_system_simulation(system_sim_name=sys_sim_name), 'Abundance maps')
+    return path_dir_endmembers
+
+
 def path_file_endmembers(sys_sim_name):
     path_dir = path_dir_endmembers(sys_sim_name)
     path_file = PH.join(path_dir, "endmembers.npy")
+    return path_file
+
+
+def path_file_abundances(sys_sim_name):
+    path_dir = path_dir_abundances(sys_sim_name)
+    path_file = PH.join(path_dir, "abundances.npy")
     return path_file
 
 
