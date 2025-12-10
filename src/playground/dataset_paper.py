@@ -200,9 +200,9 @@ def run(runtime: RuntimeEnvironment):
     # rng = np.random.default_rng(1243567)
     # generate_forest_master(runtime=runtime, rng=rng)
 
-    sys_sim_name = 'FWP1_1024'
-    # gn_endmembers(sys_sim_name)
-    plot_endmembers(sys_sim_name='FWP1_1024', save_thumbnail=True, dont_show=True)
+    sys_sim_name = 'FDS1_1024'
+    gn_endmembers(sys_sim_name)
+    plot_endmembers(sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=False)
 
 
 def gn_endmembers(sys_sim_name):
@@ -216,19 +216,43 @@ def gn_endmembers(sys_sim_name):
     # Load cube to memory
     Y_cube = cube.load()
 
-    # Remove bands related to water absorption.
-    # I manually checked what band images looked bad, a professional should also check these.
+    # Remove noisy bands
     remove = np.concatenate((np.arange(192, 202), np.arange(284, 307)))
     Y_cube = np.delete(Y_cube, remove, axis=2)
 
-    # Divide by max val to get values from 0 to 1
-    max_val = np.max(Y_cube)
-    Y_cube = Y_cube / max_val
-
-    path_visibility, vismap_list = get_vismaps(sys_sim_name)
+    path_visibility, visibility_names = get_vismaps(sys_sim_name)
 
     # Get ground truths and abundances
-    E = CD.ground_truth_endmembers(cube, max_val, remove, visibility_maps_dir=path_visibility, visibility_names=vismap_list)
+    material_means_array = CD.ground_truth_endmembers(Y_cube, visibility_maps_dir=path_visibility, visibility_names=visibility_names)
+
+    # The real interesting endmembers should not contain the five reference materials
+    endmember_count = material_means_array.shape[1] - 5
+    endmember_array = np.zeros(shape=(material_means_array.shape[0], endmember_count))
+
+    # figsize= (33, 14)
+    # fig, ax = plt.subplots(nrows=2, ncols=3, figsize=figsize)
+
+    # Create and save a dict to be saved in toml file for endmember-index mapping
+    endmember_names = {}
+
+    endmember_idx = 0
+    for i in range(material_means_array.shape[1]):
+        material_name = visibility_names[i]
+        if "Reference" in material_name:
+            # plot_ax = ax[1,0]
+            # plot_ax.set_title("Reference means")
+            pass
+        else:
+            # plot_ax = ax[0,0]
+            # plot_ax.set_title("Material means")
+            endmember_array[:,endmember_idx] = material_means_array[:,i]
+            endmember_names[f"{endmember_idx}"] = visibility_names[i]
+            endmember_idx += 1
+
+        # plot_ax.plot(material_means_array[i,:], label=material_name)
+        # plot_ax.legend()
+
+    # plt.show()
 
     # Create endbember directory if it does not exist
     path_dir = path_dir_endmembers(sys_sim_name=sys_sim_name)
@@ -236,12 +260,10 @@ def gn_endmembers(sys_sim_name):
         os.makedirs(path_dir)
 
     # Save endmember array to disk
-    np.save(path_file_endmembers(sys_sim_name), E)
+    np.save(path_file_endmembers(sys_sim_name), endmember_array)
 
-    # Create and save a dict to be saved in toml file for endmember-index mapping
-    endmember_names = {}
-    for i, vismap in enumerate(vismap_list):
-        endmember_names[f"{i}"] = vismap
+    # for i, vismap in enumerate(visibility_names):
+    #     endmember_names[f"{i}"] = vismap
 
     TH.write_dict_as_toml(dictionary=endmember_names, directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml")
 

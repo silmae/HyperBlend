@@ -6,6 +6,7 @@ import os
 # from scipy.io import savemat
 # from scipy.io import loadmat
 from PIL import Image
+from matplotlib import pyplot as plt
 
 """
 This script is created by Lassi Raivonen and edited by Kimmo Riihiaho.
@@ -41,7 +42,7 @@ workdir
 # ]
 
 
-def ground_truth_endmembers(spectral_cube, maximum, remove_area, visibility_maps_dir: str, visibility_names):
+def ground_truth_endmembers(spectral_cube, visibility_maps_dir: str, visibility_names):
     """
     Calculate ground truth endmembers from visibility maps.
 
@@ -49,10 +50,6 @@ def ground_truth_endmembers(spectral_cube, maximum, remove_area, visibility_maps
         spectral_cube
             spectral cube read with "cube = envi.open(path_to_hdr, path_to_img)".
             Cube that is loaded to memory does not work
-        maximum
-            Max value of the spectral cube. Used to scale all values to [0,1]
-        remove_area
-            List of indices: spectral bands to be skipped/removed.
         visibility_maps_dir:
             Path where visibility maps are located.
         visibility_names:
@@ -66,40 +63,34 @@ def ground_truth_endmembers(spectral_cube, maximum, remove_area, visibility_maps
 
     # Create binary masks from visibility maps.
     visibility_mask_list = []
-    for visibility_name in visibility_names:
+    for i,visibility_name in enumerate(visibility_names):
         if not visibility_name.endswith(".tif"):
             visibility_name = f"{visibility_name}.tif"
         im = Image.open(f"{visibility_maps_dir}/{visibility_name}")
         imarray = np.array(im)
         binary_arr = (imarray > 0).astype(bool)
-        visibility_mask_list.append(binary_arr)
 
-    # Calculate averages for every band for all endmembers.
-    ground_truth_list = []
-    num_bands = spectral_cube.shape[2]
-
-    # Loop bands
-    for band_index in range(num_bands):
-
-        # Skip bands that are included in remove_area
-        if band_index in remove_area:
+        # Skip if all visibility map values are zero. This can happen if no
+        #    objects of certain type were spawned on the scene.
+        if np.all(binary_arr == False):
+            print(f"Empty visibility map encountered in '{visibility_names[i]}'.")
             continue
 
-        band_image = spectral_cube.read_band(band_index)
+        visibility_mask_list.append(binary_arr)
 
-        # Compute averages for each visibility mask
-        # Medians work better in some cases
-        band_truths = []
-        for visibility_mask in visibility_mask_list:
-            avg = float(np.mean(band_image[visibility_mask])) / maximum
-            band_truths.append(avg)
-            # median = float(np.median(band_image[visibility_mask])) / maximum
-            # band_truths.append(median)
+    material_means_array = np.zeros(shape=(len(visibility_mask_list), spectral_cube.shape[2]))
+    # material_stds = []
+    for i,vismask in enumerate(visibility_mask_list):
+        # Select pixels by material. This is now a flat array.
+        material_pixels = spectral_cube[vismask,:]
+        material_means_array[i,:] = np.mean(material_pixels, axis=0, dtype=np.float64)
+        # material_std = np.std(material_pixels, axis=0, dtype=np.float64)
+        # material_means.append(material_mean)
+        # material_stds.append(material_std)
 
-        ground_truth_list.append(band_truths)
+    material_means_array = material_means_array / material_means_array.max()
 
-    ground_truth_arr = np.array(ground_truth_list)
-    return ground_truth_arr
+    return np.swapaxes(material_means_array, 0, 1)
 
 
 def ground_truth_abundances(factor, visibility_maps_dir: str, visibility_names):
