@@ -29,6 +29,9 @@ Reflectance\ spectra/*
 !Reflectance\ spectra/wet_sand_reflectance.csv
 !Reflectance\ spectra/default_soils.png
 
+# Ignore HySUPP versions of the data
+Hysuppified/
+
 # Ignore documentation
 Documentation/build
 
