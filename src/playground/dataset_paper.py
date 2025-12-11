@@ -207,10 +207,32 @@ def run(runtime: RuntimeEnvironment):
     # gn_endmembers(sys_sim_name)
     # plot_endmembers(sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=False)
 
-    hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False)
+    # hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False)
+    recalculate_cubes()
+
+
+def recalculate_cubes():
+
+    for ss in scenes_and_signals:
+        theme_wp = ss["theme"]  # soil: wet peat
+        theme_ds = theme_wp.replace("WP", "DS")  # soil: dry sand
+
+        for theme in [theme_wp, theme_ds]:
+
+            sys_sim_name_full_res = f"{theme}_1024"
+            CH.construct_envi_cube(system_sim_name=sys_sim_name_full_res)
+
+            for res in [256, 64, 16, 4]:
+                sys_sim_name = f"{theme}_{res}"
+                CH.construct_envi_cube(
+                    system_sim_name=sys_sim_name,
+                    system_sim_name_for_white_signal=sys_sim_name_full_res,
+                )
 
 
 def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
+
+    # recalc_cubes = True
 
     if recalculate_abundances:
         calculate_abundances()
@@ -230,6 +252,9 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
                 )
                 continue
 
+            # if recalc_cubes:
+            #     CH.construct_envi_cube(system_sim_name=sys_sim_name_full_res)
+
             if recalculate_endmembers:
                 gn_endmembers(sys_sim_name_full_res)
                 plot_endmembers(
@@ -241,13 +266,28 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
             for res in [1024, 256, 64, 16, 4]:
                 sys_sim_name = f"{theme}_{res}"
                 dir_sys_sim = PH.directory_system_simulation(sys_sim_name)
+
                 if not os.path.exists(dir_sys_sim):
                     logging.warning(
                         f"System simulation {sys_sim_name} does not exist. Skipping this resolution."
                     )
                     continue
 
-                E = load_endmembers(sys_sim_name_full_res)
+                # if recalc_cubes:
+                #     CH.construct_envi_cube(
+                #         system_sim_name=sys_sim_name,
+                #         system_sim_name_for_white_signal=sys_sim_name_full_res,
+                #     )
+
+                if recalculate_endmembers:
+                    gn_endmembers(sys_sim_name)
+                    plot_endmembers(
+                        sys_sim_name=sys_sim_name,
+                        save_thumbnail=True,
+                        dont_show=True,
+                    )
+
+                E = load_endmembers(sys_sim_name_full_res)  # Always load from full res
                 A = load_abundances(sys_sim_name)
                 hysuppify(sys_sim_name, E, A)
 
