@@ -6,6 +6,7 @@ This module is used to generate leaves for the dataset paper
 
 import logging
 import os.path
+
 # import pandas as pd
 import spectral
 from scipy.io import savemat
@@ -206,7 +207,7 @@ def run(runtime: RuntimeEnvironment):
     # gn_endmembers(sys_sim_name)
     # plot_endmembers(sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=False)
 
-    hysuppify_all()
+    hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False)
 
 
 def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
@@ -224,18 +225,26 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
             dir_sys_sim_full_res = PH.directory_system_simulation(sys_sim_name_full_res)
 
             if not os.path.exists(dir_sys_sim_full_res):
-                logging.warning(f"Full resolution system simulation {dir_sys_sim_full_res} does not exist. Skipping low resolution versions too.")
+                logging.warning(
+                    f"Full resolution system simulation {dir_sys_sim_full_res} does not exist. Skipping low resolution versions too."
+                )
                 continue
 
             if recalculate_endmembers:
                 gn_endmembers(sys_sim_name_full_res)
-                plot_endmembers(sys_sim_name=sys_sim_name_full_res, save_thumbnail=True, dont_show=True)
+                plot_endmembers(
+                    sys_sim_name=sys_sim_name_full_res,
+                    save_thumbnail=True,
+                    dont_show=True,
+                )
 
             for res in [1024, 256, 64, 16, 4]:
                 sys_sim_name = f"{theme}_{res}"
                 dir_sys_sim = PH.directory_system_simulation(sys_sim_name)
                 if not os.path.exists(dir_sys_sim):
-                    logging.warning(f"System simulation {sys_sim_name} does not exist. Skipping this resolution.")
+                    logging.warning(
+                        f"System simulation {sys_sim_name} does not exist. Skipping this resolution."
+                    )
                     continue
 
                 E = load_endmembers(sys_sim_name_full_res)
@@ -252,8 +261,10 @@ def hysuppify(sys_sim_name, E, A):
     H, W, p = A.shape
     A = A.reshape(H * W, p).T
 
-    path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='data')
-    path_to_hdr = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='header')
+    path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type="data")
+    path_to_hdr = PH.file_spectral_cube(
+        system_sim_name=sys_sim_name, file_type="header"
+    )
 
     # Open cube. This is needed for ground_truth_endmembers function
     cube = spectral.envi.open(path_to_hdr, path_to_img)
@@ -282,7 +293,7 @@ def hysuppify(sys_sim_name, E, A):
 
     path_dir_hysuppified = PH.join(PH.directory_project_root(), "Hysuppified")
     path_dir_hysupp_data = PH.join(path_dir_hysuppified, "data")
-    path_dir_hysupp_config = PH.join(path_dir_hysuppified, "config","data")
+    path_dir_hysupp_config = PH.join(path_dir_hysuppified, "config", "data")
     if not os.path.exists(path_dir_hysuppified):
         os.makedirs(path_dir_hysuppified)
     if not os.path.exists(path_dir_hysupp_data):
@@ -319,8 +330,10 @@ def gn_endmembers(sys_sim_name):
     endmembers for low res cubes.
     """
 
-    path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='data')
-    path_to_hdr = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type='header')
+    path_to_img = PH.file_spectral_cube(system_sim_name=sys_sim_name, file_type="data")
+    path_to_hdr = PH.file_spectral_cube(
+        system_sim_name=sys_sim_name, file_type="header"
+    )
 
     # Open cube. This is needed for ground_truth_endmembers function
     cube = spectral.envi.open(path_to_hdr, path_to_img)
@@ -335,7 +348,9 @@ def gn_endmembers(sys_sim_name):
     path_visibility, visibility_names = get_vismaps(sys_sim_name)
 
     # Get ground truths and abundances
-    material_means_array = CD.ground_truth_endmembers(Y_cube, visibility_maps_dir=path_visibility, visibility_names=visibility_names)
+    material_means_array = CD.ground_truth_endmembers(
+        Y_cube, visibility_maps_dir=path_visibility, visibility_names=visibility_names
+    )
 
     # The real interesting endmembers should not contain the five reference materials
     endmember_count = material_means_array.shape[1] - 5
@@ -351,7 +366,7 @@ def gn_endmembers(sys_sim_name):
             # plot_ax = ax[1,0]
             pass
         else:
-            endmember_array[:,endmember_idx] = material_means_array[:,i]
+            endmember_array[:, endmember_idx] = material_means_array[:, i]
             endmember_names[f"{endmember_idx}"] = visibility_names[i]
             endmember_idx += 1
 
@@ -363,24 +378,34 @@ def gn_endmembers(sys_sim_name):
     # Save endmember array to disk
     np.save(path_file_endmembers(sys_sim_name), endmember_array)
 
-    TH.write_dict_as_toml(dictionary=endmember_names, directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml")
+    TH.write_dict_as_toml(
+        dictionary=endmember_names,
+        directory=path_dir_endmembers(sys_sim_name),
+        filename="endmember_names.toml",
+    )
 
 
 def plot_endmembers(sys_sim_name, save_thumbnail=False, dont_show=False):
     E = load_endmembers(sys_sim_name)
-    endmember_names = TH.read_toml_as_dict(directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml")
-    leaf_material_map = TH.read_toml_as_dict(PH.directory_system_simulation(sys_sim_name), filename="leaf_material_map.toml")
+    endmember_names = TH.read_toml_as_dict(
+        directory=path_dir_endmembers(sys_sim_name), filename="endmember_names.toml"
+    )
+    leaf_material_map = TH.read_toml_as_dict(
+        PH.directory_system_simulation(sys_sim_name), filename="leaf_material_map.toml"
+    )
     slab_material_names = leaf_material_map["slab_material_names"]
     lotus_codes = leaf_material_map["lotus_codes"]
+
+    plt.close("all")
 
     # Decide the line style based on the material name
     for index, name in endmember_names.items():
         print(f"{index}: {name}")
-        endmember = E[:,int(index)]
+        endmember = E[:, int(index)]
         plot_label = name
         if "Reference" in name:
             line_style = "dashed"
-            splitted = name.split(' ')
+            splitted = name.split(" ")
             plot_label = splitted[0] + " " + splitted[1]
         elif "Diffuse" in name:
             line_style = "dotted"
@@ -428,14 +453,18 @@ def load_abundances(sys_sim_name):
 
 
 def path_dir_endmembers(sys_sim_name):
-    """Returns directory where the endmembers are saved. """
-    path_dir_endmembers = PH.join(PH.directory_system_simulation(system_sim_name=sys_sim_name), 'Endmembers')
+    """Returns directory where the endmembers are saved."""
+    path_dir_endmembers = PH.join(
+        PH.directory_system_simulation(system_sim_name=sys_sim_name), "Endmembers"
+    )
     return path_dir_endmembers
 
 
 def path_dir_abundances(sys_sim_name):
-    """Returns directory where the endmembers are saved. """
-    path_dir_endmembers = PH.join(PH.directory_system_simulation(system_sim_name=sys_sim_name), 'Abundance maps')
+    """Returns directory where the endmembers are saved."""
+    path_dir_endmembers = PH.join(
+        PH.directory_system_simulation(system_sim_name=sys_sim_name), "Abundance maps"
+    )
     return path_dir_endmembers
 
 
@@ -669,7 +698,7 @@ def run_late_resampling(runtime: RuntimeEnvironment):
     # In case you forgot to resample them earlier, they have to be solved again.
     # Just leaving this snippet for future reference.
     for lotus_sample_dict in lotus_sample_dicts:
-        slab_sim_name = lotus_sample_dict['slab_sim_name']
+        slab_sim_name = lotus_sample_dict["slab_sim_name"]
         SI.resample_slab_sim_target(
             slab_sim_name=slab_sim_name, range_start=400, range_end=2500, resolution=5
         )  # resample leaf spectra
