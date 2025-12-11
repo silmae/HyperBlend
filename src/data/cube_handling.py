@@ -188,9 +188,11 @@ def infer_white_ref_from_data(system_sim_name: str):
         white_mean = np.mean(white_cube, axis=(1))
         white_mean_max = white_mean.max()
         if white_mean_max < max_burn:
+            factor = 1.0 / accepted_reference_plate_reflectivity
+            white_mean = white_mean * factor
             logging.info(
                 f"Accepted white reference with {accepted_reference_plate_reflectivity:.2f} reflectivity "
-                f"producing maximum mean reflectance {white_mean_max:.1f}."
+                f"producing maximum mean reflectance {white_mean_max:.1f}. Original white signal scaled by factor {factor:.2f}."
             )
             break
 
