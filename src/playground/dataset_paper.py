@@ -231,8 +231,12 @@ def recalculate_cubes():
 
 
 def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
+    """Reformulates all scenes to format that can be passed directly to HySUPP.
 
-    # recalc_cubes = True
+    :param recalculate_endmembers: 
+    :param recalculate_abundances:
+    :return:
+    """
 
     if recalculate_abundances:
         calculate_abundances()
@@ -252,9 +256,6 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
                 )
                 continue
 
-            # if recalc_cubes:
-            #     CH.construct_envi_cube(system_sim_name=sys_sim_name_full_res)
-
             if recalculate_endmembers:
                 gn_endmembers(sys_sim_name_full_res)
                 plot_endmembers(
@@ -272,12 +273,6 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
                         f"System simulation {sys_sim_name} does not exist. Skipping this resolution."
                     )
                     continue
-
-                # if recalc_cubes:
-                #     CH.construct_envi_cube(
-                #         system_sim_name=sys_sim_name,
-                #         system_sim_name_for_white_signal=sys_sim_name_full_res,
-                #     )
 
                 if recalculate_endmembers:
                     gn_endmembers(sys_sim_name)
