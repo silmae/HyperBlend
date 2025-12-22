@@ -186,6 +186,10 @@ scenes_and_signals = [
 ]
 
 
+# Noisy bands
+remove = np.concatenate((np.arange(192, 202), np.arange(284, 307)))
+
+
 def run(runtime: RuntimeEnvironment):
     """Just a little run function to be called from main to keep the main neat."""
 
@@ -199,16 +203,17 @@ def run(runtime: RuntimeEnvironment):
 
     # Generate and run all forest simulations. The ancestor has to exist.
     # run_forest_simulations(runtime)
-
-    # rng = np.random.default_rng(1243567)
-    # generate_forest_master(runtime=runtime, rng=rng)
+    # generate_and_run_forest_simulations(
+    #     runtime=runtime, do_copy=True, run_setup=True, run_render=True
+    # )
 
     # sys_sim_name = 'FDS1_1024'
     # gn_endmembers(sys_sim_name)
     # plot_endmembers(sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=False)
 
-    # hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False)
-    recalculate_cubes()
+    # calculate_endmembers_and_abundances()
+    hysuppify_all(recalculate_endmembers=False, recalculate_abundances=False)
+    # recalculate_cubes()
 
 
 def recalculate_cubes():
@@ -233,7 +238,7 @@ def recalculate_cubes():
 def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
     """Reformulates all scenes to format that can be passed directly to HySUPP.
 
-    :param recalculate_endmembers: 
+    :param recalculate_endmembers:
     :param recalculate_abundances:
     :return:
     """
@@ -257,7 +262,7 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
                 continue
 
             if recalculate_endmembers:
-                gn_endmembers(sys_sim_name_full_res)
+                ground_truth_endmembers(sys_sim_name_full_res)
                 plot_endmembers(
                     sys_sim_name=sys_sim_name_full_res,
                     save_thumbnail=True,
@@ -275,19 +280,208 @@ def hysuppify_all(recalculate_endmembers=True, recalculate_abundances=False):
                     continue
 
                 if recalculate_endmembers:
-                    gn_endmembers(sys_sim_name)
+                    ground_truth_endmembers(sys_sim_name)
                     plot_endmembers(
                         sys_sim_name=sys_sim_name,
                         save_thumbnail=True,
                         dont_show=True,
                     )
 
+                # TODO this needs to be replaced by new calculations
                 E = load_endmembers(sys_sim_name_full_res)  # Always load from full res
                 A = load_abundances(sys_sim_name)
-                hysuppify(sys_sim_name, E, A)
+                save_hysupp_cube(sys_sim_name, E, A)
+                # raise NotImplementedError(f"Use the new cube calculations")
 
 
-def hysuppify(sys_sim_name, E, A):
+def calculate_endmembers_and_abundances():
+    """
+
+    1. Calculates endmembers from full resolution cube.
+    1.1 This may reduce the cube band-wise as noisy bands are removed and
+        also the number of endmembers is lower than the number of visibility maps
+        as we ignore the reference materials and materials that were never spawned to
+        the scene. We will not modify the original raw reflectance cube but only save
+        a new one to be run in HySUPP.
+    2. Calculate abundances for the full resolution cube. The number of abundances is
+        based on the endmembers calculated in step 1.
+    3. Repeat for low resolution cubes but use the endmembers from full resolution cube.
+
+    :param sys_sim_name:
+    :param full_res_sys_sim_name:
+    :return:
+    """
+
+    for ss in scenes_and_signals:
+
+        theme_wp = ss["theme"]  # soil: wet peat
+        theme_ds = theme_wp.replace("WP", "DS")  # soil: dry sand
+
+        for theme in [theme_wp, theme_ds]:
+
+            sys_sim_name_full_res = f"{theme}_1024"
+            # dir_sys_sim_full_res = PH.directory_system_simulation(sys_sim_name_full_res)
+
+            # This will be filled by the first iteration and stays the same for other resolutions
+            accepted_visibility_names = None
+
+            for res in [1024, 256, 64, 16, 4]:
+                sys_sim_name = f"{theme}_{res}"
+                dir_sys_sim = PH.directory_system_simulation(sys_sim_name)
+
+                if not os.path.exists(dir_sys_sim):
+                    raise FileNotFoundError(
+                        f"System simulation {sys_sim_name} does not exist."
+                    )
+
+                path_to_img = PH.file_spectral_cube(
+                    system_sim_name=sys_sim_name, file_type="data"
+                )
+                path_to_hdr = PH.file_spectral_cube(
+                    system_sim_name=sys_sim_name, file_type="header"
+                )
+
+                # Open cube. This is needed for ground_truth_endmembers function
+                cube = spectral.envi.open(path_to_hdr, path_to_img)
+
+                # Load cube to memory
+                Y_cube = cube.load()
+                # Delete noisy bands
+                Y_cube = np.delete(Y_cube, remove, axis=2)
+
+                # The full resolution as a special case
+                if res == 1024:
+
+                    # Load visibility maps
+                    path_visibility, visibility_names = get_vismaps(sys_sim_name)
+
+                    # Get ground truth endmembers with empty visibility maps ignored
+                    material_means_array, accepted_visibility_names = (
+                        CD.ground_truth_endmembers(
+                            Y_cube,
+                            visibility_maps_dir=path_visibility,
+                            visibility_names=visibility_names,
+                        )
+                    )
+
+                    # Create and save a dict to be saved in toml file for endmember-index mapping
+                    endmember_names = {}
+
+                    endmember_idx = 0
+                    for i, visibility_name in enumerate(accepted_visibility_names):
+                        endmember_names[f"{endmember_idx}"] = visibility_name
+                        endmember_idx += 1
+
+                    # Create endmember directory if it does not exist
+                    path_dir = path_dir_endmembers(sys_sim_name=sys_sim_name)
+                    if not os.path.exists(path_dir):
+                        os.makedirs(path_dir)
+
+                    # Save endmember array to disk
+                    np.save(path_file_endmembers(sys_sim_name), material_means_array)
+
+                    # And write the names mapping file
+                    TH.write_dict_as_toml(
+                        dictionary=endmember_names,
+                        directory=path_dir_endmembers(sys_sim_name),
+                        filename="endmember_names.toml",
+                    )
+
+                    plot_endmembers(
+                        sys_sim_name=sys_sim_name, save_thumbnail=True, dont_show=True
+                    )
+
+                    #### This is the end of endmembers that is only for the full res cube. Continue with abundances ####
+
+                factor = 1
+                if res == 256:
+                    factor = 4
+                elif res == 64:
+                    factor = 16
+                elif res == 16:
+                    factor = 64
+                elif res == 4:
+                    factor = 256
+
+                # Collect used visibility map names to a list
+                # vismap_list = [*endmember_names.values()]
+
+                # TODO check that this only contains the accepted visibility names
+                abundance_map_array = CD.ground_truth_abundances(
+                    factor=factor,
+                    visibility_maps_dir=path_visibility,
+                    visibility_names=accepted_visibility_names,
+                )
+
+                # Create directory for abundance maps if it does not exist
+                path_dir_abundances = PH.join(
+                    PH.directory_system_simulation(sys_sim_name),
+                    "Abundance maps",
+                )
+                if not os.path.exists(path_dir_abundances):
+                    os.makedirs(path_dir_abundances)
+
+                abundance_map_save_path = PH.join(
+                    path_dir_abundances, f"abundances.npy"
+                )
+
+                # Save the full abundance map array as a single numpy file
+                np.save(abundance_map_save_path, abundance_map_array)
+
+                map_name_indices = {
+                    "note": "Mapping of abundance map indices to human readable names. "
+                    "When you load the abundance map numpy array, you can find "
+                    "a specific map by its index in this file and use the associated name."
+                }
+
+                # Load leaf material name mapping to rename abundance maps
+                leaf_mat_name_map = TH.read_toml_as_dict(
+                    directory=PH.directory_system_simulation(sys_sim_name_full_res),
+                    filename="leaf_material_map.toml",
+                )
+                list_slab_name = leaf_mat_name_map["slab_material_names"]
+                list_lotus_code = leaf_mat_name_map["lotus_codes"]
+
+                # Rename material names to more human readable names and save visualizations
+                for i, vismap in enumerate(accepted_visibility_names):
+                    if "Diffuse material" in vismap:
+                        new_name = "Trunk"
+                    elif "Ground material" in vismap:
+                        new_name = "Soil"
+                    elif "Reference" in vismap:
+                        new_name = vismap.split(" material")[0]
+                    elif "Slab material" in vismap:
+                        slab_mat_name = vismap.split("_0001")[0]
+                        leaf_mat_map_idx = list_slab_name.index(slab_mat_name)
+                        new_name = list_lotus_code[leaf_mat_map_idx]
+                    else:
+                        new_name = "ERROR in renaming abundance map"
+
+                    map_name_indices[str(i)] = new_name
+
+                    abundance_map = abundance_map_array[:, :, i]
+                    print(
+                        f"i:{i} = vismap:'{vismap}' renamed to '{new_name}', and ab_map shape is {abundance_map.shape}"
+                    )
+
+                    plt.imshow(abundance_map, cmap="viridis")
+                    plt.title(f"Abundance {new_name}")
+                    # plt.show()
+                    image_name = f"Abundance {new_name}.png"
+                    path = PH.join(path_dir_abundances, image_name)
+                    logging.info(f"Saving abundance map visualization to '{path}'.")
+                    plt.savefig(path, dpi=300)
+                    plt.close()
+
+                TH.write_dict_as_toml(
+                    dictionary=map_name_indices,
+                    directory=path_dir_abundances,
+                    filename="map_name_indices.toml",
+                )
+
+
+def save_hysupp_cube(sys_sim_name, E, A):
+    """Saves the data in HySUPP format."""
 
     # Transform the data to right dimensions
     # Checked the right dimensions from DC1.mat data.
@@ -306,6 +500,8 @@ def hysuppify(sys_sim_name, E, A):
 
     # Load cube to memory
     Y_cube = cube.load()
+    # Delete noisy bands
+    Y_cube = np.delete(Y_cube, remove, axis=2)
 
     H, W, L = Y_cube.shape
     N = H * W
@@ -358,7 +554,7 @@ def hysuppify(sys_sim_name, E, A):
     print(f"Saved yaml to {save_path_yaml}")
 
 
-def gn_endmembers(sys_sim_name):
+def ground_truth_endmembers(sys_sim_name):
     """Estimate ground truth endmembers from simulated cubes.
 
     This should be run only for the full resolution cubes and to use those same
@@ -704,29 +900,36 @@ def get_vismaps(sys_sim_name):
     return path_visibility, vismap_list
 
 
-def generate_ancestor(runtime: RuntimeEnvironment):
-    # Only for setting the ancestor scene once
-    sun_name = "grenoble_sun"
-    sky_name = "grenoble_sky"
-    soil_name = "wet_peat_reflectance"
-
-    # This is the master master that is used to spawn the highest resolution forests
-    forest.init(
-        # leaves=leaves,
-        conf_type="m2m",
-        custom_forest_id=ancestor_scene,
-        soil_name=soil_name,
-        sun_file_name=sun_name,
-        sky_file_name=sky_name,
-    )
-
-    BC.generate_forest_control(
-        runtime=runtime, system_sim_name=ancestor_scene, global_master=False
-    )
-
-    BC.setup_system_sim_scene(
-        runtime=runtime, system_sim_name=ancestor_scene, leaf_name_list=[]
-    )
+#
+# DO NOT USE BUT DO NOT DELETE EITHER
+#
+# def generate_ancestor(runtime: RuntimeEnvironment):
+#     """Generates the ancestor scene that is used to spawn the rest of the dataset.
+#
+#     Should not be used anymore after the theme scenes have been created by hand.
+#     """
+#     # Only for setting the ancestor scene once
+#     sun_name = "grenoble_sun"
+#     sky_name = "grenoble_sky"
+#     soil_name = "wet_peat_reflectance"
+#
+#     # This is the master master that is used to spawn the highest resolution forests
+#     forest.init(
+#         # leaves=leaves,
+#         conf_type="m2m",
+#         custom_forest_id=ancestor_scene,
+#         soil_name=soil_name,
+#         sun_file_name=sun_name,
+#         sky_file_name=sky_name,
+#     )
+#
+#     BC.generate_forest_control(
+#         runtime=runtime, system_sim_name=ancestor_scene, global_master=False
+#     )
+#
+#     BC.setup_system_sim_scene(
+#         runtime=runtime, system_sim_name=ancestor_scene, leaf_name_list=[]
+#     )
 
 
 def run_late_resampling(runtime: RuntimeEnvironment):
@@ -749,47 +952,68 @@ def run_late_resampling(runtime: RuntimeEnvironment):
         )  # run slab simulation
 
 
-def run_forest_simulations(runtime: RuntimeEnvironment):
+def generate_and_run_forest_simulations(
+    runtime: RuntimeEnvironment,
+    do_copy=False,
+    run_render=False,
+    run_setup=False,
+):
 
     # For wet peat soil. Run this loop first and when the scenes are ok,
     # run the next one for dry sand
     for ss in scenes_and_signals:
-        soil_type = "wet_peat_reflectance"
-        generate_forest_variants(
+        soil_type1 = "wet_peat_reflectance"
+        soil_type2 = "dry_sand_reflectance"
+        generate_and_run_forest_variants(
             runtime=runtime,
-            soil_name=soil_type,
+            soil_name=soil_type1,
             scene_and_signals=ss,
-            generate_master=True,
-            run_simulations=True,
-            generate_resolutions=True,
+            do_copy=do_copy,
+            run_render=run_render,
+            run_setup=run_setup,
         )
 
-    # For dry sand soil
-    for ss in scenes_and_signals:
-        soil_type = "dry_sand_reflectance"
-        generate_forest_variants(
+        generate_and_run_forest_variants(
             runtime=runtime,
-            soil_name=soil_type,
+            soil_name=soil_type2,
             scene_and_signals=ss,
-            generate_master=True,
-            run_simulations=True,
-            generate_resolutions=True,
+            do_copy=do_copy,
+            run_render=run_render,
+            run_setup=run_setup,
         )
 
 
-def generate_forest_variants(
+def generate_and_run_forest_variants(
     runtime: RuntimeEnvironment,
     soil_name: str,
     scene_and_signals: dict,
-    generate_master=False,
-    generate_resolutions=False,
-    run_simulations=False,
+    do_copy=False,
+    run_render=False,
+    run_setup=False,
 ):
+    """Generates and runs forest simulations for given soil type and scene.
+
+    :param runtime: Runtime environment
+    :param soil_name: Soil name
+    :param scene_and_signals: Single item from scenes_and_signals dict.
+    :param do_copy: If True, the scene is copied from the scene indicated by `high_level_name`
+        and modified according to given resolution. Only forest initialization and material copying is done here.
+    :param run_render: If True, runs both the setup and rendering after scene generation
+    :param run_setup: If True, runs just the setup unless `run_render` is also True
+    :return: None
+    """
 
     sun_name = "grenoble_sun"
     sky_name = "grenoble_sky"
 
+    # The theme in the scene_and_signals is always for wet peat such as "FWP1"
     theme = scene_and_signals["theme"]
+    # The theme_with_soil is the actual theme to be used depending on soil type
+    theme_with_soil = theme
+    if soil_name == "dry_sand_reflectance":
+        dry_theme = theme.replace("WP", "DS")
+        theme_with_soil = dry_theme
+
     signal_tuples = scene_and_signals["signals"]
     leaves = []
     slab_mat_id = 1
@@ -802,11 +1026,42 @@ def generate_forest_variants(
             )
             slab_mat_id += 1
 
-    use_theme = theme
-    if soil_name == "dry_sand_reflectance":
-        dry_theme = theme.replace("WP", "DS")
-        use_theme = dry_theme
+    # First do the full res separately and save its name
+    high_level_name = generate_next_resolution_scene(
+        runtime=runtime,
+        resolution=1024,
+        high_level_name=theme_with_soil,
+        leaves=leaves,
+        soil_name=soil_name,
+        sun_name=sun_name,
+        sky_name=sky_name,
+        signal_tuples=signal_tuples,
+        do_copy=do_copy,
+        run_setup=run_setup,
+        run_render=run_render,
+    )
 
+    # Then loop the low resolution scenes
+    for res in [256, 64, 16, 4]:
+        generate_next_resolution_scene(
+            runtime=runtime,
+            resolution=res,
+            high_level_name=high_level_name,
+            leaves=leaves,
+            soil_name=soil_name,
+            sun_name=sun_name,
+            sky_name=sky_name,
+            signal_tuples=signal_tuples,
+            do_copy=do_copy,
+            run_setup=run_setup,
+            run_render=run_render,
+        )
+
+    #####
+    ##### This snippet should not be used. It is left here for reference only. It generates the
+    ##### theme level scenes from the one single ancestor which doesn't contain any of the geometry
+    ##### that must be done by hand.
+    #####
     # This is the master master that is used to spawn the highest resolution forests
     # if generate_master:
     #     if soil_name == "wet_peat_reflectance":
@@ -825,97 +1080,34 @@ def generate_forest_variants(
     #             leaves=leaves,
     #             conf_type="m2m",
     #             copy_forest_id=theme,  # The other soil is copied from the first soil--not from the ancestor
-    #             custom_forest_id=use_theme,  # And named accordingly
+    #             custom_forest_id=theme_with_soil,  # And named accordingly
     #             soil_name=soil_name,
     #             sun_file_name=sun_name,
     #             sky_file_name=sky_name,
     #         )
     #
-    #         material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=use_theme)
+    #         material_dict = copy_lotus_data(signal_tuples, dst_sys_sim_name=theme_with_soil)
     #         TH.write_dict_as_toml(
     #             material_dict,
-    #             PH.directory_system_simulation(use_theme),
+    #             PH.directory_system_simulation(theme_with_soil),
     #             filename="leaf_material_map",
     #         )
     #
     #         leaf_name_list = material_dict["slab_material_names"]
     #         BC.setup_system_sim_scene(
     #             runtime=runtime,
-    #             system_sim_name=use_theme,
+    #             system_sim_name=theme_with_soil,
     #             leaf_name_list=leaf_name_list,
     #         )
     #     else:
     #         raise ValueError(f"Unknown soil type {soil_name}.")
-
-    # This has to be generated when copying from master
-    BC.generate_forest_control(
-        runtime=runtime, system_sim_name=use_theme, global_master=False
-    )
-
-    if generate_resolutions:
-        high_level_name = run_next_resolution(
-            runtime=runtime,
-            resolution=1024,
-            high_level_name=use_theme,
-            leaves=leaves,
-            soil_name=soil_name,
-            sun_name=sun_name,
-            sky_name=sky_name,
-            do_copy=True,
-            run_setup_and_render=run_simulations,
-            signal_tuples=signal_tuples,
-        )
-        run_next_resolution(
-            runtime=runtime,
-            resolution=256,
-            high_level_name=high_level_name,
-            leaves=leaves,
-            soil_name=soil_name,
-            sun_name=sun_name,
-            sky_name=sky_name,
-            do_copy=True,
-            run_setup_and_render=run_simulations,
-            signal_tuples=signal_tuples,
-        )
-        run_next_resolution(
-            runtime=runtime,
-            resolution=64,
-            high_level_name=high_level_name,
-            leaves=leaves,
-            soil_name=soil_name,
-            sun_name=sun_name,
-            sky_name=sky_name,
-            do_copy=True,
-            run_setup_and_render=run_simulations,
-            signal_tuples=signal_tuples,
-        )
-        run_next_resolution(
-            runtime=runtime,
-            resolution=16,
-            high_level_name=high_level_name,
-            leaves=leaves,
-            soil_name=soil_name,
-            sun_name=sun_name,
-            sky_name=sky_name,
-            do_copy=True,
-            run_setup_and_render=run_simulations,
-            signal_tuples=signal_tuples,
-        )
-        run_next_resolution(
-            runtime=runtime,
-            resolution=4,
-            high_level_name=high_level_name,
-            leaves=leaves,
-            soil_name=soil_name,
-            sun_name=sun_name,
-            sky_name=sky_name,
-            do_copy=True,
-            run_setup_and_render=run_simulations,
-            signal_tuples=signal_tuples,
-        )
+    # # This has to be generated when copying from master
+    # BC.generate_forest_control(
+    #     runtime=runtime, system_sim_name=theme_with_soil, global_master=False
+    # )
 
 
-def run_next_resolution(
+def generate_next_resolution_scene(
     runtime,
     resolution: int,
     high_level_name: str,
@@ -925,11 +1117,31 @@ def run_next_resolution(
     sky_name: str,
     signal_tuples,
     do_copy=False,
-    run_setup_and_render: bool = False,
+    run_setup=False,
+    run_render=False,
 ):
+    """
+    Generates the next resolution level of the forest simulation.
+
+    :param run_setup:
+    :param runtime: Runtime environment
+    :param resolution: Resolution to generate one of (1024, 256, 64, 16, 4)
+    :param high_level_name: Name of the high level scene to copy from. For full res scene, this is the theme name.
+    :param leaves: List of leaves to use in the forest initialization. Constant within a theme.
+    :param soil_name: The name of the soil file
+    :param sun_name: The name of the sun file
+    :param sky_name: The name of the sky file
+    :param signal_tuples: List of signal tuples used to copy the LOTUS data.
+    :param do_copy: If True, the scene is copied from the scene indicated by `high_level_name`
+        and modified according to given resolution. Only forest initialization and material copying is done here.
+    :param run_setup: If True, the scene setup is run. Can be used separately from rendering.
+    :param run_render: If True, both the scene setup and rendered is run. Also constructs the ENVI cube after rendering.
+    :return: The name of the current level that was just generated.
+    """
 
     theme = high_level_name.split(sep="_")[0]
     current_level_name = f"{theme}_{resolution}"
+    leaf_material_map_name = "leaf_material_map"
 
     if do_copy:
         forest.init(
@@ -945,11 +1157,10 @@ def run_next_resolution(
         material_dict = copy_lotus_data(
             signal_tuples, dst_sys_sim_name=current_level_name
         )
-        leaf_name_list = material_dict["slab_material_names"]
         TH.write_dict_as_toml(
             material_dict,
             PH.directory_system_simulation(current_level_name),
-            filename="leaf_material_map",
+            filename=leaf_material_map_name,
         )
 
         sys_sim_path = PH.directory_system_simulation(current_level_name)
@@ -961,6 +1172,7 @@ def run_next_resolution(
         scene_control["Images"]["rgb_resolution_x"] = resolution
         scene_control["Images"]["rgb_resolution_y"] = resolution
 
+        # These preview resolutions are kept constant (they are only rendered for high res scene anyways)
         scene_control["Images"]["walker_resolution_x"] = 1024
         scene_control["Images"]["walker_resolution_y"] = 512
         scene_control["Images"]["sleeper_resolution_x"] = 1024
@@ -987,28 +1199,33 @@ def run_next_resolution(
             filename="system_sim_control",
         )
 
-    if run_setup_and_render:
+    if run_setup or run_render:
+        material_dict = TH.read_toml_as_dict(
+            PH.directory_system_simulation(current_level_name),
+            filename=leaf_material_map_name,
+        )
+        leaf_name_list = material_dict["slab_material_names"]
         BC.setup_system_sim_scene(
             runtime=runtime,
             system_sim_name=current_level_name,
             leaf_name_list=leaf_name_list,
         )
 
+    if run_render:
         # Visibility maps and previews only for the high res cube.
         if resolution >= 1024:
-
             BC.render_forest(
                 runtime=runtime,
                 system_sim_name=current_level_name,
                 render_mode="preview",
             )
-
             BC.render_forest(
                 runtime=runtime,
                 system_sim_name=current_level_name,
                 render_mode="visibility",
             )
 
+        # Spectral bands are rendered for all resolutions
         BC.render_forest(
             runtime=runtime,
             system_sim_name=current_level_name,
@@ -1029,8 +1246,12 @@ def run_next_resolution(
 
 
 def copy_lotus_data(signal_tuples, dst_sys_sim_name: str):
-    # Copy original LOTUS leaf data and slab simulation results so that the system
-    #   simulation directory is self-contained
+    """Copies the LOTUS leaf data and slab simulation results to create self-contained system simulation directory.
+
+    :param signal_tuples:
+    :param dst_sys_sim_name:
+    :return:
+    """
 
     # Slab materials in a list of tuples (slab_material_name, lotus_code)
     slab_material_names = []

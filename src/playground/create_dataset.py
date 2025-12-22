@@ -58,14 +58,22 @@ def ground_truth_endmembers(spectral_cube, visibility_maps_dir: str, visibility_
         np.ndarray
             L x p -shaped numpy array with ground truth endmembers,
             where L is number of channels and p is number of endmembers.
+        list of accepted visibility map names
 
     """
 
     # Create binary masks from visibility maps.
     visibility_mask_list = []
-    for i,visibility_name in enumerate(visibility_names):
+    accepred_visibility_names = []
+    for i, visibility_name in enumerate(visibility_names):
+
+        if "Reference" in visibility_name:
+            # Skip reference materials
+            continue
+
         if not visibility_name.endswith(".tif"):
             visibility_name = f"{visibility_name}.tif"
+
         im = Image.open(f"{visibility_maps_dir}/{visibility_name}")
         imarray = np.array(im)
         binary_arr = (imarray > 0).astype(bool)
@@ -77,20 +85,23 @@ def ground_truth_endmembers(spectral_cube, visibility_maps_dir: str, visibility_
             continue
 
         visibility_mask_list.append(binary_arr)
+        accepred_visibility_names.append(visibility_name)
 
-    material_means_array = np.zeros(shape=(len(visibility_mask_list), spectral_cube.shape[2]))
+    material_means_array = np.zeros(
+        shape=(len(visibility_mask_list), spectral_cube.shape[2])
+    )
     # material_stds = []
-    for i,vismask in enumerate(visibility_mask_list):
+    for i, vismask in enumerate(visibility_mask_list):
         # Select pixels by material. This is now a flat array.
-        material_pixels = spectral_cube[vismask,:]
-        material_means_array[i,:] = np.mean(material_pixels, axis=0, dtype=np.float64)
+        material_pixels = spectral_cube[vismask, :]
+        material_means_array[i, :] = np.mean(material_pixels, axis=0, dtype=np.float64)
         # material_std = np.std(material_pixels, axis=0, dtype=np.float64)
         # material_means.append(material_mean)
         # material_stds.append(material_std)
 
     material_means_array = material_means_array / material_means_array.max()
 
-    return np.swapaxes(material_means_array, 0, 1)
+    return np.swapaxes(material_means_array, 0, 1), accepred_visibility_names
 
 
 def ground_truth_abundances(factor, visibility_maps_dir: str, visibility_names):
