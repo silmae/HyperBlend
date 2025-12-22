@@ -144,15 +144,23 @@ def infer_white_ref_from_data(system_sim_name: str):
     """
     Infers a good white reference signal from available visibility maps.
 
+    Saves plot of the raw mean spectra of the reference plates.
+
+    :note: Even if an acceptable white reference plate is found, it does not guarantee
+        that the reflectance cube is of good quality. If there are objects in the scene
+        that brighter than the white reference plate, they will be clipped.
+
     :param system_sim_name: Name of the system simulation.
     :return: White reference signal as a 3D numpy array with shape (bands, 1, 1).
     :raises FileNotFoundError: if no visibility maps are found.
+    :raises RuntimeError: if none of the available white reference plates is acceptable.
     """
 
-    # Burnt areas have values around 65535
-    # Loop white references until the image is not burned
-    max_burn = 65000.0
-    white_mean = max_burn
+    """Burnt areas have values around 65535. As we will check the *mean* of the white reference 
+    block is less than this value, we set it considerably lower than this to avoid burning and 
+    to still be able to calculate a proper reflectance."""
+    max_burn = 60000.0
+    white_mean_non_scaled = max_burn
 
     # Find available reflectance plate reflectivity based on visibility map file names.
     reflectivities = []
@@ -172,7 +180,11 @@ def infer_white_ref_from_data(system_sim_name: str):
 
     reflectivities.sort(reverse=True)
 
+    # Initialize the final white signal to None. If none of the plates are acceptable,
+    # it will remain None and we can raise an error.
+    white_mean_scaled_accepted = None
     logging.info(f"Searching for a good white reference plate..")
+    plt.close("all")
     for reflectivity in reflectivities:
         accepted_reference_plate_reflectivity = reflectivity
         mask_path = PH.find_reference_visibility_map(
@@ -185,22 +197,48 @@ def infer_white_ref_from_data(system_sim_name: str):
         raw_cube = get_raw_cube(system_sim_name=system_sim_name)
         white_cube = raw_cube[:, mask]
         # so we take the mean only on one axis.
-        white_mean = np.mean(white_cube, axis=(1))
-        white_mean_max = white_mean.max()
-        if white_mean_max < max_burn:
+        white_mean_non_scaled = np.mean(white_cube, axis=(1))
+
+        white_mean_non_scaled_max = white_mean_non_scaled.max()
+
+        # Check if this white reference is acceptable. This is checked as long as
+        # white_mean_scaled_accepted is None to select the brightest possible.
+        if white_mean_non_scaled_max < max_burn and white_mean_scaled_accepted is None:
             factor = 1.0 / accepted_reference_plate_reflectivity
-            white_mean = white_mean * factor
+            white_mean_scaled_accepted = white_mean_non_scaled * factor
             logging.info(
                 f"Accepted white reference with {accepted_reference_plate_reflectivity:.2f} reflectivity "
-                f"producing maximum mean reflectance {white_mean_max:.1f}. Original white signal scaled by factor {factor:.2f}."
+                f"producing maximum mean reflectance {white_mean_non_scaled_max:.1f}. Original white signal scaled by factor {factor:.2f}."
             )
-            break
+            plt.plot(
+                white_mean_non_scaled, label=f"Accepted reflectivity {reflectivity}"
+            )
+        else:
+            plt.plot(white_mean_non_scaled, label=f"Reflectivity {reflectivity}")
 
-    save_white_signal(system_sim_name=system_sim_name, white_signal=white_mean)
+    if white_mean_scaled_accepted is None:
+        raise RuntimeError(
+            f"None of the available white reference plates was acceptable. "
+        )
+
+    # plt.plot(white_mean_scaled_accepted, label=f"Accepted")
+
+    folder = PH.directory_system_simulation(system_sim_name=system_sim_name)
+    image_name = "white_references_plates.png"
+    plot_save_path = PH.join(folder, image_name)
+    logging.info(f"Saving white reference plate spectra to '{plot_save_path}'.")
+    plt.legend()
+    # plt.show()  # for debugging
+    plt.savefig(plot_save_path, dpi=600)
+
+    # And then save the actual accepted white signal data.
+    save_white_signal(
+        system_sim_name=system_sim_name, white_signal=white_mean_scaled_accepted
+    )
 
     # Expand dimensions to match the raw cube shape for reflectance calculation.
-    white_mean = np.expand_dims(white_mean, axis=(1, 2))
-    return white_mean
+    white_mean_scaled_accepted = np.expand_dims(white_mean_scaled_accepted, axis=(1, 2))
+    return white_mean_scaled_accepted
 
 
 def save_white_signal(system_sim_name: str, white_signal: np.ndarray):
