@@ -208,7 +208,7 @@ def run(runtime: RuntimeEnvironment):
     # )
 
     # calculate_endmembers_and_abundances()
-    # hysuppify_all(recalculate_endmembers=False, recalculate_abundances=False)
+    hysuppify_all()
 
 
 def generate_and_run_forest_simulations(
@@ -760,7 +760,7 @@ def save_hysupp_cube(sys_sim_name, E, A):
     H, W, L = Y_cube.shape
     N = H * W
     Y = Y_cube.reshape(H * W, L).T
-    logging.info("Y shape:", Y.shape, ", E shape:", E.shape, ", A shape:", A.shape)
+    logging.info(f"Y shape: {Y.shape}, E shape: {E.shape}, A shape: {A.shape}")
 
     dataset = {
         "Y": Y,
@@ -773,7 +773,8 @@ def save_hysupp_cube(sys_sim_name, E, A):
         "p": p,  # Number of endmembers
     }
 
-    data_class_name = "src.data.base.RealHSI"
+    # data_class_name = "src.data.base.RealHSI"
+    data_class_name = "src.data.base.HSIWithGT"
     dataset_name = sys_sim_name
 
     path_dir_hysuppified = PH.join(PH.directory_project_root(), "Hysuppified")
