@@ -1,6 +1,5 @@
-from data import cube_handling as CH
-from system_simulation import forest
-from rendering import blender_control as BC
+from src.system_simulation import forest
+from src.rendering import blender_control as BC
 from src.setup.runtime_environment import RuntimeEnvironment
 
 
