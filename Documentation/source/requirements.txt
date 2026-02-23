@@ -1,9 +1,9 @@
 sphinx-rtd-theme
-pip==20.1
-Sphinx==2.2.0
+pip
+Sphinx
 blurb
 polib
-pospell==1.0.5
+pospell
 potodo
 powrap
 python-docs-theme
