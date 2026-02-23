@@ -5,7 +5,6 @@ sphinx-autorun
 sphinxemoji
 sphinx-tabs
 sphinx-intl
-bibtex
 numpy
 scipy
 matplotlib
