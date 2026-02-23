@@ -11,6 +11,8 @@
 import os
 import sys
 
+print(f"NOTE TO SELF: the working dir is {os.getcwd()}")
+
 for x in os.walk("../../src"):
     sys.path.insert(0, os.path.abspath(x[0]))
 
