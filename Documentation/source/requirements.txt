@@ -10,7 +10,7 @@ numpy
 scipy
 matplotlib
 toml
-pytorch
+torch
 spectral
 spectres
 Pillow
