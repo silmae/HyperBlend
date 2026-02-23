@@ -14,7 +14,7 @@ import sys
 print(f"NOTE TO SELF: the working dir is {os.getcwd()}")
 
 sys.path.insert(0, os.path.abspath("../../"))
-sys.path.append(os.path.abspath("../../src/blender_scripts/"))
+sys.path.append(os.path.abspath("./src/blender_scripts/"))
 
 #for x in os.walk("../../src"):
     #sys.path.insert(0, os.path.abspath(x[0]))
