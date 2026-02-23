@@ -1,10 +1,6 @@
 sphinx-rtd-theme
 pip
 Sphinx
-sphinx-autorun
-sphinxemoji
-sphinx-tabs
-sphinx-intl
 numpy
 scipy
 matplotlib
