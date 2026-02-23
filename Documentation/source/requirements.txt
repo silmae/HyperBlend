@@ -14,3 +14,4 @@ spectral
 spectres
 Pillow
 black
+sphinxcontrib-bibtex
