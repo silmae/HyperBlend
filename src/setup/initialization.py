@@ -136,20 +136,26 @@ def _check_blender_version(runtime: RuntimeEnvironment):
     operating_system = runtime.operating_system_string
     supported_blender_versions = runtime.supported_blender_versions
 
-    path_foundation = C.blender_foundation_win
-
+    path_foundation = ""
     if operating_system == "linux":
-        # TODO linux has only one installation at a time? Check it and do something with the information
-        raise NotImplementedError("Linux is not supported yet.")
+        # If we are on Linux, we will not do the fancy checking of versions
+        #   and just use the only path that is given in control.py
+        path_foundation = C.blender_executable_path_linux
+        runtime._BLENDER_EXECUTABLE = path_foundation
+        logging.info(f"Set Blender executable to: {runtime._BLENDER_EXECUTABLE}")
+        return
     elif operating_system == "win32":
-        if not os.path.exists(path_foundation):
-            logging.error(
-                f"It seems that there is no Blender installed to the default "
-                f"path in {path_foundation}. Install Blender or change the path in "
-                f"'constants.py' file."
-            )
-            exit(1)
+        path_foundation = C.blender_foundation_win
+    elif not operating_system:
+        raise RuntimeError("Operating system is not recognized.")
 
+    if not os.path.exists(path_foundation):
+        raise RuntimeError(
+            f"It seems that there is no Blender installed to the default "
+            f"path in {path_foundation}. Install Blender or change the path in "
+            f"'constants.py' file."
+        )
+    else:
         logging.debug(f"Searching for Blender versions from {path_foundation}")
         # check available versions
         for x in os.listdir(path_foundation):
@@ -157,18 +163,14 @@ def _check_blender_version(runtime: RuntimeEnvironment):
             version = splitted[1]
             logging.debug(f"Found {x}. Parsed version number: {version}")
             found_versions.append(version)
-    elif not operating_system:
-        logging.error("Operating system is not recognized.")
-        exit(1)
 
     res = np.array(list(i in supported_blender_versions for i in found_versions))
 
     if not np.any(res):
-        logging.error(
+        raise RuntimeError(
             f"Found Blender versions {found_versions} are not supported. Please install one of the "
             f"supported versions: {supported_blender_versions}"
         )
-        exit(1)
 
     # It's a tuple so take the newest version
     i = np.where(res)[0][-1]
