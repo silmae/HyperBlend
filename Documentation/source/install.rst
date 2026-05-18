@@ -25,8 +25,8 @@ Setting up Conda environment
 
 HyperBlend relies on a bunch of external libraries that are specified in
 `root/hb_env.yml` file. To install these, you should use a Python package
-handler such as  MiniConda <https://www.anaconda.com>
-or Mamba <https://github.com/mamba-org/mamba>.
+handler such as  MiniConda `www.anaconda.com <https://www.anaconda.com>`__
+or Mamba `github.com/mamba-org/mamba <https://github.com/mamba-org/mamba>`__.
 Both are free to use but Mamba may be faster to run in many cases.
 
 You can test that your installation was successful by running:
@@ -54,7 +54,7 @@ One final thing before running HyperBlend is the installation of
 Blender 3D-modeling and rendering software. Blender is open-source
 software available from <blender.org>. HyperBlend works only with
 Blender version 3.6.XX, which you can download from
-<https://download.blender.org/release/Blender3.6/>.
+`download.blender.org/release/Blender3.6 <https://download.blender.org/release/Blender3.6/>`__.
 There are installers for Windows (`windows-x64.msi`) and
 Linux (`linux-x64.tar.xz`).
 
@@ -81,4 +81,4 @@ you can also run Python from command line, but you have to figure out how
 to do that by yourself.
 
 Now we are ready to test run HyperBlend. Move to the
-:doc:`beginner tutorial <./basics.rst>`.
+:doc:`beginner tutorial <./basics>`.
