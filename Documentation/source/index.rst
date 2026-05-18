@@ -22,6 +22,7 @@ The documentation is organized as follows:
 
    self
    install
+   basics
    slab_sim
    system_sim
    code/src
