@@ -11,7 +11,9 @@ Cloning the project
 ---------------------------
 
 This is very simple: start by creating a directory for the project, open
-a terminal to that directory and use command:
+a terminal to that directory and use command
+
+..code-block::
 
     git clone <the.address.from.where.to.clone.from>
 
@@ -25,15 +27,19 @@ Setting up Conda environment
 
 HyperBlend relies on a bunch of external libraries that are specified in
 `root/hb_env.yml` file. To install these, you should use a Python package
-handler such as  MiniConda `www.anaconda.com <https://www.anaconda.com>`__
+handler such as  MiniConda `anaconda.com <https://www.anaconda.com>`__
 or Mamba `github.com/mamba-org/mamba <https://github.com/mamba-org/mamba>`__.
 Both are free to use but Mamba may be faster to run in many cases.
 
-You can test that your installation was successful by running:
+You can test that your installation was successful by running
+
+..code-block::
 
     conda --version
 
 or
+
+..code-block::
 
     mamba --version
 
@@ -41,6 +47,8 @@ in your command prompt. (For Windows, this would be the Anaconda command prompt,
 the default one and not Powershell.)
 
 Once that is done, run:
+
+..code-block::
 
     conda env create -n hb --file hb_env.yml
 
