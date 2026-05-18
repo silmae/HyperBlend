@@ -13,7 +13,7 @@ Cloning the project
 This is very simple: start by creating a directory for the project, open
 a terminal to that directory and use command
 
-..code-block::
+.. code-block::
 
     git clone <the.address.from.where.to.clone.from>
 
@@ -33,13 +33,13 @@ Both are free to use but Mamba may be faster to run in many cases.
 
 You can test that your installation was successful by running
 
-..code-block::
+.. code-block::
 
     conda --version
 
 or
 
-..code-block::
+.. code-block::
 
     mamba --version
 
@@ -48,7 +48,7 @@ the default one and not Powershell.)
 
 Once that is done, run:
 
-..code-block::
+.. code-block::
 
     conda env create -n hb --file hb_env.yml
 
