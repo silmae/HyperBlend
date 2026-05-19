@@ -21,7 +21,7 @@ dependencies:
   - pip: 
       - sphinx-rtd-theme # shpinx theme
 #      - myst-parser # for parsing Markdown files to sphinx documentation
-#      - sphinxcontrib-bibtex # sphinx bibtex extension for citing
+      - sphinxcontrib-bibtex # sphinx bibtex extension for citing
       - spectral # for image cube read and write
       - spectres # for resampling spectra
       - Pillow
