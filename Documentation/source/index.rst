@@ -8,7 +8,8 @@ Welcome to HyperBlend's documentation!
 
 This documentation is still work in progress. We will get it done eventually!
 
-Webhook test...
+This documentation lives in https://hyperblend.readthedocs.io/en/latest/index.html
+The project is hosted in GitHub at https://github.com/silmae/HyperBlend
 
 The documentation is organized as follows:
 

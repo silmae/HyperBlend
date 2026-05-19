@@ -34,7 +34,8 @@ that you installed the correct version and that you provided a correct path.
 Another thing that is likely to occur is that you get an import error from
 every script in the program.
 
-The imports in HyperBlend require `<wherever_you_cloned_the_repo>/HyperBlend/`
+The imports in HyperBlend require `<wherever_you_cloned_the_repo>/HyperBlend/`, i.e.,
+the `root`, as we decided to call it in the installation tutorial,
 directory to be included in `PYTHONPATH` variable.
 You can check if it is by running
 
@@ -43,7 +44,8 @@ You can check if it is by running
     import sys
     print(sys.path)
 
-If not, and if you are using PyCharm as your IDE on Windows machine, you can
+This will print you a list of paths in the variable and one of the should be the
+`root`. If not, and if you are using PyCharm as your IDE on Windows machine, you can
 
 - go to `<wherever_you_cloned_the_repo>/`
 - right-click on HyperBlend directory
@@ -60,8 +62,20 @@ https://www.simplilearn.com/tutorials/python-tutorial/python-path, for example.
 HyperBlend Simulations
 -----------------------
 
-A tiny introduction to the working principle of HB.
-See the next heading if you want to try running a tiny example.
+This subsection contains a little introduction to HyperBlend's working
+principle necessary to understand the bare basics. We will revisit these
+ideas in more depth later. If you are already too eager to run some code,
+you can skip to the next heading and copypaste run it, and come back here
+after that.
+
+HyperBlend is designed for creating spectral forest canopy simulations.
+Since the leaves of trees are the most active part interacting with light
+the first part of the simulation is focused on that. In this tutorial,
+this is called with a general term :term:`Slab simulation`. Creating
+custom slab simulations is explained in more detail in
+:ref:`chap-slab-simulation` chapter.
+
+
 
 The Smallest Working Example
 -----------------------------

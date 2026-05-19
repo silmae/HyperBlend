@@ -1,3 +1,5 @@
+.. _chap-slab-simulation:
+
 The Slab Simulation
 ==============================
 
