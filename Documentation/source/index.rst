@@ -49,7 +49,6 @@ This is the same README file that is shown on the github landing page.
    :parser: myst_parser.sphinx_
 .. include:: ../../README.rst
 
-
 Indices and tables
 ==================
 

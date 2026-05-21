@@ -17,6 +17,18 @@ General
         In other simulation context it might represent a slab of water full of
         microalgae as in :cite:`riihiaho25`.
 
+    Signal
+        Signal is a pair of reflectance and transmittance spectra in the
+        :term:`Slab simulation`. In forestry application the signal is reflectance
+        and transmittance of a single leaf. Signals can originate from real world
+        measurements or they can be simulated with the integrated PROSPECT
+        :cite:`feret17` leaf
+        spectral simulator. In slab simulation, the signal is initially called
+        `Target signal`. The point of the slab simulation is to solve which slab
+        material parameter values (for Blender) produce the same reflectance and
+        transmittance in the virtual environment. Solving of these parameters
+        produces the `Result signal` that can be used in :term:`System simulation`.
+
     System simulation
         System simulation is the high level simulation where the material slabs
         of :term:`Slab simulation` will be placed to create a meaningful recreation of

@@ -77,8 +77,65 @@ custom slab simulations is explained in more detail in
 :ref:`chap-slab-simulation` chapter.
 
 
-
-The Smallest Working Example
+The Tiny Working Example
 -----------------------------
 
-To be filled in very soon.
+Leaf Slabs
+"""""""""""""""
+
+HyperBlend has an integrated PROSPECT :cite:`feret17` simulator for generating
+leaf reflectance and transmittance spectra, so let's use that to generate a few
+random leaves to work with. You can copypaste the following into the program's entry
+point at `root/src/__main__.py` main method
+
+.. code-block:: python3
+    :linenos:
+
+    from src.slab_model import interface as SMI
+
+    if __name__ == "__main__":
+
+        runtime = initialization.initialize()
+        slab_sim_name = "tutorial_slab_simulation"
+        SMI.generate_prospect_leaf_random(slab_sim_name=slab_sim_name, leaf_count=3)
+        SMI.solve_slab_material_parameters(
+            runtime=runtime,
+            slab_sim_name=slab_sim_name,
+            range_start=400,
+            range_end=1000,
+            resolution=100,
+        )
+
+Line ``1`` imports the slab model interface with name SMI. Line ``5`` runs the
+initialization and saves the ``runtime`` environment which we will need later.
+Line ``6`` is just a name of our slab simulation, which we will use the rest of this
+beginner tutorial. Line ``7`` generates 3 random leaf spectra. In HyperBlend,
+these pairs of reflectance and transmittance spectra are called target signal
+(see :term:`Signal`). The method
+:py:func:`~slab_model.interface.generate_prospect_leaf_random` doesn't have
+a return value as it will save the data on the disc.
+
+The last line runs the actual slab simulation that solves the slab (leaf) material
+parameters to be used later in :term:`System simulation`. Our last call to
+:py:func:`~slab_model.interface.solve_slab_material_parameters` has a lot
+going on, so let's take a closer look what we are doing.
+
+First of all, we provide it with the runtime and slab simulation name, which are
+mandatory. If we did not provide any additional arguments, by default, the method
+would solve us the slab material parameters with spectral range from 400 nm to
+2500 nm with 1 nm spectral resolution. Which means that we would simulate 2101
+spectral bands three times for all of our three leaves. To get you results a bit
+faster, we restrict the range from 400 nm to 1000 nm with only 100 nm resolution,
+which produces 7 spectral bands and the run should take only some seconds.
+The spectral range and resolution of the slabs control the range and resolution
+of the following steps, so it is a quite important step to decide beforehand, which
+values to use.
+You can find the results of this simulation from directory
+`root/Slab simulation/tutorial_slab_simulation/`. Now we are ready to proceed to
+the :term:`System simulation`.
+
+
+Forest System
+"""""""""""""""
+
+afzv
