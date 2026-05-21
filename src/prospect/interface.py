@@ -13,31 +13,31 @@ from src.data import toml_handling as TH
 from src.data import path_handling as PH
 
 
-def make_random_leaf_targets(set_name, count=1):
+def make_random_leaf_targets(slab_sim_name, count=1):
     """Generate count number of random PROSPECT leaves.
 
-    :param set_name: Set name to be used.
-    :param count: How many target leaves are generated to the set.
+    :param slab_sim_name: The desired name for the slab simulation.
+    :param count: Number of leaves that will be generated.
     """
 
     FH.create_top_level_slab_sim_directories(
-        set_name
+        slab_sim_name
     )  # make sure to have directories created
 
     for i in range(count):
         wls, r, t, p_dict = run_prospect_random()
         logging.info(f"Generating random leaf data with prospect.")
         src.slab_model.training_data._make_target(
-            set_name, wls=wls, r_m=r, t_m=t, sample_id=i
+            slab_sim_name, wls=wls, r_m=r, t_m=t, sample_id=i
         )  # sample directories are now created
-        dict_dir = PH.directory_result_signal(set_name, signal_id=i)
+        dict_dir = PH.directory_result_signal(slab_sim_name, signal_id=i)
         dict_name = f"prospect_params_{i}"
         TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
 
 
 def make_leaf_target(
-    set_name,
-    sample_id=0,
+    slab_sim_name,
+    signal_id=0,
     n=None,
     ab=None,
     ar=None,
@@ -51,8 +51,8 @@ def make_leaf_target(
     If any of the values are not provided, default values are used.
     You get the default PROSPECT leaf by calling without any arguments.
 
-    :param set_name: Set name where the target is saved.
-    :param sample_id: Sample id for this target. Default is 0. Overwrites existing targets if existing id is given.
+    :param slab_sim_name: See :term:`slab_sim_name`.
+    :param signal_id: Signal id for this target. Default is 0. Overwrites existing targets if existing id is given.
     :param n: PROSPECT N parameter [unitless]
     :param ab: chlorophyll a + b concentration [ug / cm^2]
     :param ar: cartenoid content [ug / cm^2]
@@ -64,7 +64,7 @@ def make_leaf_target(
     """
 
     FH.create_top_level_slab_sim_directories(
-        set_name
+        slab_sim_name
     )  # make sure to have directories created
 
     if n is None:
@@ -87,10 +87,10 @@ def make_leaf_target(
 
     logging.info(f"Generating random leaf data with prospect.")
     src.slab_model.training_data._make_target(
-        set_name, wls=wls, r_m=r, t_m=t, sample_id=sample_id
+        slab_sim_name, wls=wls, r_m=r, t_m=t, sample_id=signal_id
     )  # sample directory is now created
-    dict_dir = PH.directory_result_signal(set_name, signal_id=sample_id)
-    dict_name = f"prospect_params_{sample_id}"  # save used prospect parameters
+    dict_dir = PH.directory_result_signal(slab_sim_name, signal_id=signal_id)
+    dict_name = f"prospect_params_{signal_id}"  # save used prospect parameters
     TH.write_dict_as_toml(p_dict, directory=dict_dir, filename=dict_name)
     return wls, r, t
 

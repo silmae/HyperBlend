@@ -1,7 +1,7 @@
 """
-
-Interface for all leaf material related actions.
-
+Interface for the slab model. Most common needs can be called from here.
+You should avoid calling slab simulation related code directly unless it
+cannot be avoided. It just keeps the hierarchy more clear.
 """
 
 import numpy as np
@@ -26,8 +26,8 @@ from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def generate_prospect_leaf(
-    set_name,
-    sample_id=0,
+    slab_sim_name,
+    signal_id=0,
     n=None,
     ab=None,
     ar=None,
@@ -36,34 +36,24 @@ def generate_prospect_leaf(
     m=None,
     ant=None,
 ):
-    """Run prospect simulation with given PROSPECT parameters.
+    """Run prospect simulation with given arguments.
 
-    If any of the values are not provided, default values are used (see prospect.p_default_dict).
-    You get the default PROSPECT leaf by calling without any arguments.
-
-    Calling this is the same as calling prospect.make_leaf_target().
-
-    :param set_name: Set name where the target is saved.
-    :param sample_id: Sample id for this target. Default is 0. Overwrites existing targets if existing id is given.
-    :param n: PROSPECT N parameter [unitless]
-    :param ab: chlorophyll a + b concentration [ug / cm^2]
-    :param ar: cartenoid content [ug / cm^2]
-    :param brown: brown pigment [unitless]
-    :param w: equivalent water thickness [cm]
-    :param m: dry mater content [g / cm^2]
-    :param ant: anthocyanin content [ug / cm^2]
+    Calling this is the same as calling :py:func:`prospect.interface.make_leaf_target`.
+    See explanation of the arguments there.
+    If any of the values are not provided, default values are used.
+    You get the default PROSPECT leaf by calling without any of the optional arguments.
     """
 
-    interface.make_leaf_target(set_name, sample_id, n, ab, ar, brown, w, m, ant)
+    interface.make_leaf_target(slab_sim_name, signal_id, n, ab, ar, brown, w, m, ant)
 
 
 def generate_prospect_leaf_random(slab_sim_name, leaf_count=1):
-    """Generate count number of random PROSPECT leaves.
+    """Generate one or more random PROSPECT leaves.
 
-    Calling this is the same as calling prospect.make_random_leaf_targets().
+    Calling this is the same as calling :py:func:`prospect.interface.make_random_leaf_targets`.
 
-    :param slab_sim_name: Set name to be used.
-    :param leaf_count: How many target leaves are generated to the set.
+    :param slab_sim_name: See :term:`slab_sim_name`.
+    :param leaf_count: How many target leaves will be generated.
     """
 
     interface.make_random_leaf_targets(slab_sim_name, leaf_count)
@@ -76,17 +66,19 @@ def resample_slab_sim_target(
     range_end: int = None,
     resolution: int = None,
 ):
-    """Resamples slab simulation targets.
+    """Runs a spectral resampling of all target signals in this slab simulation.
 
-    After this, you must solve leaf material parameters (for rendering) again.
-    Uses sampling information from `sampling.toml` in `targets` directory.
+    After this, you must solve leaf material parameters (for rendering) again
+    by calling :py:func:`solve_leaf_material_parameters`.
+    Reads the old sampling information from `sampling.toml` in `targets` directory
+    and rewrites it before calling the actual resampling from :py:func:`leaf_sampling.resample`.
 
-    :param slab_sim_name: Name of the slab simulation.
+    :param slab_sim_name: See :term:`slab_sim_name`.
+    :param wls: List of new wavelengths. If given, this overrides ``range_start``,
+        ``range_end`` and ``resolution``.
     :param range_start: Start of the wavelength range to be resampled (inclusive).
     :param range_end: End of the wavelength range to be resampled (inclusive).
     :param resolution: Resolution of the sampling in nm.
-    :param wls: List of new wavelengths. If given this overrides ``range_start``,
-        ``range_end`` and ``resolution``.
 
     :raises AttributeError: If neither ``wls`` nor ``range_start``, ``range_end``
         and ``resolution`` are given.
@@ -139,7 +131,7 @@ def resample_slab_sim_target(
     sampling.resample(slab_sim_name=slab_sim_name, plot_resampling=True)
 
 
-def solve_leaf_material_parameters(
+def solve_slab_material_parameters(
     runtime: RuntimeEnvironment,
     slab_sim_name: str,
     range_start: int = None,
@@ -149,30 +141,36 @@ def solve_leaf_material_parameters(
     solver="nn",
     clear_old_results=False,
     solver_dirname: str = None,
-    copyof=None,
+    copyof: str | None = None,
 ):
-    """Solves leaf material parameters for rendering.
+    """Solves leaf material parameters that are needed for rendering.
 
-    The result is saved to disk: this method does not have a return value.
+    The result is saved to disk (the actual data and plots).
 
-    Note that solvers 'surf' and 'nn' need trained model to work. Pre-trained model are included
-    in the Git repository, but you can train your own using ``train_models()`` method. Solver 'opt'
-    does not need training.
+    If any of ``wls``, ``range_start``, ``range_end`` and ``resolution`` are given, spectral resampling is
+    called before solving the slab parameters. See documentation of these arguments from
+    :py:func:`slab_model.interface.resample_slab_sim_target`.
 
-    :param slab_sim_name: Name of the measurement set.
-    :param resolution: If resolution is None (default), spectral sampling defined
-        in `sampling.toml` will be used. If resolution is provided and can be interpreted
-        as an int, new sampling is written from 400 nm to 2500 nm with given `resolution` nm intervals.
+    .. note::
+        Solvers 'surf' and 'nn' need a trained model to work. Pre-trained model are included
+        in the Git repository, but you can train your own using
+        :py:func:`slab_model.interface.train_models` method. Solver 'opt' does not need prior training,
+        but it is slow. In case you have several trained models (whether surf or nn), you can also
+        provide the `solver_dirname` to specify which solver to use.
+
+    :param runtime: See :term:`runtime`.
+    :param slab_sim_name: See :term:`slab_sim_name`.
     :param solver: Solving method either 'opt', 'surf' or 'nn'. Opt is slowest and most accurate
         (the original method). Surf is fast but not very accurate. NN is fast and fairly accurate.
         Surf and NN are roughly 200 times faster than opt. Recommended solver is the default 'nn'.
-    :param clear_old_results: If True, clear old results of the set. This is handy for redoing the
-        same set with different method, for example. Note that existing wavelength results are
-        not redone unless first removed.
+    :param clear_old_results: If True, clear old results of the slab simulation. This is handy for redoing the
+        same slab simulation with different method, for example. When False, the old results are
+        not overwritten and solver just skips the signals that are already solved.
     :param solver_dirname: Name of the (directory of the) solver to be used. If None, the default
         solver is used.
-    :param copyof: Name of the set to copy. Copies target from existing set (walengths, reflectances,
-        and transmittances).
+    :param copyof: Name of the slab simulation to copy. Copies target from existing slab simulation
+        (walengths, reflectances, and transmittances).
+
     """
 
     if copyof:
@@ -291,9 +289,172 @@ def solve_leaf_material_parameters(
     plotter.plot_slab_sim_errors(slab_sim_name, dont_show=True, save_thumbnail=True)
 
 
-def iterative_train(
-    runtime: RuntimeEnvironment, iterations=8, training_points=200, dry_run=False
+def train_models(
+    runtime: RuntimeEnvironment,
+    slab_sim_name_for_training="training_data",
+    generate_data=False,
+    data_generation_diff_step=0.01,
+    starting_guess_type="curve",
+    similarity_rt=0.25,
+    train_surf=True,
+    train_nn=True,
+    layer_count=5,
+    layer_width=1000,
+    epochs=300,
+    batch_size=32,
+    learning_rate=0.01,
+    patience=30,
+    split=0.1,
+    train_points_per_dim=20,
+    dry_run=False,
+    show_plot=False,
+    solver_name_to_save=None,
+    solver_name_to_use=None,
 ):
+    """Train surface model and neural network.
+
+    If training data does not yet exist, it must be created by setting ``generate_data=True``. Note that
+    this will take a lot of time as the data generation uses the original optimization method explained in
+
+    :cite:`riihiaho22`.
+    Depending on value of ``train_points_per_dim`` the generation time varies from tens of minutes to several days.
+    You should generate a few thousand points (which equals to ``train_points_per_dim``:math:`^{2}`)
+    at least for any accuracy. Models in the repository were
+    trained with 40 000 points (4 days generation time). Use ``dry_run=True`` just to print the number of
+    points that would have been generated.
+
+    You can select to train surface model (``train_surf``) and neural network (``train_nn``) separately
+    or just generate the points by setting both to False.
+
+    The plots are saved to the disk even if ``show_plot`` is set to False.
+
+    :param runtime: See :term:`runtime`.
+    :param slab_sim_name_for_training:
+        The name of the slab simulation that contains or will contain the training data.
+        New training data is generated with this name if  ``generate_data=True``.
+        Otherwise, existing data with this name is used.
+    :param generate_data:
+        If True, new training data is generated with given ``slab_sim_name_for_training``.
+        Default is False. The training data must exist in order to train the models.
+    :param data_generation_diff_step:
+        Used in :py:class:`slab_model.opt.Optimization` as a stepsize for finite difference Jacobian
+        estimation. Smaller step gives better results, but the variables look cloudy. Big
+        step is faster and variables smoother but there will be outliers in the results. Good
+        stepsize is between 0.001 and 0.01.
+    :param starting_guess_type:
+        String, one of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
+        Hard-coded is only needed if training the other methods from absolute scratch (for
+        example if leaf material parameter count or bounds change in future development).
+        Curve fitting 'curve' is the method presented in the first HyperBlend paper
+        :cite:`riihiaho22`. It will
+        only work in cases where R and T are relatively close to each other (around +- 0.2).
+        Surface fitting method 'surf' can be used after the first training iteration has been carried
+        out. It can more robustly adapt to situations where R and T are dissimilar.
+    :param similarity_rt:
+        Controls the symmetry of generated pairs, i.e., how much each R value can differ from
+        respective T value. Using greater than 0.25 will cause generating a lot of points
+        that will fail to be optimized properly (and will be pruned before training). This
+        wastes computational resources. Good results were obtained in :cite:`riihiaho25`
+        by training multiple times and gradually loosening the similarity requirement.
+    :param train_surf:
+        If True, train the surface model. Default is True.
+    :param train_nn:
+        If True, train the neural network. Default is True.
+    :param layer_count:
+        Number of hidden layers in neural network. Omitted if ``train_nn=False``.
+    :param layer_width:
+        Width (in number of nodes) of hidden layers in neural network.
+        Omitted if ``train_nn=False``.
+    :param epochs:
+        Maximum number of epochs the neural network is trained. Omitted if ``train_nn=False``.
+    :param batch_size:
+        Batch size when training neural network. Omitted if ``train_nn=False``. Smaller values (e.g. 2) yield better
+        accuracy while bigger values (e.g. 32) train faster.
+    :param learning_rate:
+        Learning rate of the Adam optimizer. Default value of 0.001 is good and this has very little effect on
+        training results. Feel free to test different values. Omitted if ``train_nn=False``.
+    :param patience:
+        Stop NN training if the loss has not improved in this many epochs. Omitted if ``train_nn=False``.
+    :param split:
+        Percentage [0,1] of data reserved for testing between epochs. Value between 0.1 and 0.2
+        is usually sufficient. Omitted if ``train_nn=False``.
+    :param train_points_per_dim:
+         Into how many parts each dimension (R,T) are cut in interval [0,1]. Greater value results in more
+         training points. Good values from 100 to 500. For testing purposes, low values, e.g., 20 can be used.
+         Omitted if ``generate_data=False``.
+    :param dry_run:
+        Print the number of points that would have been generated, but does not really generate the training points.
+        Omitted if ``generate_data=False``.
+    :param show_plot:
+        If True, shows interactive plots to user (which halts execution until window is closed). Regardless
+        of this value, the plots are saved to disk. Default is False.
+    :param solver_name_to_save:
+        Solver used to save the generated training data and used to train the models if any.
+    :param solver_name_to_use:
+        Name of the solver to be used. If None, default solver name is used.
+        For iterative training, this should be the name of the previous iteration's solver.
+    """
+
+    if generate_data:
+        TD.generate_train_data(
+            runtime=runtime,
+            slab_sim_name=slab_sim_name_for_training,
+            dry_run=dry_run,
+            train_points_per_dim=train_points_per_dim,
+            similarity_rt=similarity_rt,
+            starting_guess_type=starting_guess_type,
+            data_generation_diff_step=data_generation_diff_step,
+            solver_name_to_use=solver_name_to_use,
+            solver_name_to_save=solver_name_to_save,
+        )
+
+    # Do not try to train if it was only a dry run
+    if dry_run:
+        return
+
+    if train_surf:
+        surf.train(
+            training_sim_name=slab_sim_name_for_training,
+            solver_save_name=solver_name_to_save,
+        )
+    if train_nn:
+        nn.train(
+            show_plot=show_plot,
+            layer_count=layer_count,
+            layer_width=layer_width,
+            epochs=epochs,
+            batch_size=batch_size,
+            learning_rate=learning_rate,
+            patience=patience,
+            split=split,
+            training_sim_name=slab_sim_name_for_training,
+            solver_name=solver_name_to_save,
+        )
+
+    visualize_slab_model_training(
+        training_slab_sim_name=slab_sim_name_for_training,
+        show_plot=False,
+        plot_surf=train_surf,
+        plot_nn=train_nn,
+        solver_name=solver_name_to_save,
+    )
+
+
+def iterative_train(
+    runtime: RuntimeEnvironment, iterations=8, train_points_per_dim=200, dry_run=False
+):
+    """Iteratively train the slab models several times.
+
+    .. note::
+        This method has many hard-coded values that are passed to
+        :py:func:`slab_model.interface.train_models`. You may want to modify
+        them to your needs.
+
+    :param runtime: See :term:`runtime`.
+    :param iterations: The number of iterations to run.
+    :param train_points_per_dim: See :py:func:`slab_model.interface.train_models`.
+    :param dry_run: See :py:func:`slab_model.interface.train_models`.
+    """
 
     first_run_similarity_requirement = 0.2
     last_run_similarity_requirement = 1.0
@@ -319,14 +480,14 @@ def iterative_train(
             # First iteration
             train_models(
                 runtime=runtime,
-                set_name=current_iteration_slab_sim_name,
+                slab_sim_name_for_training=current_iteration_slab_sim_name,
                 generate_data=True,
                 data_generation_diff_step=first_run_diffstep,
                 starting_guess_type="curve",
                 similarity_rt=first_run_similarity_requirement,
                 train_surf=True,
                 train_nn=False,
-                train_points_per_dim=training_points,
+                train_points_per_dim=train_points_per_dim,
                 dry_run=dry_run,
                 solver_name_to_save=current_iteration_slab_sim_name,
             )
@@ -335,7 +496,7 @@ def iterative_train(
             # Last iteration
             train_models(
                 runtime=runtime,
-                set_name=current_iteration_slab_sim_name,
+                slab_sim_name_for_training=current_iteration_slab_sim_name,
                 generate_data=True,
                 data_generation_diff_step=diffstep,
                 starting_guess_type="surf",
@@ -343,7 +504,7 @@ def iterative_train(
                 train_surf=True,
                 train_nn=True,
                 learning_rate=0.0005,
-                train_points_per_dim=training_points,
+                train_points_per_dim=train_points_per_dim,
                 dry_run=dry_run,
                 solver_name_to_save=current_iteration_slab_sim_name,
                 solver_name_to_use=previous_iteration_slab_sim_name,
@@ -352,14 +513,14 @@ def iterative_train(
             # Intermediate iterations
             train_models(
                 runtime=runtime,
-                set_name=current_iteration_slab_sim_name,
+                slab_sim_name_for_training=current_iteration_slab_sim_name,
                 generate_data=True,
                 data_generation_diff_step=diffstep,
                 starting_guess_type="surf",
                 similarity_rt=curr_similarity,
                 train_surf=True,
                 train_nn=False,
-                train_points_per_dim=training_points,
+                train_points_per_dim=train_points_per_dim,
                 dry_run=dry_run,
                 solver_name_to_save=current_iteration_slab_sim_name,
                 solver_name_to_use=previous_iteration_slab_sim_name,
@@ -369,142 +530,8 @@ def iterative_train(
         curr_similarity += diff_similarity
 
 
-def train_models(
-    runtime: RuntimeEnvironment,
-    set_name="training_data",
-    generate_data=False,
-    data_generation_diff_step=0.01,
-    starting_guess_type="curve",
-    similarity_rt=0.25,
-    train_surf=True,
-    train_nn=True,
-    layer_count=5,
-    layer_width=1000,
-    epochs=300,
-    batch_size=32,
-    learning_rate=0.01,
-    patience=30,
-    split=0.1,
-    train_points_per_dim=20,
-    dry_run=False,
-    show_plot=False,
-    solver_name_to_save=None,
-    solver_name_to_use=None,
-):
-    """Train surface model and neural network.
-
-    If training data does not yet exist, it must be created by setting ``generate_data=True``. Note that
-    this will take a lot of time as the data generation uses the original optimization method. Depending
-    on value of ``train_points_per_dim`` the generation time varies from tens of minutes to several days.
-    You should generate a few thousand points at least for any accuracy. Models in the repository were
-    trained with 40 000 points (4 days generation time). Use ``dry_run=True`` just to print the number of
-    points that would have been generated.
-
-    You can select to train surface model (``train_surf``) and neural network (``train_nn``) separately
-    or just generate the points.
-
-    TODO: The names are pure chaos now. There is a name for the dataset to use, name for the solver to
-        be saved, and a name for the solver that is used as a starting guess. Some sense must be made of this.
-
-    Show plot is safe to be kept at default ``False``. The plots are saved to the disk anyways.
-
-    :param data_generation_diff_step:
-    :param starting_guess_type:
-            One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
-            Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
-            example if leaf material parameter count or bounds change in future development).
-            Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
-            only work in cases where R and T are relatively close to each other (around +- 0.2).
-            Surface fitting method 'surf' can be used after the first training iteration has been carried
-            out. It can more robustly adapt to situations where R and T are dissimilar.
-    :param similarity_rt:
-    :param set_name:
-        Set name of the training data. New training data is generated with this name if  ``generate_data=True``.
-        Otherwise, existing data with this name is used.
-    :param show_plot:
-        If True, shows interactive plots to user (which halts excecution until window is closed). Regardless
-        of this value, the plots are saved to disk. Default is False.
-    :param layer_count:
-        Number of hidden layers in neural network. Omitted if ``train_nn=False``.
-    :param layer_width:
-        Width of hidden layers in neural network. Omitted if ``train_nn=False``.
-    :param epochs:
-        Maximum number of epochs the neural network is trained. Omitted if ``train_nn=False``.
-    :param batch_size:
-        Batch size when training neural network. Omitted if ``train_nn=False``. Smaller values (e.g. 2) yield better
-        accuracy while bigger values (e.g. 32) train faster.
-    :param learning_rate:
-        Learning rate of the Adam optimizer. Default value of 0.001 is good and this has very little effect on
-        training results. Feel free to test different values. Omitted if ``train_nn=False``.
-    :param patience:
-        Stop NN training if the loss has not improved in this many epochs. Omitted if ``train_nn=False``.
-    :param split:
-        Percentage [0,1] of data reserved for testing between epochs. Value between 0.1 and 0.2
-        is usually sufficient. Omitted if ``train_nn=False``.
-    :param generate_data:
-        If True, new training data is generated with given ``set_name``. Default is False. The training data
-        must exist in order to train the models.
-    :param train_points_per_dim:
-         Into how many parts each dimension (R,T) are cut in interval [0,1]. Greater value results in more
-         training points. Good values from 100 to 500. For testing purposes, low values, e.g., 20 can be used.
-         Omitted if ``generate_data=False``.
-    :param dry_run:
-        Print the number of points that would have been generated, but does not really generate the training points.
-        Omitted if ``generate_data=False``.
-    :param train_surf:
-        If True, train the surface model. Default is True.
-    :param train_nn:
-        If True, train the neural network. Default is True.
-    :param solver_name_to_save: Name of the solver used to get a starting guess if ``starting_guess_type='surf'``.
-        For iterative training, this should be the name of the previous iteration's solver.
-    """
-
-    if generate_data:
-        TD.generate_train_data(
-            runtime=runtime,
-            set_name=set_name,
-            dry_run=dry_run,
-            cuts_per_dim=train_points_per_dim,
-            similarity_rt=similarity_rt,
-            starting_guess_type=starting_guess_type,
-            data_generation_diff_step=data_generation_diff_step,
-            solver_name_to_use=solver_name_to_use,
-            solver_name_to_save=solver_name_to_save,
-        )
-
-    if dry_run:
-        return
-
-    if train_surf:
-        surf.train(training_sim_name=set_name, solver_save_name=solver_name_to_save)
-    if train_nn:
-        nn.train(
-            show_plot=show_plot,
-            layer_count=layer_count,
-            layer_width=layer_width,
-            epochs=epochs,
-            batch_size=batch_size,
-            learning_rate=learning_rate,
-            patience=patience,
-            split=split,
-            training_sim_name=set_name,
-            solver_name=solver_name_to_save,
-        )
-    #
-    # nn_name = FN.get_nn_save_name(layer_count=layer_count, layer_width=layer_width, batch_size=batch_size,
-    #                               lr=learning_rate, split=split, training_set=set_name)
-
-    visualize_leaf_models(
-        training_set_name=set_name,
-        show_plot=False,
-        plot_surf=train_surf,
-        plot_nn=train_nn,
-        solver_name=solver_name_to_save,
-    )
-
-
-def visualize_leaf_models(
-    training_set_name: str,
+def visualize_slab_model_training(
+    training_slab_sim_name: str,
     show_plot=False,
     plot_surf=True,
     plot_nn=True,
@@ -513,11 +540,20 @@ def visualize_leaf_models(
 ):
     """Visualize trained surface and neural network model against training data.
 
-    The plot is always saved to disk regardless of ``show_plot`` flag.
+    The plot is always saved to disk regardless of ``show_plot`` attribute.
 
-    :param solver_name:
+    :param training_slab_sim_name:
+        Name of the slab simulation that was used as training data.
     :param show_plot:
         If True, show interactive plot. Default is false.
+    :param plot_surf:
+        If True, plot surface model against training data. Default is False.
+    :param plot_nn:
+        If True, plot neural network model against training data. Default is True.
+    :param plot_points:
+        If True, plot training data points. Default is True.
+    :param solver_name:
+        Name of the solver to be plotted. Default is None and plots the default solver.
     """
 
     plotter.plot_trained_leaf_models(
@@ -526,6 +562,6 @@ def visualize_leaf_models(
         plot_surf=plot_surf,
         plot_nn=plot_nn,
         plot_points=plot_points,
-        set_name=training_set_name,
+        slab_sim_name=training_slab_sim_name,
         solver_name=solver_name,
     )

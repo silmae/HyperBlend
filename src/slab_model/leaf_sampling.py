@@ -103,4 +103,4 @@ def resample(slab_sim_name: str, plot_resampling=True):
         )
 
     if plot_resampling:
-        plotter.plot_resampling(set_name=slab_sim_name)
+        plotter.plot_resampling(slab_sim_name=slab_sim_name)

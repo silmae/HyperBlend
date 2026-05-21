@@ -8,13 +8,15 @@ from src.data import toml_handling as TH
 from publication_run import run_paper_tests, asym_test
 from src.system_simulation import forest
 
-
 if __name__ == "__main__":
 
     runtime = initialization.initialize()
 
-    SI.visualize_leaf_models(
-        training_set_name="train_iter_1", show_plot=False, plot_surf=True, plot_nn=False
+    SI.visualize_slab_model_training(
+        training_slab_sim_name="train_iter_1",
+        show_plot=False,
+        plot_surf=True,
+        plot_nn=False,
     )
 
     run_paper_tests()
@@ -25,9 +27,11 @@ if __name__ == "__main__":
     set_name_iter_4 = "train_iter_4"
     # Training data visualization
     TD.visualize_training_data_pruning(set_name=set_name_iter_4, show=True)
-    SI.visualize_leaf_models(training_set_name=set_name_iter_4, show_plot=True)
-    SI.visualize_leaf_models(
-        training_set_name=set_name_iter_4, show_plot=True, plot_nn=True
+    SI.visualize_slab_model_training(
+        training_slab_sim_name=set_name_iter_4, show_plot=True
+    )
+    SI.visualize_slab_model_training(
+        training_slab_sim_name=set_name_iter_4, show_plot=True, plot_nn=True
     )
     plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
 
@@ -56,7 +60,7 @@ if __name__ == "__main__":
     # generates three leaf targets to \HyperBlend\leaf_measurement_sets\try_random_p_leaves\sample_targets
     SI.generate_prospect_leaf_random(slab_sim_name=set_name, count=3)
     # Solve renderable leaf material parameters that produce target reflectance and transmittance
-    SI.solve_leaf_material_parameters(
+    SI.solve_slab_material_parameters(
         slab_sim_name=set_name, solver="nn", clear_old_results=True
     )
     # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_random_p_leaves\set_result
@@ -67,7 +71,7 @@ if __name__ == "__main__":
     print(sampling)
 
     SI.resample_slab_sim_target(slab_sim_name=set_name)
-    plotter.plot_resampling(set_name=set_name)
+    plotter.plot_resampling(slab_sim_name=set_name)
 
     # Similarly, we can provide exact parameters
     set_name = "try_p_leaves"
@@ -75,7 +79,7 @@ if __name__ == "__main__":
     # The values used here are the default values.
     SI.generate_prospect_leaf(
         set_name=set_name,
-        sample_id=0,
+        signal_id=0,
         n=1.5,
         ab=32,
         ar=8,
@@ -86,9 +90,9 @@ if __name__ == "__main__":
     )
     # You can also give only some parameters. Defaults will be used for the ones not provided.
     # Remember to give new sample_id so that the previously created leaf is not overwritten.
-    SI.generate_prospect_leaf(set_name=set_name, sample_id=1, w=0.001, m=0.03)
+    SI.generate_prospect_leaf(slab_sim_name=set_name, signal_id=1, w=0.001, m=0.03)
     # Solve renderable leaf material parameters as before
-    SI.solve_leaf_material_parameters(
+    SI.solve_slab_material_parameters(
         slab_sim_name=set_name,
         resolution=10,
         range_start=400,
@@ -100,7 +104,7 @@ if __name__ == "__main__":
     # We can also copy existing set and solve it with a different solver for example. Let's try that with
     #   surface fitting solver called 'surf'
     copy_set = "try_copying_set"
-    SI.solve_leaf_material_parameters(
+    SI.solve_slab_material_parameters(
         slab_sim_name=copy_set,
         resolution=10,
         range_start=400,
@@ -116,7 +120,7 @@ if __name__ == "__main__":
     # Write data to disk in a format the HyperBlend can understand
     TH.write_target(set_name, data, signal_id=0, resampled=False)
     # Solve as before
-    SI.solve_leaf_material_parameters(
+    SI.solve_slab_material_parameters(
         slab_sim_name=set_name,
         resolution=10,
         range_start=400,

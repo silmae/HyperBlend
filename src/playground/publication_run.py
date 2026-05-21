@@ -25,7 +25,7 @@ def run_paper_tests():
     resolution = 5
     range_start = 400
     range_end = 2500
-    LI.solve_leaf_material_parameters(
+    LI.solve_slab_material_parameters(
         clear_old_results=True,
         resolution=resolution,
         range_start=range_start,
@@ -35,7 +35,7 @@ def run_paper_tests():
         solver="nn",
         solver_dirname=nn_name,
     )
-    LI.solve_leaf_material_parameters(
+    LI.solve_slab_material_parameters(
         clear_old_results=True,
         resolution=resolution,
         range_start=range_start,
@@ -46,7 +46,7 @@ def run_paper_tests():
         solver_dirname=surf_model_name,
     )
 
-    LI.solve_leaf_material_parameters(
+    LI.solve_slab_material_parameters(
         clear_old_results=True,
         resolution=resolution,
         range_start=range_start,
@@ -56,7 +56,7 @@ def run_paper_tests():
         solver="nn",
         solver_dirname=nn_name,
     )
-    LI.solve_leaf_material_parameters(
+    LI.solve_slab_material_parameters(
         clear_old_results=True,
         resolution=resolution,
         range_start=range_start,
@@ -93,7 +93,7 @@ def asym_test(smthng="const_r_var_t"):
     # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
     # o = Optimization(set_name=set_name, diffstep=0.01)
     # o.run_optimization(resampled=False, use_threads=True)
-    LI.solve_leaf_material_parameters(
+    LI.solve_slab_material_parameters(
         slab_sim_name=set_name,
         solver="nn",
         clear_old_results=True,
@@ -106,7 +106,7 @@ def iterative_train():
     # Iterative train manually
     set_name_iter_1 = "train_iter_1v4"
     LI.train_models(
-        set_name=set_name_iter_1,
+        slab_sim_name_for_training=set_name_iter_1,
         generate_data=True,
         data_generation_diff_step=0.01,
         starting_guess_type="curve",
@@ -118,7 +118,7 @@ def iterative_train():
     set_name_iter_2 = "train_iter_2_v4"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_1)
     LI.train_models(
-        set_name=set_name_iter_2,
+        slab_sim_name_for_training=set_name_iter_2,
         generate_data=True,
         data_generation_diff_step=0.001,
         starting_guess_type="surf",
@@ -130,7 +130,7 @@ def iterative_train():
     set_name_iter_3 = "train_iter_3_v4"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_2)
     LI.train_models(
-        set_name=set_name_iter_3,
+        slab_sim_name_for_training=set_name_iter_3,
         generate_data=True,
         data_generation_diff_step=0.001,
         starting_guess_type="surf",
@@ -142,7 +142,7 @@ def iterative_train():
     set_name_iter_4 = "train_iter_4_v4"
     surf_model_name = FN.get_surface_model_save_name(set_name_iter_3)
     LI.train_models(
-        set_name=set_name_iter_4,
+        slab_sim_name_for_training=set_name_iter_4,
         generate_data=False,
         data_generation_diff_step=0.001,
         starting_guess_type="surf",

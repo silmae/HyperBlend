@@ -1,3 +1,5 @@
+.. _chap-install:
+
 Installing HyperBlend
 ==============================
 

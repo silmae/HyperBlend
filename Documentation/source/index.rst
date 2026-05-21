@@ -6,7 +6,13 @@
 Welcome to HyperBlend's documentation!
 ======================================
 
-This documentation is still work in progress. We will get it done eventually!
+This documentation is still work in progress.
+
+If this is the first time you hear about HyperBlend, you might want
+to read this page first to gain some information on what kind of simulator
+it is. You can then continue to :ref:`chap-install` for installation instructions
+and then to :ref:`chap-basics` for a beginner tutorial to construct your first HyperBlend
+simulation.
 
 This documentation lives in https://hyperblend.readthedocs.io/en/latest/index.html
 The project is hosted in GitHub at https://github.com/silmae/HyperBlend

@@ -264,7 +264,7 @@ class TestSlabs(TestCase):
 
         # Generate some random PROSPECT leaves to use for testing
         SMI.generate_prospect_leaf_random(slab_sim_name=slab_sim_name, leaf_count=2)
-        SMI.generate_prospect_leaf(set_name=slab_sim_name, sample_id=3, w=0.001)
+        SMI.generate_prospect_leaf(slab_sim_name=slab_sim_name, signal_id=3, w=0.001)
 
         # Check that the target files exist after generating them
         self.assertTrue(os.path.exists(p1))
@@ -290,7 +290,7 @@ class TestSlabs(TestCase):
         self.assertTrue(os.path.exists(p2))
         self.assertTrue(os.path.exists(p3))
 
-        SMI.solve_leaf_material_parameters(
+        SMI.solve_slab_material_parameters(
             runtime=self.runtime,
             slab_sim_name=slab_sim_name,
             clear_old_results=True,
@@ -345,7 +345,7 @@ class TestSlabs(TestCase):
         new_sampling = [550, 650]
         SMI.resample_slab_sim_target(slab_sim_name=slab_sim_opt_name, wls=new_sampling)
 
-        SMI.solve_leaf_material_parameters(
+        SMI.solve_slab_material_parameters(
             runtime=self.runtime,
             slab_sim_name=slab_sim_opt_name,
             clear_old_results=True,

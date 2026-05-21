@@ -81,9 +81,9 @@ def visualize_training_data_pruning(
 
 def generate_train_data(
     runtime: RuntimeEnvironment,
-    set_name="training_data",
+    slab_sim_name="training_data",
     dry_run=True,
-    cuts_per_dim=10,
+    train_points_per_dim=10,
     similarity_rt=0.25,
     starting_guess_type="curve",
     data_generation_diff_step=0.01,
@@ -96,44 +96,52 @@ def generate_train_data(
     generated points.
 
     If ``dry_run=True``, only pretends to generate the points. This is useful for testing how
-    different ``cuts_per_dim`` values affect the actual point count.
+    different ``train_points_per_dim`` values affect the actual point count.
 
     Data visualization is saved to disk when the data has been generated.
 
     :param data_generation_diff_step:
-    :param set_name:
-        Optionally change the ``set_name`` that is used for destination directory. If other
+        Used in :py:class:`slab_model.opt.Optimization` as a stepsize for finite difference Jacobian
+        estimation. Smaller step gives better results, but the variables look cloudy. Big
+        step is faster and variables smoother but there will be outliers in the results. Good
+        stepsize is between 0.001 and 0.01.
+    :param slab_sim_name:
+        Optionally change the ``slab_sim_name`` that is used for destination directory. If other
         than default is used, it must be taken into account when training, i.e., pass the same
         name for training method.
     :param dry_run:
         If true, just prints how many points would have been generated. Note that it
         is not the same as ``cuts_per_dim`` ^2 because parts of the space are not
         usable and will be cut out.
-    :param cuts_per_dim:
+    :param train_points_per_dim:
         Into how many parts each dimension (R,T) are cut in interval [0,1].
     :param similarity_rt:
         Controls the symmetry of generated pairs, i.e., how much each R value can differ from
         respective T value. Using greater than 0.25 will cause generating a lot of points
         that will fail to be optimized properly (and will be pruned before training).
     :param starting_guess_type:
-            One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
-            Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
-            example if leaf material parameter count or bounds change in future development).
-            Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
-            only work in cases where R and T are relatively close to each other (around +- 0.2).
-            Surface fitting method 'surf' can be used after the first training iteration has been carried
-            out. It can more robustly adapt to situations where R and T are dissimilar.
-    :param solver_name_to_use: Name of the solver to be used. If None, default solver name is used.
+        One of 'hard-coded', 'curve', 'surf' in order of increasing complexity.
+        Hard-coded 'hard-coded' is only needed if training the other methods from absolute scratch (for
+        example if leaf material parameter count or bounds change in future development).
+        Curve fitting 'curve' is the method presented in the first HyperBlend paper. It will
+        only work in cases where R and T are relatively close to each other (around +- 0.2).
+        Surface fitting method 'surf' can be used after the first training iteration has been carried
+        out. It can more robustly adapt to situations where R and T are dissimilar.
+    :param solver_name_to_use:
+        Name of the solver to be used. If None, default solver name is used.
+    :param solver_name_to_save:
+         Solver used to save the generated training data.
+
     """
 
-    FH.create_top_level_slab_sim_directories(set_name)
+    FH.create_top_level_slab_sim_directories(slab_sim_name)
 
     data = []
     fake_wl = (
         1  # Set dummy wavelengths so that the rest of the code is ok with the files
     )
-    R = np.linspace(0, 1.0, cuts_per_dim, endpoint=True)
-    T = np.linspace(0, 1.0, cuts_per_dim, endpoint=True)
+    R = np.linspace(0, 1.0, train_points_per_dim, endpoint=True)
+    T = np.linspace(0, 1.0, train_points_per_dim, endpoint=True)
     for i, r in enumerate(R):
         for j, t in enumerate(T):
             # Do not allow r+t to exceed 1 as it would break conservation of energy
@@ -163,17 +171,20 @@ def generate_train_data(
         if not os.path.exists(p_solver_dir):
             os.makedirs(p_solver_dir)
 
-        TH.write_target(set_name, data, signal_id=0)
+        TH.write_target(slab_sim_name, data, signal_id=0)
         o = Optimization(
             runtime=runtime,
-            set_name=set_name,
+            set_name=slab_sim_name,
             diffstep=data_generation_diff_step,
             starting_guess_type=starting_guess_type,
             solver_name=solver_name_to_use,
         )
         o.run_optimization(resampled=False)
         visualize_training_data_pruning(
-            set_name=set_name, show=False, save=True, solver_name=solver_name_to_save
+            set_name=slab_sim_name,
+            show=False,
+            save=True,
+            solver_name=solver_name_to_save,
         )
     else:
         logging.info(
@@ -219,7 +230,7 @@ def generate_starting_guess(
         slab_sim_name=slab_sim_name, solver_name=solver_name
     )
     plotter._plot_starting_guess_coeffs_fitting(
-        set_name=slab_sim_name, solver_name=solver_name
+        slab_sim_name=slab_sim_name, solver_name=solver_name
     )
 
 
@@ -242,7 +253,7 @@ def fit_starting_guess_coefficients(
     if slab_sim_name is None:
         slab_sim_name = C.starting_guess_set_name
     a_list, ad_list, sd_list, ai_list, mf_list = get_starting_guess_points(
-        set_name=slab_sim_name
+        slab_sim_name=slab_sim_name
     )
 
     ad_coeffs = GU.fit_poly(a_list, ad_list, degree=degree)

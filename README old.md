@@ -179,7 +179,7 @@ set_name = "try_random_p_leaves"
 LI.generate_prospect_leaf_random(slab_sim_name=set_name, leaf_count=3)
 
 # Solve renderable leaf material parameters that produce target reflectance and transmittance
-LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
+LI.solve_slab_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
 
 # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_random_p_leaves\set_result
 ```
@@ -195,14 +195,14 @@ set_name = "try_p_leaves"
 
 # generates a leaf target with certain parameters to \HyperBlend\leaf_measurement_sets\try_p_leaves\sample_targets.
 # The values used here are the default values.
-LI.generate_prospect_leaf(set_name=set_name, sample_id=0, n=1.5, ab=32, ar=8, brown=0, w=0.016, m=0.009, ant=0)
+LI.generate_prospect_leaf(set_name=set_name, signal_id=0, n=1.5, ab=32, ar=8, brown=0, w=0.016, m=0.009, ant=0)
 
 # You can also give only some parameters. Defaults will be used for the ones not provided.
 # Remember to give new sample_id so that the previously created leaf is not overwritten.
-LI.generate_prospect_leaf(set_name=set_name, sample_id=1, w=0.001, m=0.03)
+LI.generate_prospect_leaf(set_name=set_name, signal_id=1, w=0.001, m=0.03)
 
 # Solve renderable leaf material parameters as before
-LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
+LI.solve_slab_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
 
 # After solver has run, check results from HyperBlend\leaf_measurement_sets\try_p_leaves\set_result
 ```
@@ -216,7 +216,7 @@ in `\HyperBlend\leaf_measurement_sets\try_copying_set\set_result`
 from src.slab_model import interface as LI
 
 copy_set = "try_copying_set"
-LI.solve_leaf_material_parameters(slab_sim_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
+LI.solve_slab_material_parameters(slab_sim_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
 ```
 
 
@@ -239,7 +239,7 @@ data = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
 TH.write_target(set_name, data, signal_id=0)
 
 # Solve as before
-LI.solve_leaf_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
+LI.solve_slab_material_parameters(slab_sim_name=set_name, resolution=10, solver='nn')
 ```
 
 The same workflow we have seen in earlier examples applies here. We just have to have some data to work with.
@@ -307,7 +307,7 @@ Once the training is done, you can visualize the result by calling
 ```python
 from src.slab_model import interface as LI
 
-LI.visualize_leaf_models()
+LI.visualize_slab_model_training()
 ```
 
 which will create a 3D plot similar to the ones in the published paper. 

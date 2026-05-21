@@ -99,22 +99,22 @@ def get_training_data(training_sim_name: str):
     return ad, sd, ai, mf, r, t, re, te
 
 
-def get_starting_guess_points(set_name: str = None):
+def get_starting_guess_points(slab_sim_name: str = None):
     """Get starting guess points.
 
     NOTE: Points where reflectance or transmittance error exceeds 0.002 are deleted.
 
-    :param set_name:
+    :param slab_sim_name:
         Custom set name to fetch the data from. If not given, default set name variable
         'starting_guess_set_name' stored in constants.py is used.
     :return:
         a_list, ad_list, sd_list, ai_list, mf_list
     """
 
-    if set_name is None:
-        set_name = C.starting_guess_set_name
+    if slab_sim_name is None:
+        slab_sim_name = C.starting_guess_set_name
 
-    result_dict = T.read_signal_result(set_name, 0)
+    result_dict = T.read_signal_result(slab_sim_name, 0)
     wls = result_dict[C.key_sample_result_wls]
 
     re_list = np.array(

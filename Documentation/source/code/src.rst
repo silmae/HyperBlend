@@ -1,4 +1,4 @@
-Source Code
+API Reference
 ===============
 
 .. This toctree defines in which order the modules are displayed.

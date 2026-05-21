@@ -59,3 +59,7 @@ Commonly used parameter names
         purposes, such as slabs of different thicknesses. Each model has either an
         optimization, surface figging, or neural network solver, depending on how it
         was trained. The optimization solver is always usable even without training.
+
+    runtime
+        Runtime data that the program needs to perform all the tasks. This includes
+        logging and Blender executable path, for example.

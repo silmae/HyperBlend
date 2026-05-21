@@ -54,7 +54,7 @@ class TestTraining(TestCase):
         SMI.iterative_train(
             runtime=self.runtime,
             iterations=iterations,
-            training_points=10,
+            train_points_per_dim=10,
             dry_run=False,
         )
 

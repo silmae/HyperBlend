@@ -1,3 +1,4 @@
+.. _chap-basics:
 
 Beginner Tutorial
 =======================

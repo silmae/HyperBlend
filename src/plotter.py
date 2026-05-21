@@ -23,7 +23,6 @@ from src.data import (
 from src.slab_model import nn, surf
 from src.utils import data_utils as DU, spectra_utils as SU
 
-
 figsize_triple_width = (22, 6)
 """Figure size for two plot figures."""
 
@@ -374,7 +373,7 @@ def plot_nn_train_history(
 
 
 def plot_trained_leaf_models(
-    set_name="training_data",
+    slab_sim_name="training_data",
     save_thumbnail=True,
     show_plot=False,
     plot_surf=True,
@@ -399,7 +398,7 @@ def plot_trained_leaf_models(
 
     plt.close("all")
     ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = (
-        src.slab_model.training_utils.get_training_data(training_sim_name=set_name)
+        src.slab_model.training_utils.get_training_data(training_sim_name=slab_sim_name)
     )
     ad_train, sd_train, ai_train, mf_train, r_train, t_train = (
         src.slab_model.training_utils.prune_training_data(
@@ -478,7 +477,7 @@ def plot_trained_leaf_models(
 
         if save_thumbnail:
             folder = PH.directory_slab_model(slab_model_name=solver_name)
-            image_name = f"{set_name}_{leaf_param_names[i]}.png"
+            image_name = f"{slab_sim_name}_{leaf_param_names[i]}.png"
             path = PH.join(folder, image_name)
             logging.info(f"Saving surface plot to '{path}'.")
             plt.savefig(path, dpi=save_resolution)
@@ -573,12 +572,12 @@ def plot_training_data_set(
 
 
 def plot_wl_optimization_history(
-    set_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True
+    slab_sim_name: str, wl: float, sample_id, dont_show=True, save_thumbnail=True
 ) -> None:
     """Plots optimization history of a single wavelength using existing wavelength result toml file.
 
-    :param set_name:
-        Set name.
+    :param slab_sim_name:
+        See :term:`slab_sim_name`.
     :param wl:
         Wavelength of the optimization.
     :param sample_id:
@@ -591,7 +590,7 @@ def plot_wl_optimization_history(
 
     plt.close("all")
     subres_dict = TH.read_wavelength_result(
-        slab_sim_name=set_name, signal_id=sample_id, wl=wl
+        slab_sim_name=slab_sim_name, signal_id=sample_id, wl=wl
     )
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=figsize_triple_width)
     fig.suptitle(
@@ -678,7 +677,7 @@ def plot_wl_optimization_history(
     )
 
     if save_thumbnail is not None:
-        folder = PH.directory_optimization_result(set_name, sample_id)
+        folder = PH.directory_optimization_result(slab_sim_name, sample_id)
         image_name = FN.filename_wl_result(wl, file_type="plot")
         path = PH.join(folder, image_name)
         logging.info(f"Saving the subresult plot to '{path}'.")
@@ -692,11 +691,13 @@ def plot_wl_optimization_history(
     plt.close(fig)
 
 
-def plot_slab_sim_result(set_name: str, dont_show=True, save_thumbnail=True) -> None:
+def plot_slab_sim_result(
+    slab_sim_name: str, dont_show=True, save_thumbnail=True
+) -> None:
     """Plot average of sample results as the set result.
 
-    :param set_name:
-        Set name.
+    :param slab_sim_name:
+        See :term:`slab_sim_name`.
     :param dont_show:
         If False, pyplot.show() is called, otherwise nothing is shown. Default is True.
     :param save_thumbnail:
@@ -709,7 +710,7 @@ def plot_slab_sim_result(set_name: str, dont_show=True, save_thumbnail=True) -> 
     # ax[0].set_title('Variable space')
     # ax[1].set_title('Target space')
 
-    r = TH.read_slab_sim_result(set_name)
+    r = TH.read_slab_sim_result(slab_sim_name)
     wls = r[C.key_set_result_wls]
     ad_mean = np.array(r[C.key_set_result_wl_ad_mean])
     sd_mean = np.array(r[C.key_set_result_wl_sd_mean])
@@ -766,14 +767,14 @@ def plot_slab_sim_result(set_name: str, dont_show=True, save_thumbnail=True) -> 
     ax_inverted.plot(wls, tm_mean + (tm_std / 2), color="gray", ls="dashed")
 
     if save_thumbnail:
-        path = PH.file_slab_sim_result_plot(slab_sim_name=set_name)
+        path = PH.file_slab_sim_result_plot(slab_sim_name=slab_sim_name)
         logging.info(f"Saving the set result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution, bbox_inches="tight", pad_inches=0.1)
     if not dont_show:
         plt.show()
 
 
-def plot_slab_sim_errors(set_name: str, dont_show=True, save_thumbnail=True):
+def plot_slab_sim_errors(slab_sim_name: str, dont_show=True, save_thumbnail=True):
     """Plots averaged optimization errors of a sample."""
 
     plt.close("all")
@@ -783,12 +784,12 @@ def plot_slab_sim_errors(set_name: str, dont_show=True, save_thumbnail=True):
 
     ax.set_ylabel("RMSE", fontsize=axis_label_font_size)
 
-    ids = FH.list_finished_result_signal_ids(set_name)
+    ids = FH.list_finished_result_signal_ids(slab_sim_name)
     wls = []
     refl_errs = []
     tran_errs = []
     for _, sample_id in enumerate(ids):
-        result = TH.read_signal_result(set_name, sample_id)
+        result = TH.read_signal_result(slab_sim_name, sample_id)
         wls = result[C.key_sample_result_wls]
         refl_errs.append(result[C.key_sample_result_re])
         tran_errs.append(result[C.key_sample_result_te])
@@ -835,18 +836,18 @@ def plot_slab_sim_errors(set_name: str, dont_show=True, save_thumbnail=True):
     # ax.set_ylim(variable_space_ylim)
 
     if save_thumbnail:
-        path = PH.file_slab_sim_error_plot(slab_sim_name=set_name)
+        path = PH.file_slab_sim_error_plot(slab_sim_name=slab_sim_name)
         logging.info(f"Saving the set error plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
 
-def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
+def plot_resampling(slab_sim_name: str, dont_show=True, save_thumbnail=True) -> None:
     """Plots leaf resampled spectra along with the original for all leaf samples in given set.
 
-    :param set_name:
-        Set name.
+    :param slab_sim_name:
+        See :term:`slab_sim_name`.
     :param save_thumbnail:
         If True, a PNG image is saved. Default is True.
     :param dont_show:
@@ -855,14 +856,14 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
     """
 
     plt.close("all")
-    target_ids = FH.list_target_ids(slab_sim_name=set_name)
+    target_ids = FH.list_target_ids(slab_sim_name=slab_sim_name)
 
     for sample_id in target_ids:
         target_original = TH.read_target(
-            slab_sim_name=set_name, signal_id=sample_id, resampled=False
+            slab_sim_name=slab_sim_name, signal_id=sample_id, resampled=False
         )
         target_resampled = TH.read_target(
-            slab_sim_name=set_name, signal_id=sample_id, resampled=True
+            slab_sim_name=slab_sim_name, signal_id=sample_id, resampled=True
         )
         wls_org, refl_org, tran_org = DU.unpack_target(target_original)
         wls_resampled, refl_resampled, tran_resampled = DU.unpack_target(
@@ -893,7 +894,7 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
         )
 
         if save_thumbnail:
-            folder = PH.directory_top_target(slab_sim_name=set_name)
+            folder = PH.directory_top_target(slab_sim_name=slab_sim_name)
             image_name = FN.filename_resample_plot(sample_id=sample_id)
             path = PH.join(folder, image_name)
             logging.info(f"Saving resampling plot to '{path}'.")
@@ -903,12 +904,12 @@ def plot_resampling(set_name: str, dont_show=True, save_thumbnail=True) -> None:
 
 
 def plot_signal_result(
-    set_name: str, sample_id: int, dont_show=True, save_thumbnail=True
+    slab_sim_name: str, sample_id: int, dont_show=True, save_thumbnail=True
 ) -> None:
     """Plots sample result.
 
-    :param set_name:
-        Set name.
+    :param slab_sim_name:
+        See :term:`slab_sim_name`.
     :param sample_id:
         Sample id.
     :param save_thumbnail:
@@ -919,7 +920,7 @@ def plot_signal_result(
     """
 
     plt.close("all")
-    result = TH.read_signal_result(set_name, sample_id)
+    result = TH.read_signal_result(slab_sim_name, sample_id)
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=figsize)
     fig.suptitle(f"Optimization result ", fontsize=fig_title_font_size)
     ax[0].set_title("Variable space")
@@ -977,46 +978,52 @@ def plot_signal_result(
         invert_tran=True,
     )
     if save_thumbnail:
-        path = PH.file_signal_result_plot(slab_sim_name=set_name, signal_id=sample_id)
+        path = PH.file_signal_result_plot(
+            slab_sim_name=slab_sim_name, signal_id=sample_id
+        )
         logging.info(f"Saving the sample result plot to '{path}'.")
         plt.savefig(path, dpi=save_resolution)
     if not dont_show:
         plt.show()
 
 
-def replot_wl_results(set_name: str):
+def replot_wl_results(slab_sim_name: str):
     """Replot wavelength results.
 
     Overwrites existing plots.
     """
 
-    sample_ids = FH.list_finished_result_signal_ids(set_name)
+    sample_ids = FH.list_finished_result_signal_ids(slab_sim_name)
     for sample_id in sample_ids:
-        d = TH.read_signal_result(set_name, signal_id=sample_id)
+        d = TH.read_signal_result(slab_sim_name, signal_id=sample_id)
         wls = d[C.key_sample_result_wls]
         for wl in wls:
-            plot_wl_optimization_history(set_name, wl=wl, sample_id=sample_id)
+            plot_wl_optimization_history(slab_sim_name, wl=wl, sample_id=sample_id)
 
 
 def _plot_starting_guess_coeffs_fitting(
-    dont_show=True, save_thumbnail=True, set_name: str = None, solver_name: str = None
+    dont_show=True,
+    save_thumbnail=True,
+    slab_sim_name: str = None,
+    solver_name: str = None,
 ) -> None:
     """Plot starting guess poynomial fit with data.
 
     Used only when generating the starting guess.
 
-    :param set_name:
-        Custom set name to fetch the data from. If not given, default set name variable
-        'starting_guess_set_name' stored in constants.py is used.
+    :param slab_sim_name:
+        See :term:`slab_sim_name`.
     """
 
     plt.close("all")
 
-    if set_name is None:
-        set_name = C.starting_guess_set_name
+    if slab_sim_name is None:
+        slab_sim_name = C.starting_guess_set_name
 
     a_list, ad_list, sd_list, ai_list, mf_list = (
-        src.slab_model.training_utils.get_starting_guess_points(set_name=set_name)
+        src.slab_model.training_utils.get_starting_guess_points(
+            slab_sim_name=slab_sim_name
+        )
     )
 
     ms = 10  # markersize
@@ -1042,7 +1049,7 @@ def _plot_starting_guess_coeffs_fitting(
     plt.legend()
 
     if save_thumbnail:
-        p = PH.directory_slab_simulation(slab_sim_name=set_name)
+        p = PH.directory_slab_simulation(slab_sim_name=slab_sim_name)
         image_name = f"variable_fitting.png"
         path = PH.join(p, image_name)
         logging.info(f"Saving variable fitting plot to '{path}'.")
