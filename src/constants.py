@@ -40,9 +40,6 @@ blender_executable_path_linux = "/snap/bin/blender"
 blender_scene_slab_simulation_template = "slab_sim_template.blend"
 """Name of the slab simulation template Blender scene."""
 
-ramdisk = "/media/ramdisk"
-"""Location of the ramdisk if used."""
-
 slab_nn_name = "slab_nn.pt"
 """Name of the neural network solver."""
 
@@ -53,10 +50,10 @@ path_project_root = "../"
 """Project root relative to working folder that is assumed to be project_root/src/."""
 
 # Names of the directories
-# NOTE do not change render folder names as they are used by Blender script
+# NOTE do not change render folder names as they are used by Blender scripts
 
 
-dirname_log = "log"
+dirname_log = "Log"
 
 dirname_internal = "Internal"
 
