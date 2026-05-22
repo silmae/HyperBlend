@@ -12,12 +12,12 @@ import os.path
 
 import numpy as np
 
-from src.slab_model.training_utils import get_starting_guess_points
+from src.slab_simulation.training_utils import get_starting_guess_points
 
 from src import plotter, constants as C
 from src.data import toml_handling as TH, file_handling as FH, path_handling as PH
-from src.slab_model.opt import Optimization
-from src.slab_model.training_utils import prune_training_data
+from src.slab_simulation.opt import Optimization
+from src.slab_simulation.training_utils import prune_training_data
 from src.utils import general_utils as GU, data_utils as DU
 from src.setup.runtime_environment import RuntimeEnvironment
 
@@ -101,7 +101,7 @@ def generate_train_data(
     Data visualization is saved to disk when the data has been generated.
 
     :param data_generation_diff_step:
-        Used in :py:class:`slab_model.opt.Optimization` as a stepsize for finite difference Jacobian
+        Used in :py:class:`slab_simulation.opt.Optimization` as a stepsize for finite difference Jacobian
         estimation. Smaller step gives better results, but the variables look cloudy. Big
         step is faster and variables smoother but there will be outliers in the results. Good
         stepsize is between 0.001 and 0.01.

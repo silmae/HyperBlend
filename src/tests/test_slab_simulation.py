@@ -11,7 +11,7 @@ import logging
 import numpy as np
 
 from src.setup import initialization
-from src.slab_model import interface as SMI
+from src.slab_simulation import interface as SMI
 from src.data import path_handling as PH, toml_handling as TH
 from src.utils import data_utils as DU
 

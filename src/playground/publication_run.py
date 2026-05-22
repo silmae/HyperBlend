@@ -1,5 +1,5 @@
 from data import toml_handling as TH, path_handling as PH, file_names as FN
-from slab_model import interface as LI
+from slab_simulation import interface as LI
 
 
 def write_forest_control(forest_id: str, control_dict: dict):
@@ -70,7 +70,7 @@ def run_paper_tests():
 
 def asym_test(smthng="const_r_var_t"):
     import numpy as np
-    from src.slab_model import slab_commons as LC
+    from src.slab_simulation import slab_commons as LC
     from src.utils import data_utils
 
     set_name = f"{smthng}_test"

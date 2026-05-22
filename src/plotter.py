@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-import src.slab_model.training_utils
+import src.slab_simulation.training_utils
 from src import constants as C
 from src.data import (
     file_handling as FH,
@@ -20,7 +20,7 @@ from src.data import (
     file_names as FN,
     path_handling as PH,
 )
-from src.slab_model import nn, surf
+from src.slab_simulation import nn, surf
 from src.utils import data_utils as DU, spectra_utils as SU
 
 figsize_triple_width = (22, 6)
@@ -398,10 +398,12 @@ def plot_trained_leaf_models(
 
     plt.close("all")
     ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train = (
-        src.slab_model.training_utils.get_training_data(training_sim_name=slab_sim_name)
+        src.slab_simulation.training_utils.get_training_data(
+            training_sim_name=slab_sim_name
+        )
     )
     ad_train, sd_train, ai_train, mf_train, r_train, t_train = (
-        src.slab_model.training_utils.prune_training_data(
+        src.slab_simulation.training_utils.prune_training_data(
             ad_train, sd_train, ai_train, mf_train, r_train, t_train, re_train, te_train
         )
     )
@@ -1021,7 +1023,7 @@ def _plot_starting_guess_coeffs_fitting(
         slab_sim_name = C.starting_guess_set_name
 
     a_list, ad_list, sd_list, ai_list, mf_list = (
-        src.slab_model.training_utils.get_starting_guess_points(
+        src.slab_simulation.training_utils.get_starting_guess_points(
             slab_sim_name=slab_sim_name
         )
     )

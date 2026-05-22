@@ -141,7 +141,7 @@ def run_parallel_slab_wl_render(
 ):
     """Runs a Blender script that renders a slab simulation for multiple wavelengths.
 
-    This is used by the optimization solver :mod:`slab_model.opt`.
+    This is used by the optimization solver :mod:`slab_simulation.opt`.
 
     :param runtime: Runtime environment object that contains the Blender executable path.
     :param rend_base_path: Base path for Blender renders. This is usually
@@ -215,7 +215,7 @@ def run_slab_wl_render(
 ):
     """Renders a single image of the slab simulation with given slab material parameters.
 
-    This is used by the optimization solver :mod:`slab_model.opt`.
+    This is used by the optimization solver :mod:`slab_simulation.opt`.
 
     :param runtime: Runtime environment object that contains the Blender executable path.
     :param rend_base_path: Base path for Blender renders. This is usually

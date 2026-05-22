@@ -171,7 +171,7 @@ documentation. We have made an effort to document the code well, so you should b
 Let's try generating random leaves with PROSPECT and running leaf material parameter solver.
 
 ```python
-from src.slab_model import interface as LI
+from src.slab_simulation import interface as LI
 
 set_name = "try_random_p_leaves"
 
@@ -188,7 +188,7 @@ If you want to give certain PROSPECT parameters instead of using random ones, yo
 can call it like this:
 
 ```python
-from src.slab_model import interface as LI
+from src.slab_simulation import interface as LI
 
 # Similarly, we can provide exact parameters. Lets give a new set name.
 set_name = "try_p_leaves"
@@ -213,7 +213,7 @@ used until now. Try running the code below and see the results
 in `\HyperBlend\leaf_measurement_sets\try_copying_set\set_result`
 
 ```python
-from src.slab_model import interface as LI
+from src.slab_simulation import interface as LI
 
 copy_set = "try_copying_set"
 LI.solve_slab_material_parameters(slab_sim_name=copy_set, resolution=10, solver='surf', copyof="try_p_leaves")
@@ -227,7 +227,7 @@ you must write the targets before solving for leaf material parameters. Let's as
 data in a list (we will write the list manually for the sake of example)
 
 ```python
-from src.slab_model import interface as LI
+from src.slab_simulation import interface as LI
 from src.data import toml_handling as TH
 
 set_name = "try_manual_set"
@@ -262,11 +262,11 @@ as well.
 Generating new starting for original optimization method can be done by
 
 ```python
-import slab_model.training_data
+import slab_simulation.training_data
 from src.utils import spectra_utils as SU
 
-slab_model.training_data.generate_starting_guess()
-slab_model.training_data.fit_starting_guess_coefficients()
+slab_simulation.training_data.generate_starting_guess()
+slab_simulation.training_data.fit_starting_guess_coefficients()
 ```
 
 Copy paste this to ```__main__.py``` and run.
@@ -293,7 +293,7 @@ get by following the documentation of the `training_data` module.
 The actual training is simple by calling the leaf model interface again
 
 ```python
-from src.slab_model import interface as LI
+from src.slab_simulation import interface as LI
 
 LI.train_models()
 ```
@@ -305,7 +305,7 @@ or all. You can use existing training data or generate new. See the documentatio
 Once the training is done, you can visualize the result by calling
 
 ```python
-from src.slab_model import interface as LI
+from src.slab_simulation import interface as LI
 
 LI.visualize_slab_model_training()
 ```

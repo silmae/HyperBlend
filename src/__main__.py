@@ -8,7 +8,7 @@ and run in your favourite IDE.
 import numpy as np
 
 from src.setup import initialization
-from src.slab_model import interface as SMI
+from src.slab_simulation import interface as SMI
 from src.system_simulation import forest as F
 from src.playground import integration_test_like as ITL
 from src.rendering import blender_control as BC

@@ -8,9 +8,9 @@ import logging
 import numpy as np
 from scipy.optimize import curve_fit
 
-import src.slab_model.training_utils as TU
+import src.slab_simulation.training_utils as TU
 from src.data import toml_handling as TH, path_handling as PH, file_names as FN
-from src.slab_model import surface_functions as FF
+from src.slab_simulation import surface_functions as FF
 
 
 def predict(target_refl, target_tran, solver_dirname: str):

@@ -11,7 +11,7 @@ API Reference
 
    src_root
    setup
-   slab_model
+   slab_simulation
    utils
    rendering
    reflectance_lab

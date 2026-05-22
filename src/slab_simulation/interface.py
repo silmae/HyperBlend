@@ -9,9 +9,9 @@ import time
 import logging
 import os
 
-import src.slab_model.training_data as TD
-import src.slab_model.leaf_sampling as sampling
-from src.slab_model.opt import Optimization
+import src.slab_simulation.training_data as TD
+import src.slab_simulation.leaf_sampling as sampling
+from src.slab_simulation.opt import Optimization
 from src.data import (
     file_handling as FH,
     toml_handling as TH,
@@ -19,7 +19,7 @@ from src.data import (
     path_handling as PH,
 )
 from src import plotter
-from src.slab_model import nn, surf, slab_commons as LC
+from src.slab_simulation import nn, surf, slab_commons as LC
 from src.prospect import interface
 from src.utils import data_utils as DU
 from src.setup.runtime_environment import RuntimeEnvironment
@@ -149,12 +149,12 @@ def solve_slab_material_parameters(
 
     If any of ``wls``, ``range_start``, ``range_end`` and ``resolution`` are given, spectral resampling is
     called before solving the slab parameters. See documentation of these arguments from
-    :py:func:`slab_model.interface.resample_slab_sim_target`.
+    :py:func:`slab_simulation.interface.resample_slab_sim_target`.
 
     .. note::
         Solvers 'surf' and 'nn' need a trained model to work. Pre-trained model are included
         in the Git repository, but you can train your own using
-        :py:func:`slab_model.interface.train_models` method. Solver 'opt' does not need prior training,
+        :py:func:`slab_simulation.interface.train_models` method. Solver 'opt' does not need prior training,
         but it is slow. In case you have several trained models (whether surf or nn), you can also
         provide the `solver_dirname` to specify which solver to use.
 
@@ -337,7 +337,7 @@ def train_models(
         If True, new training data is generated with given ``slab_sim_name_for_training``.
         Default is False. The training data must exist in order to train the models.
     :param data_generation_diff_step:
-        Used in :py:class:`slab_model.opt.Optimization` as a stepsize for finite difference Jacobian
+        Used in :py:class:`slab_simulation.opt.Optimization` as a stepsize for finite difference Jacobian
         estimation. Smaller step gives better results, but the variables look cloudy. Big
         step is faster and variables smoother but there will be outliers in the results. Good
         stepsize is between 0.001 and 0.01.
@@ -447,13 +447,13 @@ def iterative_train(
 
     .. note::
         This method has many hard-coded values that are passed to
-        :py:func:`slab_model.interface.train_models`. You may want to modify
+        :py:func:`slab_simulation.interface.train_models`. You may want to modify
         them to your needs.
 
     :param runtime: See :term:`runtime`.
     :param iterations: The number of iterations to run.
-    :param train_points_per_dim: See :py:func:`slab_model.interface.train_models`.
-    :param dry_run: See :py:func:`slab_model.interface.train_models`.
+    :param train_points_per_dim: See :py:func:`slab_simulation.interface.train_models`.
+    :param dry_run: See :py:func:`slab_simulation.interface.train_models`.
     """
 
     first_run_similarity_requirement = 0.2

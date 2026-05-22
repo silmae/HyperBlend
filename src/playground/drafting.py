@@ -1,7 +1,7 @@
-import slab_model.training_data
+import slab_simulation.training_data
 from setup import initialization
 from src.reflectance_lab import diffuse_reflectance
-from src.slab_model import interface as SI, training_data as TD
+from src.slab_simulation import interface as SI, training_data as TD
 from src.utils import spectra_utils as SU
 from src import plotter
 from src.data import toml_handling as TH
@@ -36,8 +36,8 @@ if __name__ == "__main__":
     plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
 
     # Let redo starting guess
-    slab_model.training_data.generate_starting_guess()
-    slab_model.training_data.fit_starting_guess_coefficients(degree=12)
+    slab_simulation.training_data.generate_starting_guess()
+    slab_simulation.training_data.fit_starting_guess_coefficients(degree=12)
     plotter._plot_starting_guess_coeffs_fitting(dont_show=False)
 
     # gsv.visualize_default_soils(save=False, dont_show=False)

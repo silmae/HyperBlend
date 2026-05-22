@@ -14,12 +14,11 @@ from src.rendering import blender_control as B
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, toml_handling as TH, path_handling as P
 from src import plotter, constants as C
-from src.slab_model import slab_commons as LC
+from src.slab_simulation import slab_commons as LC
 from src.setup.runtime_environment import RuntimeEnvironment
 
 # TESTR
-from src.slab_model import surf
-
+from src.slab_simulation import surf
 
 hard_coded_starting_guess = [0.28, 0.43, 0.55, 0.28]
 """This should be used only if the starting guess based on polynomial fitting is not available. 

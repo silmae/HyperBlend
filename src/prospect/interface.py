@@ -5,7 +5,7 @@ Little PROSPECT interface with some quality-of-life calls.
 import logging
 import numpy as np
 
-import src.slab_model.training_data
+import src.slab_simulation.training_data
 from src.prospect import prospect_d as PD
 from src.utils import spectra_utils as SU
 from src.data import file_handling as FH
@@ -27,7 +27,7 @@ def make_random_leaf_targets(slab_sim_name, count=1):
     for i in range(count):
         wls, r, t, p_dict = run_prospect_random()
         logging.info(f"Generating random leaf data with prospect.")
-        src.slab_model.training_data._make_target(
+        src.slab_simulation.training_data._make_target(
             slab_sim_name, wls=wls, r_m=r, t_m=t, sample_id=i
         )  # sample directories are now created
         dict_dir = PH.directory_result_signal(slab_sim_name, signal_id=i)
@@ -86,7 +86,7 @@ def make_leaf_target(
     wls, r, t = run_prospect_with_dict(p_dict)
 
     logging.info(f"Generating random leaf data with prospect.")
-    src.slab_model.training_data._make_target(
+    src.slab_simulation.training_data._make_target(
         slab_sim_name, wls=wls, r_m=r, t_m=t, sample_id=signal_id
     )  # sample directory is now created
     dict_dir = PH.directory_result_signal(slab_sim_name, signal_id=signal_id)

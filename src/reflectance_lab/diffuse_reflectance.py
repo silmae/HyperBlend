@@ -8,7 +8,7 @@ TODO this whole thing should be reworked to solve reflective diffuse materials.
 import data.path_handling
 from src import plotter, constants as C
 from src.rendering import blender_control as BC
-from src.slab_model import slab_commons as LC
+from src.slab_simulation import slab_commons as LC
 from src.utils import data_utils as DU
 from src.data import file_handling as FH, path_handling as PH
 from src.setup.runtime_environment import RuntimeEnvironment

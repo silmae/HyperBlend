@@ -19,9 +19,9 @@ import unittest  # needed for skipping tests
 from unittest import TestCase
 import logging
 
-from src.slab_model import interface as SMI
+from src.slab_simulation import interface as SMI
 from src.data import path_handling as PH
-from src.slab_model import training_data as TD
+from src.slab_simulation import training_data as TD
 from src.setup import initialization
 from src import constants as C
 

@@ -11,7 +11,7 @@ import logging
 import numpy as np
 
 from src.setup import initialization
-from src.slab_model import interface as SMI
+from src.slab_simulation import interface as SMI
 from src.data import path_handling as PH
 from src.data import cube_handling as CH
 from src.system_simulation import forest

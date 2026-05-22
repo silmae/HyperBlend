@@ -1,48 +1,48 @@
-Slab model
+Slab simulation
 ===============
 
-This is the documentation for the slab model module.
+This is the documentation for the slab simulation module.
 
-.. automodule:: slab_model
+.. automodule:: slab_simulation
 
 Interface
 ------------
 
-.. automodule:: slab_model.interface
+.. automodule:: slab_simulation.interface
    :members:
 
 Sampling
 ------------
 
-.. automodule:: slab_model.leaf_sampling
+.. automodule:: slab_simulation.leaf_sampling
    :members:
 
 Optimization
 ------------------------
 
-.. automodule:: slab_model.opt
+.. automodule:: slab_simulation.opt
    :members:
 
 Surface fitting model
 ------------------------------------------------
 
-.. automodule:: slab_model.surf
+.. automodule:: slab_simulation.surf
    :members:
 
 Functions for the Surface fitting model
 ------------------------------------------------
 
-.. automodule:: slab_model.surface_functions
+.. automodule:: slab_simulation.surface_functions
    :members:
 
 Neural network
 ----------------
 
-.. automodule:: slab_model.nn
+.. automodule:: slab_simulation.nn
    :members:
 
 Training data
 ----------------
 
-.. automodule:: slab_model.training_data
+.. automodule:: slab_simulation.training_data
    :members:

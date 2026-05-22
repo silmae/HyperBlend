@@ -250,8 +250,8 @@ def clear_directory(path: str) -> None:
 def expand(slab_sim_name: str) -> None:
     """Re-generate files removed by :func:`reduce()`.
 
-    Doesn't do anything for slab simulations solved with :mod:`slab_model.surf`
-    or :mod:`slab_model.nn` models.
+    Doesn't do anything for slab simulations solved with :mod:`slab_simulation.surf`
+    or :mod:`slab_simulation.nn` models.
 
     .. note::
         Can not re-generate rendered images but will generate optimization history.
@@ -275,8 +275,8 @@ def expand(slab_sim_name: str) -> None:
 def reduce(slab_sim_name: str) -> None:
     """Removes wavelength-wise optimization history plots and cleans up temp working directories.
 
-    Doesn't do anything for slab simulations solved with :mod:`slab_model.surf`
-    or :mod:`slab_model.nn` models.
+    Doesn't do anything for slab simulations solved with :mod:`slab_simulation.surf`
+    or :mod:`slab_simulation.nn` models.
 
     Useful for reducing file size when sharing over internet, for example.
     Use :func:`expand()` method to re-generate most of the files as they were.
