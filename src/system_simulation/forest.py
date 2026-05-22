@@ -1,8 +1,12 @@
 """
 
-.. note::
-    Write the docs
+This module contains system simulation functionality in case of a forest simulation.
 
+.. note::
+    If you plan to build a custom system simulation say, a conveyor belt with plastic
+    bits, you should create a similar file to this as much of the stuff here is specific
+    for a forest simulation. That is why this file is not simpy called something like
+    `system_simulation.interface`. It is simply not so general.
 """
 
 import logging
@@ -25,58 +29,73 @@ def init(
     soil_name: str = None,
     sun_file_name: str = None,
     sky_file_name: str = None,
-    copy_forest_id: str = None,
-    custom_forest_id: str = None,
+    system_sim_name_to_copy_from: str = None,
+    new_system_sim_name: str = None,
     conf_type: str = None,
     rng=None,
-):
-    """Create a new system_simulation by copying template.
+) -> str:
+    """Create a new forest system simulation by copying a template.
 
-    Load leaf material parameters for each leaf. They must use same spectral sampling,
-    but do not have to be from a single measurement set.
+    If you want to produce a non-working (i.e., you cannot actually run the system simulation)
+    copy, do not provide any of the arguments. For a working copy, you have to produce
+    at least the leaves. Other arguments can still be left to None and the default values
+    will be used.
 
-    Load sun and resample its spectra to match the leaves.
-    Normalize so that highest intensity is 1.
-    Save as local sun spectra.
+    Loads slab (leaf) material parameters for each leaf. They must have the same spectral
+    sampling, but they do not have to originate from a single :term:`Slab simulation`.
 
-    Load sky and resample its spectra to match the leaves.
-    Normalize with highest sun intensity.
-    Save as local sky spectra.
+    Loads sun and sky scatter spectra and resample them to match the range and resolution of
+    the leaves. The spectra are normalized so that the brightest band of the brightest spectra
+    will be unity, and the other spectrum is normalized with that too. In other words, the sky scatter
+    may be brighter than the direct sunlight (overcast sky) and the sky spectrum would reach the value
+    of 1 but the sun spectrum would not (unless they are equal). Same works if the sunlight is brighter
+    than sky scattered light. These resampled spectra are saved locally for this system simulation for
+    later use.
 
-    :param rng: Numpy random number generator for reproducibility.
-    :param soil_name: Soil name
-    :param leaves: Leaves should be given as list of tuples [(set_name: str, sample_id: int, leaf_material_name: str), (),...].
-    :param sun_file_name:
-    :param sky_file_name:
-    :param copy_forest_id:
-        If given, a system_simulation scene with this id will be copied instead of the default system_simulation template.
-    :param custom_forest_id:
-        If given, this will be the identifier for the new system_simulation instead of the standard generated id.
+    :param leaves: Leaves should be given as list of tuples
+        [(slab_simulation_name: str, sample_id: int, slab_material_name: str), (),...].
+        If None, the scene will be copied, but no sun, sky, or leaf spectra will be copied.
+        In this case, an empty string is returned.
+    :param soil_name: Uses the soil spectrum from a file that includes this string. First found occurrence is used.
+    :param sun_file_name: Name of the file with the sun spectrum to be used.
+    :param sky_file_name: Name of the file with the sky spectrum to be used.
+    :param system_sim_name_to_copy_from:
+        If given, a system_simulation scene with this name will be copied instead of the default system_simulation template.
+    :param new_system_sim_name:
+        If given, this will be the name for the new system_simulation instead of the default generated name,
+        which is meant for creating an arbitrary number of randomized clones.
     :param conf_type:
-        How to produce configuration file: string from ['m2m','m2s','s2m'].
+        How to produce configuration file: string on of "m2m", "m2s", or "s2m". The configuration file is most
+        useful in randomization.
 
-            - m2m (from master to master) makes a pure copy of the scene configuration file from the source scene.
+            - "m2m" (from master to master) makes a pure copy of the scene configuration file from the source scene.
               This is the default behavior.
-            - m2s (from master to slave) will generate (gaussian) random values based on standard deviations defined in
+            - "m2s" (from master to slave) will generate (gaussian) random values based on standard deviations defined in
               the source master configuration file.
-            - s2m (from slave to master) will create a new master configuration from the source scene configuration
+            - "s2m" (from slave to master) will create a new master configuration from the source scene configuration
               with default standard deviation.
 
-        Note: s2s does not exist as there is no standard deviations present in slave configs.
-    :return: Forest id that is generated if custom_forest_id is not given.
+        .. note:: Configuration type s2s does not exist as there is no standard deviations present in slave configs.
+    :param rng: Numpy random number generator for randomizing forest and tree parameters (the geometry of the scene).
+        This is only needed if ``conf_type="m2m"`` and failing to provide it **will raise an error**.
+
+    :return: New system_sim_name that is generated if new_system_sim_name is not given.
     """
 
-    if copy_forest_id is not None:
+    if system_sim_name_to_copy_from is not None:
         forest_id = FH.duplicate_system_simulation_scene(
-            src_system_sim_name=copy_forest_id, dst_system_sim_name=custom_forest_id
+            src_system_sim_name=system_sim_name_to_copy_from,
+            dst_system_sim_name=new_system_sim_name,
         )
     else:
         forest_id = FH.duplicate_system_simulation_scene(
-            dst_system_sim_name=custom_forest_id
+            dst_system_sim_name=new_system_sim_name
         )
 
-    if copy_forest_id is not None:
-        source_path = PH.directory_system_simulation(system_sim_name=copy_forest_id)
+    if system_sim_name_to_copy_from is not None:
+        source_path = PH.directory_system_simulation(
+            system_sim_name=system_sim_name_to_copy_from
+        )
     else:
         source_path = PH.directory_internal()
 
@@ -92,7 +111,7 @@ def init(
         control_dict = forest_control.read_toml_as_dict(
             directory=source_path, filename=C.filename_system_sim_control
         )
-        control_dict = m2s(control_dict=control_dict, rng=rng)
+        control_dict = _m2s(control_dict=control_dict, rng=rng)
         forest_control.write_forest_control(
             forest_id=forest_id, control_dict=control_dict
         )
@@ -100,7 +119,7 @@ def init(
         control_dict = forest_control.read_toml_as_dict(
             directory=source_path, filename=C.filename_system_sim_control
         )
-        control_dict = s2m(control_dict=control_dict)
+        control_dict = _s2m(control_dict=control_dict)
         forest_control.write_forest_control(
             forest_id=forest_id, control_dict=control_dict
         )
@@ -115,7 +134,7 @@ def init(
         logging.info(
             f"No leaves were provided for system_simulation initialization, so I just copied the system_simulation scene."
         )
-        return
+        return ""
 
     # load requested leaf sample result dicts
     sample_list = []
@@ -183,8 +202,11 @@ def init(
     # print(f"RGB dict '{rgb_dict}'.")
     FH.write_blender_rgb_colors(system_sim_name=forest_id, rgb_dict=rgb_dict)
 
-    ################ Sun ################
+    ################ Loading Sun and Sky ################
 
+    # TODO Loading and normalizing sun and sky needs to be checked and normalization reworked.
+
+    # TODO Why do we load twice? There might be an actual reason for this, so refactor very carefully.
     logging.info(f"Loading sun data from file '{sun_file_name}'.")
     sun_wls_org, sun_irradiance_org = lighting.load_light(
         file_name=sun_file_name, system_sim_name=forest_id, lighting_type="sun"
@@ -196,6 +218,11 @@ def init(
         sampling=sampling,
         lighting_type="sun",
     )
+
+    # TODO Load sky here
+
+    # TODO Then normalize them together as sky can be brighter than the sun. This should be tested too.
+
     logging.info(f"Normalizing sun spectrum.")
     # Normalizing sun
     sun_irr_max = np.max(sun_irradiance)
@@ -282,7 +309,7 @@ def init(
     return forest_id
 
 
-def m2s(control_dict: dict, rng) -> dict:
+def _m2s(control_dict: dict, rng) -> dict:
     """Rewrites given master control dictionary into a slave control dictionary.
 
     New values are drawn from Gaussian distribution based on standard deviations present in
@@ -316,7 +343,7 @@ def m2s(control_dict: dict, rng) -> dict:
                 new_value = rng.integers(1000)
             else:
                 # Recursion for sub-dictionaries.
-                new_value = m2s(control_dict=dict_item, rng=rng)
+                new_value = _m2s(control_dict=dict_item, rng=rng)
         elif key == FC.key_ctrl_item_std:
             # If one of the keys is 'Standard deviation', we are inside a sub-dictionary that is
             #   essentially a single value that we must randomize.
@@ -359,7 +386,7 @@ def _gaussian(param_dict: dict, rng) -> dict:
     return new_dict
 
 
-def s2m(control_dict: dict) -> dict:
+def _s2m(control_dict: dict) -> dict:
     """Change slave control into master control.
 
     Basically, just adds default STD to each item that needs it.
@@ -390,7 +417,7 @@ def s2m(control_dict: dict) -> dict:
                 new_value = dict_item
             else:
                 # Recursion for sub-dictionaries.
-                new_value = s2m(control_dict=dict_item)
+                new_value = _s2m(control_dict=dict_item)
         elif key == FC.key_ctrl_item_type:
             item_type = control_dict[FC.key_ctrl_item_type]
             if item_type == "INT" or item_type == "VALUE":

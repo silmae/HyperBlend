@@ -53,7 +53,7 @@ if __name__ == "__main__":
     diffuse_reflectance.run(runtime=runtime, data_exits=True)
 
     leaf_stuff = [("try_random_p_leaves", 0, 1), ("try_random_p_leaves", 1, 3)]
-    forest.init(copy_forest_id="0102231033")
+    forest.init(system_sim_name_to_copy_from="0102231033")
 
     # Let's first generate some random PROSPECT leaves
     set_name = "try_random_p_leaves"

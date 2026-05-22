@@ -26,6 +26,29 @@ if __name__ == "__main__":
         resolution=100,
     )
 
+    # System simulation beginner tutorial
+    system_sim_name = "tutorial_system_simulation"
+    slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
+
+    rng = np.random.default_rng(12345)
+
+    # Pack leaf data for system_simulation scene initialization.
+    leaves = [
+        (slab_sim_name, 0, slab_material_names[0]),
+        (slab_sim_name, 1, slab_material_names[1]),
+        (slab_sim_name, 3, slab_material_names[2]),
+    ]
+
+    F.init(
+        leaves=leaves,
+        conf_type="m2m",
+        rng=rng,
+        new_system_sim_name=system_sim_name,
+        soil_name=soil_name,
+        sun_file_name=sun_name,
+        sky_file_name=sky_name,
+    )
+
     # BC.generate_forest_control(runtime=runtime, global_master=True)
 
     # rng = np.random.default_rng(123324)

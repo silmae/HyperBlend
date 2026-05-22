@@ -46,7 +46,7 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
         leaves=leaves,
         conf_type="m2m",
         rng=rng,
-        custom_forest_id=forest_id_master,
+        new_system_sim_name=forest_id_master,
         soil_name=soil_name,
         sun_file_name=sun_name,
         sky_file_name=sky_name,
