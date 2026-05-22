@@ -138,4 +138,8 @@ the :term:`System simulation`.
 Forest System
 """""""""""""""
 
-afzv
+In this tutorial, our system simulation is a forest scene. That is the only
+one readily available by default, but it is possible to build any kind of
+custom system simulations.
+
+
