@@ -16,6 +16,7 @@ simulation.
 
 This documentation lives in https://hyperblend.readthedocs.io/en/latest/index.html
 The project is hosted in GitHub at https://github.com/silmae/HyperBlend
+The latest simulated dataset for validation is available in Zenodo with DOI: https://doi.org/10.5281/zenodo.17140892
 
 The documentation is organized as follows:
 
