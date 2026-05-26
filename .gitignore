@@ -33,7 +33,7 @@ Reflectance\ spectra/*
 Documentation/build
 
 # Ignore log files
-log*/* 
+Log*/* 
 
 # Ignore other than the default slab model
 Slab\ models/*
