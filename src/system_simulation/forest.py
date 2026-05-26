@@ -22,6 +22,8 @@ from src.system_simulation import soil
 from src import plotter
 from src.blender_scripts import forest_control
 from src.blender_scripts import forest_constants as FC
+from src.rendering import blender_control as BC
+from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def init(
@@ -307,6 +309,56 @@ def init(
     )
 
     return forest_id
+
+
+def regenerate_forest_control(runtime: RuntimeEnvironment, system_sim_name: str):
+    """Regenerates the control file.
+
+    This should be called after making any changes to the Blender scene file manually,
+    i.e., using Blender directly rather than calling the HyperBlend's internal scripts.
+
+    :param system_sim_name:
+    :return:
+    """
+
+    BC.generate_forest_control(runtime=runtime, system_sim_name=system_sim_name)
+
+
+def setup_forest_for_rendering(
+    runtime: RuntimeEnvironment, system_sim_name: str, leaf_name_list=None
+):
+    """Run a setup that applies the forest control file to the scene.
+
+    After this, the scene can be rendered into a spectral image by calling
+    :py:func:`system_simulation.forest.render_forest`.
+
+    :param runtime:
+    :param system_sim_name:
+    :param leaf_name_list:
+    :return:
+    """
+    BC.setup_system_sim_scene(runtime, system_sim_name, leaf_name_list=leaf_name_list)
+
+
+def render_forest(
+    runtime: RuntimeEnvironment, system_sim_name: str, render_mode: str, silent=True
+):
+    """Renders the forest scene into a spectral image.
+
+    :param runtime:
+    :param system_sim_name:
+    :param render_mode:
+        One of the following 'preview', 'spectral' or 'visibility'.
+        'preview' renders only some preview images that can give an idea of the
+        scene geometry without having to open the Blender file itself.
+        'spectral' renders all spectral channels as a single image.
+        'visibility' renders visibility maps that show which object is visible
+        in each pixel.
+    :param silent:
+    :return:
+    """
+
+    BC.render_forest(runtime, system_sim_name, render_mode, silent=silent)
 
 
 def _m2s(control_dict: dict, rng) -> dict:
