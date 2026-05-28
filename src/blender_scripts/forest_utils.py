@@ -7,7 +7,6 @@ import csv
 import numpy as np
 import math
 
-
 """
 These imports must be here because this script is not invoked directly. 
 The other Blender scripts can protect these imports in with if __name__ == '__main__', 
@@ -743,10 +742,15 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
     """
 
     tree = trees[tree_name]
-    if tree is None:
-        logging.error(f"Cannot find tree named '{tree_name}'.")
+    if tree is None or len(tree_name) == 0:
+        logging.error(f"Cannot find tree called '{tree_name}'.")
         return
+
     tree_mod = tree.modifiers["GeometryNodes"]
+    if tree_mod is None:
+        logging.error(f"Tree '{tree_name}' does not have GeometryNodes modifier.")
+        return
+
     inputs = tree_mod.node_group.inputs
     socket = inputs.get(parameter_name)
     if socket is None:
@@ -758,7 +762,7 @@ def set_tree_parameter(tree_name: str, parameter_name: str, value):
     old_val = tree_mod[socket.identifier]
     tree_mod[socket.identifier] = value
     if old_val != value:
-        logging.error(
+        logging.warning(
             f"Socket {socket.name} ({socket_id}) changed from {old_val} to {value}."
         )
 
