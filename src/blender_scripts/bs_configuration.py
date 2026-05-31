@@ -11,7 +11,6 @@ import csv
 import random
 import numpy as np
 
-
 if __name__ == "__main__":
 
     blend_dir = os.path.dirname(os.path.abspath(bpy.data.filepath))
@@ -59,6 +58,7 @@ if __name__ == "__main__":
     # Argument names
     key_scene_id = ["-id", "--scene_id"]
     key_global_master = ["-g", "--global_master"]
+    key_generate = ["-e", "--generate"]
 
     parser = argparse.ArgumentParser()
 
@@ -77,21 +77,52 @@ if __name__ == "__main__":
         action="store_true",
         required=False,
         help="If True, a global scene configuration file is generated to "
-        "project root. This will also ignore the scene id parameter.",
+        "project root/Internal/. This will also ignore the scene id parameter.",
+    )
+    parser.add_argument(
+        key_generate[0],
+        key_generate[1],
+        dest=key_generate[1],
+        action="store_true",
+        required=False,
+        help="If True (default), generate system simulation control file. If False, apply the control file to the scene.",
     )
 
     args = parser.parse_args(argv)
 
     scene_id = vars(args)[key_scene_id[1]]
     global_master = vars(args)[key_global_master[1]]
+    generate = vars(args)[key_generate[1]]
 
-    if global_master:
-        logging.error(f"Generating global master scene control file.")
+    if generate:
+        if global_master:
+            logging.error(f"Generating global master scene control file.")
+        else:
+            logging.error(f"Generating ordinary master scene control file.")
+
+        scene_dict = FU.get_scene_parameters(as_master=True)
+
+        forest_control.write_forest_control(
+            system_sim_name=scene_id,
+            control_dict=scene_dict,
+            global_master=global_master,
+        )
     else:
-        logging.error(f"Generating ordinary master scene control file.")
+        if global_master:
+            logging.error(f"Applying global master scene control file.")
+        else:
+            logging.error(f"Applying ordinary master scene control file.")
 
-    scene_dict = FU.get_scene_parameters(as_master=True)
+        FU.apply_forest_control(system_sim_name=scene_id, global_master=global_master)
 
-    forest_control.write_forest_control(
-        forest_id=scene_id, control_dict=scene_dict, global_master=global_master
-    )
+        from src.data import path_handling as PH
+
+        importlib.reload(PH)
+
+        if global_master:
+            filepath = PH.file_blend_system_simulation_template()
+        else:
+            filepath = PH.file_blend_system_simulation(simulation_name=scene_id)
+
+        # Save changes to the Blender file
+        bpy.ops.wm.save_as_mainfile(filepath=filepath)
