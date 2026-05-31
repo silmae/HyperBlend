@@ -1,7 +1,7 @@
 """
 This script is responsible for writing and reading system_simulation control toml files.
 
-This functionality would be better plced under data.toml_handling, but due to
+This functionality would be better placed under data.toml_handling, but due to
 Blender using different Python environment than the rest of the code, it would
 create problems with dependencies.
 
@@ -15,37 +15,46 @@ from src import constants as C
 
 
 def write_forest_control(
-    forest_id: str, control_dict: dict, global_master: bool = False
+    system_sim_name: str, control_dict: dict, global_master: bool = False
 ):
     """Writes system_simulation control file.
 
-    :param forest_id:
-        Forest id for which the control file is written to.
+    :param system_sim_name: See :term:`system_sim_name`. Ignored if global_master is True.
     :param control_dict:
         Dictionary to be written.
     :param global_master:
-        If True, global master file is written to project root. Needs to be done if there are
+        If True, global master file is written to project root/Internal/. Needs to be done if there are
         changes made to the system_simulation template file. This will be kept safe in the Git repository.
         Default is False.
     """
 
     if global_master:
-        write_dict_as_toml(
-            dictionary=control_dict,
-            directory=PH.directory_internal(),
-            filename=C.filename_system_sim_control,
-        )
+        directory = PH.directory_internal()
     else:
-        write_dict_as_toml(
-            dictionary=control_dict,
-            directory=PH.directory_system_simulation(system_sim_name=forest_id),
-            filename=C.filename_system_sim_control,
-        )
+        directory = PH.directory_system_simulation(system_sim_name=system_sim_name)
+
+    write_dict_as_toml(
+        dictionary=control_dict,
+        directory=directory,
+        filename=C.filename_system_sim_control,
+    )
 
 
-def read_forest_control(forest_id: str) -> dict:
+def read_forest_control(system_sim_name: str, global_master=False) -> dict:
+    """Read forest control file.
+
+    :param system_sim_name: See :term:`system_sim_name`. Ignored if global_master is True.
+    :param global_master:
+    :return:
+    """
+
+    if global_master:
+        directory = PH.directory_internal()
+    else:
+        directory = PH.directory_system_simulation(system_sim_name=system_sim_name)
+
     return read_toml_as_dict(
-        directory=PH.directory_system_simulation(system_sim_name=forest_id),
+        directory=directory,
         filename=C.filename_system_sim_control,
     )
 
