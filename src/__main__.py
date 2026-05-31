@@ -32,8 +32,6 @@ if __name__ == "__main__":
     system_sim_name = "tutorial_system_simulation"
     slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
 
-    rng = np.random.default_rng(12345)
-
     # Pack leaf data for system_simulation scene initialization.
     leaves = [
         (slab_sim_name, 0, slab_material_names[0]),
@@ -44,9 +42,8 @@ if __name__ == "__main__":
     # F.init(
     #     leaves=leaves,
     #     conf_type="m2m",
-    #     rng=rng,
     #     new_system_sim_name=system_sim_name,
-    #     soil_name="meadian_humid_peat",
+    #     soil_name="meadian_humid_clay",
     # )
 
     # FIRST we go this far and check the new files
@@ -59,14 +56,14 @@ if __name__ == "__main__":
     #     runtime=runtime, system_sim_name=system_sim_name, generate=True
     # )
 
-    # F.setup_forest_for_rendering(
-    #     runtime=runtime,
-    #     system_sim_name=system_sim_name,
-    #     leaf_name_list=slab_material_names,
-    # )
-    # F.render_forest(
-    #     runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
-    # )
+    F.setup_forest_for_rendering(
+        runtime=runtime,
+        system_sim_name=system_sim_name,
+        leaf_name_list=slab_material_names,
+    )
+    F.render_forest(
+        runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
+    )
     F.render_forest(
         runtime=runtime, system_sim_name=system_sim_name, render_mode="visibility"
     )
