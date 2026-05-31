@@ -24,6 +24,7 @@ from src.blender_scripts import forest_control
 from src.blender_scripts import forest_constants as FC
 from src.rendering import blender_control as BC
 from src.setup.runtime_environment import RuntimeEnvironment
+from src.data import cube_handling as CH
 
 
 def init(
@@ -107,7 +108,7 @@ def init(
             directory=source_path, filename=C.filename_system_sim_control
         )
         forest_control.write_forest_control(
-            forest_id=forest_id, control_dict=control_dict
+            system_sim_name=forest_id, control_dict=control_dict
         )
     elif conf_type == "m2s":
         control_dict = forest_control.read_toml_as_dict(
@@ -115,7 +116,7 @@ def init(
         )
         control_dict = _m2s(control_dict=control_dict, rng=rng)
         forest_control.write_forest_control(
-            forest_id=forest_id, control_dict=control_dict
+            system_sim_name=forest_id, control_dict=control_dict
         )
     elif conf_type == "s2m":
         control_dict = forest_control.read_toml_as_dict(
@@ -123,7 +124,7 @@ def init(
         )
         control_dict = _s2m(control_dict=control_dict)
         forest_control.write_forest_control(
-            forest_id=forest_id, control_dict=control_dict
+            system_sim_name=forest_id, control_dict=control_dict
         )
     else:
         raise AttributeError(
@@ -311,33 +312,49 @@ def init(
     return forest_id
 
 
-def regenerate_forest_control(runtime: RuntimeEnvironment, system_sim_name: str):
-    """Regenerates the control file.
+def process_forest_control(
+    runtime: RuntimeEnvironment, system_sim_name: str, generate=True
+):
+    """Either (re)generates the control file (if `generate=True`) or applies it to the scene (if `generate=False`).
 
     This should be called after making any changes to the Blender scene file manually,
-    i.e., using Blender directly rather than calling the HyperBlend's internal scripts.
+    i.e., using Blender directly rather than calling the HyperBlend's internal scripts
+    to reflect those changes in the control file. And in reverse, if you manually change
+    the control file, this method will apply the changes to the scene file (.blend).
 
-    :param system_sim_name:
-    :return:
+    :param runtime: See :term:`runtime`.
+    :param system_sim_name: See :term:`system_sim_name`.
+    :param generate: If True, generate the control file based on the scene file. If False,
+        does the opposite, i.e., applies the control file to the scene file.
     """
 
-    BC.generate_forest_control(runtime=runtime, system_sim_name=system_sim_name)
+    BC.process_forest_control(
+        runtime=runtime,
+        system_sim_name=system_sim_name,
+        global_master=False,
+        generate=generate,
+    )
 
 
 def setup_forest_for_rendering(
-    runtime: RuntimeEnvironment, system_sim_name: str, leaf_name_list=None
+    runtime: RuntimeEnvironment, system_sim_name: str, slab_material_names=None
 ):
-    """Run a setup that applies the forest control file to the scene.
+    """Set up the system simulation for rendering.
 
-    After this, the scene can be rendered into a spectral image by calling
-    :py:func:`system_simulation.forest.render_forest`.
+    Most importantly, this applies the material and light values frame by frame to
+    reflect the values needed to each spectral band.
 
-    :param runtime:
-    :param system_sim_name:
-    :param leaf_name_list:
-    :return:
+    .. warning:: If this is not called before rendering, the results are arbitrary.
+
+    :param runtime: Runtime environment object that contains the Blender executable path.
+    :param system_sim_name: Name of the system simulation to be set up.
+    :param slab_material_names: Names of the slab materials (must mach the ones used in the
+        Blender scene) as a list of strings like: ['Slab material 1', 'Slab material 2',...].
     """
-    BC.setup_system_sim_scene(runtime, system_sim_name, leaf_name_list=leaf_name_list)
+
+    BC.setup_system_sim_scene(
+        runtime, system_sim_name, slab_material_names=slab_material_names
+    )
 
 
 def render_forest(
@@ -345,20 +362,57 @@ def render_forest(
 ):
     """Renders the forest scene into a spectral image.
 
-    :param runtime:
-    :param system_sim_name:
+    :param runtime: See :term:`runtime`.
+    :param system_sim_name: See :term:`system_sim_name`.
     :param render_mode:
         One of the following 'preview', 'spectral' or 'visibility'.
         'preview' renders only some preview images that can give an idea of the
-        scene geometry without having to open the Blender file itself.
-        'spectral' renders all spectral channels as a single image.
+        scene geometry without having to open the Blender scene itself.
+        'spectral' renders all spectral bands (one rendered image per band).
         'visibility' renders visibility maps that show which object is visible
-        in each pixel.
+        in each pixel. This **must** be done before you can construct the reflectance
+        image cube as the white correction relies on this information to find the
+        reference plate locations.
     :param silent:
-    :return:
+        If True, Blender output is redirected to null stream to avoid
+        cluttering of console.
     """
 
     BC.render_forest(runtime, system_sim_name, render_mode, silent=silent)
+
+
+def construct_spectral_cube(
+    system_sim_name: str, system_sim_name_for_white_signal: str = None
+):
+    """Constructs an ENVI-style hyperspectral image cube out of rendered images.
+
+    Can be used after the scene has been rendered (at least spectral and visibility maps).
+
+    White reference for reflectance calculation is searched automatically from
+    available visibility maps if `system_sim_name_for_white_signal` is not given .
+    Note that the maps must be named like `Reference 0.00 material_0001.tif`.
+
+    Saves white signal used in reflectance calculation as a toml file.
+
+    Default RGB bands for ENVI metadata are inferred if in visible range.
+    Otherwise first, middle, and last bands are used.
+
+    :param system_sim_name: See :term:`system_sim_name`.
+    :param system_sim_name_for_white_signal: Optionally, give system simulation name
+        from where to fetch the white signal. This is useful when you have a lot of scenes
+        with the same illumination, so the white signal does not have to be inferred for
+        every scene separately. If None, it is inferred from the data.
+        If there are no visibility maps in the current system simulation, this will fail
+        and raise an error.
+
+    :raises FileNotFoundError: if the rendered frames directory does not exist or is
+        empty. Also, if the sun data file does not exist, which is needed for wavelength info.
+    """
+
+    CH.construct_envi_cube(
+        system_sim_name=system_sim_name,
+        system_sim_name_for_white_signal=system_sim_name_for_white_signal,
+    )
 
 
 def _m2s(control_dict: dict, rng) -> dict:
@@ -370,7 +424,7 @@ def _m2s(control_dict: dict, rng) -> dict:
     :param control_dict:
         Master control dictionary.
     :param rng:
-        Numpy random generator object.
+        Numpy random generator object used to randomize values in the slave control file.
 
     :return:
         New slave control dictionary.
