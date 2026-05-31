@@ -376,7 +376,7 @@ if __name__ == "__main__":
 
     FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=True)
     FU.set_sun_or_sky_power_hsi(scene_id=forest_id, for_sun=False)
-    FU.apply_forest_control(forest_id=forest_id)
+    FU.apply_forest_control(system_sim_name=forest_id, global_master=False)
 
     # FU.print_materials()
 
