@@ -32,7 +32,7 @@ def set_render_parameters(
     FU.set_forest_parameter(False, "Simplified understory")
 
     # Load control dict
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
 
     # just in case we have multiple scenes at some point loop them over
     for scene in data.scenes:
@@ -333,7 +333,7 @@ def call_blender_render(write_still=True, animation=False):
 
 def render_sleeper_rgb():
 
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
     images_dict = control_dict["Images"]
     res_x = images_dict[FC.key_ctrl_sleeper_resolution_x]
     res_y = images_dict[FC.key_ctrl_sleeper_resolution_y]
@@ -356,7 +356,7 @@ def render_sleeper_rgb():
 
 def render_walker_rgb():
 
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
     images_dict = control_dict["Images"]
     res_x = images_dict[FC.key_ctrl_walker_resolution_x]
     res_y = images_dict[FC.key_ctrl_walker_resolution_y]
@@ -379,7 +379,7 @@ def render_walker_rgb():
 
 def render_drone_rgb():
 
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
     images_dict = control_dict["Images"]
     res_x = images_dict[FC.key_ctrl_rgb_resolution_x]
     res_y = images_dict[FC.key_ctrl_rgb_resolution_y]
@@ -398,7 +398,7 @@ def render_drone_rgb():
 
 def render_tree_rgb():
 
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
     images_dict = control_dict["Images"]
     res_x = images_dict[FC.key_ctrl_tree_preview_resolution_x]
     res_y = images_dict[FC.key_ctrl_tree_preview_resolution_y]
@@ -417,7 +417,7 @@ def render_tree_rgb():
 
 def render_drone_hsi():
 
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
     images_dict = control_dict["Images"]
     res_x = images_dict[FC.key_ctrl_hsi_resolution_x]
     res_y = images_dict[FC.key_ctrl_hsi_resolution_y]
@@ -438,7 +438,7 @@ def render_drone_hsi():
 
 def render_visibility_maps():
 
-    control_dict = control.read_forest_control(forest_id=SCENE_ID)
+    control_dict = control.read_forest_control(system_sim_name=SCENE_ID)
     images_dict = control_dict["Images"]
     res_x = images_dict[FC.key_ctrl_hsi_resolution_x]
     res_y = images_dict[FC.key_ctrl_hsi_resolution_y]
