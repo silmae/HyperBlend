@@ -26,3 +26,9 @@ Misc
 
 .. automodule:: system_simulation.misc
    :members:
+
+Developer Actions
+------------------------
+
+.. automodule:: system_simulation.dev_actions
+   :members:

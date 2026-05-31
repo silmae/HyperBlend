@@ -80,7 +80,7 @@ def _get_base_blender_args(
         "--python",  # Execute a python script with the Blender file.
         script_path,  # Python script file to be run.
         "--log-level",
-        "0",
+        "1",
     ]
     return blender_args
 
@@ -299,10 +299,11 @@ def run_reflectance_lab(
     )
 
 
-def generate_forest_control(
+def process_forest_control(
     runtime: RuntimeEnvironment,
     system_sim_name: str = None,
     global_master: bool = False,
+    generate=True,
 ):
     """Generates a system_simulation control file for forest simulation by reading
     parameters from a Blender file.
@@ -316,6 +317,9 @@ def generate_forest_control(
         Can be None only if ``global_master == True``.
     :param global_master: If True, the global master control file is updated based on the parameters
         in system_simulation template file. The result is saved to the project root directory.
+    :param generate:
+        If True, generate a control file. If False, apply the control file.
+
     :raises AttributeError: if either ``global_master == False`` and ``scene_id == None``,
         because there is nothing to be done OR if ``global_master == True`` and
         ``scene_id is not None``, because the caller might expect something else to
@@ -342,6 +346,8 @@ def generate_forest_control(
     scirpt_args += ["-id", f"{system_sim_name_to_use}"]
     if global_master:
         scirpt_args += ["-g"]
+    if generate:
+        scirpt_args += ["-e"]
 
     run_script(
         script_name="bs_configuration.py",
@@ -353,24 +359,29 @@ def generate_forest_control(
 
 
 def setup_system_sim_scene(
-    runtime: RuntimeEnvironment, system_sim_name: str, leaf_name_list=None
+    runtime: RuntimeEnvironment, system_sim_name: str, slab_material_names=None
 ):
-    """Set up the system_simulation for rendering.
+    """Set up the system simulation for rendering.
 
-    TODO: Refactor this when the material names in the system simulation scene are changed
-        into more general slab material names and diffuse material names.
+    Most importantly, this applies the material and light values frame by frame to
+    reflect the values needed to each spectral band.
+
+    .. warning:: If this is not called before rendering, the results are arbitrary.
 
     :param runtime: Runtime environment object that contains the Blender executable path.
     :param system_sim_name: Name of the system simulation to be set up.
-    :param leaf_name_list: Names of the leaf materials (must mach the ones used in the
-        Blender file) as a list of strings like: ['Leaf material 1', 'Leaf material 2',...].
+    :param slab_material_names: Names of the slab materials (must mach the ones used in the
+        Blender file) as a list of strings like: ['Slab material 1', 'Slab material 2',...].
     """
 
     scirpt_args = ["--"]
     scirpt_args += ["-id", f"{system_sim_name}"]
 
-    if leaf_name_list is not None and len(leaf_name_list) > 0:
-        scirpt_args += ["-l_ids", f"{list(leaf_name_list)}"]  # available leaf indexes
+    if slab_material_names is not None and len(slab_material_names) > 0:
+        scirpt_args += [
+            "-l_ids",
+            f"{list(slab_material_names)}",
+        ]  # available leaf indexes
 
     run_script(
         script_name="bs_setup_forest.py",

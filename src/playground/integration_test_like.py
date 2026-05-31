@@ -56,7 +56,7 @@ def forest_pipe_test(runtime: RuntimeEnvironment, rng):
     BC.setup_system_sim_scene(
         runtime=runtime,
         system_sim_name=forest_id_master,
-        leaf_name_list=["Slab material 1", "Slab material 2", "Slab material 3"],
+        slab_material_names=["Slab material 1", "Slab material 2", "Slab material 3"],
     )
     BC.render_forest(
         runtime=runtime, system_sim_name=forest_id_master, render_mode="preview"

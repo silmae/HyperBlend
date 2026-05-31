@@ -84,7 +84,7 @@ class TestSystemSimulation(TestCase):
         # Setup master and render preview
         BC.setup_system_sim_scene(
             system_sim_name=system_sim_name_master,
-            leaf_name_list=slab_material_names,
+            slab_material_names=slab_material_names,
             runtime=self.runtime,
         )
 
@@ -140,7 +140,9 @@ class TestSystemSimulation(TestCase):
         # Read the master system_simulation control file and modify it and write it to the slave
         #   Setting the minimum tree separation to lower value spawns more trees so the
         #   change will be visible in the preview images.
-        system_control = FCtrl.read_forest_control(forest_id=system_sim_name_master)
+        system_control = FCtrl.read_forest_control(
+            system_sim_name=system_sim_name_master
+        )
         key_forest = "Forest"
         key_min_tree_separation = "Minimum tree separation [m]"
         old_separation = system_control[key_forest][key_min_tree_separation]["Value"]
@@ -150,14 +152,14 @@ class TestSystemSimulation(TestCase):
         # print(system_control)
 
         FCtrl.write_forest_control(
-            forest_id=system_sim_name_slave,
+            system_sim_name=system_sim_name_slave,
             control_dict=system_control,
             global_master=False,
         )
 
         # Check that the new separation is written to the slave control file
         system_control_slave = FCtrl.read_forest_control(
-            forest_id=system_sim_name_slave
+            system_sim_name=system_sim_name_slave
         )
         slave_separation = system_control_slave[key_forest][key_min_tree_separation][
             "Value"
@@ -168,7 +170,7 @@ class TestSystemSimulation(TestCase):
         #   Blender scene renderable. This also applies the changes in the control file.
         BC.setup_system_sim_scene(
             system_sim_name=system_sim_name_slave,
-            leaf_name_list=slab_material_names,
+            slab_material_names=slab_material_names,
             runtime=self.runtime,
         )
 

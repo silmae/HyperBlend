@@ -161,7 +161,7 @@ def set_sun_or_sky_power_hsi(scene_id: str, for_sun=True):
 
     bands, _, irradiances = read_csv(p)
 
-    control_dict = control.read_forest_control(forest_id=scene_id)
+    control_dict = control.read_forest_control(system_sim_name=scene_id)
     # NOTE that the multiplier is taken from "Sun" field for both sun and sky
     #   so that they keep their relative power intact.
     sun_power = control_dict["Sun"][FC.key_ctrl_sun_base_power_hsi]
@@ -458,19 +458,20 @@ def _get_tree_as_dict(tree_object, is_master=False) -> dict:
     return tree_dict
 
 
-def apply_forest_control(forest_id):
+def apply_forest_control(system_sim_name, global_master=False):
     """Reads system_simulation control file and applies it to the system_simulation scene.
 
     Note that some values, such as sun power, must be reset when rendering because
     proper values depend on are we rendering an RGB image or a hyperspectral image.
 
-    :param forest_id:
-        Forest id to be set.
+    :param global_master:
+    :param system_sim_name: See :term:`system_sim_name`.
     """
 
     logging.error(f"Applying scene control.")
-
-    control_dict = control.read_forest_control(forest_id=forest_id)
+    control_dict = control.read_forest_control(
+        system_sim_name=system_sim_name, global_master=global_master
+    )
 
     for key, dict_item in control_dict.items():
 
@@ -704,8 +705,9 @@ def get_visibility_mapping_material_names():
 
         obj = ground_gn[ground_socket.identifier]
         if obj is None:
-            logging.warning(
-                f"Ground socket returned None for '{ground_socket.identifier}'. Continuing to next one"
+            logging.info(
+                f"No object to have a visibility map in '{ground_socket.name}' (id: '{ground_socket.identifier}'). "
+                f"Continuing to the next one."
             )
             continue
         # print(f"Object: {obj.name}")

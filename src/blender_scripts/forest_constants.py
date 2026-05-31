@@ -37,8 +37,8 @@ key_cam_tree_rgb = "Tree RGB"
 
 #######################################
 
-max_sun_power_spectral = 40
-max_sun_power_rgb = 400
+max_sun_power_spectral = 4
+max_sun_power_rgb = 100
 
 ########### Scene control file keys ###########
 
