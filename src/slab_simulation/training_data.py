@@ -312,4 +312,4 @@ def _make_target(set_name: str, wls, r_m, t_m, sample_id=None):
         sample_id = 0
     FH.create_signal_optimization_directories(set_name, sample_id)
     target_data = DU.pack_target(wls=wls, refls=r_m, trans=t_m)
-    TH.write_target(slab_sim_name=set_name, data=target_data, signal_id=sample_id)
+    TH.write_target(slab_sim_name=set_name, target=target_data, signal_id=sample_id)

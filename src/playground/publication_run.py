@@ -89,7 +89,7 @@ def asym_test(smthng="const_r_var_t"):
     data = data_utils.pack_target(wls=wls, refls=r_list, trans=t_list)
 
     LC.initialize_directories(slab_sim_name=set_name, clear_old_results=True)
-    TH.write_target(slab_sim_name=set_name, data=data)
+    TH.write_target(slab_sim_name=set_name, target=data)
     # targets = TH.read_target(set_name=set_name, sample_id=0, resampled=False)
     # o = Optimization(set_name=set_name, diffstep=0.01)
     # o.run_optimization(resampled=False, use_threads=True)

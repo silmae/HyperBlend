@@ -363,13 +363,13 @@ def read_wavelength_result(slab_sim_name: str, signal_id: int, wl: float):
     return subres_dict
 
 
-def write_target(slab_sim_name: str, data, signal_id=0, resampled=False) -> None:
+def write_target(slab_sim_name: str, target, signal_id=0, resampled=False) -> None:
     """Writes given list of reflectance and transmittance data to toml formatted file.
 
     Writes also an empty sampling file to the target directory.
 
     :param slab_sim_name: Name of the slab simulation.
-    :param data: List of lists, or list of tuples like [[wl, r, t], ...]
+    :param target: List of lists, or list of tuples like [[wl, r, t], ...]
 
         .. warning::
             Do not use numpy arrays as they may break the toml writer.
@@ -378,7 +378,7 @@ def write_target(slab_sim_name: str, data, signal_id=0, resampled=False) -> None
         name. Default is False.
     """
 
-    floated_list = [[float(a), float(b), float(c)] for (a, b, c) in data]
+    floated_list = [[float(a), float(b), float(c)] for (a, b, c) in target]
     res = {"wlrt": floated_list}
     p = PH.file_slab_target(slab_sim_name, signal_id, resampled=resampled)
     if not os.path.exists(p):
@@ -400,7 +400,8 @@ def read_target(slab_sim_name: str, signal_id: int, resampled=False):
     :param resampled:
         If True, data is read from a corresponding resampled file. Default is False.
 
-    :return: List of reflectances and transmittances per wavelength [[wl, r, t],...] as numpy array
+    :return: Numpy array which is essentially a list of tuples
+        [[wavelength_1, reflectance_1, transmittance_1], [wavelength_2, reflectance_2, transmittance_2]]
 
     :raises OSError: if file could not be opened.
     """

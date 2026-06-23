@@ -97,7 +97,7 @@ def resample(slab_sim_name: str, plot_resampling=True):
         )
         TH.write_target(
             slab_sim_name=slab_sim_name,
-            data=resampled_target,
+            target=resampled_target,
             signal_id=sample_id,
             resampled=True,
         )

@@ -48,12 +48,12 @@ def get_rend_as_ndarray_wl(image_file_path: str):
         raise Exception(f"Image {image_file_path} does not exist.")
 
 
-def unpack_target(target):
+def unpack_target(target) -> tuple[list[int | float], list[float], list[float]]:
     """Unpacks target as given by toml_handling into separate lists.
 
-    toml_handling.read_target returns wavelengths, reflectances and transmittances
+    Function :py:func:`data.toml_handling.read_target` returns wavelengths, reflectances and transmittances
     as a list of tuples. In many cases it is beneficial to handle them as three separate lists.
-    This is reverse of pack_target().
+    This is reverse of :py:func:`utils.data_utils.pack_target`.
 
     :param target: Target to be unpacked.
     :return: 3 lists: wls, refls, trans
@@ -63,16 +63,16 @@ def unpack_target(target):
     return wls, refls, trans
 
 
-def pack_target(wls, refls, trans):
+def pack_target(wls: list[int | float], refls: list[float], trans: list[float]):
     """Pack lists of wavelengths, reflectances and transmittances into a numpy array of tuples.
 
-    This is reverse of unpack_target(). This method can be used to pack lists
-    of data in a form that can be passed to toml_handling.write_target() method.
+    This is reverse of :py:func:`utils.data_utils.unpack_target`. This method can be used to pack lists
+    of data in a form that can be passed to :py:func:`data.toml_handling.write_target` method.
 
     :param wls: List of wavelengths.
     :param refls: List of reflectances.
     :param trans: List of transmittances.
-    :return: Numpy array of tuples (wl, reflectance, transmittance).
+    :return: Numpy array of tuples (wl, reflectance, transmittance), which is the format for `target`.
     """
 
     target = np.zeros((3, len(wls)))

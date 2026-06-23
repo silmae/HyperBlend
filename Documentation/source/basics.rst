@@ -3,7 +3,7 @@
 Beginner Tutorial
 =======================
 
-In the :doc:`previous step <./install>`, we installed everything needed
+In the :doc:`previous step <install>`, we installed everything needed
 to run HyperBlend, so it's time to test it out.
 
 First Run
@@ -165,7 +165,7 @@ Copy-paste the following code snippet into the main method
             leaves=leaves,
             conf_type="m2m",
             new_system_sim_name=system_sim_name,
-            soil_name="meadian_humid_clay",
+            soil_name="median_humid_clay",
         )
 
         # FIRST we go this far and check the new files
@@ -215,7 +215,7 @@ and add the following snippet under the previous code
     F.setup_forest_for_rendering(
         runtime=runtime,
         system_sim_name=system_sim_name,
-        leaf_name_list=slab_material_names,
+        slab_material_names=slab_material_names,
     )
     F.render_forest(
         runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
