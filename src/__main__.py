@@ -19,13 +19,22 @@ if __name__ == "__main__":
 
     runtime = initialization.initialize()
 
-    set_name = "try_manual_set"
-
-    # Example data list of lists where inner list holds the data ordered as [wavelength, reflectance, transmittance]
-    target = [[400, 0.21435, 0.26547], [401, 0.21431, 0.26540]]
-
-    # Write data to disk in a format the HyperBlend can understand
-    TH.write_target(set_name, target, signal_id=0)
-
-    # Solve as before
-    SMI.solve_slab_material_parameters(runtime=runtime, slab_sim_name=set_name)
+    slab_sim_name = "prospect_slab"
+    SMI.generate_prospect_leaf(
+        slab_sim_name=slab_sim_name,
+        signal_id=0,
+        n=1.5,
+        ab=32.0,
+        ar=8.0,
+        brown=0.0,
+        w=0.016,
+        m=0.009,
+        ant=0.0,
+    )
+    SMI.solve_slab_material_parameters(
+        runtime=runtime,
+        slab_sim_name=slab_sim_name,
+        range_start=400,
+        range_end=1000,
+        resolution=100,
+    )

@@ -20,7 +20,7 @@ from src.data import (
 )
 from src import plotter
 from src.slab_simulation import nn, surf, slab_commons as LC
-from src.prospect import interface
+from src.prospect import interface as PI
 from src.utils import data_utils as DU
 from src.setup.runtime_environment import RuntimeEnvironment
 
@@ -42,9 +42,19 @@ def generate_prospect_leaf(
     See explanation of the arguments there.
     If any of the values are not provided, default values are used.
     You get the default PROSPECT leaf by calling without any of the optional arguments.
+
+    :param slab_sim_name: See :term:`slab_sim_name`.
+    :param signal_id: Signal id for this target. Default is 0. Overwrites existing targets if existing id is given.
+    :param n: PROSPECT N parameter [unitless]
+    :param ab: chlorophyll a + b concentration [ug / cm^2]
+    :param ar: carotenoid content [ug / cm^2]
+    :param brown: brown pigment [unitless]
+    :param w: equivalent water thickness [cm]
+    :param m: dry mater content [g / cm^2]
+    :param ant: anthocyanin content [ug / cm^2]
     """
 
-    interface.make_leaf_target(slab_sim_name, signal_id, n, ab, ar, brown, w, m, ant)
+    PI.make_leaf_target(slab_sim_name, signal_id, n, ab, ar, brown, w, m, ant)
 
 
 def generate_prospect_leaf_random(slab_sim_name, leaf_count=1):
@@ -56,7 +66,7 @@ def generate_prospect_leaf_random(slab_sim_name, leaf_count=1):
     :param leaf_count: How many target leaves will be generated.
     """
 
-    interface.make_random_leaf_targets(slab_sim_name, leaf_count)
+    PI.make_random_leaf_targets(slab_sim_name, leaf_count)
 
 
 def resample_slab_sim_target(

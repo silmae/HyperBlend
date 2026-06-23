@@ -129,7 +129,9 @@ def run_prospect_with_dict(prospect_params: dict):
     You can get the dictionary by calling prospect_params_as_dict()
     with desired parameter values.
 
-    :param prospect_params: Dictionary of PROSPECT parameters as returned by prospect_params_as_dict().
+    :param prospect_params: Dictionary of PROSPECT parameters as returned by
+                            :py:func:`prospect.interface.prospect_params_as_dict`.
+
     :return: Tuple (wls,r,t)
     """
     wls, r, t = PD.run_prospect(
