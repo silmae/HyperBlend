@@ -33,6 +33,7 @@ The documentation is organized as follows:
    basics
    slab_sim
    system_sim
+   developers
    code/src
    license
    contributing

@@ -1,3 +1,4 @@
+.. _chap-glossary:
 
 Glossary
 ============
