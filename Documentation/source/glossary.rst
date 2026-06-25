@@ -18,6 +18,13 @@ General
         In other simulation context it might represent a slab of water full of
         microalgae as in :cite:`riihiaho25`.
 
+    Solver
+        Slab simulation solver which in code has a **name**:
+        **opt** (optimization based), original solver, which is accurate but very slow.
+        **nn** (neural network), which is fast (200 times faster than opt) with good accuracy
+        (decrease of 2-4 times compared to opt). **surf** (surface fitting), which is worse
+        than nn in accuracy but around the same speed.
+
     Signal
         Signal is a pair of reflectance and transmittance spectra in the
         :term:`Slab simulation`. In forestry application the signal is reflectance

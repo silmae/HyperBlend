@@ -19,22 +19,22 @@ if __name__ == "__main__":
 
     runtime = initialization.initialize()
 
-    slab_sim_name = "prospect_slab"
-    SMI.generate_prospect_leaf(
-        slab_sim_name=slab_sim_name,
-        signal_id=0,
-        n=1.5,
-        ab=32.0,
-        ar=8.0,
-        brown=0.0,
-        w=0.016,
-        m=0.009,
-        ant=0.0,
-    )
-    SMI.solve_slab_material_parameters(
+    SMI.train_models(
         runtime=runtime,
-        slab_sim_name=slab_sim_name,
-        range_start=400,
-        range_end=1000,
-        resolution=100,
+        slab_sim_name_for_training="My training data",
+        generate_data=False,
+        dry_run=False,
+        train_surf=True,
+        train_nn=True,
+        layer_count=5,
+        layer_width=1000,
+        epochs=300,
+        batch_size=32,
+        learning_rate=0.01,
+        patience=30,
+        split=0.1,
+        train_points_per_dim=20,
+        show_plot=False,
+        solver_name_to_save=None,
+        solver_name_to_use=None,
     )
