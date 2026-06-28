@@ -11,6 +11,13 @@ Interface
 .. automodule:: slab_simulation.interface
    :members:
 
+Commons
+------------
+
+.. automodule:: slab_simulation.slab_commons
+   :members:
+
+
 Sampling
 ------------
 
@@ -29,6 +36,7 @@ Surface fitting model
 .. automodule:: slab_simulation.surf
    :members:
 
+
 Functions for the Surface fitting model
 ------------------------------------------------
 
@@ -45,4 +53,7 @@ Training data
 ----------------
 
 .. automodule:: slab_simulation.training_data
+   :members:
+
+.. automodule:: slab_simulation.training_utils
    :members:

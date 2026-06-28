@@ -18,6 +18,7 @@ This documentation lives in https://hyperblend.readthedocs.io/en/latest/index.ht
 The project is hosted in GitHub at https://github.com/silmae/HyperBlend
 The latest simulated dataset for validation is available in Zenodo with DOI: https://doi.org/10.5281/zenodo.17140892
 
+All usage examples are in the tutorials, there are none in the API documentation.
 The documentation is organized as follows:
 
 .. The toctree defines the structure of the documentation on the top level.

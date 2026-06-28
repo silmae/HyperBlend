@@ -283,4 +283,39 @@ result of the previous iteration to be used in training the next iteration.
 When you MUST train
 """""""""""""""""""""
 
-As said earlier, the `root/Internal/slab_sim_template.blend`
+As said earlier, the `root/Internal/slab_sim_template.blend` is the base of the slab
+simulation. It has a box with width and height of 1 m and thickness of 2 mm. If,
+for any reason you would need, say, a 10 mm thick slab of material, you would
+have to change the thickness in the `slab_sim_template.blend` file and retrain the
+nn and surf solvers.
+
+.. note::
+
+    If you are a developer, the work was started on making copies of the
+    `slab_sim_template` so that several thickness slabs could coexist in
+    the slab simulation phase, but the time run out to finish that development.
+    The filename can already be passed to the blender script, but it needs
+    an implementation to :py:func:`rendering.blender_control.run_slab_wl_render`
+    and :py:func:`rendering.blender_control.run_parallel_slab_wl_render`.
+    Another way would be to make the slab itself parametric, and just give
+    the thickness as a parameter.
+
+One last thing. It is **very important** so:
+
+.. warning::
+
+    There is a magical density scaling constant in
+    :py:mod:`slab_simulation.slab_commons` and
+    :py:mod:`blender_scripts.bs_setup_forest`. Its value is 3000. The
+    particle density (as all other parameters) in slab simulation very from
+    0 to 1, and this is nowhere near enough density to get the R and T values
+    we want, this density scaling is used to fix it. Moreover, the value 3000
+    is for 2 mm leaf slab. If you want a 1 mm thick leaf, you should raise the
+    constant to 6000. For other than leaf simulation purposes, you may need
+    to figure out a new good scaling factor.
+
+    And once again, if you are a developer, please fix this ugly hard-coded
+    constant that has to be synced over separate files.
+
+That's all for slab simulation. We should be ready to get to the actual meat
+of HyperBlend: :ref:`chap-system-simulation`.
