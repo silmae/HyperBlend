@@ -490,15 +490,15 @@ def iterative_train(
             # First iteration
             train_models(
                 runtime=runtime,
+                dry_run=dry_run,
                 slab_sim_name_for_training=current_iteration_slab_sim_name,
                 generate_data=True,
+                train_points_per_dim=train_points_per_dim,
                 data_generation_diff_step=first_run_diffstep,
-                starting_guess_type="curve",
-                similarity_rt=first_run_similarity_requirement,
                 train_surf=True,
                 train_nn=False,
-                train_points_per_dim=train_points_per_dim,
-                dry_run=dry_run,
+                starting_guess_type="curve",
+                similarity_rt=first_run_similarity_requirement,
                 solver_name_to_save=current_iteration_slab_sim_name,
             )
 
@@ -506,16 +506,16 @@ def iterative_train(
             # Last iteration
             train_models(
                 runtime=runtime,
+                dry_run=dry_run,
                 slab_sim_name_for_training=current_iteration_slab_sim_name,
                 generate_data=True,
+                train_points_per_dim=train_points_per_dim,
                 data_generation_diff_step=diffstep,
-                starting_guess_type="surf",
-                similarity_rt=last_run_similarity_requirement,
                 train_surf=True,
                 train_nn=True,
+                starting_guess_type="surf",
+                similarity_rt=last_run_similarity_requirement,
                 learning_rate=0.0005,
-                train_points_per_dim=train_points_per_dim,
-                dry_run=dry_run,
                 solver_name_to_save=current_iteration_slab_sim_name,
                 solver_name_to_use=previous_iteration_slab_sim_name,
             )
@@ -523,15 +523,15 @@ def iterative_train(
             # Intermediate iterations
             train_models(
                 runtime=runtime,
+                dry_run=dry_run,
                 slab_sim_name_for_training=current_iteration_slab_sim_name,
                 generate_data=True,
+                train_points_per_dim=train_points_per_dim,
                 data_generation_diff_step=diffstep,
-                starting_guess_type="surf",
-                similarity_rt=curr_similarity,
                 train_surf=True,
                 train_nn=False,
-                train_points_per_dim=train_points_per_dim,
-                dry_run=dry_run,
+                starting_guess_type="surf",
+                similarity_rt=curr_similarity,
                 solver_name_to_save=current_iteration_slab_sim_name,
                 solver_name_to_use=previous_iteration_slab_sim_name,
             )
