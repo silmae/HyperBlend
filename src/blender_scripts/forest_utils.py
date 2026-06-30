@@ -60,13 +60,6 @@ lights = data.collections[FC.key_collection_lights].all_objects
 trees = data.collections[FC.key_collection_trees].all_objects
 
 
-"""
-These imports cannot be protected by if __name__ == '__main__' because 
-the scipts calling this one will fail. Sphinx will not be able to autodoc 
-this script, but we'll have to deal with that.
-"""
-
-
 def set_materials_use_spectral(use_spectral: bool):
     """Sets all materials mode to either spectral or RGB mode.
 
