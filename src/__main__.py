@@ -18,23 +18,25 @@ from system_simulation import dev_actions
 if __name__ == "__main__":
 
     runtime = initialization.initialize()
+    slab_sim_name = "tutorial_slab_simulation"
+    system_sim_name = "tutorial_system_simulation_2"
+    slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
 
-    SMI.train_models(
-        runtime=runtime,
-        slab_sim_name_for_training="My training data",
-        generate_data=False,
-        dry_run=False,
-        train_surf=True,
-        train_nn=True,
-        layer_count=5,
-        layer_width=1000,
-        epochs=300,
-        batch_size=32,
-        learning_rate=0.01,
-        patience=30,
-        split=0.1,
-        train_points_per_dim=20,
-        show_plot=False,
-        solver_name_to_save=None,
-        solver_name_to_use=None,
+    # Pack leaf data for system_simulation scene initialization.
+    leaves = [
+        (slab_sim_name, 0, slab_material_names[0]),
+        (slab_sim_name, 1, slab_material_names[1]),
+        (slab_sim_name, 2, slab_material_names[2]),
+    ]
+
+    # F.init(
+    #     leaves=leaves,
+    #     conf_type="m2m",
+    #     new_system_sim_name=system_sim_name,
+    #     soil_name="median_humid_clay",
+    #     sun_file_name="default_sun",
+    #     sky_file_name="default_sky",
+    # )
+    F.render_forest(
+        runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
     )

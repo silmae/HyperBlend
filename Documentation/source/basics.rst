@@ -77,6 +77,8 @@ custom slab simulations is explained in more detail in
 :ref:`chap-slab-simulation` chapter.
 
 
+.. _sec-tiny-working-example:
+
 The Tiny Working Example
 -----------------------------
 
