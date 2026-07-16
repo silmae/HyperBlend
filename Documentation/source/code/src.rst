@@ -1,3 +1,5 @@
+.. _chap-api:
+
 API Reference
 ===============
 

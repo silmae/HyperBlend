@@ -1,3 +1,5 @@
+.. _chap-license:
+
 Licence
 ===============
 
