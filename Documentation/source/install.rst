@@ -54,7 +54,8 @@ Once that is done, run:
 
     conda env create -n hb --file hb_env.yml
 
-which will create a new virtual Python environment called `hb`.
+which will create a new virtual Python environment called `hb`. Naturally,
+replace word `conda` with `mamba` if you are using mamba.
 
 
 Installing Blender
@@ -62,7 +63,7 @@ Installing Blender
 
 One final thing before running HyperBlend is the installation of
 Blender 3D-modeling and rendering software. Blender is open-source
-software available from <blender.org>. HyperBlend works only with
+software available at https://www.blender.org/. HyperBlend works only with
 Blender version 3.6.XX, which you can download from
 `download.blender.org/release/Blender3.6 <https://download.blender.org/release/Blender3.6/>`__.
 There are installers for Windows (`windows-x64.msi`) and
