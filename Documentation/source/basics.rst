@@ -114,12 +114,12 @@ Line ``6`` is just a name of our slab simulation, which we will use the rest of 
 beginner tutorial. Line ``7`` generates 3 random leaf spectra. In HyperBlend,
 these pairs of reflectance and transmittance spectra are called target signal
 (see :term:`Signal`). The method
-:py:func:`~slab_model.interface.generate_prospect_leaf_random` doesn't have
+:py:func:`~slab_simulation.interface.generate_prospect_leaf_random` doesn't have
 a return value as it will save the data on the disc.
 
 The last line runs the actual slab simulation that solves the slab (leaf) material
 parameters to be used later in :term:`System simulation`. Our last call to
-:py:func:`~slab_model.interface.solve_slab_material_parameters` has a lot
+:py:func:`~slab_simulation.interface.solve_slab_material_parameters` has a lot
 going on, so let's take a closer look what we are doing.
 
 First of all, we provide it with the runtime and slab simulation name, which are
@@ -130,7 +130,7 @@ spectral bands three times for all of our three leaves. To get you results a bit
 faster, we restrict the range from 400 nm to 1000 nm with only 100 nm resolution,
 which produces 7 spectral bands and the run should take only some seconds.
 The spectral range and resolution of the slabs control the range and resolution
-of the following steps, so it is a quite important step to decide beforehand, which
+of the following steps, so it is a quite important to decide beforehand, which
 values to use.
 You can find the results of this simulation from directory
 `root/Slab simulation/tutorial_slab_simulation/`. Now we are ready to proceed to
@@ -145,6 +145,7 @@ one readily available by default, but it is possible to build any kind of
 custom system simulations.
 
 Copy-paste the following code snippet into the main method
+(you can comment out or delete the previous one)
 
 .. code-block:: python3
     :linenos:
@@ -208,7 +209,7 @@ You can open it anyways, and change some values. For example, change
 This will result in a small spatial size of the simulated spectral cube that
 is fast to compute.
 
-Nest step is to run the actual simulation. Comment out the `F.init` call
+Nest step is to run the actual simulation. Comment out the `F.init()` call
 and add the following snippet under the previous code
 
 .. code-block:: python3
