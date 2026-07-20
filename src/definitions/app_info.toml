@@ -1,6 +1,6 @@
 
 app_title = "HyperBlend"
-app_version = 0.3
+app_version = 1.0
 app_author = "Kimmo Riihiaho"
 supported_blender_versions = ["3.6",]
 # Blender 3.6 is the only supported version at the moment. Switching to 4.0+

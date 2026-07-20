@@ -2,8 +2,10 @@
 
 This module contains the initialization functions for HyperBlend.
 
-Running the initialization populates :mod:`definitions.runtime_environment`. After this, the values
-in there are not supposed to be changed.
+Running the initialization populates :py:mod:`setup.runtime_environment`.
+After this, the values in runtime are not supposed to be changed.
+
+You can also change the logging options in this file.
 
 """
 
@@ -22,10 +24,13 @@ from src.setup.runtime_environment import RuntimeEnvironment
 
 
 def initialize():
-    """Initializes HyperBlend.
+    """Initializes HyperBlend and provides the runtime environment object.
 
     Directory structure is checked and missing directories created as necessary.
-    Dynamically checks operating system and found Blender versions.
+    Dynamically checks operating system and found Blender versions on Windows machine.
+    On Linux, there are no dynamic checks performed.
+
+    :returns: RuntimeEnvironment object
     """
 
     runtime = RuntimeEnvironment()
@@ -39,6 +44,11 @@ def initialize():
 
 
 def _init_logging():
+    """Initializes global logger.
+
+    By default, the logging level is info. Logging options can
+    only be changed by editing the source code in this method.
+    """
 
     path_dir_logs = PH.directory_log()
     if not os.path.exists(path_dir_logs):
@@ -65,7 +75,7 @@ def _init_logging():
 
 
 def _load_app_info(runtime: RuntimeEnvironment):
-    """Load application information from the app info from :mod:`definitions.app_info`.
+    """Load application information from the app info from `root/src/definitions/app_info.toml`.
 
     This function reads the application information file, which contains metadata about HyperBlend,
     such as the application version and supported Blender versions. The data is then stored in the
@@ -126,7 +136,7 @@ def _check_blender_version(runtime: RuntimeEnvironment):
     """Check the installed Blender version and set the corresponding variable in the runtime environment.
 
     On a Windows machine, the latest supported version is selected. Supported versions are listed in
-    :mod:`definitions.app_info`.
+    `root/src/definitions/app_info.toml`.
     """
 
     logging.info("Checking Blender version")

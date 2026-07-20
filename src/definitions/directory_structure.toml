@@ -4,7 +4,7 @@
 # This is checked in initialization phase of HyperBlend.
 
 title = "HyperBlend directory structure definition"
-version = 0.3
+version = 1.0
 
 
 [root]
