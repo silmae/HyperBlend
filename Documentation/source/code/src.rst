@@ -24,3 +24,4 @@ API Reference
    data
    blender_scripts
    playground
+   tests
