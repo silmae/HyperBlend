@@ -36,8 +36,8 @@ Documentation/build
 Log*/* 
 
 # Ignore other than the default slab model
-Slab\ models/*
-!Slab\ models/Default\ slab
+Slab\ solvers/*
+!Slab\ solvers/Default\ slab
 
 # Ignore old (version 0.2) directories
 

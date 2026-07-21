@@ -14,13 +14,13 @@ description = "Root directory"
 
 	[root.slab_models]
 	type = "dir"
-	name = "Slab models"
-	description = "Top level directory for the slab models used to tranfer reflectance and transmittance values into renderable parameters. Although only the default model has to exist, the user can create their own models and store them here."
+	name = "Slab solvers"
+	description = "Top level directory for the slab solvers used to tranfer reflectance and transmittance values into renderable parameters. Although only the default model has to exist, the user can create their own models and store them here."
 
 		[root.slab_models.default]
 		type = "dir"
 		name = "Default slab"
-		description = "Default slab models that come with the distribution."
+		description = "Default slab solvers that come with the distribution."
 
 			[root.slab_models.default.surface_model_params]
 			type = "file"

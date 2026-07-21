@@ -94,11 +94,11 @@ dirname_system_simulation = "System simulation"
 dirname_slab_simulation = "Slab simulation"
 """Top level slab simulation directory name."""
 
-dirname_slab_models = "Slab models"
-"""Top level Slab model directory name."""
+dirname_slab_solvers = "Slab solvers"
+"""Top level Slab solver directory name."""
 
-dirname_slab_models_default = "Default slab"
-"""Default slab model directory name."""
+dirname_slab_solvers_default = "Default slab"
+"""Default slab solver directory name."""
 
 dirname_opt_target_signal = "Target signal"
 """Target signal files are stored to this directory."""
