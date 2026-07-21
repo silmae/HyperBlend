@@ -4,7 +4,7 @@ The System Simulation
 ==============================
 
 The system simulation is quite a bit more complicated than the slab simulation
-in previous tutorial. The main idea of the system simulation is still quite
+in previous tutorial. However, the main idea of the system simulation is quite
 simple: we take the virtual 3D slabs and put them into some bigger context
 to create spectral simulations of some meaningful environment. We will
 use a forest canopy as an example in this tutorial as it is the main focus
@@ -34,20 +34,16 @@ different in that regard. The connection between HyperBlend code and Blender
 is implemented through Blender's Python API. In HyperBlend, all code that calls
 Blender is secluded to :py:mod:`blender_scripts` module.
 
-
-How to start
---------------
-
 If you have not read through :ref:`sec-tiny-working-example` from the
 :ref:`chap-basics`, do it now. It will teach you how to create a new
 forest scene with mostly default settings, so you can get up to speed immediately.
 You will run a full simulation, which will result in a spectral image cube of
 a forest canopy.
-The tutorial at had will dig deeper into the intricacies of the process.
+The tutorial at hand will dig deeper into the intricacies of the process.
 
 
 Initializing System Simulation
-"""""""""""""""""""""""""""""""""""
+------------------------------------------
 
 In the beginner tutorial, we already had the following code that initializes
 our new forest scene. We assume that there is an existing slab simulation done
@@ -95,10 +91,10 @@ third party simulators from :py:mod:`system_simulation.lighting`.
 
 
 Shape your ground
-"""""""""""""""""
+------------------------------------------
 
-Shaping your geometry is easiest to do inside Blender's UI. Running the code
-snippet will create a new system simulation and you can open the associated
+Shaping your geometry is easiest to do inside Blender's UI. Running the previous
+code snippet will create a new system simulation and you can open the associated
 Blender scene by double clicking
 `root/System simulation/scene_tutorial_system_simulation_2/tutorial_system_simulation_2.blend`.
 
@@ -106,48 +102,85 @@ The UI should look something like this
 
 .. image:: ../../readme_img/terrain_object_edit_parameters.png
 
-Select the object called Ground from the to right corner and then select
+Select the object called Ground from the top right corner and then select
 the wrench icon from bottom right corner as shown.
 
 The full list of the 39 tunable parameters is:
 
     - Seed
+
         - Random seed value
+
     - Size X [m]
+
         - Width of the forest in meters
+
     - Size Y [m]
+
         - Width of the forest in meters
+
     - Simplified understory
+
         - Replace understory objects with their convex hull for faster response time while editing
+
     - Minimum tree separation [m]
+
         - Minimum separation of objects spawn by the primary spawning mechanism
+
     - Spawn probability [%]
+
         - General spawn probability, i.e. what percentage of points of the spawn grid can be used
+
     - Object 1-10 probability [%] (10 separate parameters)
+
         - These are similar to previous, but for each spawnable object separately
+
     - Spawn object 1-10 (10 separate parameters)
+
         - The actual objects to be spawn by the tree spawning system
+
     - Reference object
+
         - Reference plate object for reflectance calculation
+
     - Reference controller
+
         - An empty object that controls the x,y position of the Reference object
+
     - Reference height [m]
+
         - Reference object's height from local ground surface
+
     - Reference safe distance [m]
+
         - Spawn objects that are closer than this to the reference object will be un-spawn
+
     - Height map strength
+
         - How strongly will the height map move the vertices of the ground on z-axis
+
     - Height point separation [m]
+
         - How detailed grid is used to apply the height map (smaller value = more detail)
+
     - Max tree tilt [Deg]
-        - Maximum random tilt that can be assigned to spwn objects
+
+        - Maximum random tilt that can be assigned to spawn objects
+
     - Max tree scale [%]
-        - Maximum random scale that can be assigned to spwn objects
+
+        - Maximum random scale that can be assigned to spawn objects
+
     - Understory object 1-2 (2 separate parameters)
+
         - Objects spawned using the secondary spawning mechanism
+
     - Understory 1-2 min separation [m] (2 separate parameters)
+
         - Minimum distance between the objects spawned by the secondary spawning mechanism
+
     - Ground material
+
         - Blender material used for the soil
 
 The list may seem daunting, but most of them are pretty simple to understand.
@@ -164,53 +197,101 @@ by setting some of the  ``Object X probability [%]`` to less than 100.
 
 You can call this listing (without the explanations) from
 :py:func:`blender_scripts.forest_utils.list_forest_parameters`. Since the
-autodoc breaks for this file, you need to check the comments from the actual
-source code file.
+Sphinx autodoc breaks for this file, the above link does not work and you
+need to check the comments from the actual source code file.
 
 Shape your trees
-"""""""""""""""""
+------------------------------------------
 
+The trees are also parametric models. To adjust them to your liking,
+you should first hide the ground object, so that you can see what you
+are doing. This can be done by clicking the eye icon on the top right
+corner from the row with the `Ground` object (can be seen in the previous
+picture).
 
+The picture below shows how to unhide the `Trees` object collection
+and any of the trees you want to reshape by clicking the eye icons.
 
-The Forest Control file
-""""""""""""""""""""""""""
+.. image:: ../../readme_img/adjust_tree_params.png
 
-Below are the 28 adjustable parameters for a single tree model
+Then you can adjust the parameters to your liking as before under
+the wrench icon.
+Below are the 28 adjustable parameters for the tree model
+(obvious explanations omitted)
 
     - Branch thickness factor (VALUE)
     - Trunk length [m] (VALUE)
     - Trunk diameter [m] (VALUE)
     - Trunk pruning (VALUE)
+
+        - Removes some of the branch spawning points to make airier crown
+
     - Trunk clear start [%] (INT)
+
+        - Percentage of the trunk length that is left completely branchless
+
     - Trunk child count (INT)
+
+        - How many first-level branches will be spawn on the trunk
+
     - Trunk top spawn (BOOLEAN)
+
+        - If True, spawn one branch as a continuation of the trunk
+
     - Branch 1 length [m] (VALUE)
     - Branch 1 diameter [m] (VALUE)
+
     - Branch 1 scale (VALUE)
+
+        - Scale 1st level branches bigger or smaller when approaching the top of the trunk
+
     - Branch 1 child count (INT)
+
+        - How many 2nd level branches are spawn to the 1st level branch
+
     - Branch 1 align (VALUE)
+
+        - Alignment of the 1st level branches to the tree trunk
+
     - Droop angle [deg] (VALUE)
+
+        - How curved the branches will be
+
     - Branch 2 length [m] (VALUE)
     - Branch 2 child count (INT)
     - Branch 2 align (VALUE)
     - Branch 3 length [m] (VALUE)
     - Branch 3 align (VALUE)
+
     - Branch 3 resolution (INT)
+
+        - How many faces will the last level branch have. This affects to how many leaves are spawn
+
     - Trunk material (MATERIAL)
     - Leaf material (MATERIAL)
     - Hide leafs (BOOLEAN)
+
     - Leaf object (OBJECT)
+
+        - Select a leaf object to be used
+
     - Leaf density (VALUE)
+
+        - More or less leaves
+
     - Average leaf angle (VALUE)
+
     - Seed (INT)
+
+        - Random seed for this tree
+
     - Splines only (BOOLEAN)
+
+        - Remove actual geometry and show only splines constructing the tree. For debugging
+
     - Hide trunk data (BOOLEAN)
 
-
-Running the simulation
-"""""""""""""""""""""""
-
-hbvedfv
+        Trees can show some data of themselves. Must be hidden during rendering
 
 
 
@@ -218,14 +299,45 @@ Lighting
 ----------
 
 The lighting of the scene is completely based on an third party simulator that is
-used to generate the direct sunlight and scattered skylight spectra.
+used to generate the direct sunlight and scattered skylight spectra. By default,
+there are two light spectra available in `root/Light spectra` called `default_sky.txt`
+and `default_sun.txt`. The content of the default sun file begins like this
+
+.. code-block::
+
+    # Output file from SSolar_GOA model
+    #   Input Data
+    #  Ext. Spectrum= Wehrli
+    # lat=41.66 lon=-4.7 sza=29.358 jday=152
+    #  p=1013.0 o3=300.0 h2o=1.5 alb=0.2
+    #  alpha=1.5 beta=0.05 Wa=0.98 g=0.75
+    # Wavelength Irradiance
+    400.0 0.77937
+    401.0 0.84119
+    402.0 0.87123
+    403.0 0.87947
+    404.0 0.87883
+    ...
+
+It is a simple CSV-formatted file with wavelengths and irradiances. Rows
+prefixed with `#` are not read and can be used for comments and metadata.
+The light files are directly read during the forest setup, where you can
+also provide the name of the file(s) to be used.
 
 
 Camera
 ----------
 
-There is not much to do here.
+For top of canopy imaging setup, it is easiest to control the camera using
+the control file. However, you may want to test for a good combination
+of altitude and FOV for your forest scene (depending on scene dimensions)
+through Blender UI.
 
+
+The control file
+-----------------------------
+
+**The control file** is used to  
 
 Spectral materials
 ----------------------------
@@ -246,5 +358,3 @@ Constructing the spectral cube
 """""""""""""""""""""""""""""""""
 
 Normalization to reflectance
-
-
