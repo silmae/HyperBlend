@@ -235,8 +235,13 @@ if R and T are far away from each other (e.g. R=0.05 and T=0.95 as they live in
 interval 0-1), the slab model is incapable of producing good, reliable, or consistent
 results.
 
-``train_points_per_dim=20`` tell to how many parts the R and T dimensions are split.
+The argument ``train_points_per_dim=20`` tells to how many parts the R and T dimensions are split.
 In other words, with value 20, there will be 20 different values for R and 20 for T.
+The final number of training points would then be some fraction of 20x20,
+depending on what the similarity requirement value is. If it is 1, the number
+of generated points would be 400, i.e., all the points are simulated. Note,
+that the points will be later pruned, so that only results whose root mean squared
+error does not exceed certain threshold (2% by default) are accepted.
 
 Actual training
 """""""""""""""""""""
@@ -265,7 +270,7 @@ For training, we will still use the same call but with different argument values
         patience=30,
         split=0.1,
         show_plot=False,
-        solver_name_to_save=None,
+        solver_name_to_save="My own solvers",
         solver_name_to_use=None,
     )
 
@@ -283,7 +288,7 @@ When you MUST train
 """""""""""""""""""""
 
 As said earlier, the `root/Internal/slab_sim_template.blend` is the base of the slab
-simulation. It has a box with width and height of 1 m and thickness of 2 mm. If,
+simulation. It contains a box with width of 1 m and thickness of 2 mm. If,
 for any reason you would need, say, a 10 mm thick slab of material, you would
 have to change the thickness in the `slab_sim_template.blend` file and retrain the
 nn and surf solvers.
@@ -306,7 +311,7 @@ One last thing. It is **very important** so:
     There is a magical density scaling constant in
     :py:mod:`slab_simulation.slab_commons` and
     :py:mod:`blender_scripts.bs_setup_forest`. Its value is 3000. The
-    particle density (as all other parameters) in slab simulation very from
+    particle density (as all other parameters) in slab simulation vary from
     0 to 1, and this is nowhere near enough density to get the R and T values
     we want, this density scaling is used to fix it. Moreover, the value 3000
     is for 2 mm leaf slab. If you want a 1 mm thick leaf, you should raise the
