@@ -11,10 +11,6 @@ word 'code' in their name.
 
 import logging
 import os
-from typing import List
-
-import constants as C
-from data import file_names as FN
 
 from src import constants as C
 from src.data import file_names as FN
@@ -121,10 +117,10 @@ def directory_slab_model(slab_model_name: str = None) -> str:
 
     if slab_model_name is None:
         p = join(
-            C.path_project_root, C.dirname_slab_models, C.dirname_slab_models_default
+            C.path_project_root, C.dirname_slab_solvers, C.dirname_slab_solvers_default
         )
     else:
-        p = join(C.path_project_root, C.dirname_slab_models, slab_model_name)
+        p = join(C.path_project_root, C.dirname_slab_solvers, slab_model_name)
     return p
 
 

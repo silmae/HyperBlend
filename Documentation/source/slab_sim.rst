@@ -139,15 +139,14 @@ If we would like to solve the previous example using the `opt` solver, we would 
 
 .. code-block:: python3
 
-    SMI.solve_slab_material_parameters(runtime=runtime, slab_sim_name=set_name, solver='opt')
+    SMI.solve_slab_material_parameters(runtime=runtime, slab_sim_name=slab_sim_name, solver='opt')
 
 For using the surface
 fitting method, we would call it with argument ``solver='surf'``.  Calling the solver is
 still a bit more complicated than this because one may have trained multiple sets of solvers.
 The call we use above will select the desired default solver that are available in the repository.
 
-If you train custom solvers (we'll cover how to, next), they will reside under `root/Slab models/`.
-(Yes it would be more accurate to name the directory 'Slab solvers'.)
+If you train custom solvers (we'll cover how to, next), they will reside under `root/Slab solvers/`.
 Say, you trained a new set of solvers called ``'My own solvers'``. Then
 you would call the :py:func:`~slab_simulation.interface.solve_slab_material_parameters`
 like so
@@ -168,15 +167,15 @@ like so
 Training custom solvers
 ---------------------------
 
-Training new solver comes into question if:
+Training new solvers comes into question if:
 
-    1 you want to improve the existing default ones
-    1 you need different slab thickness or do other changes to the slab simulation environment
+    - you want to improve the existing default ones
+    - you need different slab thickness or do other changes to the slab simulation environment
 
 The first case is more about if you want to do something or not. The default solvers
 are pretty good, but they can definitely be improved. In the second case, if you introduced some
 changes to the slab simulation environment (i.e., you are a developer), you **must** retrain
-the solver as they will no longer give correct results (although they may look like doing
+the solvers as they will no longer give correct results (although they may look like doing
 sensible things).
 
 .. note::

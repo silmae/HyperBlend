@@ -4,7 +4,13 @@ HyperBlend
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 
-Access the full documentation at https://hyperblend.readthedocs.io/en/latest/index.html
+
+Mini info:
+
+    - Access the full documentation and tutorials at https://hyperblend.readthedocs.io/en/latest/index.html
+    - Supported operating systems: Windows and Linux (tested on Windows 10 and Ubuntu 20.0.4).
+    - Programming language: Python.
+    - Active development from May 2021 to September 2026. Development may resume later in this or another fork.
 
 HyperBlend is a spectral simulator that can be used to construct complex scenes with
 physically based light propagation. Its main focus is in simulating forest canopies

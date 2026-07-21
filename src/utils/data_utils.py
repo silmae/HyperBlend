@@ -7,8 +7,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-import data.path_handling
-from src.data import file_handling as FH, path_handling as PH
+from src.data import path_handling as PH
 from src import constants as C
 
 
