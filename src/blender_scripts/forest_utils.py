@@ -457,8 +457,10 @@ def apply_forest_control(system_sim_name, global_master=False):
     Note that some values, such as sun power, must be reset when rendering because
     proper values depend on are we rendering an RGB image or a hyperspectral image.
 
-    :param global_master:
     :param system_sim_name: See :term:`system_sim_name`.
+    :param global_master: If true, the scene template file is changed. The one
+        in the repository. So be VERY CAREFUL that you know what you are doing
+        if you set this true. It is meant for developers only.
     """
 
     logging.error(f"Applying scene control.")
