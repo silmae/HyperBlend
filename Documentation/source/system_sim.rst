@@ -337,7 +337,118 @@ through Blender UI.
 The control file
 -----------------------------
 
-**The control file** is used to  
+**The control file** is used to store values that define the geometry
+of the scene. In other words it has the same values that were listed
+above and many more. An extract of a control file is shown below
+
+.. code-block::
+
+    Note = "This file controls the setup of the Blender scene file. "
+    is_master_control = true
+
+    [Sun]
+    Note = "When sun azimuth angle is 0 degrees, the sun points to positive y-axis direction in Blender that is thought as north in HyperBlend. 90 degrees would be pointing west, 180 to south and 270 to east, respectively. Zenith angle is the Sun's angle from zenith."
+    sun_angle_zenith_deg = 23.550000484583723
+    sun_angle_azimuth_deg = 335.91998685373596
+    sun_base_power_hsi = 40
+    sun_base_power_rgb = 400
+
+    [Drone]
+    Note = "Unit of drone location and altitude is meter."
+    drone_location_x = 0.0
+    drone_location_y = 0.0
+    drone_altitude = 100.0
+
+    [Cameras]
+    Note = "Camera angles are stored in degrees in this file. They must be converted to radians before passing to Blender file."
+    drone_hsi_fow = 28.000001917535847
+    drone_rgb_fow = 28.000001917535847
+
+    [Rendering]
+    Note = "Sample count controls how many samples (light rays) are cast through each pixel.More samples result in smoother image but require more time to render. Try values between 16 and 512, for example. The RGB sampling is for preview images so it can be higher as not many images are rendered with that sampling."
+    sample_count_rbg = 32
+    sample_count_hsi = 32
+
+    [Images]
+    hsi_resolution_x = 1024
+    hsi_resolution_y = 1024
+    rgb_resolution_x = 1024
+    rgb_resolution_y = 1024
+    walker_resolution_x = 1024
+    walker_resolution_y = 512
+    sleeper_resolution_x = 1024
+    sleeper_resolution_y = 512
+    tree_preview_resolution_x = 1024
+    tree_preview_resolution_y = 512
+
+    [Forest.Seed]
+    Value = 4
+    Type = "INT"
+    ID = 7
+
+    [Forest."Size X [m]"]
+    Value = 75.0
+    "Standard deviation" = 7.5
+    Type = "VALUE"
+    ID = 8
+
+    [Forest."Size Y [m]"]
+    Value = 75.0
+    "Standard deviation" = 7.5
+    Type = "VALUE"
+    ID = 9
+
+    ...
+    # Here are more terrain object parameters
+    # These comment is not part of the file format
+    # Then there are all the tree parameters
+    ...
+
+    [Forest."Spawn object 1"."Trunk length [m]"]
+    Value = 15.0
+    "Standard deviation" = 1.5
+    Type = "VALUE"
+    ID = 10
+
+    [Forest."Spawn object 1"."Trunk diameter [m]"]
+    Value = 0.4000000059604645
+    "Standard deviation" = 0.04000000059604645
+    Type = "VALUE"
+    ID = 11
+
+    [Forest."Spawn object 1"."Trunk pruning"]
+    Value = 0.5999999046325684
+    "Standard deviation" = 0.05999999046325684
+    Type = "VALUE"
+    ID = 12
+
+    [Forest."Spawn object 1"."Trunk clear start [%]"]
+    Value = 30
+    "Standard deviation" = 3
+    Type = "INT"
+    ID = 13
+    ...
+
+And so on. The control file can be several hundreds lines long depending on
+how many spawn objects are used in the scene. Most of it is meant to be edited
+programmatically The file is toml-formatted human readable text, which is read
+into a Python dictionary.
+
+Usage
+""""""""""
+
+The control file is coupled with the Blender scene file, as already shown in
+the :ref:`chap-basics`. **Remember** that you have to take care to bring any
+manually made changes from the scene to the control file and from the control
+file to the scene file! This is done through
+:py:func:`system_simulation.forest.process_forest_control`, so run it
+after any changes. When either of the files is modified through code, they
+are synced automatically.
+
+Manual changes to the control file usually relate to the general parameters
+at the beginning of the file, i.e., light power, spatial image size,
+sample count, etc..
+
 
 Spectral materials
 ----------------------------
