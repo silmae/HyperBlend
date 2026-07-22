@@ -434,6 +434,36 @@ how many spawn objects are used in the scene. Most of it is meant to be edited
 programmatically The file is toml-formatted human readable text, which is read
 into a Python dictionary.
 
+Changing the global master control file
+"""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. warning::
+    This action is for developers only.
+
+If you want to change the global master control file, i.e., the one shipped
+in the repository, you can do it like this after making changes to the
+forest scene template in `root/Internal`
+
+.. code-block:: python3
+
+    from src.rendering import blender_control as BC
+
+    if __name__ == "__main__":
+
+        runtime = initialization.initialize()
+        rng = np.random.default_rng(1234)
+
+        # REWRITES GLOBAL MASTER !!!!!!!!!!!!!!!!!
+        BC.process_forest_control(
+            runtime=runtime,
+            global_master=True,
+            generate=True,
+        )
+
+In reverse, if you make changes to the control file and want to apply it to the template
+scene, simply set ``generate=False``. See API documentation
+:py:func:`rendering.blender_control.process_forest_control`.
+
 Usage
 """"""""""
 

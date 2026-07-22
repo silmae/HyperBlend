@@ -415,7 +415,7 @@ def construct_spectral_cube(
     )
 
 
-def _m2s(control_dict: dict, rng) -> dict:
+def _m2s(control_dict: dict, rng, is_seed=False) -> dict:
     """Rewrites given master control dictionary into a slave control dictionary.
 
     New values are drawn from Gaussian distribution based on standard deviations present in
@@ -425,6 +425,8 @@ def _m2s(control_dict: dict, rng) -> dict:
         Master control dictionary.
     :param rng:
         Numpy random generator object used to randomize values in the slave control file.
+    :param is_seed:
+        If True, new value is drawn from discrete uniform distribution.
 
     :return:
         New slave control dictionary.
@@ -445,15 +447,14 @@ def _m2s(control_dict: dict, rng) -> dict:
             # Change the control file type from master to slave.
             new_value = False
         elif isinstance(dict_item, dict):
-            if key == "Seed":
-                new_value = rng.integers(1000)
-            else:
-                # Recursion for sub-dictionaries.
-                new_value = _m2s(control_dict=dict_item, rng=rng)
+            # Recursion for sub-dictionaries.
+            # Seed is a special variable as we take it from normal distribution so let's mark it for next recursion
+            is_seed = "Seed" in key
+            new_value = _m2s(control_dict=dict_item, rng=rng, is_seed=is_seed)
         elif key == FC.key_ctrl_item_std:
             # If one of the keys is 'Standard deviation', we are inside a sub-dictionary that is
             #   essentially a single value that we must randomize.
-            return _gaussian(control_dict, rng=rng)
+            return _gaussian(control_dict, rng=rng, is_seed=is_seed)
         else:
             new_value = dict_item
 
@@ -462,14 +463,15 @@ def _m2s(control_dict: dict, rng) -> dict:
     return new_dict
 
 
-def _gaussian(param_dict: dict, rng) -> dict:
+def _gaussian(param_dict: dict, rng, is_seed=False) -> dict:
     """Applies gaussian random value to a value that is represented as a dictionary in system_simulation control file.
 
     :param param_dict:
         Dict representation of the value.
     :param rng:
         A Numpy random generator object to be used for randomization.
-
+    :param is_seed:
+        If True, new value is drawn from discrete uniform distribution.
     :return:
         A new dict with randomized value based on standard deviation that was
         present in given dict. The std field is removed from returned dict representation.
@@ -481,7 +483,9 @@ def _gaussian(param_dict: dict, rng) -> dict:
     value = param_dict[FC.key_ctrl_item_value]
     item_type = param_dict[FC.key_ctrl_item_type]
 
-    if item_type == "INT":
+    if is_seed:
+        new_val = int(rng.integers(0,10000))
+    elif item_type == "INT":
         new_val = int(rng.normal(loc=value, scale=std))
     elif item_type == "VALUE":  # float
         new_val = rng.normal(loc=value, scale=std)

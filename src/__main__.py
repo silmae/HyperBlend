@@ -18,15 +18,18 @@ from system_simulation import dev_actions
 if __name__ == "__main__":
 
     runtime = initialization.initialize()
-    slab_sim_name = "tutorial_slab_simulation"
-    system_sim_name = "tutorial_system_simulation_2"
+
+    rng = np.random.default_rng(666)
+
+    slab_sim_name = "slabs_for_system_test"
+    # system_sim_name = "tutorial_system_simulation_2"
     slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
 
     # Pack leaf data for system_simulation scene initialization.
     leaves = [
         (slab_sim_name, 0, slab_material_names[0]),
         (slab_sim_name, 1, slab_material_names[1]),
-        (slab_sim_name, 2, slab_material_names[2]),
+        (slab_sim_name, 3, slab_material_names[2]),
     ]
 
     # F.init(
@@ -37,6 +40,18 @@ if __name__ == "__main__":
     #     sun_file_name="default_sun",
     #     sky_file_name="default_sky",
     # )
-    F.render_forest(
-        runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
-    )
+    # F.render_forest(
+    #     runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
+    # )
+
+    # test_sys_sim_name = "testing new control"
+    # F.init(
+    #     leaves=leaves,
+    #     conf_type="m2s",
+    #     new_system_sim_name=test_sys_sim_name,
+    #     soil_name="median_humid_clay",
+    #     sun_file_name="default_sun",
+    #     sky_file_name="default_sky",
+    #     rng=rng
+    # )
+    # F.process_forest_control(runtime=runtime, system_sim_name=test_sys_sim_name,generate=False)

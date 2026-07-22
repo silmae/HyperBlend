@@ -387,17 +387,24 @@ def _dictify_input_socket(gn, socket, is_master) -> dict:
     socket_dict = {
         f"Value": socket_value,
     }
+    # Ignore some parameters that should not be randomized ever
+    ignored = [
+        8,  # forest size x
+        9,  # forest size y
+        20,  # reference plate safe distance
+    ]
 
     # Only add standard deviation numerical parameters in master file, but ignore seeds.
-    if is_master and "Seed" not in socket.name:
+    if is_master and socket_id_numeric not in ignored:
         if socket_type == "VALUE":
             socket_dict[f"Standard deviation"] = (
                 socket_value * FC.ctrl_default_std_of_value
             )
         if socket_type == "INT":
-            socket_dict[f"Standard deviation"] = int(
+            # Return at least 1 for integers
+            socket_dict[f"Standard deviation"] = max(int(
                 socket_value * FC.ctrl_default_std_of_value
-            )
+            ), 1)
 
     socket_dict[f"Type"] = socket_type
     socket_dict[f"ID"] = socket_id_numeric

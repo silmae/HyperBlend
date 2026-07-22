@@ -38,18 +38,17 @@ tree_preview_resolution_y = 512
 
 [Forest.Seed]
 Value = 4
+"Standard deviation" = 1
 Type = "INT"
 ID = 7
 
 [Forest."Size X [m]"]
 Value = 75.0
-"Standard deviation" = 7.5
 Type = "VALUE"
 ID = 8
 
 [Forest."Size Y [m]"]
 Value = 75.0
-"Standard deviation" = 7.5
 Type = "VALUE"
 ID = 9
 
@@ -157,7 +156,6 @@ Name = "Elm wide"
 
 [Forest."Reference safe distance [m]"]
 Value = 10.0
-"Standard deviation" = 1.0
 Type = "VALUE"
 ID = 20
 
@@ -244,7 +242,6 @@ ID = 14
 
 [Forest."Spawn object 1"."Branch thickness factor"]
 Value = 0.5
-"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 9
 
@@ -268,7 +265,6 @@ ID = 19
 
 [Forest."Spawn object 1"."Branch 1 align"]
 Value = 0.8299999833106995
-"Standard deviation" = 0.08299999833106995
 Type = "VALUE"
 ID = 20
 
@@ -286,7 +282,7 @@ ID = 22
 
 [Forest."Spawn object 1"."Branch 2 child count"]
 Value = 8
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -328,6 +324,7 @@ ID = 32
 
 [Forest."Spawn object 1".Seed]
 Value = 75
+"Standard deviation" = 7
 Type = "INT"
 ID = 33
 
@@ -374,7 +371,6 @@ ID = 14
 
 [Forest."Spawn object 2"."Branch thickness factor"]
 Value = 0.5
-"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 9
 
@@ -398,7 +394,6 @@ ID = 19
 
 [Forest."Spawn object 2"."Branch 1 align"]
 Value = 0.8299999833106995
-"Standard deviation" = 0.08299999833106995
 Type = "VALUE"
 ID = 20
 
@@ -416,7 +411,7 @@ ID = 22
 
 [Forest."Spawn object 2"."Branch 2 child count"]
 Value = 8
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -458,6 +453,7 @@ ID = 32
 
 [Forest."Spawn object 2".Seed]
 Value = 75
+"Standard deviation" = 7
 Type = "INT"
 ID = 33
 
@@ -504,7 +500,6 @@ ID = 14
 
 [Forest."Spawn object 3"."Branch thickness factor"]
 Value = 0.5
-"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 9
 
@@ -528,7 +523,6 @@ ID = 19
 
 [Forest."Spawn object 3"."Branch 1 align"]
 Value = 0.5699999928474426
-"Standard deviation" = 0.056999999284744265
 Type = "VALUE"
 ID = 20
 
@@ -546,7 +540,7 @@ ID = 22
 
 [Forest."Spawn object 3"."Branch 2 child count"]
 Value = 9
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -588,6 +582,7 @@ ID = 32
 
 [Forest."Spawn object 3".Seed]
 Value = 7851
+"Standard deviation" = 785
 Type = "INT"
 ID = 33
 
@@ -634,7 +629,6 @@ ID = 14
 
 [Forest."Spawn object 4"."Branch thickness factor"]
 Value = 0.5
-"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 9
 
@@ -658,7 +652,6 @@ ID = 19
 
 [Forest."Spawn object 4"."Branch 1 align"]
 Value = 0.5699999928474426
-"Standard deviation" = 0.056999999284744265
 Type = "VALUE"
 ID = 20
 
@@ -676,7 +669,7 @@ ID = 22
 
 [Forest."Spawn object 4"."Branch 2 child count"]
 Value = 9
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -718,6 +711,7 @@ ID = 32
 
 [Forest."Spawn object 4".Seed]
 Value = 7851
+"Standard deviation" = 785
 Type = "INT"
 ID = 33
 
@@ -764,7 +758,6 @@ ID = 14
 
 [Forest."Spawn object 5"."Branch thickness factor"]
 Value = 0.41999998688697815
-"Standard deviation" = 0.04199999868869782
 Type = "VALUE"
 ID = 9
 
@@ -788,7 +781,6 @@ ID = 19
 
 [Forest."Spawn object 5"."Branch 1 align"]
 Value = 0.11000001430511475
-"Standard deviation" = 0.011000001430511476
 Type = "VALUE"
 ID = 20
 
@@ -806,7 +798,7 @@ ID = 22
 
 [Forest."Spawn object 5"."Branch 2 child count"]
 Value = 9
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -848,6 +840,7 @@ ID = 32
 
 [Forest."Spawn object 5".Seed]
 Value = 561
+"Standard deviation" = 56
 Type = "INT"
 ID = 33
 
@@ -894,7 +887,6 @@ ID = 14
 
 [Forest."Spawn object 6"."Branch thickness factor"]
 Value = 0.41999998688697815
-"Standard deviation" = 0.04199999868869782
 Type = "VALUE"
 ID = 9
 
@@ -918,7 +910,6 @@ ID = 19
 
 [Forest."Spawn object 6"."Branch 1 align"]
 Value = 0.11000001430511475
-"Standard deviation" = 0.011000001430511476
 Type = "VALUE"
 ID = 20
 
@@ -936,7 +927,7 @@ ID = 22
 
 [Forest."Spawn object 6"."Branch 2 child count"]
 Value = 9
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -978,6 +969,7 @@ ID = 32
 
 [Forest."Spawn object 6".Seed]
 Value = 561
+"Standard deviation" = 56
 Type = "INT"
 ID = 33
 
@@ -1024,7 +1016,6 @@ ID = 14
 
 [Forest."Spawn object 7"."Branch thickness factor"]
 Value = 0.44999998807907104
-"Standard deviation" = 0.04499999880790711
 Type = "VALUE"
 ID = 9
 
@@ -1042,13 +1033,12 @@ ID = 17
 
 [Forest."Spawn object 7"."Branch 1 child count"]
 Value = 6
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 19
 
 [Forest."Spawn object 7"."Branch 1 align"]
 Value = 0.11000001430511475
-"Standard deviation" = 0.011000001430511476
 Type = "VALUE"
 ID = 20
 
@@ -1066,7 +1056,7 @@ ID = 22
 
 [Forest."Spawn object 7"."Branch 2 child count"]
 Value = 9
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -1108,6 +1098,7 @@ ID = 32
 
 [Forest."Spawn object 7".Seed]
 Value = 129
+"Standard deviation" = 12
 Type = "INT"
 ID = 33
 
@@ -1154,7 +1145,6 @@ ID = 14
 
 [Forest."Spawn object 8"."Branch thickness factor"]
 Value = 0.44999998807907104
-"Standard deviation" = 0.04499999880790711
 Type = "VALUE"
 ID = 9
 
@@ -1172,13 +1162,12 @@ ID = 17
 
 [Forest."Spawn object 8"."Branch 1 child count"]
 Value = 6
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 19
 
 [Forest."Spawn object 8"."Branch 1 align"]
 Value = 0.11000001430511475
-"Standard deviation" = 0.011000001430511476
 Type = "VALUE"
 ID = 20
 
@@ -1196,7 +1185,7 @@ ID = 22
 
 [Forest."Spawn object 8"."Branch 2 child count"]
 Value = 9
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -1238,6 +1227,7 @@ ID = 32
 
 [Forest."Spawn object 8".Seed]
 Value = 129
+"Standard deviation" = 12
 Type = "INT"
 ID = 33
 
@@ -1284,7 +1274,6 @@ ID = 14
 
 [Forest."Spawn object 9"."Branch thickness factor"]
 Value = 0.5
-"Standard deviation" = 0.05
 Type = "VALUE"
 ID = 9
 
@@ -1308,7 +1297,6 @@ ID = 19
 
 [Forest."Spawn object 9"."Branch 1 align"]
 Value = -0.2699999511241913
-"Standard deviation" = -0.02699999511241913
 Type = "VALUE"
 ID = 20
 
@@ -1326,7 +1314,7 @@ ID = 22
 
 [Forest."Spawn object 9"."Branch 2 child count"]
 Value = 7
-"Standard deviation" = 0
+"Standard deviation" = 1
 Type = "INT"
 ID = 23
 
@@ -1368,6 +1356,7 @@ ID = 32
 
 [Forest."Spawn object 9".Seed]
 Value = 789
+"Standard deviation" = 78
 Type = "INT"
 ID = 33
 
@@ -1414,7 +1403,6 @@ ID = 14
 
 [Forest."Spawn object 10"."Branch thickness factor"]
 Value = 0.6200000047683716
-"Standard deviation" = 0.06200000047683716
 Type = "VALUE"
 ID = 9
 
@@ -1438,7 +1426,6 @@ ID = 19
 
 [Forest."Spawn object 10"."Branch 1 align"]
 Value = 0.4000000059604645
-"Standard deviation" = 0.04000000059604645
 Type = "VALUE"
 ID = 20
 
@@ -1498,6 +1485,7 @@ ID = 32
 
 [Forest."Spawn object 10".Seed]
 Value = 786524
+"Standard deviation" = 78652
 Type = "INT"
 ID = 33
 

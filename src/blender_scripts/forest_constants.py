@@ -76,6 +76,6 @@ ctrl_default_std_of_value = 0.1
 """Default standard deviation assigned to numeric parameters in master system_simulation control files (as percentage 0-1)."""
 
 key_ctrl_item_type = "Type"
-key_ctrl_item_std = "STD"
+key_ctrl_item_std = "Standard deviation"
 key_ctrl_item_value = "Value"
 key_ctrl_item_id = "ID"

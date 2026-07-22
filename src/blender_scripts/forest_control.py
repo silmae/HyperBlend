@@ -9,6 +9,7 @@ create problems with dependencies.
 
 import os
 import toml
+import logging
 
 from src.data import path_handling as PH
 from src import constants as C
@@ -82,6 +83,8 @@ def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
     p = PH.join(directory, filename)
     with open(p, "w+") as file:
         toml.dump(dictionary, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+    logging.error(f"Dictionary successfully written in '{p}'")
 
 
 def read_toml_as_dict(directory: str, filename: str):
