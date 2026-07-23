@@ -539,10 +539,17 @@ It begins like this:
     406.0 0.226477394
     407.0 0.227038273
 
+The default soil spectra included in the repository look like this
+
+
+.. image:: ../../readme_img/default_soils.png
+
 Trunk
 """""""""""""""""
 
-sadfd
+There is no integrated simulator for trunk data in HyperBlend largely because
+such a simulator could not be found from literature. Someone should build one.
+That someone could be you!
 
 
 Constructing the spectral cube
