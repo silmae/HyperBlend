@@ -9,10 +9,10 @@ from src.data import path_handling as PH
 from src import plotter
 
 
-gsv_wls = np.arange(400, 2501, 10)
+GSV_WLS = np.arange(400, 2501, 10)
 """Native hyperspectral wavelengths of GSV ranging from 400-2500 nm with 10 nm resolution."""
 
-new_wls = np.arange(400, 2501, 1)
+NEW_WLS = np.arange(400, 2501, 1)
 """Wavelengths from 400-2500 nm with 1 nm resolution. 
 Spectral resolution in HyperBlend is assumed to be 1 nm, so we 
 linearly interpolate the native GSV resolution to 1 nm."""
@@ -67,7 +67,7 @@ def simulate_gsv_soil(c1: float, c2: float, c3: float, cSM: float):
     """The general spectral vectors derived in the manuscript"""
 
     gsv_spectra = c1 * GSV[0] + c2 * GSV[1] + c3 * GSV[2] + cSM * GSV[3]
-    resampled_spectra = np.interp(new_wls, gsv_wls, gsv_spectra)
+    resampled_spectra = np.interp(NEW_WLS, GSV_WLS, gsv_spectra)
     return resampled_spectra
 
 
@@ -115,7 +115,7 @@ def visualize_default_soils(dont_show=True, save=True):
         labels.append(key)
 
     plotter.plot_default_soil_visualization(
-        new_wls, reflectances=refls, labels=labels, dont_show=dont_show, save=save
+        NEW_WLS, reflectances=refls, labels=labels, dont_show=dont_show, save=save
     )
 
 
@@ -127,18 +127,14 @@ def _write_default_soils():
 
     for key, item in default_soils.items():
         spec = simulate_gsv_soil(*item)
-        write_soil_spectra(
-            wls=new_wls, reflectance_spectra=spec, filename=f"{key}_reflectance.csv"
-        )
+        write_soil_spectra(reflectance_spectra=spec, filename=f"{key}_reflectance.csv")
 
 
-def write_soil_spectra(wls, reflectance_spectra, filename):
+def write_soil_spectra(reflectance_spectra, filename):
     """Write soil reflectance spectra to a csv file. This is
     'master' spectra that is later copied (with possible resampling)
     to scene directory.
 
-    :param wls:
-        Wavelengths as a list.
     :param reflectance_spectra:
         Reflectance values corresponding to each wavelength.
     :param filename:
@@ -146,5 +142,5 @@ def write_soil_spectra(wls, reflectance_spectra, filename):
     """
 
     p = PH.join(PH.directory_reflectance_spectra(), filename)
-    stacked = np.vstack((wls, reflectance_spectra)).transpose()
+    stacked = np.vstack((NEW_WLS, reflectance_spectra)).transpose()
     np.savetxt(p, stacked, delimiter=" ", fmt=("%.1f", "%.9f"))
