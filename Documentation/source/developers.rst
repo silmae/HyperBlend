@@ -19,4 +19,4 @@ Directory names
 If you add directories or rename old ones, you should update the names
 in :py:mod:`src.constants`, `root/src/definitions/directory_structure.toml`,
 and :py:mod:`data.path_handling`. They all work in tandem to keep the directory
-structure in order and automatically create directories that are not there. 
+structure in order and automatically create directories that are not there.
