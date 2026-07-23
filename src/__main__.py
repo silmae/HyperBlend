@@ -15,43 +15,12 @@ from src.playground import integration_test_like as ITL
 from src.rendering import blender_control as BC
 from system_simulation import dev_actions
 
+rng = np.random.default_rng(666)
+
+from src.gsv import interface as gsvi
+
 if __name__ == "__main__":
 
     runtime = initialization.initialize()
-
-    rng = np.random.default_rng(666)
-
-    slab_sim_name = "slabs_for_system_test"
-    # system_sim_name = "tutorial_system_simulation_2"
-    slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
-
-    # Pack leaf data for system_simulation scene initialization.
-    leaves = [
-        (slab_sim_name, 0, slab_material_names[0]),
-        (slab_sim_name, 1, slab_material_names[1]),
-        (slab_sim_name, 3, slab_material_names[2]),
-    ]
-
-    # F.init(
-    #     leaves=leaves,
-    #     conf_type="m2m",
-    #     new_system_sim_name=system_sim_name,
-    #     soil_name="median_humid_clay",
-    #     sun_file_name="default_sun",
-    #     sky_file_name="default_sky",
-    # )
-    # F.render_forest(
-    #     runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
-    # )
-
-    test_sys_sim_name = "bundle ancestor"
-    F.init(
-        leaves=leaves,
-        conf_type="m2m",
-        new_system_sim_name=test_sys_sim_name,
-    )
-    # F.process_forest_control(runtime=runtime, system_sim_name=test_sys_sim_name,generate=False)
-
-    bundle_name = "My second bundle"
-    F.create_scene_bundle(bundle_name=bundle_name, system_sim_name_ancestor=test_sys_sim_name, rng=rng, count=3, leaves=leaves)
-    F.run_scene_bundle(runtime=runtime, bundle_name=bundle_name, slab_material_names=slab_material_names, render_spectral=False, construct_cube=False, render_visibility_maps=False)
+    soil_spectra = gsvi.simulate_gsv_soil(c1=0.528, c2=-0.011, c3=0.014, cSM=-0.129)
+    gsvi.write_soil_spectra(reflectance_spectra=soil_spectra, filename="My new soil spectrum")

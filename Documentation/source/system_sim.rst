@@ -350,8 +350,8 @@ above and many more. An extract of a control file is shown below
     Note = "When sun azimuth angle is 0 degrees, the sun points to positive y-axis direction in Blender that is thought as north in HyperBlend. 90 degrees would be pointing west, 180 to south and 270 to east, respectively. Zenith angle is the Sun's angle from zenith."
     sun_angle_zenith_deg = 23.550000484583723
     sun_angle_azimuth_deg = 335.91998685373596
-    sun_base_power_hsi = 40
-    sun_base_power_rgb = 400
+    sun_base_power_hsi = 4
+    sun_base_power_rgb = 100
 
     [Drone]
     Note = "Unit of drone location and altitude is meter."
@@ -370,31 +370,30 @@ above and many more. An extract of a control file is shown below
     sample_count_hsi = 32
 
     [Images]
-    hsi_resolution_x = 1024
-    hsi_resolution_y = 1024
-    rgb_resolution_x = 1024
-    rgb_resolution_y = 1024
-    walker_resolution_x = 1024
+    hsi_resolution_x = 512
+    hsi_resolution_y = 512
+    rgb_resolution_x = 512
+    rgb_resolution_y = 512
+    walker_resolution_x = 512
     walker_resolution_y = 512
-    sleeper_resolution_x = 1024
+    sleeper_resolution_x = 512
     sleeper_resolution_y = 512
-    tree_preview_resolution_x = 1024
+    tree_preview_resolution_x = 512
     tree_preview_resolution_y = 512
 
     [Forest.Seed]
     Value = 4
+    "Standard deviation" = 1
     Type = "INT"
     ID = 7
 
     [Forest."Size X [m]"]
     Value = 75.0
-    "Standard deviation" = 7.5
     Type = "VALUE"
     ID = 8
 
     [Forest."Size Y [m]"]
     Value = 75.0
-    "Standard deviation" = 7.5
     Type = "VALUE"
     ID = 9
 
@@ -434,6 +433,40 @@ how many spawn objects are used in the scene. Most of it is meant to be edited
 programmatically The file is toml-formatted human readable text, which is read
 into a Python dictionary.
 
+Usage
+""""""""""
+
+The control file is coupled with the Blender scene file, as already shown in
+the :ref:`chap-basics`. **Remember** that you have to take care to bring any
+manually made changes from the scene to the control file and from the control
+file to the scene file! In other words, they are cyclically dependent of each
+other. Syncing the files is done through
+:py:func:`system_simulation.forest.process_forest_control`, so run it
+after any changes. When either of the files is modified through code, they
+are synced automatically.
+
+Manual changes to the control file usually relate to the general parameters
+at the beginning of the file, i.e., light power, spatial image size,
+sample count, etc. while you are searching for good settings for your
+specific scene.
+
+The real power of the control file is to create randomized variations of
+your scene.
+Variables with field ``"Standard deviation"`` are randomized when you initialize a
+new "m2s" system simulation with :py:func:`system_simulation.forest.init`.
+In other words, you would start with an ancestor,
+or a *master*, system sim. The master's control file will have these fields
+that are read, and new values for the *slave* system sim are populated by
+drawing from gaussian distribution with the original value as mean and
+standard deviation as variance. Only fields with ``Type="INT"`` or
+``Type="VALUE"`` (float) are randomized. Seeds have a special randomization
+where a value is drawn from uniform distribution between 0 and 10000.
+The ``ID`` field is the variable's id inside Blender scene.
+
+.. note::
+    The slave control files do not have the ``"Standard deviation"`` field.
+
+
 Changing the global master control file
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -464,20 +497,7 @@ In reverse, if you make changes to the control file and want to apply it to the 
 scene, simply set ``generate=False``. See API documentation
 :py:func:`rendering.blender_control.process_forest_control`.
 
-Usage
-""""""""""
 
-The control file is coupled with the Blender scene file, as already shown in
-the :ref:`chap-basics`. **Remember** that you have to take care to bring any
-manually made changes from the scene to the control file and from the control
-file to the scene file! This is done through
-:py:func:`system_simulation.forest.process_forest_control`, so run it
-after any changes. When either of the files is modified through code, they
-are synced automatically.
-
-Manual changes to the control file usually relate to the general parameters
-at the beginning of the file, i.e., light power, spatial image size,
-sample count, etc..
 
 
 Spectral materials
@@ -486,7 +506,23 @@ Spectral materials
 Soil
 """""""""""""""
 
-dsafdgjrhty
+Generating a new soil spectrum with the integrated soil spectrum
+generator GSV is simple:
+
+.. code-block:: python3
+
+    from src.gsv import interface as gsvi
+
+    if __name__ == "__main__":
+
+        runtime = initialization.initialize()
+        soil_spectra = gsvi.simulate_gsv_soil(c1=0.528, c2=-0.011, c3=0.014, cSM=-0.129)
+        gsvi.write_soil_spectra(reflectance_spectra=soil_spectra, filename="My new soil spectrum")
+
+The example given here recreates the humid clay spectrum already included in
+the default soil spectra in the repository. Consult the original GSV paper
+:cite:`gsv19` and API documentation :py:mod:`gsv.interface` for the explanation
+of the parameters.
 
 
 Trunk
@@ -499,3 +535,44 @@ Constructing the spectral cube
 """""""""""""""""""""""""""""""""
 
 Normalization to reflectance
+
+
+
+Bundle system simulation
+================================
+
+The bundle run is the holy grail of HyperBlend. This is where you
+can truly generate arbitrary number of variations of a system simulation
+scene by just two lines of code. In the example below, we assume we have
+done slab simulation with name `"slabs_for_bundle"` and then create a
+ancestor scene. Finally, the ancestor is used to generate three new
+variants, and directly processed into spectral image cubes.
+
+.. code-block:: python3
+
+    if __name__ == "__main__":
+
+        runtime = initialization.initialize()
+
+        rng = np.random.default_rng(666)
+
+        slab_sim_name = "slabs_for_bundle"
+        slab_material_names = ["Slab material 1", "Slab material 2", "Slab material 3"]
+
+        # Pack leaf data for system_simulation scene initialization.
+        leaves = [
+            (slab_sim_name, 0, slab_material_names[0]),
+            (slab_sim_name, 1, slab_material_names[1]),
+            (slab_sim_name, 3, slab_material_names[2]),
+        ]
+
+        bundle_ancestor_name = "bundle ancestor"
+        F.init(
+            leaves=leaves,
+            conf_type="m2m",
+            new_system_sim_name=bundle_ancestor_name,
+        )
+
+        bundle_name = "My second bundle"
+        F.create_scene_bundle(bundle_name=bundle_name, system_sim_name_ancestor=bundle_ancestor_name, rng=rng, count=3, leaves=leaves)
+        F.run_scene_bundle(runtime=runtime, bundle_name=bundle_name, slab_material_names=slab_material_names)
