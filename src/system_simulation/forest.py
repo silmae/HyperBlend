@@ -225,6 +225,7 @@ def init(
     # TODO Load sky here
 
     # TODO Then normalize them together as sky can be brighter than the sun. This should be tested too.
+    #       No time to implement this but it should be done.
 
     logging.info(f"Normalizing sun spectrum.")
     # Normalizing sun
@@ -405,7 +406,7 @@ def run_scene_bundle(runtime: RuntimeEnvironment, bundle_name: str, slab_materia
         if render_spectral:
             render_forest(runtime=runtime, system_sim_name=system_sim_name, render_mode="spectral")
         if construct_cube:
-            construct_spectral_cube( system_sim_name=system_sim_name)
+            construct_spectral_cube(system_sim_name=system_sim_name)
 
 
 def process_forest_control(
