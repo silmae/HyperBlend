@@ -141,6 +141,9 @@ def write_soil_spectra(reflectance_spectra, filename):
         Filename used for saving. Directory is fixed to root/soil_data/.
     """
 
+    if not filename.endswith(".csv"):
+        filename += ".csv"
+
     p = PH.join(PH.directory_reflectance_spectra(), filename)
     stacked = np.vstack((NEW_WLS, reflectance_spectra)).transpose()
     np.savetxt(p, stacked, delimiter=" ", fmt=("%.1f", "%.9f"))

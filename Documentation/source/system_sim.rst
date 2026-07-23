@@ -524,6 +524,20 @@ the default soil spectra in the repository. Consult the original GSV paper
 :cite:`gsv19` and API documentation :py:mod:`gsv.interface` for the explanation
 of the parameters.
 
+Running the above snippet will add a new csv file to `root/Reflectance spectra`.
+
+It begins like this:
+
+.. code-block::
+
+    400.0 0.223112120
+    401.0 0.223672999
+    402.0 0.224233878
+    403.0 0.224794757
+    404.0 0.225355636
+    405.0 0.225916515
+    406.0 0.226477394
+    407.0 0.227038273
 
 Trunk
 """""""""""""""""
