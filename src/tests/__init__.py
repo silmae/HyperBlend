@@ -16,4 +16,8 @@ Things that are tested:
     - Slab training
     - System simulation
 
+.. warning::
+    System simulation bundles are not tested at all as there was no time
+    to write tests for it.
+
 """
