@@ -59,6 +59,8 @@ dirname_internal = "Internal"
 
 dirname_system_sim = "System simulation"
 
+dirname_system_bundles = "System sim bundles"
+
 dirname_light_spectra = "Light spectra"
 
 dirname_reflectance_spectra = "Reflectance spectra"

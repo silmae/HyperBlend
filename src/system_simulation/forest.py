@@ -312,6 +312,102 @@ def init(
     return forest_id
 
 
+def create_scene_bundle(
+    bundle_name: str,
+    system_sim_name_ancestor: str,
+    rng,
+    count=10,
+    leaves=None,
+    soil_name: str = None,
+    sun_file_name: str = None,
+    sky_file_name: str = None
+):
+    """Creates a bundle of scene variants and initializes them.
+
+    Loop count times and create slave scenes with initialization.
+    Gather and write generated scene names into a toml.
+    Return path to the toml so it can be run in a bundle
+    by :py:func:`system_simulation.forest.run_scene_bundle`.
+
+    Parameters without explanation are passed directrly to
+    :py:func:`system_simulation.forest.init`.
+
+    :param bundle_name:
+        Name of the bundle (file name).
+    :param system_sim_name_ancestor:
+        Which scene is to be used as an ancestor for the new scenes.
+        It must be a master scene (indicated in the scene control file).
+    :param rng:
+        Numpy random number generator.
+    :param count:
+        How many scene variations are to be created.
+
+    :return:
+        The path to the created bundle file.
+    """
+
+    list_scene_names = []
+    for i in range(count):
+        new_scene_name = init(
+            system_sim_name_to_copy_from=system_sim_name_ancestor,
+            rng=rng,
+            leaves=leaves,
+            conf_type="m2s",
+            soil_name=soil_name,
+            sun_file_name=sun_file_name,
+            sky_file_name=sky_file_name,
+        )
+        list_scene_names.append(new_scene_name)
+
+    bundle_dict = {"list_scene_names": list_scene_names}
+    p = TH.write_sys_sim_bundle(bundle_name=bundle_name, sys_sim_bundle_dict=bundle_dict)
+    return p
+
+
+def run_scene_bundle(runtime: RuntimeEnvironment, bundle_name: str, slab_material_names, render_spectral=True, render_visibility_maps=True, render_preview=True, construct_cube=True):
+    """Runs the scene bundle either by rendering or by constructing the spectral image cube.
+
+    All of these can be done with a single call.
+
+    See other parameters from :py:func:`system_simulation.forest.render_forest` .
+
+    :param runtime:
+        See :term:`runtime`.
+    :param bundle_name:
+        Name of the bundle (file name).
+    :param slab_material_names:
+        Slab material name list as accepted by
+        :py:func:`system_simulation.forest.setup_forest_for_rendering`.
+    :param render_spectral:
+        If True, renders spectral bands.
+    :param render_visibility_maps:
+        If True, renders visibility maps (needed for spectral cube construction).
+    :param render_preview:
+        If True, renders preview images.
+    :param construct_cube:
+        If True, constructs the spectral cube out of rendered frames.
+        Cannot be called before spectral bands and visibility maps are rendered.
+    """
+
+    bundle_dict = TH.read_sys_sim_bundle(bundle_name=bundle_name)
+    list_scene_names = bundle_dict["list_scene_names"]
+    for _, system_sim_name in enumerate(list_scene_names):
+
+        if slab_material_names is None:
+            raise RuntimeError(f"Slab material names must be provided.")
+
+        setup_forest_for_rendering(runtime=runtime, system_sim_name=system_sim_name, slab_material_names=slab_material_names)
+
+        if render_preview:
+            render_forest(runtime=runtime, system_sim_name=system_sim_name, render_mode="preview")
+        if render_visibility_maps:
+            render_forest(runtime=runtime, system_sim_name=system_sim_name, render_mode="visibility")
+        if render_spectral:
+            render_forest(runtime=runtime, system_sim_name=system_sim_name, render_mode="spectral")
+        if construct_cube:
+            construct_spectral_cube( system_sim_name=system_sim_name)
+
+
 def process_forest_control(
     runtime: RuntimeEnvironment, system_sim_name: str, generate=True
 ):

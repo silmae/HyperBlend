@@ -52,6 +52,13 @@ def directory_top_system_simulation() -> str:
     return p
 
 
+def directory_system_bundle() -> str:
+    """Path to system simulation bundle directory."""
+
+    p = join(C.path_project_root, C.dirname_system_bundles)
+    return p
+
+
 def directory_light_spectra() -> str:
     """Path to light spectra directory that contains all spectra for light sources."""
 

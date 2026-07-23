@@ -44,14 +44,14 @@ if __name__ == "__main__":
     #     runtime=runtime, system_sim_name=system_sim_name, render_mode="preview"
     # )
 
-    # test_sys_sim_name = "testing new control"
-    # F.init(
-    #     leaves=leaves,
-    #     conf_type="m2s",
-    #     new_system_sim_name=test_sys_sim_name,
-    #     soil_name="median_humid_clay",
-    #     sun_file_name="default_sun",
-    #     sky_file_name="default_sky",
-    #     rng=rng
-    # )
+    test_sys_sim_name = "bundle ancestor"
+    F.init(
+        leaves=leaves,
+        conf_type="m2m",
+        new_system_sim_name=test_sys_sim_name,
+    )
     # F.process_forest_control(runtime=runtime, system_sim_name=test_sys_sim_name,generate=False)
+
+    bundle_name = "My second bundle"
+    F.create_scene_bundle(bundle_name=bundle_name, system_sim_name_ancestor=test_sys_sim_name, rng=rng, count=3, leaves=leaves)
+    F.run_scene_bundle(runtime=runtime, bundle_name=bundle_name, slab_material_names=slab_material_names, render_spectral=False, construct_cube=False, render_visibility_maps=False)

@@ -29,7 +29,7 @@ Reflectance\ spectra/*
 !Reflectance\ spectra/wet_sand_reflectance.csv
 !Reflectance\ spectra/default_soils.png
 
-# Ignore documentation
+# Ignore documentation build files
 Documentation/build
 
 # Ignore log files
@@ -38,6 +38,9 @@ Log*/*
 # Ignore other than the default slab model
 Slab\ solvers/*
 !Slab\ solvers/Default\ slab
+
+# Ignore system simulation bundle files
+System\ sim\ bundles/
 
 # Ignore old (version 0.2) directories
 

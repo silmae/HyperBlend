@@ -44,6 +44,11 @@ description = "Root directory"
 	name = "System simulation"
 	description = "Stores system level simulations such as forest canopy simulations. The name of this directory is very important as it is used in many rendering scripts as-is. Similarly to slab simulation, the content is checked as needed."
 
+	[root.system_simulation_bundles]
+	type = "dir"
+	name = "System sim bundles"
+	description = "Contains toml files that define scene names belonging to a single simulation bundle."
+
 	[root.light_spectra]
 	type = "dir"
 	name = "Light spectra"

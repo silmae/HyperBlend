@@ -20,6 +20,8 @@ def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
     :param dictionary: Dictionary to be written as toml.
     :param directory: Path to the directory where the toml should be written.
     :param filename: Name of the file to be written. Postfix '.toml' will be added if necessary.
+
+    :return: Path to where the dictionary was written.
     """
 
     if not os.path.exists(os.path.abspath(directory)):
@@ -34,6 +36,8 @@ def write_dict_as_toml(dictionary: dict, directory: str, filename: str):
     p = PH.join(directory, filename)
     with open(p, "w+") as file:
         toml.dump(dictionary, file, encoder=toml.encoder.TomlNumpyEncoder())
+
+    return p
 
 
 def read_toml_as_dict(directory: str, filename: str):
@@ -61,6 +65,34 @@ def read_toml_as_dict(directory: str, filename: str):
     with open(p, "r") as file:
         result = toml.load(file)
     return result
+
+
+def write_sys_sim_bundle(bundle_name: str, sys_sim_bundle_dict: dict) -> str:
+    """Write system simulation bundle file that lists scenes belonging to that bundle.
+
+    :param bundle_name:
+        Name of the bundle which is used as a filename too.
+    :param sys_sim_bundle_dict:
+        Dict to be saved.
+    :return:
+        Path where the file was written to.
+    """
+
+    p = write_dict_as_toml(dictionary=sys_sim_bundle_dict, directory=PH.directory_system_bundle(), filename=bundle_name)
+    return p
+
+
+def read_sys_sim_bundle(bundle_name: str) -> dict:
+    """Read system simulation bundle file as dict.
+
+    :param bundle_name:
+        Name of the bundle.
+    :return:
+        Bundle dictionary containing the names of the scenes belonging to that bundle.
+    """
+
+    bundle_dict = read_toml_as_dict(directory=PH.directory_system_bundle(), filename=bundle_name)
+    return bundle_dict
 
 
 def read_surface_model_parameters(solver_name: str = None):

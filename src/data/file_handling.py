@@ -329,7 +329,7 @@ def duplicate_system_simulation_scene(
     else:
         now = datetime.datetime.now()
         dst_system_sim_name = (
-            f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}"
+            f"{now.day:02}{now.month:02}{now.year - 2000}{now.hour:02}{now.minute:02}{now.second:02}"
         )
 
     if src_system_sim_name is None:
