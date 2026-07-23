@@ -541,8 +541,8 @@ It begins like this:
 
 The default soil spectra included in the repository look like this
 
-
 .. image:: ../../readme_img/default_soils.png
+
 
 Trunk
 """""""""""""""""
@@ -551,16 +551,75 @@ There is no integrated simulator for trunk data in HyperBlend largely because
 such a simulator could not be found from literature. Someone should build one.
 That someone could be you!
 
+Anyways, there was no time to implement proper spectral trunks even though
+it should not be very difficult. At the moment, trunk shader is set to be
+0.25 reflective diffuse material in
+:py:func:`blender_scripts.bs_setup_forest.insert_diffuse_material_spectra`.
+There are some comments to help you implement it if you are up for it.
+
 
 Constructing the spectral cube
 """""""""""""""""""""""""""""""""
 
-Normalization to reflectance
+Constructing a spectral image cube from your simulation is very simple
 
+.. code-block:: python3
+
+    from src.system_simulation import forest as F
+
+    if __name__ == "__main__":
+
+        runtime = initialization.initialize()
+
+        system_sim_name = "My simulation"
+        F.construct_spectral_cube(system_sim_name=system_sim_name)
+
+Before calling that, you should have rendered your spectral bands and
+visibility maps for the scene. It will automatically find the reference
+plates for reflectance calculation and select the brightest one that does
+not cause over-exposure. If all of them do, you should lower your light
+power in the control file and rerender all bands.
+
+See full instructions of the method
+:py:func:`system_simulation.forest.construct_spectral_cube`.
+
+You can find the spectral cube from
+`root/System simulation/scene_My simulation/Spectral cube`.
+The cube is saved in ENVI format, so there are two files:
+.hdr and .img file. The .hdr file is just headers and
+looks something like this
+
+.. code-block::
+
+    ENVI
+    samples = 1024
+    lines = 1024
+    bands = 421
+    header offset = 0
+    file type = ENVI Standard
+    data type = 4
+    interleave = bip
+    byte order = 0
+    data_type = 4
+    default bands = { 47 , 27 , 14 }
+    wavelength = { 400.0 , 405.0 , 410.0 , 415.0 , 420.0 , 425.0 , 430.0 , 435.0 , 440.0 , 445.0 , 450.0 , 455.0 , 460.0 , 465.0 , 470.0 , 475.0 , 480.0 , 485.0 , 490.0 , 495.0 , 500.0 , 505.0 , 510.0 , 515.0 , 520.0 , 525.0 , 530.0 , 535.0 , 540.0 , 545.0 , 550.0 , 555.0 , 560.0 , 565.0 , 570.0 , 575.0 , 580.0 , 585.0 , 590.0 , 595.0 , 600.0 , 605.0 , 610.0 , 615.0 , 620.0 , 625.0 , 630.0 , 635.0 , 640.0 , 645.0 , 650.0 , 655.0 , 660.0 , 665.0 , 670.0 , 675.0 , 680.0 , 685.0 , 690.0 , 695.0 , 700.0 , 705.0 , 710.0 , 715.0 , 720.0 , 725.0 , 730.0 , 735.0 , 740.0 , 745.0 , 750.0 , 755.0 , 760.0 , 765.0 , 770.0 , 775.0 , 780.0 , 785.0 , 790.0 , 795.0 , 800.0 , 805.0 , 810.0 , 815.0 , 820.0 , 825.0 , 830.0 , 835.0 , 840.0 , 845.0 , 850.0 , 855.0 , 860.0 , 865.0 , 870.0 , 875.0 , 880.0 , 885.0 , 890.0 , 895.0 , 900.0 , 905.0 , 910.0 , 915.0 , 920.0 , 925.0 , 930.0 , 935.0 , 940.0 , 945.0 , 950.0 , 955.0 , 960.0 , 965.0 , 970.0 , 975.0 , 980.0 , 985.0 , 990.0 , 995.0 , 1000.0 , 1005.0 , 1010.0 , 1015.0 , 1020.0 , 1025.0 , 1030.0 , 1035.0 , 1040.0 , 1045.0 , 1050.0 , 1055.0 , 1060.0 , 1065.0 , 1070.0 , 1075.0 , 1080.0 , 1085.0 , 1090.0 , 1095.0 , 1100.0 , 1105.0 , 1110.0 , 1115.0 , 1120.0 , 1125.0 , 1130.0 , 1135.0 , 1140.0 , 1145.0 , 1150.0 , 1155.0 , 1160.0 , 1165.0 , 1170.0 , 1175.0 , 1180.0 , 1185.0 , 1190.0 , 1195.0 , 1200.0 , 1205.0 , 1210.0 , 1215.0 , 1220.0 , 1225.0 , 1230.0 , 1235.0 , 1240.0 , 1245.0 , 1250.0 , 1255.0 , 1260.0 , 1265.0 , 1270.0 , 1275.0 , 1280.0 , 1285.0 , 1290.0 , 1295.0 , 1300.0 , 1305.0 , 1310.0 , 1315.0 , 1320.0 , 1325.0 , 1330.0 , 1335.0 , 1340.0 , 1345.0 , 1350.0 , 1355.0 , 1360.0 , 1365.0 , 1370.0 , 1375.0 , 1380.0 , 1385.0 , 1390.0 , 1395.0 , 1400.0 , 1405.0 , 1410.0 , 1415.0 , 1420.0 , 1425.0 , 1430.0 , 1435.0 , 1440.0 , 1445.0 , 1450.0 , 1455.0 , 1460.0 , 1465.0 , 1470.0 , 1475.0 , 1480.0 , 1485.0 , 1490.0 , 1495.0 , 1500.0 , 1505.0 , 1510.0 , 1515.0 , 1520.0 , 1525.0 , 1530.0 , 1535.0 , 1540.0 , 1545.0 , 1550.0 , 1555.0 , 1560.0 , 1565.0 , 1570.0 , 1575.0 , 1580.0 , 1585.0 , 1590.0 , 1595.0 , 1600.0 , 1605.0 , 1610.0 , 1615.0 , 1620.0 , 1625.0 , 1630.0 , 1635.0 , 1640.0 , 1645.0 , 1650.0 , 1655.0 , 1660.0 , 1665.0 , 1670.0 , 1675.0 , 1680.0 , 1685.0 , 1690.0 , 1695.0 , 1700.0 , 1705.0 , 1710.0 , 1715.0 , 1720.0 , 1725.0 , 1730.0 , 1735.0 , 1740.0 , 1745.0 , 1750.0 , 1755.0 , 1760.0 , 1765.0 , 1770.0 , 1775.0 , 1780.0 , 1785.0 , 1790.0 , 1795.0 , 1800.0 , 1805.0 , 1810.0 , 1815.0 , 1820.0 , 1825.0 , 1830.0 , 1835.0 , 1840.0 , 1845.0 , 1850.0 , 1855.0 , 1860.0 , 1865.0 , 1870.0 , 1875.0 , 1880.0 , 1885.0 , 1890.0 , 1895.0 , 1900.0 , 1905.0 , 1910.0 , 1915.0 , 1920.0 , 1925.0 , 1930.0 , 1935.0 , 1940.0 , 1945.0 , 1950.0 , 1955.0 , 1960.0 , 1965.0 , 1970.0 , 1975.0 , 1980.0 , 1985.0 , 1990.0 , 1995.0 , 2000.0 , 2005.0 , 2010.0 , 2015.0 , 2020.0 , 2025.0 , 2030.0 , 2035.0 , 2040.0 , 2045.0 , 2050.0 , 2055.0 , 2060.0 , 2065.0 , 2070.0 , 2075.0 , 2080.0 , 2085.0 , 2090.0 , 2095.0 , 2100.0 , 2105.0 , 2110.0 , 2115.0 , 2120.0 , 2125.0 , 2130.0 , 2135.0 , 2140.0 , 2145.0 , 2150.0 , 2155.0 , 2160.0 , 2165.0 , 2170.0 , 2175.0 , 2180.0 , 2185.0 , 2190.0 , 2195.0 , 2200.0 , 2205.0 , 2210.0 , 2215.0 , 2220.0 , 2225.0 , 2230.0 , 2235.0 , 2240.0 , 2245.0 , 2250.0 , 2255.0 , 2260.0 , 2265.0 , 2270.0 , 2275.0 , 2280.0 , 2285.0 , 2290.0 , 2295.0 , 2300.0 , 2305.0 , 2310.0 , 2315.0 , 2320.0 , 2325.0 , 2330.0 , 2335.0 , 2340.0 , 2345.0 , 2350.0 , 2355.0 , 2360.0 , 2365.0 , 2370.0 , 2375.0 , 2380.0 , 2385.0 , 2390.0 , 2395.0 , 2400.0 , 2405.0 , 2410.0 , 2415.0 , 2420.0 , 2425.0 , 2430.0 , 2435.0 , 2440.0 , 2445.0 , 2450.0 , 2455.0 , 2460.0 , 2465.0 , 2470.0 , 2475.0 , 2480.0 , 2485.0 , 2490.0 , 2495.0 , 2500.0 }
+    wavelength units = nm
+
+The .img file contains the actual data. You can open the files programmaticly
+with Python package spectral like so
+
+.. code-block:: python3
+
+    from spectral.io import envi as envi
+
+    cube_data = envi.open(file=hdr_path, image=data_path)
+
+For making it easier, you can just download an executable from
+HyperBlend's sister project CubeInspector https://github.com/silmae/cubeinspector
 
 
 Bundle system simulation
-================================
+--------------------------------
 
 The bundle run is the holy grail of HyperBlend. This is where you
 can truly generate arbitrary number of variations of a system simulation
@@ -597,3 +656,8 @@ variants, and directly processed into spectral image cubes.
         bundle_name = "My second bundle"
         F.create_scene_bundle(bundle_name=bundle_name, system_sim_name_ancestor=bundle_ancestor_name, rng=rng, count=3, leaves=leaves)
         F.run_scene_bundle(runtime=runtime, bundle_name=bundle_name, slab_material_names=slab_material_names)
+
+
+You will find these new system simulations from `root/System simulation/`
+like any other system simulation. The names of the directories are generated
+with a time stamp that is unique for all.
